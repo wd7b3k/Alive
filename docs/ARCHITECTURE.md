@@ -2,7 +2,7 @@
 
 ## 1. Статус
 
-Документ фиксирует целевую архитектуру новой серии. Реализация ещё не начата.
+Документ фиксирует архитектуру новой серии. **Platform bootstrap уже начат:** frontend и PostgreSQL/RLS schema существуют, Google OAuth и Cloudflare deployment ещё проходят V3-GATE-01.
 
 Основной принцип: **простая архитектура, достаточная для нескольких участников и дальнейшего роста, без преждевременного усложнения.**
 
@@ -15,17 +15,17 @@
 → `Supabase PostgreSQL + RLS`
 → `Edge Functions / DB functions`
 
-Operational jobs:
+Operational jobs позднее:
 
 `Supabase Cron → aggregation / health / maintenance`
 
-Incident/digest email:
+Incident/digest email позднее:
 
 `Edge Function → email provider`
 
 ## 3. Frontend
 
-Планируется web-first responsive client на `alive.hmnos.ru`.
+Web-first responsive client находится в `app/`.
 
 Требования:
 
@@ -47,7 +47,7 @@ Google Sign-In через Supabase Auth.
 
 ## 5. Database
 
-PostgreSQL — durable source of truth.
+PostgreSQL — durable runtime data store. **Schema source of truth — только `supabase/migrations/` в `wd7b3k/Alive`.**
 
 Основные принципы:
 
@@ -60,14 +60,13 @@ PostgreSQL — durable source of truth.
 
 ## 6. Privileged logic
 
-Edge Functions/DB functions используются для:
+Edge Functions/DB functions используются только там, где действительно требуются privileged credentials/authorization, в частности для будущих:
 
 - admin operations;
 - UGC publish/review;
 - weekly digests;
 - health checks;
-- privileged aggregations;
-- operations requiring service credentials.
+- privileged aggregations.
 
 Не использовать Edge Functions для каждой простой CRUD-операции без причины.
 
@@ -81,11 +80,11 @@ Edge Functions/DB functions используются для:
 
 Не дублировать sensitive text в analytics.
 
-Для групповой статистики использовать заранее агрегированные daily metrics, а не тяжёлые пересчёты всей истории при каждом открытии.
+Для будущей групповой статистики использовать заранее агрегированные daily metrics, а не тяжёлые пересчёты всей истории при каждом открытии.
 
 ## 8. Module boundaries
 
-ALIVE v3 может быть реализован как modular monolith на уровне кода/БД, но ownership и public contracts между модулями должны быть явными.
+ALIVE v3 реализуется как modular monolith на уровне приложения/БД с явным ownership и public contracts между модулями.
 
 Никакой необходимости в microservices на ранней стадии нет.
 
@@ -104,9 +103,8 @@ Raw tobacco facts не зависят от ALIVE equivalence model.
 
 До внешнего пилота:
 
-- RLS coverage report;
-- tenant isolation tests;
-- admin authorization tests;
+- RLS coverage/tenant isolation tests;
+- admin authorization tests, когда admin появится;
 - secret scanning;
 - CSP/security headers;
 - audit critical privileged actions;
@@ -117,7 +115,7 @@ Raw tobacco facts не зависят от ALIVE equivalence model.
 
 Основной адрес: `alive.hmnos.ru`.
 
-DNS/deployment metadata после настройки должны быть отражены в repo docs, но реальные secrets — нет.
+DNS/deployment metadata после настройки отражаются в repo docs, но реальные secrets — нет.
 
 ## 12. Что не требуется v3.0
 

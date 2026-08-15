@@ -2,23 +2,36 @@
 
 ## Статус
 
-ALIVE — самостоятельный продуктовый контур внутри `wd7b3k/humanos`.
+ALIVE — **полностью самостоятельный private repository `wd7b3k/Alive`**.
 
 Текущая стадия: **ALIVE v3.0 Platform — IN DEVELOPMENT**.
 
-Активная ветка:
-
-`alive/v3.0-platform`
-
 ## Единственный source of truth
 
-Каноническое состояние проекта находится только в:
+Каноническое состояние проекта находится только в репозитории:
 
-`projectsv2.0/products/alive/`
+`wd7b3k/Alive`
 
-Чат, локальные ZIP, Supabase Dashboard, Cloudflare Dashboard и другие внешние системы не являются самостоятельным source of truth. Любая значимая конфигурация или решение должны иметь безопасное версионируемое отражение в git без секретов.
+и его корневых каталогах `app/`, `supabase/`, `docs/`, `releases/`.
 
-Правило: **если внешнее состояние расходится с repo, считается, что repo отражает желаемое состояние, а расхождение должно быть либо устранено через versioned change, либо явно задокументировано как drift.**
+Чат, локальные ZIP, Supabase Dashboard, Cloudflare Dashboard и исторический каталог `wd7b3k/humanos/projectsv2.0/products/alive/` не являются самостоятельным source of truth.
+
+Правило: **если внешнее состояние расходится с repo, repo отражает желаемое состояние, а drift должен быть либо устранён versioned change, либо явно задокументирован.**
+
+## Репозиторная миграция 2026-08-15
+
+ALIVE физически выделен из `wd7b3k/humanos` в `wd7b3k/Alive`.
+
+Перенесены:
+
+- product foundation/governance;
+- React/TypeScript/Vite frontend bootstrap;
+- Supabase migrations;
+- release units;
+- ADR;
+- AI audit trail.
+
+Исторические документы могут содержать старые пути как описание прошлого состояния; они не переопределяют текущий source of truth.
 
 ## Что уже сделано в v3.0
 
@@ -49,7 +62,7 @@ ALIVE — самостоятельный продуктовый контур в�
 1. `v3_platform_initial`
 2. `v3_platform_security_indexes`
 
-Канонические SQL-файлы находятся в `supabase/migrations/`.
+Канонические SQL-файлы находятся в `supabase/migrations/` этого repository.
 
 ## Что ещё НЕ сделано
 
@@ -82,15 +95,16 @@ Privileged operations позднее выполняются через Edge Func
 
 Текущий статус шагов:
 
-1. Supabase project — **PASS**;
-2. migrations из repo применены — **PASS**;
-3. security linter — **PASS, 0 warnings**;
-4. Google Auth — **NEXT**;
-5. `.env.local` — pending;
-6. `npm install` + `npm run build` — pending;
-7. login/profile creation — pending;
-8. two-user RLS isolation — pending;
-9. Cloudflare preview — pending.
+1. отдельный canonical repository — **PASS**;
+2. Supabase project — **PASS**;
+3. migrations из repo применены — **PASS**;
+4. security linter — **PASS, 0 warnings**;
+5. Google Auth — **NEXT**;
+6. `.env.local` — pending;
+7. `npm install` + `npm run build` — pending;
+8. login/profile creation — pending;
+9. two-user RLS isolation — pending;
+10. Cloudflare preview — pending.
 
 Только после PASS V3-GATE-01 начинать onboarding/core craving flow.
 
