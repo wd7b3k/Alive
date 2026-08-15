@@ -1,0 +1,78 @@
+name: Bootstrap canonical ALIVE brand assets
+
+on:
+  push:
+    branches:
+      - v3.0-hardening
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  brand-assets:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout hardening branch
+        uses: actions/checkout@v4
+        with:
+          ref: v3.0-hardening
+
+      - name: Skip when canonical assets already exist
+        id: existing
+        shell: bash
+        run: |
+          if [[ -f app/public/brand-logo-icon.png && -f app/public/brand-logo-full.png ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch canonical v2.7 UI and extract approved brand assets
+        if: steps.existing.outputs.skip != 'true'
+        env:
+          LEGACY_URL: https://script.google.com/macros/s/AKfycbyJ1P7u6VtUAlrvvLyZ8KGHRwoo42FNa7_yZxsfc9-_lozkDaG7mUlBG_Ivb8L1MkPP/exec
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p app/public
+          curl --fail --location --retry 3 --retry-delay 2 --user-agent 'Mozilla/5.0 ALIVE-brand-bootstrap' "$LEGACY_URL" -o /tmp/alive-v27.html
+          python3 - <<'PY'
+          import base64, hashlib, re, pathlib
+          html = pathlib.Path('/tmp/alive-v27.html').read_text(encoding='utf-8', errors='replace')
+          expected = {
+              'brand-logo-icon.png': '95eca2d503e1124f686e39893b793328dcc204a1b393a21dd064350bc8b769da',
+              'brand-logo-full.png': '11c8624d6ecf84c6a6bb554ca72a7455a0e5c1923ed324fb58c8eeabc42191d2',
+          }
+          patterns = {
+              'brand-logo-icon.png': r'class=["\'][^"\']*brand-logo-icon[^"\']*["\'][^>]*src=["\']data:image/png;base64,([^"\']+)',
+              'brand-logo-full.png': r'class=["\'][^"\']*brand-logo-full[^"\']*["\'][^>]*src=["\']data:image/png;base64,([^"\']+)',
+          }
+          for filename, pattern in patterns.items():
+              match = re.search(pattern, html, re.I | re.S)
+              if not match:
+                  # Some HTML serializers put src before class.
+                  cls = 'brand-logo-icon' if 'icon' in filename else 'brand-logo-full'
+                  match = re.search(r'<img[^>]*src=["\']data:image/png;base64,([^"\']+)["\'][^>]*class=["\'][^"\']*' + cls + r'[^"\']*["\']', html, re.I | re.S)
+              if not match:
+                  raise SystemExit(f'Cannot find {filename} in canonical v2.7 HTML')
+              raw = base64.b64decode(re.sub(r'\s+', '', match.group(1)))
+              digest = hashlib.sha256(raw).hexdigest()
+              if digest != expected[filename]:
+                  raise SystemExit(f'{filename} SHA mismatch: got {digest}, expected {expected[filename]}')
+              pathlib.Path('app/public', filename).write_bytes(raw)
+              print(filename, len(raw), digest)
+          PY
+
+      - name: Commit exact approved assets
+        if: steps.existing.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/public/brand-logo-icon.png app/public/brand-logo-full.png
+          git diff --cached --quiet && exit 0
+          git commit -m 'brand: restore exact approved v2.7 Om assets'
+          git push origin HEAD:v3.0-hardening
