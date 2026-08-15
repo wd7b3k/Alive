@@ -7,7 +7,8 @@
 - Canonical repository: `wd7b3k/Alive`
 - Visibility: `private`
 - Default branch: `main`
-- Active development branch: `v3.0-platform`
+- Active development branch: `v3.0-hardening`
+- Active PR: `#3 ALIVE v3.0 hardening` (draft)
 - Canonical standalone merge: `d1bcec0ae7f8feb2fee0cfe64c28bde44ef585cb`
 - Historical source before extraction: `wd7b3k/humanos/projectsv2.0/products/alive/`
 - HumanOS cleanup merge: `78f2f74ef223d1da20c6c65203e5806263ec85e3`
@@ -26,38 +27,31 @@
 
 ### Remote migrations applied
 
-1. `v3_platform_initial`
-2. `v3_platform_security_indexes`
-
-Канонические SQL-файлы: `supabase/migrations/`.
+Канонические SQL-файлы находятся в `supabase/migrations/`; remote schema разворачивается только versioned migrations из repo.
 
 ### Security state
 
-После применения hardening migration Supabase Database Security Advisor: `0 warnings`.
+После применения hardening migrations Supabase Database Security Advisor: `0 warnings`.
 
-Performance Advisor на пустой БД показывает только `unused_index`; это ожидаемо до появления workload и не является основанием удалять индексы до реальных query metrics.
+Performance Advisor на пустой/малой БД может показывать `unused_index`; это не является основанием удалять индексы до реальных query metrics.
 
 ## Google OAuth
 
-Status: `E2E PARTIAL PASS / REDIRECT FIX REQUIRED`.
+Status: `E2E PASS`.
 
-2026-08-15 первый реальный Google OAuth flow дошёл до Supabase успешно:
+2026-08-15 реальный Google OAuth flow подтверждён:
 
 - Google consent — PASS;
 - `auth.users` row — PASS;
 - `public.profiles` auto-create — PASS;
 - display name из Google metadata — PASS;
-- финальный redirect — FAIL: production Pages URL ещё не был разрешён в Supabase Auth URL Configuration, поэтому использовался старый localhost Site URL.
+- возврат в Cloudflare Pages frontend — PASS после настройки Supabase Auth URL Configuration.
 
 Supabase callback:
 
 `https://xkigijaqimzuveyzyzyk.supabase.co/auth/v1/callback`
 
-Current Cloudflare Pages production host:
-
-`https://alive-aw2.pages.dev`
-
-До подключения `alive.hmnos.ru` Supabase Auth URL Configuration должна содержать:
+До подключения custom domain production Auth configuration использует Pages host:
 
 - Site URL: `https://alive-aw2.pages.dev`
 - Redirect URL: `https://alive-aw2.pages.dev/**`
@@ -67,15 +61,23 @@ Current Cloudflare Pages production host:
 
 Google OAuth Client Secret никогда не сохранять в repo, frontend или обычных логах.
 
-## Cloudflare
+## Cloudflare Pages
 
-Status: `PAGES DEPLOYED / AUTH REDIRECT PENDING`.
+Status: `PRODUCTION HEALTHY / PREVIEWS HEALTHY`.
 
-Current Pages host:
+Dashboard project label: `alive`.
+
+Production host:
 
 `https://alive-aw2.pages.dev`
 
-Deployment source: `wd7b3k/Alive`.
+Production source: `main`.
+
+Branch previews для `v3.0-hardening` создаются автоматически и доступны на hash-hosts вида:
+
+`https://<deployment-hash>.alive-aw2.pages.dev`
+
+2026-08-15 единичный `DNS_PROBE_FINISHED_NXDOMAIN` на мобильном устройстве не подтвердился как outage: production host и preview deployments фактически доступны. Не считать это инфраструктурным blocker без повторяемого подтверждения.
 
 Planned canonical host:
 
