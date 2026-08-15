@@ -7,8 +7,12 @@
 - Canonical repository: `wd7b3k/Alive`
 - Visibility: `private`
 - Default branch: `main`
+- Active development branch: `v3.0-platform`
+- Canonical standalone merge: `d1bcec0ae7f8feb2fee0cfe64c28bde44ef585cb`
 - Historical source before extraction: `wd7b3k/humanos/projectsv2.0/products/alive/`
-- Rule: historical HumanOS copy is archival/noncanonical; дальнейшая ALIVE-разработка ведётся только здесь.
+- HumanOS cleanup merge: `78f2f74ef223d1da20c6c65203e5806263ec85e3`
+- Current HumanOS `main` no longer contains the ALIVE product subtree; only pointer/audit history remains.
+- Rule: дальнейшая ALIVE-разработка ведётся только в `wd7b3k/Alive`.
 
 ## Supabase
 

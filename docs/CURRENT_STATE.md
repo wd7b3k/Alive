@@ -6,6 +6,10 @@ ALIVE — **полностью самостоятельный private repository
 
 Текущая стадия: **ALIVE v3.0 Platform — IN DEVELOPMENT**.
 
+Активная рабочая ветка:
+
+`v3.0-platform`
+
 ## Единственный source of truth
 
 Каноническое состояние проекта находится только в репозитории:
@@ -14,7 +18,7 @@ ALIVE — **полностью самостоятельный private repository
 
 и его корневых каталогах `app/`, `supabase/`, `docs/`, `releases/`.
 
-Чат, локальные ZIP, Supabase Dashboard, Cloudflare Dashboard и исторический каталог `wd7b3k/humanos/projectsv2.0/products/alive/` не являются самостоятельным source of truth.
+Чат, локальные ZIP, Supabase Dashboard, Cloudflare Dashboard и исторические commits/PR HumanOS не являются самостоятельным source of truth.
 
 Правило: **если внешнее состояние расходится с repo, repo отражает желаемое состояние, а drift должен быть либо устранён versioned change, либо явно задокументирован.**
 
@@ -31,7 +35,13 @@ ALIVE физически выделен из `wd7b3k/humanos` в `wd7b3k/Alive`.
 - ADR;
 - AI audit trail.
 
-Исторические документы могут содержать старые пути как описание прошлого состояния; они не переопределяют текущий source of truth.
+Target normalization PR `wd7b3k/Alive#1` merged: `d1bcec0ae7f8feb2fee0cfe64c28bde44ef585cb`.
+
+HumanOS cleanup PR `wd7b3k/humanos#18` merged: `78f2f74ef223d1da20c6c65203e5806263ec85e3`.
+
+`projectsv2.0/products/alive/` больше отсутствует в HumanOS `main`; там сохранены только routing/pointer и исторический Git trail.
+
+Исторические документы ALIVE могут содержать старые пути как описание прошлого состояния; они не переопределяют текущий source of truth.
 
 ## Что уже сделано в v3.0
 
@@ -96,15 +106,16 @@ Privileged operations позднее выполняются через Edge Func
 Текущий статус шагов:
 
 1. отдельный canonical repository — **PASS**;
-2. Supabase project — **PASS**;
-3. migrations из repo применены — **PASS**;
-4. security linter — **PASS, 0 warnings**;
-5. Google Auth — **NEXT**;
-6. `.env.local` — pending;
-7. `npm install` + `npm run build` — pending;
-8. login/profile creation — pending;
-9. two-user RLS isolation — pending;
-10. Cloudflare preview — pending.
+2. HumanOS duplicate cleanup — **PASS**;
+3. Supabase project — **PASS**;
+4. migrations из repo применены — **PASS**;
+5. security linter — **PASS, 0 warnings**;
+6. Google Auth — **NEXT**;
+7. `.env.local` — pending;
+8. `npm install` + `npm run build` — pending;
+9. login/profile creation — pending;
+10. two-user RLS isolation — pending;
+11. Cloudflare preview — pending.
 
 Только после PASS V3-GATE-01 начинать onboarding/core craving flow.
 
