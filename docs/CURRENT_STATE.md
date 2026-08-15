@@ -2,116 +2,112 @@
 
 ## Статус
 
-ALIVE — **полностью самостоятельный private repository `wd7b3k/Alive`**.
+ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
-Текущая стадия: **ALIVE v3.0 Platform — IN DEVELOPMENT**.
+Текущая стадия: **ALIVE v3.0 — PRODUCT ALPHA / IN DEVELOPMENT**.
 
-## Единственный source of truth
+`wd7b3k/Alive` — единственный source of truth. Код, migrations, product rules и release gates меняются сначала в repo; Dashboard/чат не переопределяют repo.
 
-Каноническое состояние проекта находится только в репозитории:
+## Живая инфраструктура
 
-`wd7b3k/Alive`
+- Frontend: React + TypeScript + Vite.
+- Hosting: Cloudflare Pages.
+- Текущий production host: `https://alive-aw2.pages.dev`.
+- Planned canonical host: `https://alive.hmnos.ru`.
+- Auth: Google → Supabase Auth.
+- Database: Supabase PostgreSQL + RLS.
+- Supabase project: `xkigijaqimzuveyzyzyk`, `eu-west-1`.
+- GitHub CI: Node `22.12.0`, `npm ci`, `typecheck`, production build.
 
-и его корневых каталогах `app/`, `supabase/`, `docs/`, `releases/`.
+Google OAuth проверен реальным входом: Auth user и ALIVE profile автоматически создаются, display name/avatar приходят из Google metadata.
 
-Чат, локальные ZIP, Supabase Dashboard, Cloudflare Dashboard и исторический каталог `wd7b3k/humanos/projectsv2.0/products/alive/` не являются самостоятельным source of truth.
+## Ключевое решение после первого platform bootstrap
 
-Правило: **если внешнее состояние расходится с repo, repo отражает желаемое состояние, а drift должен быть либо устранён versioned change, либо явно задокументирован.**
+Первый web-shell был технически рабочим, но продуктово значительно беднее legacy v2.7. Это признано regression.
 
-## Репозиторная миграция 2026-08-15
+Создан обязательный baseline `docs/V3_PARITY_BASELINE.md`:
 
-ALIVE физически выделен из `wd7b3k/humanos` в `wd7b3k/Alive`.
+**v3.0 не может считаться готовым, если новый пользователь получает менее глубокий продукт, чем v2.7.**
 
-Перенесены:
+Новая архитектура должна сохранить минимум глубины v2.7 и добавить утверждённые возможности v3.
 
-- product foundation/governance;
-- React/TypeScript/Vite frontend bootstrap;
-- Supabase migrations;
-- release units;
-- ADR;
-- AI audit trail.
+## Реализовано в текущей ветке `v3.0-platform`
 
-Исторические документы могут содержать старые пути как описание прошлого состояния; они не переопределяют текущий source of truth.
+### Product UI
 
-## Что уже сделано в v3.0
+- universal onboarding / personal baseline;
+- cigarette / hookah / vape как отдельные raw products;
+- product role: `target_dependency` / `cessation_bridge`;
+- Сегодня — action screen, current metrics, attention links, recent episodes;
+- guided craving flow: product → trigger → need → 3 contextual replacements → outcome;
+- quick nicotine fact logging без выдумывания craving score;
+- evening check-in;
+- Связки — automatic trigger map + private user Links;
+- Смыслы — global universal catalog + private CRUD/UGC workflow;
+- Путь — 7-day динамика, raw products, personal replacement effectiveness, Freedom Fund, rewards;
+- Profile/baseline;
+- Эксперимент — methodology, assumptions, limitations, privacy;
+- Релизы;
+- deletion of erroneous/test episode with recalculation from remaining facts;
+- inline explanations / `nothing unexplained` pattern.
 
-- создан release unit `releases/v3.0-platform/`;
-- pre-registered FR/RISK scope;
-- создан React + TypeScript + Vite frontend bootstrap в `app/`;
-- создан browser-safe environment contract;
-- добавлен Supabase browser client bootstrap;
-- добавлен Google OAuth login shell;
-- добавлена публичная страница `/experiment`;
-- добавлены inline explanations по принципу `nothing unexplained`;
-- создана initial PostgreSQL migration;
-- private entities имеют `user_id` и RLS policies;
-- создан auto-profile trigger при регистрации Auth user;
-- зафиксированы `ALIVE Method v1` и `ALIVE Equivalence v1`;
-- добавлены initial Trigger/Need/Replacement catalogs;
-- поддерживаемые raw products: cigarette / hookah / vape;
-- подтверждён Supabase project `xkigijaqimzuveyzyzyk`, region `eu-west-1`;
-- initial migration применена удалённо;
-- security hardening migration создана в repo и только после этого применена удалённо;
-- Supabase security advisors: **0 warnings** после hardening;
-- FK indexes добавлены; remaining performance lints — только `unused_index` на пустой БД и считаются ожидаемыми;
-- remote schema содержит 16 public tables, RLS включён на всех public tables;
-- TypeScript database types успешно генерируются из remote schema.
+### Content depth
 
-## Применённые migrations в remote Supabase
+Remote catalog after product-depth migrations:
+
+- 29 published triggers;
+- 46 published replacements;
+- 96 trigger→replacement relations;
+- 13 universal Meanings;
+- 5 universal identity scripts;
+- 13 support messages;
+- 7 rewards.
+
+Legacy personal biography is intentionally not promoted into global content. Private personal content belongs to the individual user profile.
+
+### Data / privacy
+
+Applied remote migrations:
 
 1. `v3_platform_initial`
 2. `v3_platform_security_indexes`
+3. `v3_product_depth_schema`
+4. `v3_product_depth_catalog_a`
+5. `v3_product_depth_catalog_b`
+6. `v3_product_depth_mapping`
+7. `v3_product_depth_meaning`
+8. `v3_support_state_and_account_control`
+9. `v3_remove_public_account_delete_rpc`
 
-Канонические SQL-файлы находятся в `supabase/migrations/` этого repository.
+RLS protects private user-owned entities. Service-role/OAuth secrets are not stored in frontend/repo.
 
-## Что ещё НЕ сделано
+A proposed public `SECURITY DEFINER` self-delete RPC was rejected after Security Advisor flagged the exposed surface. It was removed by migration before alpha merge. Account deletion will use an authenticated Edge Function instead.
 
-- Google OAuth provider не настроен;
-- Cloudflare Pages не подключён;
-- DNS `alive.hmnos.ru` не настроен;
-- dependencies/build ещё не проверялись в реальном Node environment;
-- local Supabase `db reset` ещё не выполнялся;
-- login/profile creation не проверены реальным Google user;
-- двухпользовательский RLS isolation test ещё не выполнен;
-- onboarding ещё не реализован;
-- craving core flow ещё не реализован;
-- user Meanings/Links CRUD UI ещё не реализован;
-- export/delete ещё не реализованы;
-- automated RLS isolation tests ещё не реализованы.
+Current Supabase Security Advisor has one remaining Auth warning: leaked-password protection is disabled. ALIVE currently exposes Google OAuth only, not password sign-in, so the warning does not represent an active password-login surface. Revisit before ever enabling password auth.
 
-## Продуктовый статус
+## CI state
 
-ALIVE остаётся полностью некоммерческим экспериментом. Миграция legacy v2.x пользовательских данных не нужна: реального периода эксплуатации ещё не было.
+Latest rich product frontend commit passes:
 
-## Архитектурное направление
+- locked dependency install — PASS;
+- TypeScript typecheck — PASS;
+- Vite production build — PASS.
 
-`Browser → alive.hmnos.ru → Cloudflare Pages → Supabase Auth → PostgreSQL/RLS`
+## Still required before v3.0 can be called RELEASED
 
-Privileged operations позднее выполняются через Edge Functions/DB functions только там, где это действительно требуется.
+- real runtime smoke-test of new deep UI;
+- full user Link edit/disable controls (create/delete/UGC already implemented);
+- background NRT patch UI (DB/RLS support exists);
+- user data export UI;
+- authenticated Edge Function for full account deletion;
+- two-user RLS isolation test;
+- local full DB reset from migrations;
+- mobile/desktop parity review;
+- `alive.hmnos.ru` DNS/custom-domain cutover;
+- validation/docs sync.
 
-## Следующий gate
+`Together` remains v3.1. Admin/Product Intelligence remains v3.2.
 
-**V3-GATE-01: воспроизводимый local/remote platform bootstrap.**
+## Release discipline
 
-Текущий статус шагов:
-
-1. отдельный canonical repository — **PASS**;
-2. Supabase project — **PASS**;
-3. migrations из repo применены — **PASS**;
-4. security linter — **PASS, 0 warnings**;
-5. Google Auth — **NEXT**;
-6. `.env.local` — pending;
-7. `npm install` + `npm run build` — pending;
-8. login/profile creation — pending;
-9. two-user RLS isolation — pending;
-10. Cloudflare preview — pending.
-
-Только после PASS V3-GATE-01 начинать onboarding/core craving flow.
-
-## Не строить до V3-GATE-01
-
-- Together v3.1;
-- Admin/Monitoring v3.2;
-- сложный personalized ranking;
-- LLM runtime;
-- дополнительные infrastructure layers.
+Deploying a v3.0 alpha for real testing does **not** mean the release gate is complete. `v3.0 RELEASED` is reserved until `releases/v3.0-platform/REQUIREMENTS.md` and `VALIDATION.md` pass.

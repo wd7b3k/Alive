@@ -16,6 +16,15 @@
 
 `H-ALIVE-006 Together` не входит в v3.0.
 
+## Product depth / legacy parity — BLOCKER
+
+Канонический baseline описан в `docs/V3_PARITY_BASELINE.md`.
+
+- `FR-V3-000A` v3.0 не может быть shell/demo: после входа пользователь получает полноценный behavioural product.
+- `FR-V3-000B` v3.0 сохраняет минимум функциональной глубины v2.7: Today / Links / Path / Meanings / Releases, real episode flow, evening check-in, recent events/delete, personal effectiveness, progress/resources/rewards and rich contextual catalog.
+- `FR-V3-000C` legacy персональные данные автора не превращаются в global defaults; переносится механика и универсальный content layer.
+- `FR-V3-000D` новый стек обязан быть продуктовым развитием v2.7, а не функциональным откатом ради новой инфраструктуры.
+
 ## Functional requirements
 
 ### Foundation
@@ -47,6 +56,8 @@
 - `FR-V3-031` Flow mobile-first и минимизирует действия в момент тяги.
 - `FR-V3-032` Episode можно завершить как successful response, nicotine used или abandoned без shame language.
 - `FR-V3-033` Craving before/after и helpfulness сохраняются как отдельные facts.
+- `FR-V3-034` Recent episodes доступны на Today и ошибочную/тестовую запись можно удалить с корректным пересчётом derived stats.
+- `FR-V3-035` Evening check-in сохраняет субъективные показатели и следующий if→then plan.
 
 ### Tobacco raw facts / units
 
@@ -63,6 +74,7 @@
 - `FR-V3-052` Food/drink replacements имеют eligibility/guardrails и не предлагаются бесконтрольно.
 - `FR-V3-053` NRT spray/gum/patch являются intervention, а не relapse; ALIVE не назначает дозировки.
 - `FR-V3-054` Vape имеет отдельные environment/interval replacement patterns.
+- `FR-V3-055` Rich catalog не беднее legacy baseline по разнообразию контекстов: movement / sensory / ritual / music / observation / journal / meaning / contact / reward / rest плюс v3 food/NRT/vape patterns.
 
 ### Personal content / UGC
 
@@ -77,6 +89,12 @@
 - `FR-V3-071` Неочевидная сущность имеет short explanation + deeper help.
 - `FR-V3-072` Страница `/experiment` объясняет гипотезу, ограничения, privacy, facts/hypotheses/heuristics.
 - `FR-V3-073` ALIVE не делает медицинских обещаний.
+
+### Path / learning layer
+
+- `FR-V3-074` Path показывает не только abstinence, но broken links, baseline delta, personal replacement effectiveness, time/money/resource return and return-after-pause.
+- `FR-V3-075` Links показывает pattern map как рабочие точки, а не рейтинг личности.
+- `FR-V3-076` Meanings показывает global универсальные опоры и private user meanings отдельно.
 
 ### Data control
 
@@ -96,6 +114,7 @@
 - `RISK-V3-008` Пользовательские UGC данные случайно публикуются без явного consent. **Blocker.**
 - `RISK-V3-009` Dashboard/manual schema начинает расходиться с migrations в git.
 - `RISK-V3-010` Слишком раннее инфраструктурное усложнение тормозит pilot.
+- `RISK-V3-011` Новая архитектура приводит к функциональному/content regression относительно v2.7. **Blocker.**
 
 ## v3.0 release gate
 
@@ -110,4 +129,5 @@
 7. `nothing unexplained` UX review PASS;
 8. UGC explicit-consent test PASS;
 9. export/delete basic tests PASS;
-10. docs/current-state/release validation синхронизированы с кодом.
+10. **v2.7 product-depth parity smoke-test PASS** по `docs/V3_PARITY_BASELINE.md`;
+11. docs/current-state/release validation синхронизированы с кодом.

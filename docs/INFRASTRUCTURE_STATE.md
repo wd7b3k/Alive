@@ -7,8 +7,12 @@
 - Canonical repository: `wd7b3k/Alive`
 - Visibility: `private`
 - Default branch: `main`
+- Active development branch: `v3.0-platform`
+- Canonical standalone merge: `d1bcec0ae7f8feb2fee0cfe64c28bde44ef585cb`
 - Historical source before extraction: `wd7b3k/humanos/projectsv2.0/products/alive/`
-- Rule: historical HumanOS copy is archival/noncanonical; дальнейшая ALIVE-разработка ведётся только здесь.
+- HumanOS cleanup merge: `78f2f74ef223d1da20c6c65203e5806263ec85e3`
+- Current HumanOS `main` no longer contains the ALIVE product subtree; only pointer/audit history remains.
+- Rule: дальнейшая ALIVE-разработка ведётся только в `wd7b3k/Alive`.
 
 ## Supabase
 
@@ -17,7 +21,7 @@
 - Region: `eu-west-1`
 - Status при последней проверке: `ACTIVE_HEALTHY`
 - Runtime role: Auth + PostgreSQL + RLS
-- Publishable key: существует и используется только как browser-safe deployment configuration; значение не является каноническим source of truth и может ротироваться.
+- Browser-safe publishable key существует и активен; его значение не является секретом, но не фиксируется как immutable source of truth, поскольку ключ может ротироваться.
 - Service-role/database/OAuth secrets: **не сохраняются в git**.
 
 ### Remote migrations applied
@@ -35,28 +39,47 @@ Performance Advisor на пустой БД показывает только `un
 
 ## Google OAuth
 
-Status: `PENDING`.
+Status: `E2E PARTIAL PASS / REDIRECT FIX REQUIRED`.
 
-Для Web OAuth использовать Supabase callback:
+2026-08-15 первый реальный Google OAuth flow дошёл до Supabase успешно:
+
+- Google consent — PASS;
+- `auth.users` row — PASS;
+- `public.profiles` auto-create — PASS;
+- display name из Google metadata — PASS;
+- финальный redirect — FAIL: production Pages URL ещё не был разрешён в Supabase Auth URL Configuration, поэтому использовался старый localhost Site URL.
+
+Supabase callback:
 
 `https://xkigijaqimzuveyzyzyk.supabase.co/auth/v1/callback`
 
-Planned application origins:
+Current Cloudflare Pages production host:
 
-- `https://alive.hmnos.ru`
-- `http://localhost:5173` для local development.
+`https://alive-aw2.pages.dev`
 
-Client secret никогда не сохранять в repo.
+До подключения `alive.hmnos.ru` Supabase Auth URL Configuration должна содержать:
+
+- Site URL: `https://alive-aw2.pages.dev`
+- Redirect URL: `https://alive-aw2.pages.dev/**`
+- local development redirect при необходимости: `http://localhost:5173/**`
+
+После подключения custom domain production Site URL должен быть переведён на `https://alive.hmnos.ru`.
+
+Google OAuth Client Secret никогда не сохранять в repo, frontend или обычных логах.
 
 ## Cloudflare
 
-Status: `PENDING`.
+Status: `PAGES DEPLOYED / AUTH REDIRECT PENDING`.
 
-Planned host:
+Current Pages host:
 
-`alive.hmnos.ru`
+`https://alive-aw2.pages.dev`
 
-Deployment source должен быть `wd7b3k/Alive` и конкретный branch/commit/release state. Dashboard configuration отражается здесь после настройки.
+Deployment source: `wd7b3k/Alive`.
+
+Planned canonical host:
+
+`https://alive.hmnos.ru`
 
 ## Drift rule
 
