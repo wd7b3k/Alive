@@ -10,9 +10,9 @@
 
 Только repository:
 
-`projectsv2.0/products/alive/`
+`wd7b3k/Alive`
 
-Внешние dashboards не заменяют git-конфигурацию и migrations.
+Внешние dashboards и исторический ALIVE-контур в HumanOS не заменяют git-конфигурацию и migrations.
 
 ## Базовый стек
 
@@ -36,11 +36,13 @@
 
 ### Step 2 — External platform connection
 
-- remote Supabase;
-- Google OAuth;
-- local migration workflow;
-- Cloudflare Pages preview;
-- `alive.hmnos.ru` после успешного preview.
+- remote Supabase — **подключён**;
+- canonical migrations applied — **PASS**;
+- database security linter — **PASS**;
+- Google OAuth — **NEXT**;
+- local build/migration verification — pending;
+- Cloudflare Pages preview — pending;
+- `alive.hmnos.ru` — после успешного preview.
 
 ### Step 3 — Onboarding / Baseline
 

@@ -1,22 +1,21 @@
 # ALIVE v3.0 — Rollback
 
-До первого production deployment v3 rollback означает возврат к последнему стабильному состоянию `main`/legacy v2.7 reference.
+До первого production deployment v3 rollback означает возврат к последнему стабильному commit/release state; legacy v2.7 остаётся исторической reference-точкой.
 
-## До подключения remote infrastructure
+## До production deployment
 
-Достаточно:
+Работа v3.0 ведётся в feature branch от `main`. Непринятые изменения не мержатся; принятые repository changes откатываются через revert, а не переписывание истории.
 
-- не merge `alive/v3.0-platform`;
-- либо revert merge commit v3.0 foundation/code changes.
+## Supabase
 
-## После подключения Supabase
+Обязательные условия:
 
-Обязательные условия до production:
-
-1. migrations в git являются единственным schema source;
-2. remote schema version зафиксирована;
+1. migrations в `wd7b3k/Alive/supabase/migrations/` являются единственным schema source;
+2. remote schema version фиксируется в repo docs;
 3. destructive migrations запрещены без отдельного backup/restore plan;
 4. rollback SQL либо forward-fix strategy документируется для каждой destructive/semantic migration.
+
+Перенос repository не менял DB schema и не требует rollback БД.
 
 ## После подключения Cloudflare
 

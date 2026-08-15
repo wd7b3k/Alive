@@ -9,8 +9,10 @@
 
 ## Локальный запуск
 
+Из корня `wd7b3k/Alive`:
+
 ```bash
-cd projectsv2.0/products/alive/app
+cd app
 cp .env.example .env.local
 npm install
 npm run dev
@@ -35,7 +37,8 @@ npm run build
 
 Cloudflare Pages contract:
 
-- Root directory: `projectsv2.0/products/alive/app`
+- Repository: `wd7b3k/Alive`
+- Root directory: `app`
 - Build command: `npm run build`
 - Build output: `dist`
 

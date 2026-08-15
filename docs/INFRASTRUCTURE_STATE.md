@@ -2,6 +2,14 @@
 
 Этот документ фиксирует безопасное версионируемое отражение внешнего состояния. Секреты и private credentials здесь запрещены.
 
+## GitHub
+
+- Canonical repository: `wd7b3k/Alive`
+- Visibility: `private`
+- Default branch: `main`
+- Historical source before extraction: `wd7b3k/humanos/projectsv2.0/products/alive/`
+- Rule: historical HumanOS copy is archival/noncanonical; дальнейшая ALIVE-разработка ведётся только здесь.
+
 ## Supabase
 
 - Project ref: `xkigijaqimzuveyzyzyk`
@@ -36,7 +44,7 @@ Status: `PENDING`.
 Planned application origins:
 
 - `https://alive.hmnos.ru`
-- local development origin, определяемый frontend dev server.
+- `http://localhost:5173` для local development.
 
 Client secret никогда не сохранять в repo.
 
@@ -48,7 +56,7 @@ Planned host:
 
 `alive.hmnos.ru`
 
-Deployment source должен быть GitHub branch/release state, а dashboard configuration должна быть отражена здесь после настройки.
+Deployment source должен быть `wd7b3k/Alive` и конкретный branch/commit/release state. Dashboard configuration отражается здесь после настройки.
 
 ## Drift rule
 

@@ -1,0 +1,11 @@
+# ALIVE local/runtime artifacts
+app/node_modules/
+app/dist/
+app/.env.local
+app/.env.*.local
+.DS_Store
+*.log
+
+# Supabase local state
+supabase/.temp/
+.supabase/

@@ -2,9 +2,9 @@
 
 Статус: `PARTIAL / NOT YET RELEASE-READY`.
 
-## Step 1 checks
+## Repository/platform checks
 
-- [x] отдельная ветка `alive/v3.0-platform` создана от `main`;
+- [x] `wd7b3k/Alive` является отдельным canonical repository;
 - [x] REPO закреплён как единственный source of truth;
 - [x] v3.0 FR/RISK scope pre-registered;
 - [x] frontend не содержит service-role/OAuth secrets;
@@ -13,16 +13,17 @@
 - [x] private tables имеют RLS policies;
 - [x] identity/profile не hardcode конкретных участников;
 - [x] `/experiment` объясняет экспериментальный статус и privacy;
-- [x] ALIVE units явно названы behavioural heuristic.
+- [x] ALIVE units явно названы behavioural heuristic;
+- [x] remote Supabase migrations применены из canonical SQL;
+- [x] Supabase Database Security Advisor: 0 warnings после hardening.
 
-## Требует реального environment
+## Требует реального environment / следующего gate
 
 - [ ] `npm install` PASS;
 - [ ] `npm run typecheck` PASS;
 - [ ] `npm run build` PASS;
 - [ ] Supabase CLI local stack запускается;
 - [ ] `supabase db reset` PASS;
-- [ ] migration применима к fresh project;
 - [ ] Google login PASS;
 - [ ] profile auto-create PASS;
 - [ ] user A → private rows user B = denied;

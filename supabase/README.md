@@ -2,55 +2,49 @@
 
 ## Source of truth
 
-Схема БД меняется только через migrations в этом каталоге.
+Схема БД меняется только через migrations в `wd7b3k/Alive/supabase/migrations/`.
 
 Запрещено считать ручные изменения через Supabase Dashboard каноническими. Если изменение сделано для эксперимента через Dashboard/SQL editor, оно должно быть немедленно оформлено migration и проверено через fresh reset до merge.
 
 ## Local workflow
 
-Из корня `projectsv2.0/products/alive/`:
+Из корня `wd7b3k/Alive`:
 
 ```bash
-npx supabase init
 npx supabase start
 npx supabase db reset
 ```
 
-Если `supabase init` создаёт/обновляет `supabase/config.toml`, этот файл коммитится после review. Секреты в `config.toml` не hardcode — использовать environment references.
+Если локальная Supabase CLI конфигурация ещё не создана, сначала выполнить `npx supabase init`, review полученного `supabase/config.toml` и только затем commit безопасной конфигурации. Секреты не hardcode — использовать environment references.
 
 ## Remote workflow
 
-После создания отдельного remote Supabase project:
+Remote project уже создан:
+
+- project ref: `xkigijaqimzuveyzyzyk`
+- region: `eu-west-1`
+
+Для CLI-link:
 
 ```bash
 npx supabase login
-npx supabase link --project-ref <PROJECT_REF>
+npx supabase link --project-ref xkigijaqimzuveyzyzyk
 npx supabase db push --dry-run
 npx supabase db push
 ```
 
 Не использовать `db reset --linked` на production.
 
-## Initial migration
+## Migrations
 
-`migrations/20260815170000_v3_platform_initial.sql`
+- `migrations/20260815170000_v3_platform_initial.sql`
+- `migrations/20260815171500_v3_platform_security_indexes.sql`
 
-Содержит:
+Обе migration уже применены к remote project. Security hardening довёл Supabase Database Security Advisor до `0 warnings` на момент последней проверки.
 
-- profiles / settings / nicotine products;
-- methodology/equivalence versions;
-- Trigger/Need/Replacement catalogs;
-- Episodes / Actions / raw Tobacco Events;
-- personal Meanings / Links;
-- explicit UGC submissions;
-- initial RLS policies;
-- auth-user → profile creation trigger.
+## Обязательная проверка до внешних участников
 
-## Обязательная проверка
-
-До подключения реальных участников:
-
-1. fresh `db reset` PASS;
+1. fresh local `db reset` PASS;
 2. два test users;
 3. user A не видит private rows user B;
 4. catalog read работает;
