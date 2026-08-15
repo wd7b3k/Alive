@@ -7,13 +7,13 @@
 - Canonical repository: `wd7b3k/Alive`
 - Visibility: `private`
 - Default branch: `main`
-- Active development branch: `v3.0-hardening`
-- Active PR: `#3 ALIVE v3.0 hardening` (draft)
+- Active development branch: `v3.0-redesign`
+- Active PR: `#4 ALIVE v3.0 — глубокий редизайн интерфейса` (draft до визуального smoke-test)
 - Canonical standalone merge: `d1bcec0ae7f8feb2fee0cfe64c28bde44ef585cb`
 - Historical source before extraction: `wd7b3k/humanos/projectsv2.0/products/alive/`
 - HumanOS cleanup merge: `78f2f74ef223d1da20c6c65203e5806263ec85e3`
 - Current HumanOS `main` no longer contains the ALIVE product subtree; only pointer/audit history remains.
-- Rule: дальнейшая ALIVE-разработка ведётся только в `wd7b3k/Alive`.
+- Rule: дальнейшая ALIVE-разработка ведётся только в `wd7b3k/Alive`; HumanOS не используется как источник текущего кода, дизайна или ассетов.
 
 ## Supabase
 
@@ -63,7 +63,7 @@ Google OAuth Client Secret никогда не сохранять в repo, front
 
 ## Cloudflare Pages
 
-Status: `PRODUCTION HEALTHY / PREVIEWS HEALTHY`.
+Status: `PRODUCTION HEALTHY / REDESIGN PREVIEW HEALTHY`.
 
 Dashboard project label: `alive`.
 
@@ -73,9 +73,13 @@ Production host:
 
 Production source: `main`.
 
-Branch previews для `v3.0-hardening` создаются автоматически и доступны на hash-hosts вида:
+Активный preview редизайна:
 
-`https://<deployment-hash>.alive-aw2.pages.dev`
+- branch: `v3.0-redesign`;
+- branch alias: `https://v3-0-redesign.alive-aw2.pages.dev`;
+- atomic preview текущего состояния: `https://e52c8d13.alive-aw2.pages.dev`;
+- Cloudflare Pages check: PASS;
+- GitHub frontend typecheck/build: PASS.
 
 2026-08-15 единичный `DNS_PROBE_FINISHED_NXDOMAIN` на мобильном устройстве не подтвердился как outage: production host и preview deployments фактически доступны. Не считать это инфраструктурным blocker без повторяемого подтверждения.
 
