@@ -66,7 +66,11 @@ HumanOS cleanup PR `wd7b3k/humanos#18` merged: `78f2f74ef223d1da20c6c65203e58062
 - FK indexes добавлены; remaining performance lints — только `unused_index` на пустой БД и считаются ожидаемыми;
 - remote schema содержит 16 public tables, RLS включён на всех public tables;
 - TypeScript database types успешно генерируются из remote schema;
-- Google OAuth client и Google provider в Supabase настроены владельцем; end-to-end login ещё не проверен.
+- Google OAuth client и Google provider в Supabase настроены владельцем; end-to-end login ещё не проверен;
+- `app/package-lock.json` зафиксирован в repo;
+- GitHub Actions использует Node `22.12.0` + `npm ci`;
+- frontend `typecheck` — **PASS**;
+- frontend production `build` — **PASS**.
 
 ## Применённые migrations в remote Supabase
 
@@ -80,7 +84,6 @@ HumanOS cleanup PR `wd7b3k/humanos#18` merged: `78f2f74ef223d1da20c6c65203e58062
 - Google login end-to-end ещё не проверен реальным пользователем;
 - Cloudflare Pages не подключён;
 - DNS `alive.hmnos.ru` не настроен;
-- frontend CI/build ещё не зафиксирован как PASS;
 - local Supabase `db reset` ещё не выполнялся;
 - profile creation не проверен реальным Google user;
 - двухпользовательский RLS isolation test ещё не выполнен;
@@ -112,10 +115,10 @@ Privileged operations позднее выполняются через Edge Func
 4. migrations из repo применены — **PASS**;
 5. security linter — **PASS, 0 warnings**;
 6. Google OAuth configuration — **CONFIGURED / E2E PENDING**;
-7. GitHub frontend CI (`typecheck + build`) — **NEXT**;
-8. login/profile creation — pending;
-9. two-user RLS isolation — pending;
-10. Cloudflare preview — pending;
+7. deterministic GitHub frontend CI (`npm ci + typecheck + build`) — **PASS**;
+8. Cloudflare preview + browser-safe env — **NEXT**;
+9. login/profile creation — pending;
+10. two-user RLS isolation — pending;
 11. DNS `alive.hmnos.ru` — pending.
 
 Только после PASS V3-GATE-01 начинать onboarding/core craving flow.
