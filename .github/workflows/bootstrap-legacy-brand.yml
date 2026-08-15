@@ -29,7 +29,7 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Fetch canonical v2.7 UI and extract approved brand assets
+      - name: Fetch v2.7 deployment and recover only byte-exact approved PNGs
         if: steps.existing.outputs.skip != 'true'
         env:
           LEGACY_URL: https://script.google.com/macros/s/AKfycbyJ1P7u6VtUAlrvvLyZ8KGHRwoo42FNa7_yZxsfc9-_lozkDaG7mUlBG_Ivb8L1MkPP/exec
@@ -39,30 +39,52 @@ jobs:
           mkdir -p app/public
           curl --fail --location --retry 3 --retry-delay 2 --user-agent 'Mozilla/5.0 ALIVE-brand-bootstrap' "$LEGACY_URL" -o /tmp/alive-v27.html
           python3 - <<'PY'
-          import base64, hashlib, re, pathlib
-          html = pathlib.Path('/tmp/alive-v27.html').read_text(encoding='utf-8', errors='replace')
+          import base64, hashlib, html as html_lib, pathlib, re, sys
+
+          doc = pathlib.Path('/tmp/alive-v27.html').read_text(encoding='utf-8', errors='replace')
           expected = {
-              'brand-logo-icon.png': '95eca2d503e1124f686e39893b793328dcc204a1b393a21dd064350bc8b769da',
-              'brand-logo-full.png': '11c8624d6ecf84c6a6bb554ca72a7455a0e5c1923ed324fb58c8eeabc42191d2',
+              '95eca2d503e1124f686e39893b793328dcc204a1b393a21dd064350bc8b769da': 'brand-logo-icon.png',
+              '11c8624d6ecf84c6a6bb554ca72a7455a0e5c1923ed324fb58c8eeabc42191d2': 'brand-logo-full.png',
           }
-          patterns = {
-              'brand-logo-icon.png': r'class=["\'][^"\']*brand-logo-icon[^"\']*["\'][^>]*src=["\']data:image/png;base64,([^"\']+)',
-              'brand-logo-full.png': r'class=["\'][^"\']*brand-logo-full[^"\']*["\'][^>]*src=["\']data:image/png;base64,([^"\']+)',
-          }
-          for filename, pattern in patterns.items():
-              match = re.search(pattern, html, re.I | re.S)
-              if not match:
-                  # Some HTML serializers put src before class.
-                  cls = 'brand-logo-icon' if 'icon' in filename else 'brand-logo-full'
-                  match = re.search(r'<img[^>]*src=["\']data:image/png;base64,([^"\']+)["\'][^>]*class=["\'][^"\']*' + cls + r'[^"\']*["\']', html, re.I | re.S)
-              if not match:
-                  raise SystemExit(f'Cannot find {filename} in canonical v2.7 HTML')
-              raw = base64.b64decode(re.sub(r'\s+', '', match.group(1)))
+
+          # Apps Script may serialize/escape the original HTML. Search every embedded PNG,
+          # decode it, and accept it ONLY when its bytes match an approved SHA exactly.
+          variants = [doc, html_lib.unescape(doc)]
+          candidates = []
+          patterns = [
+              r'data:image/png;base64,([A-Za-z0-9+/=\s]+)',
+              r'data:image%2Fpng%3Bbase64%2C([A-Za-z0-9%+/=]+)',
+          ]
+          for variant in variants:
+              for pattern in patterns:
+                  candidates.extend(re.findall(pattern, variant, re.I))
+
+          found = {}
+          seen = set()
+          for encoded in candidates:
+              encoded = encoded.replace('%2B', '+').replace('%2F', '/').replace('%3D', '=').replace('%0A', '')
+              encoded = re.sub(r'\s+', '', encoded)
+              if len(encoded) < 100:
+                  continue
+              try:
+                  raw = base64.b64decode(encoded, validate=False)
+              except Exception:
+                  continue
               digest = hashlib.sha256(raw).hexdigest()
-              if digest != expected[filename]:
-                  raise SystemExit(f'{filename} SHA mismatch: got {digest}, expected {expected[filename]}')
-              pathlib.Path('app/public', filename).write_bytes(raw)
-              print(filename, len(raw), digest)
+              if digest in seen:
+                  continue
+              seen.add(digest)
+              if digest in expected:
+                  filename = expected[digest]
+                  pathlib.Path('app/public', filename).write_bytes(raw)
+                  found[digest] = filename
+                  print(f'FOUND {filename}: {len(raw)} bytes sha256={digest}')
+
+          missing = [filename for digest, filename in expected.items() if digest not in found]
+          if missing:
+              print(f'Embedded PNG candidates scanned: {len(candidates)}; unique decoded: {len(seen)}')
+              print('Exact approved assets not present in public deployment HTML:', ', '.join(missing))
+              sys.exit(2)
           PY
 
       - name: Commit exact approved assets
@@ -70,6 +92,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          sha256sum app/public/brand-logo-icon.png app/public/brand-logo-full.png
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add app/public/brand-logo-icon.png app/public/brand-logo-full.png
