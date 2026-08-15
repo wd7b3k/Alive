@@ -65,7 +65,8 @@ HumanOS cleanup PR `wd7b3k/humanos#18` merged: `78f2f74ef223d1da20c6c65203e58062
 - Supabase security advisors: **0 warnings** после hardening;
 - FK indexes добавлены; remaining performance lints — только `unused_index` на пустой БД и считаются ожидаемыми;
 - remote schema содержит 16 public tables, RLS включён на всех public tables;
-- TypeScript database types успешно генерируются из remote schema.
+- TypeScript database types успешно генерируются из remote schema;
+- Google OAuth client и Google provider в Supabase настроены владельцем; end-to-end login ещё не проверен.
 
 ## Применённые migrations в remote Supabase
 
@@ -76,12 +77,12 @@ HumanOS cleanup PR `wd7b3k/humanos#18` merged: `78f2f74ef223d1da20c6c65203e58062
 
 ## Что ещё НЕ сделано
 
-- Google OAuth provider не настроен;
+- Google login end-to-end ещё не проверен реальным пользователем;
 - Cloudflare Pages не подключён;
 - DNS `alive.hmnos.ru` не настроен;
-- dependencies/build ещё не проверялись в реальном Node environment;
+- frontend CI/build ещё не зафиксирован как PASS;
 - local Supabase `db reset` ещё не выполнялся;
-- login/profile creation не проверены реальным Google user;
+- profile creation не проверен реальным Google user;
 - двухпользовательский RLS isolation test ещё не выполнен;
 - onboarding ещё не реализован;
 - craving core flow ещё не реализован;
@@ -110,12 +111,12 @@ Privileged operations позднее выполняются через Edge Func
 3. Supabase project — **PASS**;
 4. migrations из repo применены — **PASS**;
 5. security linter — **PASS, 0 warnings**;
-6. Google Auth — **NEXT**;
-7. `.env.local` — pending;
-8. `npm install` + `npm run build` — pending;
-9. login/profile creation — pending;
-10. two-user RLS isolation — pending;
-11. Cloudflare preview — pending.
+6. Google OAuth configuration — **CONFIGURED / E2E PENDING**;
+7. GitHub frontend CI (`typecheck + build`) — **NEXT**;
+8. login/profile creation — pending;
+9. two-user RLS isolation — pending;
+10. Cloudflare preview — pending;
+11. DNS `alive.hmnos.ru` — pending.
 
 Только после PASS V3-GATE-01 начинать onboarding/core craving flow.
 
