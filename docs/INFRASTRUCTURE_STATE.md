@@ -21,7 +21,7 @@
 - Region: `eu-west-1`
 - Status при последней проверке: `ACTIVE_HEALTHY`
 - Runtime role: Auth + PostgreSQL + RLS
-- Publishable key: существует и используется только как browser-safe deployment configuration; значение не является каноническим source of truth и может ротироваться.
+- Browser-safe publishable key существует и активен; его значение не является секретом, но не фиксируется как immutable source of truth, поскольку ключ может ротироваться.
 - Service-role/database/OAuth secrets: **не сохраняются в git**.
 
 ### Remote migrations applied
@@ -39,18 +39,20 @@ Performance Advisor на пустой БД показывает только `un
 
 ## Google OAuth
 
-Status: `PENDING`.
+Status: `CONFIGURED / E2E NOT YET VERIFIED`.
 
-Для Web OAuth использовать Supabase callback:
+2026-08-15 владелец настроил Google OAuth client и Google provider в Supabase Dashboard. Фактический PASS ставится только после успешного реального `signInWithOAuth` и создания profile row.
+
+Supabase callback:
 
 `https://xkigijaqimzuveyzyzyk.supabase.co/auth/v1/callback`
 
-Planned application origins:
+Application origins / redirects, которые должны быть разрешены:
 
 - `https://alive.hmnos.ru`
 - `http://localhost:5173` для local development.
 
-Client secret никогда не сохранять в repo.
+Google OAuth Client Secret никогда не сохранять в repo, frontend или обычных логах.
 
 ## Cloudflare
 
