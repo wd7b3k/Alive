@@ -1,4 +1,4 @@
-import type { SVGProps } from 'react';
+import type { ReactNode, SVGProps } from 'react';
 
 export type IconName =
   | 'spark' | 'chain' | 'path' | 'meaning' | 'user' | 'smoke' | 'hookah' | 'vape'
@@ -7,7 +7,7 @@ export type IconName =
   | 'breath' | 'tea' | 'walk' | 'music' | 'journal' | 'eye' | 'shield' | 'check'
   | 'arrow' | 'plus' | 'trash' | 'close' | 'clock' | 'heart' | 'chart' | 'leaf';
 
-const paths: Record<IconName, JSX.Element> = {
+const paths: Record<IconName, ReactNode> = {
   spark: <><path d="M12 2l1.7 5.1L19 9l-5.3 1.9L12 16l-1.7-5.1L5 9l5.3-1.9L12 2Z"/><path d="M5 15l.9 2.6L8.5 19l-2.6.9L5 22l-.9-2.1L1.5 19l2.6-1.4L5 15Z"/></>,
   chain: <><path d="M9.5 14.5l5-5"/><path d="M7.2 17.8l-1 1a3.5 3.5 0 0 1-5-5l3.1-3.1a3.5 3.5 0 0 1 5 0"/><path d="M16.8 6.2l1-1a3.5 3.5 0 0 1 5 5l-3.1 3.1a3.5 3.5 0 0 1-5 0"/></>,
   path: <><path d="M4 20c7 0 4-8 10-8s3-8 6-8"/><path d="M17 4h3v3"/><circle cx="4" cy="20" r="1.5"/></>,
