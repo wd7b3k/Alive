@@ -23,11 +23,19 @@
 - [x] Google OAuth client и Google provider настроены владельцем;
 - [ ] Google OAuth end-to-end login PASS.
 
+## Текущие blockers
+
+- [ ] **Cloudflare Pages host restored** — 2026-08-15 `alive-aw2.pages.dev` зафиксирован пользователем как `DNS_PROBE_FINISHED_NXDOMAIN`;
+- [ ] **Approved Om asset present in v3 runtime** — Unicode/infinity substitute запрещён, exact canonical asset обязателен;
+- [ ] **Visual parity / safe-zone review PASS** по `docs/V3_VISUAL_UX_BASELINE.md`;
+- [ ] **360/390–430/768–820/1280/1440+ viewport smoke-test PASS**;
+- [ ] primary/destructive actions не конфликтуют, fixed navigation не перекрывает content.
+
 ## Требует реального environment / следующего gate
 
 - [ ] Supabase CLI local stack запускается;
 - [ ] `supabase db reset` PASS;
-- [ ] Cloudflare preview deploy PASS;
+- [ ] Cloudflare production/preview deploy PASS после восстановления Pages project;
 - [ ] browser-safe Supabase env настроен в preview;
 - [ ] Google login PASS;
 - [ ] profile auto-create PASS;
@@ -36,4 +44,4 @@
 
 ## Release gate
 
-`v3.0` не объявляется выпущенным, пока все требования `REQUIREMENTS.md` не проверены либо явно не вынесены из scope отдельным утверждённым решением.
+`v3.0` не объявляется выпущенным, пока все требования `REQUIREMENTS.md`, `docs/V3_PARITY_BASELINE.md` и `docs/V3_VISUAL_UX_BASELINE.md` не проверены либо явно не вынесены из scope отдельным утверждённым решением.
