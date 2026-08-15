@@ -3,7 +3,8 @@ name: ALIVE frontend CI
 on:
   push:
     branches:
-      - v3.0-platform
+      - main
+      - v3.0-hardening
   pull_request:
     paths:
       - 'app/**'
