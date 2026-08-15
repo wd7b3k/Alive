@@ -39,30 +39,47 @@ Performance Advisor на пустой БД показывает только `un
 
 ## Google OAuth
 
-Status: `CONFIGURED / E2E NOT YET VERIFIED`.
+Status: `E2E PARTIAL PASS / REDIRECT FIX REQUIRED`.
 
-2026-08-15 владелец настроил Google OAuth client и Google provider в Supabase Dashboard. Фактический PASS ставится только после успешного реального `signInWithOAuth` и создания profile row.
+2026-08-15 первый реальный Google OAuth flow дошёл до Supabase успешно:
+
+- Google consent — PASS;
+- `auth.users` row — PASS;
+- `public.profiles` auto-create — PASS;
+- display name из Google metadata — PASS;
+- финальный redirect — FAIL: production Pages URL ещё не был разрешён в Supabase Auth URL Configuration, поэтому использовался старый localhost Site URL.
 
 Supabase callback:
 
 `https://xkigijaqimzuveyzyzyk.supabase.co/auth/v1/callback`
 
-Application origins / redirects, которые должны быть разрешены:
+Current Cloudflare Pages production host:
 
-- `https://alive.hmnos.ru`
-- `http://localhost:5173` для local development.
+`https://alive-aw2.pages.dev`
+
+До подключения `alive.hmnos.ru` Supabase Auth URL Configuration должна содержать:
+
+- Site URL: `https://alive-aw2.pages.dev`
+- Redirect URL: `https://alive-aw2.pages.dev/**`
+- local development redirect при необходимости: `http://localhost:5173/**`
+
+После подключения custom domain production Site URL должен быть переведён на `https://alive.hmnos.ru`.
 
 Google OAuth Client Secret никогда не сохранять в repo, frontend или обычных логах.
 
 ## Cloudflare
 
-Status: `PENDING`.
+Status: `PAGES DEPLOYED / AUTH REDIRECT PENDING`.
 
-Planned host:
+Current Pages host:
 
-`alive.hmnos.ru`
+`https://alive-aw2.pages.dev`
 
-Deployment source должен быть `wd7b3k/Alive` и конкретный branch/commit/release state. Dashboard configuration отражается здесь после настройки.
+Deployment source: `wd7b3k/Alive`.
+
+Planned canonical host:
+
+`https://alive.hmnos.ru`
 
 ## Drift rule
 
