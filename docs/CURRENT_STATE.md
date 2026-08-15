@@ -53,7 +53,7 @@ Google OAuth проверен реальным входом: Auth user и ALIVE 
 
 ### Content depth
 
-Remote catalog after v3 product-depth migrations:
+Remote catalog after product-depth migrations:
 
 - 29 published triggers;
 - 46 published replacements;
@@ -77,10 +77,13 @@ Applied remote migrations:
 6. `v3_product_depth_mapping`
 7. `v3_product_depth_meaning`
 8. `v3_support_state_and_account_control`
+9. `v3_remove_public_account_delete_rpc`
 
 RLS protects private user-owned entities. Service-role/OAuth secrets are not stored in frontend/repo.
 
-Current Supabase security advisor after product schema changes has one Auth warning: leaked-password protection is disabled. ALIVE currently uses Google OAuth rather than password auth, so this does not expose an active password-login surface; keep under review if password auth is ever enabled.
+A proposed public `SECURITY DEFINER` self-delete RPC was rejected after Security Advisor flagged the exposed surface. It was removed by migration before alpha merge. Account deletion will use an authenticated Edge Function instead.
+
+Current Supabase Security Advisor has one remaining Auth warning: leaked-password protection is disabled. ALIVE currently exposes Google OAuth only, not password sign-in, so the warning does not represent an active password-login surface. Revisit before ever enabling password auth.
 
 ## CI state
 
@@ -94,9 +97,9 @@ Latest rich product frontend commit passes:
 
 - real runtime smoke-test of new deep UI;
 - full user Link edit/disable controls (create/delete/UGC already implemented);
-- background NRT patch UI (DB support exists);
+- background NRT patch UI (DB/RLS support exists);
 - user data export UI;
-- self-service account deletion UI (secure RPC exists);
+- authenticated Edge Function for full account deletion;
 - two-user RLS isolation test;
 - local full DB reset from migrations;
 - mobile/desktop parity review;
