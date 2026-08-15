@@ -21,26 +21,28 @@
 - [x] remote Supabase migrations применены из canonical SQL;
 - [x] Supabase Database Security Advisor: 0 warnings после hardening;
 - [x] Google OAuth client и Google provider настроены владельцем;
-- [ ] Google OAuth end-to-end login PASS.
+- [x] Google OAuth end-to-end login PASS на Cloudflare Pages;
+- [x] `public.profiles` auto-create PASS после Google login;
+- [x] Cloudflare Pages production host `https://alive-aw2.pages.dev` открыт и обслуживает production;
+- [x] Cloudflare branch preview deployments для `v3.0-hardening` создаются автоматически и доступны по hash-hosts.
 
 ## Текущие blockers
 
-- [ ] **Cloudflare Pages host restored** — 2026-08-15 `alive-aw2.pages.dev` зафиксирован пользователем как `DNS_PROBE_FINISHED_NXDOMAIN`;
-- [ ] **Approved Om asset present in v3 runtime** — Unicode/infinity substitute запрещён, exact canonical asset обязателен;
+- [ ] **Approved Om asset present in v3 runtime** — Unicode/infinity substitute запрещён, exact owner-supplied canonical asset обязателен;
 - [ ] **Visual parity / safe-zone review PASS** по `docs/V3_VISUAL_UX_BASELINE.md`;
 - [ ] **360/390–430/768–820/1280/1440+ viewport smoke-test PASS**;
 - [ ] primary/destructive actions не конфликтуют, fixed navigation не перекрывает content.
 
-## Требует реального environment / следующего gate
+Примечание: единичный `DNS_PROBE_FINISHED_NXDOMAIN`, наблюдавшийся на мобильном устройстве 2026-08-15, не подтвердился как outage Cloudflare: production host и hash-preview deployments фактически доступны. Этот эпизод не считается Pages blocker.
+
+## Требует следующего gate
 
 - [ ] Supabase CLI local stack запускается;
 - [ ] `supabase db reset` PASS;
-- [ ] Cloudflare production/preview deploy PASS после восстановления Pages project;
-- [ ] browser-safe Supabase env настроен в preview;
-- [ ] Google login PASS;
-- [ ] profile auto-create PASS;
 - [ ] user A → private rows user B = denied;
-- [ ] browser bundle secret scan PASS.
+- [ ] browser bundle secret scan PASS;
+- [ ] export/delete basic tests PASS;
+- [ ] final mobile/desktop product parity smoke-test PASS.
 
 ## Release gate
 
