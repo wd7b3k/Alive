@@ -15,13 +15,14 @@
 - [x] `/experiment` объясняет экспериментальный статус и privacy;
 - [x] ALIVE units явно названы behavioural heuristic;
 - [x] remote Supabase migrations применены из canonical SQL;
-- [x] Supabase Database Security Advisor: 0 warnings после hardening.
+- [x] Supabase Database Security Advisor: 0 warnings после hardening;
+- [x] Google OAuth client и Google provider настроены владельцем;
+- [ ] Google OAuth end-to-end login PASS.
 
 ## Требует реального environment / следующего gate
 
-- [ ] `npm install` PASS;
-- [ ] `npm run typecheck` PASS;
-- [ ] `npm run build` PASS;
+- [ ] GitHub frontend CI `typecheck` PASS;
+- [ ] GitHub frontend CI `build` PASS;
 - [ ] Supabase CLI local stack запускается;
 - [ ] `supabase db reset` PASS;
 - [ ] Google login PASS;
