@@ -9,6 +9,10 @@
 - [x] v3.0 FR/RISK scope pre-registered;
 - [x] frontend не содержит service-role/OAuth secrets;
 - [x] `.env.example` содержит только browser-safe placeholders;
+- [x] `app/package-lock.json` зафиксирован в repo;
+- [x] GitHub Actions использует `npm ci` с Node `22.12.0`;
+- [x] GitHub frontend CI `typecheck` PASS;
+- [x] GitHub frontend CI production `build` PASS;
 - [x] initial SQL schema хранится versioned migration;
 - [x] private tables имеют RLS policies;
 - [x] identity/profile не hardcode конкретных участников;
@@ -21,15 +25,14 @@
 
 ## Требует реального environment / следующего gate
 
-- [ ] GitHub frontend CI `typecheck` PASS;
-- [ ] GitHub frontend CI `build` PASS;
 - [ ] Supabase CLI local stack запускается;
 - [ ] `supabase db reset` PASS;
+- [ ] Cloudflare preview deploy PASS;
+- [ ] browser-safe Supabase env настроен в preview;
 - [ ] Google login PASS;
 - [ ] profile auto-create PASS;
 - [ ] user A → private rows user B = denied;
-- [ ] browser bundle secret scan PASS;
-- [ ] Cloudflare preview deploy PASS.
+- [ ] browser bundle secret scan PASS.
 
 ## Release gate
 
