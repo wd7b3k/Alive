@@ -10,9 +10,9 @@ const cssPath = resolve(appRoot, 'src/redesign.css');
 const logoPath = resolve(appRoot, 'src/assets/brand-logo-full.png');
 const brandbookPath = resolve(root, 'docs/BRANDBOOK.md');
 
-// Owner-approved horizontal ALIVE/Om asset from canonical v2.6/v2.7/v2.8 releases.
-// Do not change this hash to make CI green. A brand change requires an explicit owner gate.
-const CANONICAL_LOGO_SHA256 = '11c8624d6ecf84c6a6bb554ca72a7455a0e5c1923ed324fb58c8eeabc42191d2';
+// Owner-approved horizontal ALIVE/Om asset supplied directly on 2026-08-16.
+// Do not change this hash without another explicit owner gate.
+const CANONICAL_LOGO_SHA256 = '6b58071efb328d970d921ea6e03d30e15a148d8c36a92f6e9ec05455a830d832';
 
 const failures = [];
 const requireFile = (path, label) => {
@@ -80,7 +80,7 @@ if (!failures.length) {
   if (actualLogoSha256 !== CANONICAL_LOGO_SHA256) {
     failures.push(
       `Неверный или повреждённый ALIVE logo asset: SHA-256 ${actualLogoSha256}; ожидается канонический ${CANONICAL_LOGO_SHA256}. ` +
-      'Восстанови точный owner-approved logo-alive-om.png; не перерисовывай и не меняй ожидаемый hash.',
+      'Восстанови точный owner-approved PNG; не перерисовывай и не меняй ожидаемый hash без owner gate.',
     );
   }
 
