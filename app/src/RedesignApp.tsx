@@ -243,9 +243,24 @@ function QuickUse({ session, data, close, saved }: { session: Session; data: Boo
 }
 
 function Guided({ session, data, close, saved, initialTrigger }: { session: Session; data: Bootstrap; close: () => void; saved: () => Promise<void>; initialTrigger?: string }) {
-  const initialProduct = data.products.find((p) => p.role === 'target_dependency')?.product_type ?? data.products[0]?.product_type ?? 'cigarette';
+  const preferredProduct = data.products.find((p) => p.role === 'target_dependency')?.product_type ?? data.products[0]?.product_type ?? 'cigarette';
+  const initialTriggerItem = data.triggers.find((trigger) => trigger.code === initialTrigger);
+  const initialProduct = initialTriggerItem
+    ? data.products.find((item) => initialTriggerItem.product_types.includes(item.product_type))?.product_type ?? preferredProduct
+    : preferredProduct;
+  const hasProductStep = data.products.length > 1;
+  const flowSteps: Array<{ id: number; label: string }> = [
+    ...(hasProductStep ? [{ id: 0, label: 'Продукт' }] : []),
+    { id: 1, label: 'Ситуация' },
+    { id: 2, label: 'Сила тяги' },
+    { id: 3, label: 'Потребность' },
+    { id: 4, label: 'Замена' },
+    { id: 5, label: 'Результат' },
+  ];
+  const initialStep = initialTrigger ? 2 : hasProductStep ? 0 : 1;
   const [product, setProduct] = useState<ProductType>(initialProduct);
-  const [step, setStep] = useState(data.products.length > 1 ? 0 : 1);
+  const [step, setStep] = useState(initialStep);
+  const [maxReached, setMaxReached] = useState(initialStep);
   const [triggerCode, setTrigger] = useState(initialTrigger ?? '');
   const [needCode, setNeed] = useState('');
   const [before, setBefore] = useState(7);
@@ -259,14 +274,89 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   const candidates = useMemo(() => triggerCode && needCode ? pickReplacements(data, product, triggerCode, needCode) : [], [data, product, triggerCode, needCode]);
   const selected = data.replacements.find((r) => r.code === replacementCode);
   const triggers = data.triggers.filter((t) => t.product_types.includes(product));
+  const currentStepIndex = Math.max(0, flowSteps.findIndex((item) => item.id === step));
+  const remainingSteps = flowSteps.length - currentStepIndex - 1;
+  const progress = Math.round(((currentStepIndex + 1) / flowSteps.length) * 100);
+  const remainingLabel = remainingSteps === 0
+    ? 'Последний шаг'
+    : 'Осталось ' + remainingSteps + ' ' + (remainingSteps === 1 ? 'шаг' : remainingSteps < 5 ? 'шага' : 'шагов');
+
+  function resetResult() {
+    setAfter(4);
+    setHelp(3);
+    setOutcome('successful_response');
+    setQty(1);
+    setPuffs(10);
+  }
+
+  function advance(next: number) {
+    setStep(next);
+    setMaxReached((current) => Math.max(current, next));
+  }
+
+  function goToStep(next: number) {
+    if (next <= maxReached) setStep(next);
+  }
+
+  function chooseProduct(value: ProductType) {
+    if (value !== product) {
+      setProduct(value);
+      setTrigger('');
+      setBefore(7);
+      setNeed('');
+      setReplacement(null);
+      resetResult();
+      setMaxReached(1);
+    }
+    advance(1);
+  }
+
+  function chooseTrigger(value: string) {
+    if (value !== triggerCode) {
+      setTrigger(value);
+      setBefore(7);
+      setNeed('');
+      setReplacement(null);
+      resetResult();
+      setMaxReached(2);
+    }
+    advance(2);
+  }
+
+  function changeStrength(value: number) {
+    if (value !== before) {
+      setBefore(value);
+      setNeed('');
+      setReplacement(null);
+      resetResult();
+      setMaxReached(2);
+    }
+  }
+
+  function chooseNeed(value: string) {
+    if (value !== needCode) {
+      setNeed(value);
+      setReplacement(null);
+      resetResult();
+      setMaxReached(4);
+    }
+    advance(4);
+  }
+
+  function chooseReplacement(value: string | null) {
+    if (value !== replacementCode) resetResult();
+    setReplacement(value);
+    advance(5);
+  }
+
   async function save() {
-    if (!triggerCode || !needCode) return;
+    if (step !== 5 || !triggerCode || !needCode) return;
     setBusy(true);
     const tobacco: GuidedEpisodeDraft['tobacco'] = outcome === 'nicotine_used' ? { cigaretteQuantity: product === 'cigarette' ? qty : undefined, hookahSessionCount: product === 'hookah' ? 1 : undefined, vapePuffs: product === 'vape' ? puffs : undefined } : undefined;
     try { await saveGuidedEpisode(session, { product, triggerCode, needCode, cravingBefore: before, cravingAfter: after, helpfulness: help, replacementCode, outcome, tobacco }); await saved(); close(); } finally { setBusy(false); }
   }
-  const progress = Math.max(1, step);
-  return <Modal wide onClose={close}><div className="r-modal-head"><div><p className="r-kicker">Не экзамен. Один живой момент.</p><h2>{step < 3 ? 'Что происходит прямо сейчас?' : 'Выбери другой ответ'}</h2></div><button className="r-icon-button" onClick={close}><Icon name="close"/></button></div><div className="r-progress"><span className={progress>=1?'done':''}>1 · ситуация</span><span className={progress>=2?'done':''}>2 · потребность</span><span className={progress>=3?'done':''}>3 · ответ</span><span className={progress>=4?'done':''}>4 · результат</span></div>{step === 0 && <section className="r-flow"><h3>К чему сейчас тянет?</h3><div className="r-choice-grid products">{data.products.map((p) => <button key={p.product_type} onClick={() => { setProduct(p.product_type); setStep(1); }}><Icon name={productIcon(p.product_type)} size={28}/><strong>{productLabel(p.product_type)}</strong></button>)}</div></section>}{step === 1 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="eye"/></span><div><h3>В каком контексте включилась тяга?</h3><p>Не ищем виноватого. Ищем повторяющийся пусковой момент.</p></div></div><div className="r-choice-grid">{triggers.map((t) => <button key={t.code} onClick={() => { setTrigger(t.code); setStep(2); }}><span className="r-choice-icon"><Icon name={triggerIcon(t)} size={23}/></span><strong>{t.title}</strong><small>{t.description}</small></button>)}</div></section>}{step === 2 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="heart"/></span><div><h3>Что ты на самом деле сейчас ищешь?</h3><p>Сигарета может обещать паузу, разрядку, завершение, стимуляцию или контакт. Нам нужна функция, а не форма ритуала.</p></div></div><div className="r-choice-grid needs">{data.needs.map((n) => <button key={n.code} onClick={() => { setNeed(n.code); setStep(3); }}><span className="r-choice-icon"><Icon name={needIcon(n.code,n.title)} size={24}/></span><strong>{n.title}</strong><small>{n.description}</small></button>)}</div><div className="r-slider"><label><span>Сила тяги</span><b>{before}/10</b></label><input type="range" min="1" max="10" value={before} onChange={(e) => setBefore(Number(e.target.value))}/></div></section>}{step === 3 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon accent"><Icon name="spark"/></span><div><h3>Три варианта под этот момент</h3><p>Не список «полезных привычек». Эти ответы подобраны под ситуацию и потребность; со временем порядок будет меняться по твоим результатам.</p></div></div><div className="r-replacement-grid">{candidates.map((r) => <button key={r.code} onClick={() => { setReplacement(r.code); setStep(4); }}><span className="r-big-icon"><Icon name={replacementIcon(r)} size={30}/></span><div><span className="r-kind">{replacementKind(r)}{r.duration ? ` · ${r.duration}` : ''}</span><h3>{r.title}</h3><p>{r.summary || r.instruction}</p></div><Icon name="arrow" className="r-card-arrow" size={20}/></button>)}</div><button className="r-skip" onClick={() => { setReplacement(null); setStep(4); }}>Сейчас не хочу пробовать замену</button></section>}{step === 4 && <section className="r-flow"><div className="r-result-choice">{selected ? <><span className="r-big-icon"><Icon name={replacementIcon(selected)} size={30}/></span><div><small>Ты выбрал</small><h3>{selected.title}</h3><p>{selected.instruction}</p></div></> : <><span className="r-big-icon"><Icon name="pause" size={30}/></span><div><small>Без замены</small><h3>Просто наблюдаем результат</h3></div></>}</div><div className="r-two-sliders"><div className="r-slider"><label><span>Тяга после</span><b>{after}/10</b></label><input type="range" min="0" max="10" value={after} onChange={(e) => setAfter(Number(e.target.value))}/></div><div className="r-slider"><label><span>Насколько помогло</span><b>{help}/5</b></label><input type="range" min="0" max="5" value={help} onChange={(e) => setHelp(Number(e.target.value))}/></div></div><div className="r-outcomes"><button className={outcome==='successful_response'?'selected success':''} onClick={() => setOutcome('successful_response')}><Icon name="check" size={22}/><div><strong>Автоматизм прерван</strong><small>Никотиновый ответ не последовал</small></div></button><button className={outcome==='nicotine_used'?'selected used':''} onClick={() => setOutcome('nicotine_used')}><Icon name={productIcon(product)} size={22}/><div><strong>Никотин всё же был</strong><small>Это итог, а не «провал» и не замена</small></div></button><button className={outcome==='abandoned'?'selected':''} onClick={() => setOutcome('abandoned')}><Icon name="pause" size={22}/><div><strong>Просто закрыть</strong><small>Без оценки результата</small></div></button></div>{outcome === 'nicotine_used' && <div className="r-nicotine-detail"><p><b>Отдельно фиксируем сам продукт.</b> Он не попадёт в поле «Замена».</p>{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(e) => setQty(Number(e.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0,puffs-5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs+5)}>+5</button></div>}</div>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Сохранить эпизод'} <Icon name="arrow" size={18}/></ShellButton><ShellButton className="ghost" onClick={() => setStep(3)}>Выбрать другой ответ</ShellButton></div></section>}</Modal>;
+
+  return <Modal wide onClose={close}><div className="r-modal-head"><div><p className="r-kicker">Не экзамен. Один живой момент.</p><h2>{step < 4 ? 'Что происходит прямо сейчас?' : step === 4 ? 'Выбери другой ответ' : 'Что получилось?'}</h2></div><button className="r-icon-button" onClick={close}><Icon name="close"/></button></div><div className="r-progress-wrap" aria-label="Ход разбора тяги"><div className="r-progress-copy"><strong>Шаг {currentStepIndex + 1} из {flowSteps.length}</strong><span>{remainingLabel}</span></div><div className="r-progress-track" aria-hidden="true"><i style={{ width: progress + '%' }}/></div><div className="r-progress">{flowSteps.map((item) => { const available = item.id <= maxReached; const current = item.id === step; return <button key={item.id} type="button" disabled={!available} className={current ? 'current' : available ? 'complete' : ''} aria-current={current ? 'step' : undefined} onClick={() => goToStep(item.id)}><span>{item.id === 0 ? 1 : hasProductStep ? item.id + 1 : item.id}</span><small>{item.label}</small></button>; })}</div></div>{step === 0 && <section className="r-flow"><h3>К чему сейчас тянет?</h3><div className="r-choice-grid products">{data.products.map((p) => <button key={p.product_type} className={product === p.product_type ? 'selected' : ''} onClick={() => chooseProduct(p.product_type)}><Icon name={productIcon(p.product_type)} size={28}/><strong>{productLabel(p.product_type)}</strong></button>)}</div></section>}{step === 1 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="eye"/></span><div><h3>В каком контексте включилась тяга?</h3><p>Не ищем виноватого. Ищем повторяющийся пусковой момент.</p></div></div><div className="r-choice-grid">{triggers.map((t) => <button key={t.code} className={triggerCode === t.code ? 'selected' : ''} onClick={() => chooseTrigger(t.code)}><span className="r-choice-icon"><Icon name={triggerIcon(t)} size={23}/></span><strong>{t.title}</strong><small>{t.description}</small></button>)}</div></section>}{step === 2 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="energy"/></span><div><h3>Насколько сильна тяга прямо сейчас?</h3><p>Отдельная оценка помогает подобрать ответ под этот момент, а не под тягу «вообще».</p></div></div><div className="r-strength"><div className="r-strength-value"><small>Сейчас</small><strong>{before}<span>/10</span></strong></div><input aria-label="Сила тяги" type="range" min="1" max="10" value={before} onChange={(e) => changeStrength(Number(e.target.value))}/><div className="r-strength-labels"><span>1 · почти фоном</span><span>10 · трудно переключиться</span></div></div><div className="r-actions"><ShellButton className="primary" onClick={() => advance(3)}>Продолжить <Icon name="arrow" size={18}/></ShellButton></div></section>}{step === 3 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="heart"/></span><div><h3>Что ты на самом деле сейчас ищешь?</h3><p>Сигарета может обещать паузу, разрядку, завершение, стимуляцию или контакт. Нам нужна функция, а не форма ритуала.</p></div></div><div className="r-choice-grid needs">{data.needs.map((n) => <button key={n.code} className={needCode === n.code ? 'selected' : ''} onClick={() => chooseNeed(n.code)}><span className="r-choice-icon"><Icon name={needIcon(n.code,n.title)} size={24}/></span><strong>{n.title}</strong><small>{n.description}</small></button>)}</div></section>}{step === 4 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon accent"><Icon name="spark"/></span><div><h3>Три варианта под этот момент</h3><p>Не список «полезных привычек». Эти ответы подобраны под ситуацию и потребность; со временем порядок будет меняться по твоим результатам.</p></div></div><div className="r-replacement-grid">{candidates.map((r) => <button key={r.code} className={replacementCode === r.code ? 'selected' : ''} onClick={() => chooseReplacement(r.code)}><span className="r-big-icon"><Icon name={replacementIcon(r)} size={30}/></span><div><span className="r-kind">{replacementKind(r)}{r.duration ? ' · ' + r.duration : ''}</span><h3>{r.title}</h3><p>{r.summary || r.instruction}</p></div><Icon name="arrow" className="r-card-arrow" size={20}/></button>)}</div><button className="r-skip" onClick={() => chooseReplacement(null)}>Сейчас не хочу пробовать замену</button></section>}{step === 5 && <section className="r-flow"><div className="r-result-choice">{selected ? <><span className="r-big-icon"><Icon name={replacementIcon(selected)} size={30}/></span><div><small>Ты выбрал</small><h3>{selected.title}</h3><p>{selected.instruction}</p></div></> : <><span className="r-big-icon"><Icon name="pause" size={30}/></span><div><small>Без замены</small><h3>Просто наблюдаем результат</h3></div></>}</div><div className="r-two-sliders"><div className="r-slider"><label><span>Тяга после</span><b>{after}/10</b></label><input type="range" min="0" max="10" value={after} onChange={(e) => setAfter(Number(e.target.value))}/></div><div className="r-slider"><label><span>Насколько помогло</span><b>{help}/5</b></label><input type="range" min="0" max="5" value={help} onChange={(e) => setHelp(Number(e.target.value))}/></div></div><div className="r-outcomes"><button className={outcome==='successful_response'?'selected success':''} onClick={() => setOutcome('successful_response')}><Icon name="check" size={22}/><div><strong>Автоматизм прерван</strong><small>Никотиновый ответ не последовал</small></div></button><button className={outcome==='nicotine_used'?'selected used':''} onClick={() => setOutcome('nicotine_used')}><Icon name={productIcon(product)} size={22}/><div><strong>Никотин всё же был</strong><small>Это итог, а не «провал» и не замена</small></div></button><button className={outcome==='abandoned'?'selected':''} onClick={() => setOutcome('abandoned')}><Icon name="pause" size={22}/><div><strong>Просто закрыть</strong><small>Без оценки результата</small></div></button></div>{outcome === 'nicotine_used' && <div className="r-nicotine-detail"><p><b>Отдельно фиксируем сам продукт.</b> Он не попадёт в поле «Замена».</p>{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(e) => setQty(Number(e.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0,puffs-5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs+5)}>+5</button></div>}</div>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Сохранить эпизод'} <Icon name="arrow" size={18}/></ShellButton><ShellButton className="ghost" onClick={() => goToStep(4)}>Выбрать другой ответ</ShellButton></div></section>}</Modal>;
 }
 
 function Evening({ session, data, close, saved }: { session: Session; data: Bootstrap; close: () => void; saved: () => Promise<void> }) {
