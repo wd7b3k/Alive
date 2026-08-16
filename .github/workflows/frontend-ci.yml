@@ -37,7 +37,9 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Inspect ALIVE brand asset
-        run: node scripts/inspect-brand-logo.mjs
+        run: |
+          identify src/assets/brand-logo-full.png
+          convert src/assets/brand-logo-full.png -alpha extract -trim -format 'VISIBLE_BOUNDS=%@\n' info:
 
       - name: Enforce ALIVE UI contract
         run: node scripts/check-ui-contract.mjs
