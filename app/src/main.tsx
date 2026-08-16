@@ -12,7 +12,7 @@ const isPagesPreview = window.location.hostname.endsWith('.alive-aw2.pages.dev')
 
 createRoot(root).render(
   <StrictMode>
-    {isPagesPreview ? <div className="v31-preview-badge">Preview v3.1 · base UI restored</div> : null}
+    {isPagesPreview ? <div className="v31-preview-badge">Предпросмотр v3.1 · кандидат в релиз</div> : null}
     <RedesignApp />
   </StrictMode>,
 );

@@ -44,9 +44,13 @@ if (!failures.length) {
   const mainForbidden = [
     "import V31App from './V31App'",
     "import './v31.css'",
+    'Preview v3.1 · base UI restored',
   ];
   for (const token of mainForbidden) {
-    if (main.includes(token)) failures.push(`Запрещён параллельный root/design layer: ${token}`);
+    if (main.includes(token)) failures.push(`Запрещён параллельный root/design layer или устаревшая подпись: ${token}`);
+  }
+  if (!main.includes('Предпросмотр v3.1 · кандидат в релиз')) {
+    failures.push('Branch-preview badge должен быть на русском языке и отражать текущий статус');
   }
 
   const baselineCapabilities = [
@@ -60,11 +64,23 @@ if (!failures.length) {
     ['пользовательские Связки', 'addLink'],
     ['пользовательские Смыслы', 'addMeaning'],
     ['guided craving flow', 'saveGuidedEpisode'],
+    ['явный основной продукт', 'primaryTargetProduct'],
     ['Google OAuth', 'signInWithOAuth'],
     ['выход из аккаунта', 'signOut'],
   ];
   for (const [label, token] of baselineCapabilities) {
     if (!app.includes(token)) failures.push(`Регрессия baseline-функции «${label}»: не найден маркер ${token}`);
+  }
+
+  if (/role\s*===\s*['"]target_dependency['"][\s\S]{0,140}\?\?\s*data\.products\[0\]/.test(app)) {
+    failures.push('Основной никотиновый продукт нельзя определять через случайный первый элемент products[0]');
+  }
+  if (!app.includes("return 'Разобрать тягу'")) {
+    failures.push('Для старых неоднозначных профилей нужен нейтральный CTA без случайной подстановки продукта');
+  }
+  const rawEnglishFallbacks = ['?? fact.category', '?? item.mechanism', 'setError(result.error.message)'];
+  for (const token of rawEnglishFallbacks) {
+    if (app.includes(token)) failures.push(`Пользовательский UI не должен выводить raw English metadata/error: ${token}`);
   }
 
   const cssTokens = ['--r-bg:#061013', '--r-lime:#c9ff5b', '--r-teal:#51ddd0', '.r-now', '.r-craving', '.r-modal'];
