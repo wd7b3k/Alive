@@ -57,6 +57,15 @@ export type Replacement = {
   duration: string | null;
   summary: string | null;
   safety: string | null;
+  mechanism: string | null;
+  evidence_level: 'A' | 'B' | 'C' | null;
+  evidence_scope: string | null;
+  source_title: string | null;
+  source_url: string | null;
+  context_tags: string[];
+  rotation_weight: number;
+  intensity_min: number | null;
+  intensity_max: number | null;
 };
 
 export type TriggerReplacement = {
@@ -237,7 +246,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     supabase.from('user_nicotine_products').select('*').eq('user_id', userId).eq('enabled', true),
     supabase.from('triggers_catalog').select('code,title,description,product_types,sort_order').eq('published', true).order('sort_order'),
     supabase.from('needs_catalog').select('code,title,description,sort_order').eq('published', true).order('sort_order'),
-    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety').eq('published', true).order('sort_order'),
+    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope,source_title,source_url,context_tags,rotation_weight,intensity_min,intensity_max').eq('published', true).order('sort_order'),
     supabase.from('trigger_replacement_map').select('trigger_code,replacement_code,tier,priority').order('priority'),
     supabase.from('meanings_catalog').select('id,title,body,sort_order').eq('published', true).order('sort_order'),
     supabase.from('user_meanings').select('id,user_id,title,body,active,sort_order,created_at').eq('user_id', userId).is('deleted_at', null).order('sort_order'),

@@ -149,6 +149,7 @@ export async function loadTogether(days = 7): Promise<TogetherSummary> {
 }
 
 export function replacementMechanism(item: Replacement): string {
+  if (item.mechanism) return item.mechanism;
   const raw = item.eligibility?.mechanism;
   if (typeof raw === 'string' && raw) return raw;
   const fallback: Record<string, string> = {
@@ -166,57 +167,73 @@ function numericEligibility(item: Replacement, key: string, fallback: number) {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
+function isReplacementEligible(data: Bootstrap, item: Replacement, product: ProductType) {
+  if (!item.product_types.includes(product)) return false;
+  if (!data.settings.food_replacements_enabled && item.category === 'food') return false;
+  if (!data.settings.nrt_enabled && item.category === 'nrt') return false;
+  if (item.category === 'nrt' && product !== 'cigarette') return false;
+  const cutoff = Number((data.settings.fruit_cutoff_time || '20:00').split(':')[0]);
+  if (item.code === 'fruit_portion' && new Date().getHours() >= cutoff) return false;
+  return true;
+}
+
 function candidateScore(data: Bootstrap, item: Replacement, product: ProductType, triggerCode: string, needCode: string, craving: number) {
-  if (!item.product_types.includes(product)) return -10000;
+  if (!isReplacementEligible(data, item, product)) return -10000;
   let score = 0;
   if (item.need_codes.includes(needCode)) score += 35;
-  const mapped = data.triggerReplacementMap.find((m) => m.trigger_code === triggerCode && m.replacement_code === item.code);
+
+  const mapped = data.triggerReplacementMap.find((mapping) => mapping.trigger_code === triggerCode && mapping.replacement_code === item.code);
   if (mapped) score += Math.max(0, 38 - mapped.priority * 2);
+  if (item.context_tags.includes(triggerCode)) score += 8;
 
-  const min = numericEligibility(item, 'intensity_min', 1);
-  const max = numericEligibility(item, 'intensity_max', 10);
-  if (craving >= min && craving <= max) score += 5;
+  const min = item.intensity_min ?? numericEligibility(item, 'intensity_min', 1);
+  const max = item.intensity_max ?? numericEligibility(item, 'intensity_max', 10);
+  if (craving >= min && craving <= max) score += 7;
+  else score -= Math.min(20, Math.min(Math.abs(craving - min), Math.abs(craving - max)) * 4);
 
-  const actions = data.actions.filter((a) => a.replacement_code === item.code);
-  const completed = actions.map((a) => data.episodes.find((e) => e.id === a.episode_id)).filter(Boolean);
+  const actions = data.actions.filter((action) => action.replacement_code === item.code);
+  const completed = actions
+    .map((action) => data.episodes.find((episode) => episode.id === action.episode_id))
+    .filter((episode): episode is NonNullable<typeof episode> => Boolean(episode));
   if (completed.length) {
-    const helpful = completed.map((e) => e?.helpfulness).filter((v): v is number => typeof v === 'number');
+    const helpful = completed.map((episode) => episode.helpfulness).filter((value): value is number => typeof value === 'number');
     const delta = completed
-      .filter((e) => typeof e?.craving_before === 'number' && typeof e?.craving_after === 'number')
-      .map((e) => Number(e?.craving_before) - Number(e?.craving_after));
-    if (helpful.length) score += helpful.reduce((a, b) => a + b, 0) / helpful.length * 5;
-    if (delta.length) score += Math.max(-5, Math.min(12, delta.reduce((a, b) => a + b, 0) / delta.length * 2));
-    const successful = completed.filter((e) => e?.outcome === 'successful_response').length;
-    score += (successful / completed.length) * 10;
+      .filter((episode) => typeof episode.craving_before === 'number' && typeof episode.craving_after === 'number')
+      .map((episode) => Number(episode.craving_before) - Number(episode.craving_after));
+    if (helpful.length) score += helpful.reduce((sum, value) => sum + value, 0) / helpful.length * 5;
+    if (delta.length) score += Math.max(-5, Math.min(12, delta.reduce((sum, value) => sum + value, 0) / delta.length * 2));
+    score += completed.filter((episode) => episode.outcome === 'successful_response').length / completed.length * 10;
   }
 
-  const recentUses = actions.filter((a) => Date.now() - new Date(a.occurred_at).getTime() < 24 * 3600_000).length;
+  const recentUses = actions.filter((action) => Date.now() - new Date(action.occurred_at).getTime() < 24 * 3600_000).length;
   score -= recentUses * 5;
 
-  const evidence = String(item.eligibility?.evidence_level ?? 'C');
+  const evidence = item.evidence_level ?? String(item.eligibility?.evidence_level ?? 'C');
   if (evidence === 'A') score += craving >= 7 ? 8 : 3;
   if (evidence === 'B') score += 3;
+  score += Math.max(0, Number(item.rotation_weight ?? 1) - 1) * 3;
   return score;
 }
 
 export function pickDiverseReplacements(data: Bootstrap, product: ProductType, triggerCode: string, needCode: string, craving: number): Replacement[] {
   const ranked = data.replacements
     .map((item) => ({ item, score: candidateScore(data, item, product, triggerCode, needCode, craving) }))
-    .filter((x) => x.score > -1000)
+    .filter((candidate) => candidate.score > -1000)
     .sort((a, b) => b.score - a.score || a.item.sort_order - b.item.sort_order);
 
   const picked: Replacement[] = [];
   const mechanisms = new Set<string>();
-  for (const row of ranked) {
-    const mechanism = replacementMechanism(row.item);
+  for (const candidate of ranked) {
+    const mechanism = replacementMechanism(candidate.item);
     if (mechanisms.has(mechanism)) continue;
-    picked.push(row.item);
+    picked.push(candidate.item);
     mechanisms.add(mechanism);
     if (picked.length === 3) return picked;
   }
-  for (const row of ranked) {
-    if (picked.some((x) => x.code === row.item.code)) continue;
-    picked.push(row.item);
+
+  for (const candidate of ranked) {
+    if (picked.some((item) => item.code === candidate.item.code)) continue;
+    picked.push(candidate.item);
     if (picked.length === 3) break;
   }
   return picked;

@@ -10,7 +10,6 @@ import {
   deleteLink,
   deleteMeaning,
   loadBootstrap,
-  pickReplacements,
   productLabel,
   saveCheckin,
   saveGuidedEpisode,
@@ -29,6 +28,7 @@ import {
 } from './data';
 import { saveQuickUse } from './actions';
 import { dailyUnits, replacementStats, statsForDays, triggerStats } from './metrics';
+import { pickDiverseReplacements, replacementMechanism } from './v31-data';
 import { Icon, type IconName } from './ui-icons';
 
 function go(path: string) {
@@ -117,12 +117,27 @@ function replacementIcon(item: Replacement): IconName {
 }
 
 function replacementKind(item: Replacement) {
-  if (item.category === 'nrt') return 'Никотин-заместительная терапия';
-  if (item.category === 'food') return 'Еда и напиток';
-  if (item.category === 'meaning') return 'Смысл';
-  if (item.category === 'physical') return 'Тело';
-  if (item.category === 'sensory') return 'Внимание и ощущения';
-  return 'Другой ответ';
+  const labels: Record<string, string> = {
+    breathing: 'Дыхание',
+    movement: 'Движение',
+    attention: 'Внимание',
+    grounding: 'Опора',
+    food: 'Еда',
+    oral: 'Оральная замена',
+    drink: 'Напиток',
+    ritual: 'Ритуал',
+    meaning: 'Смысл',
+    social: 'Контакт',
+    reflection: 'Наблюдение',
+    evidence_treatment: 'Доказательная поддержка',
+    focus: 'Фокус',
+    manual: 'Занять руки',
+    pause: 'Пауза',
+    reward: 'Награда',
+    context_change: 'Смена контекста',
+    sensory: 'Ощущения',
+  };
+  return labels[replacementMechanism(item)] ?? 'Другой ответ';
 }
 
 function tobaccoSummary(event: Bootstrap['tobaccoEvents'][number] | undefined) {
@@ -271,7 +286,7 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   const [qty, setQty] = useState(1);
   const [puffs, setPuffs] = useState(10);
   const [busy, setBusy] = useState(false);
-  const candidates = useMemo(() => triggerCode && needCode ? pickReplacements(data, product, triggerCode, needCode) : [], [data, product, triggerCode, needCode]);
+  const candidates = useMemo(() => triggerCode && needCode ? pickDiverseReplacements(data, product, triggerCode, needCode, before) : [], [data, product, triggerCode, needCode, before]);
   const selected = data.replacements.find((r) => r.code === replacementCode);
   const triggers = data.triggers.filter((t) => t.product_types.includes(product));
   const currentStepIndex = Math.max(0, flowSteps.findIndex((item) => item.id === step));
