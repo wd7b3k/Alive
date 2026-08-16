@@ -1,21 +1,21 @@
 # ALIVE v3.1 — Behavioral Depth + Together
 
-Статус: **DRAFT / VALIDATION IN PROGRESS**
+Статус: **RELEASE CANDIDATE / DRAFT PR / VALIDATION IN PROGRESS**
 
-Цель релиза — углубить поведенческий движок ALIVE без регрессии утверждённого v3.0 UI и вернуть ранее запланированный контур `Вместе`.
+Цель релиза — углубить поведенческий движок ALIVE без регрессии утверждённого v3.0 UI и вернуть privacy-safe контур `Вместе`.
 
-## Что меняется
+## Реализовано
 
-- evidence-first библиотека методов прекращения курения;
-- отдельная research-линия smoking myths / outcome expectancies;
-- расширенный каталог Замен и механизм-aware ranking;
-- короткие техники grounding/breathing/attention из HumanOS, адаптированные как state support;
-- более ясный guided craving flow;
-- `Факты` и `Мифы`;
-- smoking start year / pack-years только как evidence matching metadata;
-- lapse flow без обнуления;
-- privacy-safe `Вместе`;
-- hardening утверждённого логотипа.
+- product-aware craving CTA;
+- guided flow с явным progress, отдельной силой тяги, возвратом по достигнутым шагам и downstream invalidation;
+- mechanism-aware Replacement Engine с персональной историей и разнообразием top-3;
+- contextual Myths и private relevance;
+- source-linked Facts/Myths knowledge route;
+- optional cigarette start year и справочный pack-years;
+- lapse flow без обнуления с context-disruption next experiment;
+- privacy-safe `Вместе` без leaderboard и private user data;
+- owner-approved bundled logo;
+- сохранённый `RedesignApp`/`redesign.css` baseline без активного параллельного shell.
 
 ## Не входит
 
@@ -26,13 +26,19 @@
 - медицинские назначения;
 - индивидуальные medical risk predictions.
 
-Следующий архитектурный этап зафиксирован в `docs/ROADMAP.md`: Admin + Product Intelligence + единый versioned application/API layer для Web, Telegram, mobile и будущих клиентов поверх одной канонической базы.
-
 ## Evidence
 
 - `docs/research/NICOTINE_CESSATION_EVIDENCE_2026.md`
 - `docs/research/SMOKING_MYTHS_AND_EXPECTANCIES_2026.md`
 
+## Preview
+
+`https://agent-v3-1-behavioral-depth.alive-aw2.pages.dev/`
+
+Это branch preview, не production.
+
 ## Release gate
 
-Релиз не считается завершённым, пока `VALIDATION.md` не закрыт и runtime/production проверки не подтверждены.
+Technical frontend gate пройден: UI contract, typecheck и build зелёные. Public responsive preview и owner logo/header visual gate пройдены.
+
+Релиз не считается завершённым и PR не переводится из draft, пока не закрыты authenticated regression matrix, second-user isolation, medically significant copy review и финальный owner visual approval. Production/main не менять до отдельного решения владельца.

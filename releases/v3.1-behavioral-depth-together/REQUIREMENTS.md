@@ -2,97 +2,96 @@
 
 ## Product
 
-- [x] Сохранить product formula `импульс → контекст → потребность → альтернативный ответ → результат → обучение`.
-- [x] Не переделывать утверждённую visual language v3.0 с нуля.
+- [x] Сохранить formula `импульс → контекст → потребность → альтернативный ответ → результат → обучение`.
+- [x] Сохранить утверждённый visual language v3.0.
+- [x] Оставить `RedesignApp` root и `redesign.css` base design system.
+- [x] Не подключать параллельный `V31App`/`v31.css`.
+- [x] Сохранить четыре главных раздела и весь baseline v3.0.
 - [x] Весь новый user-facing copy на русском.
-- [x] CTA для сигарет `Хочу закурить`, для vape `Хочу затянуться`, для hookah `Хочу покурить кальян`.
-- [x] Новые заголовки без завершающих точек.
+- [x] CTA: `Хочу закурить` / `Хочу затянуться` / `Хочу покурить кальян`.
 
 ## Evidence
 
-- [x] Отдельный nicotine cessation review.
-- [x] Отдельный Myths / outcome expectancies review.
+- [x] Отдельные nicotine cessation и Myths/outcome expectancies reviews.
 - [x] Medical statements source-linked.
-- [x] Не использовать population evidence как personal medical prediction.
-- [x] Разделять cessation evidence, acute-state evidence и ALIVE heuristic.
+- [x] Population evidence не используется как personal medical prediction.
+- [x] Разделены cessation evidence, acute-state evidence и ALIVE heuristic.
 
 ## Замены
 
-- [x] Расширить каталог минимум до grounding, breathing, attention, movement, pause, oral, manual, food, drink, focus, reflection, social, context change, meaning, reward, evidence treatment.
-- [x] Пищевой каталог не ограничивается фруктом/кефиром.
-- [x] Перенести простые HumanOS patterns без заявления, что они являются доказанной cessation therapy.
-- [x] Ranking выбирает по возможности 3 разных механизма.
+- [x] Каталог содержит 75 published items и 18 mechanisms.
+- [x] Ranking учитывает product, trigger, need, context, intensity, history и recent repetition.
 - [x] Personal outcomes участвуют в ranking.
+- [x] Top-3 по возможности состоят из разных mechanisms.
+- [x] Food/NRT/product eligibility v3.0 сохранены.
 
 ## Guided flow
 
-- [x] Явный `Шаг N из M`.
-- [x] Заметный progress bar.
-- [x] Завершённые шаги кликабельны.
-- [x] Изменение product/trigger/need пересчитывает dependent selection.
-- [x] Contextual Myth не чаще одного в коротком flow.
+- [x] Явный `Шаг N из M` и заметный progress bar.
+- [x] Сила тяги — отдельный шаг.
+- [x] Достигнутые шаги кликабельны.
+- [x] Изменение product/trigger/strength/need инвалидирует downstream state.
+- [x] Изменение Replacement сбрасывает result.
+- [x] Contextual Myth появляется не чаще одного раза за короткий flow.
+- [ ] Authenticated end-to-end interaction/save regression подтверждён владельцем.
 
-## Мифы
+## Мифы и факты
 
-- [x] Versioned catalog entity.
-- [x] Private user relevance state.
-- [x] Минимум: stress relief, concentration, pause, coffee, after meal, style, social, low-dose smoking, light, hookah, vape, NRT, weight, too late, lapse reset, control, stressful period, pleasure, anxiety.
-- [x] `Похоже на меня` / `Не про меня`.
-- [x] No shame language.
+- [x] Versioned catalogs и private user relevance state.
+- [x] `Похоже на меня` / `Не про меня` без shame language.
+- [x] Вторичный `/facts` route не вытесняет четыре главных раздела.
+- [x] Facts чередуют risks/benefits, показывают evidence level и source URL.
+- [x] Knowledge loading failure изолирован от v3.0 bootstrap.
+- [ ] Owner review медицински значимого user-facing copy.
 
-## Факты
+## Onboarding и lapse
 
-- [x] Versioned catalog entity.
-- [x] Общий каталог работает без личного medical profile.
-- [x] Риски и benefits чередуются.
-- [x] У каждой карточки есть source URL.
-- [x] Нет fabricated individual risk.
-
-## Onboarding
-
-- [x] Optional regular-smoking start year для cigarettes.
-- [x] Pack-years используется только справочно и только для cigarettes.
-- [x] Vape/hookah не конвертируются в pack-years через ALIVE units.
-
-## Lapse
-
-- [x] Один эпизод ничего не обнуляет.
+- [x] Optional regular-smoking start year только для cigarettes.
+- [x] Existing users не проходят onboarding заново.
+- [x] Pack-years только справочно для cigarettes.
+- [x] Vape/hookah не конвертируются в pack-years.
+- [x] Nicotine use остаётся фактом, а не Replacement.
 - [x] Context disruption встроен в guided/quick flow.
-- [x] Driving: сначала безопасная остановка, никогда не курение за рулём.
-- [x] Observation не оптимизирует глубину/длительность/число затяжек.
+- [x] Driving copy требует сначала безопасно остановиться; курение за рулём не предлагается.
+- [x] Один эпизод ничего не обнуляет.
 
 ## Вместе
 
-- [x] Отдельный раздел основного меню.
-- [x] Personal baseline comparison выше группового сравнения.
+- [x] Вторичный route/entry point добавлен без расширения четырёхэлементной mobile bottom navigation.
+- [x] Personal baseline comparison расположен выше группового сравнения.
 - [x] Aggregate participant/activity/episode/replacement metrics.
-- [x] No leaderboard.
-- [x] No raw private text or user identifiers in group endpoint.
+- [x] Нет leaderboard, raw private text, names или user identifiers.
 - [x] Small cohort suppression минимум 3.
-- [x] Mechanism aggregates only above privacy threshold.
+- [x] Mechanism aggregates дополнительно фильтруются по privacy threshold.
+- [ ] Authenticated suppressed/evaluable UI states проверены на preview.
 
 ## Security
 
 - [x] RLS enabled on new exposed tables.
 - [x] Explicit grants for Data API tables.
-- [x] `user_myth_state` private by user_id.
-- [x] Together SECURITY DEFINER has `search_path=''`, auth check and narrow EXECUTE grants.
-- [x] Together API returns aggregates only.
+- [x] `user_myth_state` private by `user_id`.
+- [x] Together privileged function hardening и narrow grants.
+- [x] Together API возвращает aggregates only.
+- [ ] Client-level isolation проверен со вторым реальным/test account.
 
 ## Logo
 
-- [x] Approved asset preserved and not regenerated.
-- [x] Active entrypoint explicitly imports v3.1 CSS logo hardening.
-- [ ] Production deployment asset/network/rendering verified.
+- [x] Владелец прямо утвердил приложенный PNG.
+- [x] Exact bytes сохранены без обработки.
+- [x] SHA-256: `6b58071efb328d970d921ea6e03d30e15a148d8c36a92f6e9ec05455a830d832`.
+- [x] `RedesignApp` использует bundled asset; изменяется только CSS display size.
+- [x] Login, desktop authenticated header и mobile authenticated header подтверждены владельцем.
+- [x] Standalone methodology page проверена на branch preview.
+- [ ] Production deployment не выполнялся и не должен выполняться в draft PR.
 
 ## Validation
 
-- [x] Supabase migrations applied.
-- [x] Catalog counts verified.
-- [x] RLS verified.
-- [x] Together aggregate privacy smoke-test passed.
-- [ ] Frontend typecheck passes.
-- [ ] Production build passes.
-- [ ] Mobile smoke-test passes.
-- [ ] Authenticated runtime smoke-test passes.
-- [ ] Production logo smoke-test passes.
+- [x] Supabase migrations, catalog counts, RLS и Together privacy smoke.
+- [x] UI contract PASS.
+- [x] TypeScript typecheck PASS.
+- [x] Vite production build PASS.
+- [x] Public preview desktop/mobile/tablet smoke PASS.
+- [x] Cloudflare branch preview доступен.
+- [ ] Полная authenticated regression matrix PASS.
+- [ ] Full responsive authenticated matrix 390/430/768–820/1280/1440+ PASS.
+- [ ] Final owner visual approval всего RC.

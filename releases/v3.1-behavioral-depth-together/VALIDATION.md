@@ -1,181 +1,117 @@
 # Validation ALIVE v3.1
 
-Статус: **BLOCKED — UI REINTEGRATION + CANONICAL LOGO RESTORATION REQUIRED**
+Статус: **RC IMPLEMENTED — DRAFT VALIDATION, MERGE BLOCKED BY FINAL GATES**
 
-## Database
+## Baseline contract
 
-- PASS — `v31_behavioral_content_schema` applied
-- PASS — `v31_replacements_seed` applied
-- PASS — `v31_myths_seed` applied
-- PASS — `v31_facts_seed` applied
-- PASS — `v31_together_aggregates` applied
-- PASS — `v31_together_security_hardening` applied
-- PASS — published catalog counts after migration: 75 Replacements / 19 Myths / 19 Facts
-- PASS — 18 distinct replacement mechanisms present
-- PASS — RLS enabled for `myths_catalog`, `facts_catalog`, `user_myth_state`
-- PASS — content catalogs are read-only to ordinary authenticated clients
-- PASS — `user_myth_state` own-user policies present
-- PASS — authenticated Together smoke-test returned expected aggregate keys
-- PASS — Together smoke-test rejected expected private-key patterns (`user_id`, `display_name`, `private_note`, `goal_text`)
-- PASS — small cohort threshold = 3 for detailed baseline/mechanism aggregates
+- PASS — production baseline commit: `86b4608da61b34d6db14648a5d5f591ad6e63bcc`.
+- PASS — `main.tsx` продолжает запускать `RedesignApp`.
+- PASS — `redesign.css` остаётся active base design system.
+- PASS — `V31App` и `v31.css` не подключены к active entrypoint.
+- PASS — четыре baseline-раздела `Сегодня / Связки / Путь / Смыслы` сохранены.
+- PASS — UI contract защищает craving, quick log, evening check-in, delete/correction, user Links/Meanings, OAuth и logout.
+- PASS — ни одна v3.0 capability намеренно не удалена.
 
-## Evidence
+## Database, evidence и security
 
-- PASS — nicotine cessation research document created
-- PASS — separate Myths/outcome expectancies research created
-- PASS — WHO/Cochrane/primary literature anchors documented
-- PASS — A/B/C evidence distinction defined
-- PASS — explicit rule against fabricated personal medical risk
-- PASS — methodology synchronized with v3.1 evidence semantics
-- PASS — hypotheses/metrics synchronized with Myths/Facts/Together/Replacement Engine concepts
+- PASS — все шесть v3.1 migrations applied.
+- PASS — 75 published Replacements / 18 mechanisms / 19 Myths / 19 Facts.
+- PASS — RLS и read-only content catalog grants проверены.
+- PASS — `user_myth_state` own-user policies present.
+- PASS — Together API возвращает whitelist aggregates и suppresses detailed data below threshold 3.
+- PASS — public Together contract использует `SECURITY INVOKER`; privileged aggregation находится в unexposed `private` schema.
+- PASS — A/B/C evidence distinction и запрет fabricated personal medical risk задокументированы.
+- KNOWN — Supabase Auth leaked-password protection warning; продукт экспонирует только Google OAuth.
+- BLOCKED BY COHORT — client-level isolation `user_myth_state` требует второго реального/test account.
 
-## Frontend regression finding
+## Additive frontend slices
 
-Owner browser review found a blocking visual and functional regression in the first v3.1 frontend integration.
+- PASS — product-aware CTA внутри существующего Today.
+- PASS — guided progress, отдельная сила тяги, clickable reached steps.
+- PASS — downstream invalidation product → trigger → strength → need → replacement → result.
+- PASS — mechanism-aware Replacement ranking с diversity-first top-3.
+- PASS — contextual Myth с one-per-flow cap и private relevance.
+- PASS — secondary Facts/Myths route в approved dark surfaces.
+- PASS — secondary Together route с personal-first framing и privacy suppression.
+- PASS — optional cigarette start year/exposure metadata backward-compatible.
+- PASS — lapse context-disruption next experiment без reset/shame.
+- PASS — знания загружаются отдельно и не ломают v3.0 bootstrap при ошибке.
 
-Root cause:
+## Logo owner gate
 
-- production v3.0 rendered `RedesignApp`;
-- v3.1 added a parallel `V31App`;
-- `main.tsx` was switched to `V31App`;
-- existing Today/UI behavior was therefore partially replaced instead of extended;
-- parallel `v31.css` introduced visual patterns that did not preserve the approved dark ALIVE language.
+Изначальный release document ожидал другой historical hash. Затем владелец прямо предоставил и утвердил приложенный PNG словами «используй этот лого». Это обязательный owner identity gate и новый source of truth для данной ветки.
 
-This is a **FAIL** even though TypeScript and Vite build succeeded.
-
-See `UI_REGRESSION_AUDIT.md`.
-
-## Immediate remediation
-
-- PASS — active `main.tsx` restored to production-approved `RedesignApp`;
-- PASS — parallel `v31.css` removed from active stylesheet chain;
-- PASS — DB/research/security work retained;
-- PASS — canonical `docs/BRANDBOOK.md` added;
-- PASS — `AGENTS.md` now requires Brandbook review before frontend work;
-- PASS — new root shell / global visual replacement moved behind explicit owner decision gate;
-- PASS — preview badge retained so branch preview cannot be confused with production;
-- PASS — machine-readable UI contract added before typecheck/build;
-- PASS — canonical horizontal logo SHA-256 is now part of the UI contract and cannot be bypassed by a CSS-only workaround.
-
-## Frontend integration status
-
-The following v3.1 user-facing features must now be re-integrated incrementally into the approved v3.0 UI and are **not considered complete** merely because a previous implementation existed in inactive `V31App`.
-
-- PENDING — product-aware CTA integrated directly into approved Today;
-- PENDING — heading punctuation cleanup without layout rewrite;
-- PENDING — mechanism-aware Replacement ranking wired into existing flow;
-- PENDING — expanded Replacement presentation inside existing dark modal;
-- PENDING — brighter but brand-consistent progress indicator;
-- PENDING — clickable completed flow steps;
-- PENDING — contextual Myth reminder;
-- PENDING — Facts route using approved dark surfaces;
-- PENDING — Together route using approved dark surfaces;
-- PENDING — smoking start-year field integrated into existing onboarding/profile;
-- PENDING — lapse context-disruption copy integrated into existing flow;
-- **BLOCKING — restore exact canonical horizontal ALIVE/Om asset before any release candidate.**
-
-## Existing v3.0 functionality regression gate
-
-Before v3.1 can proceed, browser validation must confirm that the following existing behavior remains intact:
-
-- main Today hero and visual hierarchy;
-- craving entry;
-- quick nicotine entry;
-- evening check-in;
-- pulse metrics;
-- baseline comparison;
-- Freedom Fund / existing economics metrics where present;
-- attention/trigger entry;
-- episode history;
-- delete/correction behavior;
-- Links;
-- Path;
-- Meanings;
-- Method;
-- Profile;
-- existing mobile navigation behavior.
-
-A v3.1 feature is not accepted if it removes or hides an existing v3.0 function.
+- PASS — exact asset сохранён без resize/crop/recompress/optimization.
+- PASS — size 486931 bytes, dimensions 2048×682.
+- PASS — SHA-256 `6b58071efb328d970d921ea6e03d30e15a148d8c36a92f6e9ec05455a830d832`.
+- PASS — UI contract фиксирует owner-approved hash.
+- PASS — public login и standalone methodology rendering.
+- PASS BY OWNER — login, authenticated desktop header, authenticated mobile header.
 
 ## CI
 
-Frontend CI order:
+Frontend validation выполнялась после каждого vertical slice.
 
-1. `UI CONTRACT`;
-2. TypeScript typecheck;
-3. Vite production build.
+Current frontend head: `c5986676a5eae166fa3ca0a274b5d984c05aa83b`.
 
-The UI contract protects the approved root shell, visual baseline, baseline capabilities and canonical logo hash. A failing logo hash is intentionally a release blocker and must not be "fixed" by editing the expected hash.
+GitHub Actions run `#132`:
 
-## Cloudflare preview and OAuth
+1. UI contract — PASS.
+2. TypeScript typecheck — PASS.
+3. Vite production build — PASS.
 
-- PASS — stable Cloudflare branch preview exists;
-- PASS — OAuth preview redirect root cause identified;
-- PASS — owner configured the branch-preview origin in Supabase redirect allowlist;
-- PASS — authenticated preview now remains on the branch-preview hostname.
+Runs `#123–#128` также были зелёными для предшествующих slices. Runs `#129` и `#130` обнаружили JSX boundary errors в start-year slice; ошибки исправлены отдельными commits, run `#131` и current run `#132` зелёные.
 
-## Logo — BLOCKING
+В `app/package.json` нет отдельного automated test script/test runner. Статус «tests PASS» не заявляется; применимые automated gates — UI contract, typecheck и build.
 
-Current `app/src/assets/brand-logo-full.png` is not accepted as the canonical asset. Diagnostic decoding of the current binary failed, which matches the malformed/tiny rendering observed in the browser.
+## Browser smoke
 
-Canonical source-of-truth identity:
+Branch preview: `https://agent-v3-1-behavioral-depth.alive-aw2.pages.dev/`.
 
-- source asset name: `logo-alive-om.png`;
-- required SHA-256: `11c8624d6ecf84c6a6bb554ca72a7455a0e5c1923ed324fb58c8eeabc42191d2`;
-- the approved asset must be restored byte-for-byte;
-- do **not** redraw, regenerate, approximate, crop into a different file, substitute an infinity symbol or modify the expected hash;
-- after restoration verify login, authenticated desktop header, mobile header and standalone reading pages in a real browser.
+- PASS — 390×844 public login.
+- PASS — 820×900 standalone `/experiment`.
+- PASS — 1440×960 public login.
+- PASS — logo proportion and visibility.
+- PASS — no visible horizontal overflow на проверенных public surfaces.
+- PASS BY OWNER — authenticated desktop/mobile logo and header.
 
-`app/scripts/check-ui-contract.mjs` now rejects any other binary.
+Authenticated browser session не предоставлена текущему automation environment. Поэтому полный post-change functional matrix не объявляется пройденным только по CI или public screenshots.
 
-## Security
+## Regression matrix
 
-- PASS — no service role/token added to frontend/repo;
-- PASS — public Together contract is `SECURITY INVOKER`;
-- PASS — privileged cross-user aggregation moved to unexposed `private` schema;
-- PASS — privileged internal function has `search_path=''`;
-- PASS — Together anonymous/public EXECUTE revoked;
-- PASS — only authenticated users can call public Together contract;
-- PASS — no user-level identifiers returned by Together contract;
-- PASS — Supabase Security Advisor no longer reports the Together SECURITY DEFINER warning;
-- KNOWN — Supabase Auth leaked-password protection warning remains; current product exposes Google OAuth only and no password login;
-- BLOCKED BY COHORT — two-user client-level RLS test for `user_myth_state` requires a genuine second account or dedicated safe test environment.
+Static/contract coverage:
 
-## Brand and visual gate
+- PASS — Today hero/CTA entry points remain in canonical component.
+- PASS — quick nicotine, evening, delete/correction and recalculation paths remain.
+- PASS — Links, Path, Meanings, Profile, Method, Releases and logout remain.
+- PASS — mobile bottom navigation remains four-item baseline.
+- PASS — tobacco products are not labelled as Replacements.
+- PASS — no production/main mutation.
 
-The canonical visual baseline is:
+Runtime gates still open:
 
-- production commit `86b4608da61b34d6db14648a5d5f591ad6e63bcc`;
-- `app/src/RedesignApp.tsx`;
-- `app/src/redesign.css`;
-- `docs/BRANDBOOK.md`.
-
-v3.1 must look like the same product with more capability, not a redesign.
+- PENDING — full guided back/edit/invalidation/save.
+- PENDING — cigarette/hookah/vape quick log and correction recalculation.
+- PENDING — evening reopen/update/save.
+- PENDING — Links CRUD/submit and trigger-to-flow.
+- PENDING — Path 7/30/baseline/Fund/effectiveness/raw stats.
+- PENDING — Meanings create/toggle/delete/submit and Identity Scripts.
+- PENDING — Profile baseline/start-year preservation.
+- PENDING — Facts/Myths actions and source links.
+- PENDING — Together suppressed/evaluable states.
+- PENDING — full authenticated responsive 390/430/768–820/1280/1440+.
+- PENDING — final owner review of medically significant copy and complete RC visuals.
 
 ## Release / repo
 
-- PASS — separate branch `agent/v3.1-behavioral-depth-together`;
-- PASS — draft PR #5 remains open;
-- PASS — release requirements documented;
-- PASS — rollback documented;
-- PASS — UI regression audit documented;
-- PASS — roadmap retains v3.2 Admin + multi-client application layer;
-- PASS — brandbook and new AI guardrails committed.
+- PASS — branch `agent/v3.1-behavioral-depth-together`.
+- PASS — draft PR #5 remains open.
+- PASS — Cloudflare branch preview exists.
+- PASS — release requirements, changelog, rollback, current state and AI audit trail updated.
+- PASS — production/main unchanged.
 
 ## Release gate
 
-**Do not merge v3.1 in its current state.**
+**Do not merge or deploy v3.1 to production yet.**
 
-Required before promotion:
-
-1. restore exact canonical `logo-alive-om.png` bytes and pass SHA-256 gate;
-2. re-integrate v3.1 UI changes into the existing v3.0 shell rather than parallel `V31App`;
-3. preserve every listed v3.0 function;
-4. full UI-contract / typecheck / build PASS;
-5. browser regression matrix PASS;
-6. owner visual review of desktop Today and craving flow;
-7. owner mobile visual review;
-8. logo confirmation on login and authenticated desktop/mobile header;
-9. Facts/Myths/Together visual review under the Brandbook;
-10. second-user isolation test when a genuine second account exists or a dedicated safe environment is available;
-11. owner review of medically significant user-facing copy.
+Promotion requires closing the pending authenticated regression matrix, second-user isolation when an account/environment exists, medically significant copy review and final owner visual approval. Green CI and branch preview are necessary but not sufficient.
