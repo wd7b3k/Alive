@@ -36,13 +36,6 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Inspect ALIVE brand asset
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq imagemagick
-          identify src/assets/brand-logo-full.png
-          convert src/assets/brand-logo-full.png -alpha extract -trim -format 'VISIBLE_BOUNDS=%@\n' info:
-
       - name: Enforce ALIVE UI contract
         run: node scripts/check-ui-contract.mjs
 
