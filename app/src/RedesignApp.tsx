@@ -35,12 +35,26 @@ import {
   pickDiverseReplacements,
   replacementMechanism,
   setMythRelevance,
+  type Fact,
   type Knowledge,
   type Myth,
+  type MythState,
 } from './v31-data';
 import { Icon, type IconName } from './ui-icons';
 
 const EMPTY_KNOWLEDGE: Knowledge = { facts: [], myths: [], mythState: [] };
+
+const FACT_CATEGORIES: Record<string, string> = {
+  heart: 'Сердце и сосуды',
+  mortality: 'Долгая жизнь',
+  mental_health: 'Психика и настроение',
+  treatment: 'Поддержка',
+  product: 'Никотиновые продукты',
+  others: 'Окружающие',
+  oral_health: 'Зубы и полость рта',
+  behavior: 'Как работает зависимость',
+  weight: 'Вес',
+};
 
 function go(path: string) {
   window.history.pushState({}, '', path);
@@ -454,20 +468,54 @@ function Meanings({ session, data, reload }: { session: Session; data: Bootstrap
   return <main className="r-page"><section className="r-title meaning"><p className="r-kicker">Смыслы</p><h1>Не «почему нельзя». Ради чего становится интереснее жить иначе.</h1><p>Смысл — короткая личная опора, которую стоит увидеть в момент, когда мозг предлагает старый автоматический сценарий.</p><ShellButton className="ghost" onClick={()=>setAdding(!adding)}><Icon name="plus" size={18}/> Мой Смысл</ShellButton></section>{adding&&<section className="r-section r-form"><label className="r-field"><span>Заголовок</span><input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Я хочу увидеть себя без автоматизма"/></label><label className="r-field"><span>Что это значит для меня</span><textarea value={body} onChange={(e)=>setBody(e.target.value)}/></label><div className="r-actions"><ShellButton className="primary" onClick={add}>Сохранить</ShellButton><ShellButton className="ghost" onClick={()=>setAdding(false)}>Отмена</ShellButton></div></section>}{data.userMeanings.length>0&&<section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Мои</p><h2>Личные опоры</h2></div></div><div className="r-meaning-grid personal">{data.userMeanings.map((m)=><article key={m.id} className={!m.active?'inactive':''}><span className="r-meaning-symbol"><Icon name="meaning" size={25}/></span><h3>{m.title}</h3><p>{m.body}</p><div className="r-meaning-actions"><button onClick={()=>toggle(m)}>{m.active?'Скрыть':'Вернуть'}</button><button onClick={()=>submitMeaning(session,m)}>Предложить в общую базу</button><button onClick={()=>remove(m.id)}>Удалить</button></div></article>)}</div></section>}<section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Библиотека ALIVE</p><h2>Опоры, которые можно примерить на себя</h2></div></div><div className="r-meaning-grid">{data.meanings.map((m)=><article key={m.id}><span className="r-meaning-symbol"><Icon name="meaning" size={25}/></span><h3>{m.title}</h3><p>{m.body}</p></article>)}</div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Перепись сценария</p><h2>От старого паттерна к новому выбору</h2></div></div><div className="r-scripts">{data.identityScripts.map((s)=><details key={s.code}><summary>{s.title}</summary><div><span><small>Старый сценарий</small>{s.old_pattern}</span><Icon name="arrow"/><span><small>Новый выбор</small>{s.new_choice}</span></div></details>)}</div></section></main>;
 }
 
+function EvidenceBadge({ level }: { level: 'A' | 'B' | 'C' }) {
+  return <span className={'r-evidence-level ' + level.toLowerCase()}>{level === 'A' ? 'Хорошо изучено' : level === 'B' ? 'Есть данные' : 'Гипотеза ALIVE'}</span>;
+}
+
+function FactCard({ fact }: { fact: Fact }) {
+  return <article className={'r-fact-card ' + (fact.benefit ? 'benefit' : 'risk')}><div className="r-card-meta"><EvidenceBadge level={fact.evidence_level}/><span>{FACT_CATEGORIES[fact.category] ?? fact.category}</span></div><h2>{fact.title}</h2><p>{fact.short_text}</p><details><summary>Подробнее</summary><p>{fact.full_text}</p>{fact.sample_size && <small>Участников в исследовании: {new Intl.NumberFormat('ru-RU').format(fact.sample_size)}</small>}<a href={fact.source_url} target="_blank" rel="noreferrer">Источник: {fact.source_title} <Icon name="arrow" size={14}/></a></details></article>;
+}
+
+function FactsPage({ session, knowledge, error, reloadKnowledge }: { session: Session; knowledge: Knowledge; error: string; reloadKnowledge: () => Promise<void> }) {
+  const queryTab = new URLSearchParams(window.location.search).get('tab');
+  const [tab, setTab] = useState<'facts' | 'myths'>(queryTab === 'myths' ? 'myths' : 'facts');
+  const [category, setCategory] = useState('all');
+  const categories = Array.from(new Set(knowledge.facts.map((fact) => fact.category)));
+  const balancedFacts = useMemo(() => {
+    const filtered = knowledge.facts.filter((fact) => category === 'all' || fact.category === category);
+    const risks = filtered.filter((fact) => !fact.benefit);
+    const benefits = filtered.filter((fact) => fact.benefit);
+    const result: Fact[] = [];
+    for (let index = 0; index < Math.max(risks.length, benefits.length); index += 1) {
+      if (risks[index]) result.push(risks[index]);
+      if (benefits[index]) result.push(benefits[index]);
+    }
+    return result;
+  }, [knowledge.facts, category]);
+
+  async function mark(myth: Myth, relevance: MythState['relevance']) {
+    await setMythRelevance(session, myth.code, relevance);
+    await reloadKnowledge();
+  }
+
+  return <main className="r-page"><section className="r-title"><p className="r-kicker">Факты и мифы</p><h1>Знать достаточно, чтобы видеть выбор яснее</h1><p>Без страшилок, личных диагнозов и ложной точности. Факты показывают, что известно о рисках и пользе отказа; мифы разбирают обещания, которые поддерживают старый ритуал.</p><div className="r-knowledge-tabs"><button className={tab === 'facts' ? 'active' : ''} onClick={() => setTab('facts')}>Факты</button><button className={tab === 'myths' ? 'active' : ''} onClick={() => setTab('myths')}>Мифы</button></div></section>{error && <section className="r-section"><p className="r-error">{error}</p><ShellButton className="ghost small" onClick={reloadKnowledge}>Попробовать ещё раз</ShellButton></section>}{!error && tab === 'facts' && <><div className="r-filter-row"><button className={category === 'all' ? 'active' : ''} onClick={() => setCategory('all')}>Все</button>{categories.map((item) => <button key={item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{FACT_CATEGORIES[item] ?? item}</button>)}</div>{balancedFacts.length ? <section className="r-fact-grid">{balancedFacts.map((fact) => <FactCard key={fact.code} fact={fact}/>)}</section> : <section className="r-section"><div className="r-empty compact"><Icon name="eye"/><p>Факты пока не загрузились. Личные данные для этой библиотеки не требуются.</p></div></section>}</>}{!error && tab === 'myths' && (knowledge.myths.length ? <section className="r-myth-grid">{knowledge.myths.map((myth) => { const state = knowledge.mythState.find((item) => item.myth_code === myth.code); return <article key={myth.code} className="r-myth-card"><div className="r-card-meta"><EvidenceBadge level={myth.evidence_level}/><span>Ожидаемый эффект</span></div><h2>{myth.title}</h2><p className="r-reframe">{myth.short_reframe}</p><details><summary>Почему так кажется</summary><p>{myth.explanation}</p><a href={myth.source_url} target="_blank" rel="noreferrer">Источник: {myth.source_title} <Icon name="arrow" size={14}/></a></details><div className="r-belief-actions"><span>Это про тебя?</span><button className={state?.relevance === 'relevant' ? 'selected' : ''} onClick={() => mark(myth, 'relevant')}>Похоже на меня</button><button className={state?.relevance === 'not_relevant' ? 'selected' : ''} onClick={() => mark(myth, 'not_relevant')}>Не про меня</button></div></article>; })}</section> : <section className="r-section"><div className="r-empty compact"><Icon name="eye"/><p>Библиотека мифов пока не загрузилась.</p></div></section>)}</main>;
+}
+
 function Experiment() { return <main className="r-reading"><Brand compact/><article><p className="r-kicker">Эксперимент над автоматизмом</p><h1>ALIVE ничего тебе не обещает.</h1><p className="r-lead">Мы проверяем простую гипотезу: если достаточно раз заметить повторяющуюся Связку, понять её функцию и удовлетворить ту же потребность другим ответом, автоматический сценарий может стать слабее.</p><h2>Что здесь считается успехом</h2><p>Не только «день без сигарет». Важны снижение интенсивности относительно своего исходного уровня, замеченные моменты тяги, прерванные Связки, рабочие Замены, увеличение промежутков без продукта и возвращение в систему после употребления.</p><h2>Что известно, а что является гипотезой ALIVE</h2><div className="r-evidence"><div><b>Хорошо подтверждено</b><p>Никотиновая зависимость формирует устойчивые контекстные и поведенческие ассоциации; отказ от курения снижает риски для здоровья.</p></div><div><b>Правдоподобно</b><p>Работа с триггерами, альтернативным поведением и осознаванием функции ритуала может помогать менять привычные ответы.</p></div><div><b>Эксперимент ALIVE</b><p>Наша конкретная система Связок, Смыслов, персонального ранжирования Замен и единиц ALIVE — собственная продуктовая гипотеза, которую нужно проверять на данных.</p></div></div><h2>Безопасность и медицина</h2><p>ALIVE не является лечением и не заменяет врача, психотерапию или доказательные методы отказа от табака. Никотин-заместительная терапия учитывается как поддержка, а не как срыв; дозировки сервис не назначает.</p><h2>Приватность</h2><blockquote>Эти данные слишком личные, чтобы превращать их в рекламный профиль.</blockquote><p>Личные заметки, Связки и Смыслы приватны по умолчанию. В общую базу что-либо попадает только после явного действия пользователя. Абсолютной безопасности не существует: технические поставщики инфраструктуры обрабатывают необходимые технические данные по своим правилам.</p><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Вернуться в ALIVE</ShellButton></div></article></main>; }
 
 function Profile({ session, data, editSetup }: { session: Session; data: Bootstrap; editSetup: () => void }) {
   async function logout(){await getSupabase()?.auth.signOut();go('/');}
-  return <main className="r-page"><section className="r-title"><p className="r-kicker">Профиль</p><h1>{data.profile.display_name}</h1><p>Здесь только настройки твоего эксперимента. Приватные Смыслы, Связки и заметки не превращаются в публичный профиль.</p></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Исходный уровень</p><h2>С чем сравнивается динамика</h2></div><ShellButton className="ghost small" onClick={editSetup}>Изменить</ShellButton></div><div className="r-raw">{data.products.map((p: NicotineProduct)=><div key={p.product_type}><Icon name={productIcon(p.product_type)}/><small>{productLabel(p.product_type)}</small><strong>{p.product_type==='cigarette'?`${Number(p.baseline.cigarettes_per_day??0)} / день`:p.product_type==='hookah'?`${Number(p.baseline.sessions_per_week??0)} / нед.`:`${Number(p.baseline.puffs_per_day??0)} затяжек / день`}</strong></div>)}</div></section><section className="r-section"><div className="r-profile-links"><button onClick={()=>go('/experiment')}><Icon name="shield"/><span><strong>Как работает эксперимент</strong><small>Методология, ограничения и приватность</small></span><Icon name="arrow"/></button><button onClick={()=>go('/releases')}><Icon name="path"/><span><strong>История версий</strong><small>Что меняется в ALIVE</small></span><Icon name="arrow"/></button></div><ShellButton className="danger" onClick={logout}>Выйти из аккаунта</ShellButton></section></main>;
+  return <main className="r-page"><section className="r-title"><p className="r-kicker">Профиль</p><h1>{data.profile.display_name}</h1><p>Здесь только настройки твоего эксперимента. Приватные Смыслы, Связки и заметки не превращаются в публичный профиль.</p></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Исходный уровень</p><h2>С чем сравнивается динамика</h2></div><ShellButton className="ghost small" onClick={editSetup}>Изменить</ShellButton></div><div className="r-raw">{data.products.map((p: NicotineProduct)=><div key={p.product_type}><Icon name={productIcon(p.product_type)}/><small>{productLabel(p.product_type)}</small><strong>{p.product_type==='cigarette'?`${Number(p.baseline.cigarettes_per_day??0)} / день`:p.product_type==='hookah'?`${Number(p.baseline.sessions_per_week??0)} / нед.`:`${Number(p.baseline.puffs_per_day??0)} затяжек / день`}</strong></div>)}</div></section><section className="r-section"><div className="r-profile-links"><button onClick={()=>go('/facts')}><Icon name="eye"/><span><strong>Факты и мифы</strong><small>Что известно и какие обещания поддерживают ритуал</small></span><Icon name="arrow"/></button><button onClick={()=>go('/experiment')}><Icon name="shield"/><span><strong>Как работает эксперимент</strong><small>Методология, ограничения и приватность</small></span><Icon name="arrow"/></button><button onClick={()=>go('/releases')}><Icon name="path"/><span><strong>История версий</strong><small>Что меняется в ALIVE</small></span><Icon name="arrow"/></button></div><ShellButton className="danger" onClick={logout}>Выйти из аккаунта</ShellButton></section></main>;
 }
 
 function Releases(){return <main className="r-reading"><Brand compact/><article><p className="r-kicker">История версий</p><h1>ALIVE развивается как эксперимент.</h1><div className="r-release"><b>3.0</b><div><h2>Универсальная платформа</h2><p>Google-вход, отдельная база данных, сигареты / кальян / электронка, Связки, Смыслы, контекстные Замены и персональная аналитика.</p></div></div><div className="r-release"><b>2.7</b><div><h2>Последний эталон предыдущей архитектуры</h2><p>Версия, от которой 3.0 обязана не регрессировать по глубине, вовлечению и качеству интерфейса.</p></div></div><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Назад в ALIVE</ShellButton></div></article></main>}
 
 export default function RedesignApp() {
-  const path=usePath(); const [session,setSession]=useState<Session|null>(null); const [data,setData]=useState<Bootstrap|null>(null); const [knowledge,setKnowledge]=useState<Knowledge>(EMPTY_KNOWLEDGE); const [loading,setLoading]=useState(true); const [setup,setSetup]=useState(false); const [flow,setFlow]=useState<{open:boolean;trigger?:string}>({open:false}); const [quick,setQuick]=useState(false); const [evening,setEvening]=useState(false);
+  const path=usePath(); const [session,setSession]=useState<Session|null>(null); const [data,setData]=useState<Bootstrap|null>(null); const [knowledge,setKnowledge]=useState<Knowledge>(EMPTY_KNOWLEDGE); const [knowledgeError,setKnowledgeError]=useState(''); const [loading,setLoading]=useState(true); const [setup,setSetup]=useState(false); const [flow,setFlow]=useState<{open:boolean;trigger?:string}>({open:false}); const [quick,setQuick]=useState(false); const [evening,setEvening]=useState(false);
   const configured=Boolean(publicEnv.supabaseUrl&&publicEnv.supabasePublishableKey);
-  async function reload(s:Session=session as Session){const [next,nextKnowledge]=await Promise.all([loadBootstrap(s),loadKnowledge(s).catch(()=>EMPTY_KNOWLEDGE)]);setData(next);setKnowledge(nextKnowledge);return next;}
-  useEffect(()=>{if(!configured){setLoading(false);return;}const supabase=getSupabase();if(!supabase)return;supabase.auth.getSession().then(async({data:{session:s}})=>{setSession(s);if(s)await reload(s);setLoading(false);});const {data:listener}=supabase.auth.onAuthStateChange((_event,s)=>{setSession(s);if(!s){setData(null);setKnowledge(EMPTY_KNOWLEDGE);}});return()=>listener.subscription.unsubscribe();},[configured]);
+  async function reloadKnowledgeForSession(s:Session=session as Session){try{const next=await loadKnowledge(s);setKnowledge(next);setKnowledgeError('');}catch(error){setKnowledgeError(error instanceof Error?error.message:'Не удалось загрузить библиотеку знаний');}}
+  async function reload(s:Session=session as Session){const [next]=await Promise.all([loadBootstrap(s),reloadKnowledgeForSession(s)]);setData(next);return next;}
+  useEffect(()=>{if(!configured){setLoading(false);return;}const supabase=getSupabase();if(!supabase)return;supabase.auth.getSession().then(async({data:{session:s}})=>{setSession(s);if(s)await reload(s);setLoading(false);});const {data:listener}=supabase.auth.onAuthStateChange((_event,s)=>{setSession(s);if(!s){setData(null);setKnowledge(EMPTY_KNOWLEDGE);setKnowledgeError('');}});return()=>listener.subscription.unsubscribe();},[configured]);
   if(!configured)return <main className="r-login"><section className="r-login-card"><Brand/><h1>Не хватает настроек подключения.</h1><p>Интерфейс не получил адрес Supabase или публичный ключ. Секретные ключи сюда передавать нельзя.</p></section></main>;
   if(loading)return <main className="r-loading"><span/><p>Загружаю ALIVE…</p></main>;
   if(path==='/experiment'&&!session)return <Experiment/>;
@@ -479,6 +527,7 @@ export default function RedesignApp() {
   if(path==='/links')page=<Links session={session} data={data} reload={()=>reload(session).then(()=>{})} openFlow={(trigger)=>setFlow({open:true,trigger})}/>;
   else if(path==='/path')page=<PathPage data={data}/>;
   else if(path==='/meanings')page=<Meanings session={session} data={data} reload={()=>reload(session).then(()=>{})}/>;
+  else if(path==='/facts')page=<FactsPage session={session} knowledge={knowledge} error={knowledgeError} reloadKnowledge={()=>reloadKnowledgeForSession(session)}/>;
   else if(path==='/experiment')page=<Experiment/>;
   else if(path==='/profile')page=<Profile session={session} data={data} editSetup={()=>setSetup(true)}/>;
   else if(path==='/releases')page=<Releases/>;
