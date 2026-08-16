@@ -29,13 +29,14 @@
 5. `docs/PRODUCT_STRATEGY.md`
 6. `docs/METHODOLOGY.md`
 7. `docs/PRODUCT_PRINCIPLES.md`
-8. `docs/PRIVACY_AND_DATA.md`
-9. релевантные architecture/data/module документы
-10. `docs/HYPOTHESES_AND_METRICS.md`
-11. `docs/ROADMAP.md`
-12. последний релевантный `docs/ai_sessions/**/**-response.md`
-13. документацию текущего release unit
-14. только затем — код.
+8. `docs/BRANDBOOK.md` — обязательно перед любыми frontend/UI/client-app изменениями
+9. `docs/PRIVACY_AND_DATA.md`
+10. релевантные architecture/data/module документы
+11. `docs/HYPOTHESES_AND_METRICS.md`
+12. `docs/ROADMAP.md`
+13. последний релевантный `docs/ai_sessions/**/**-response.md`
+14. документацию текущего release unit
+15. только затем — код.
 
 ## Статус проекта
 
@@ -98,6 +99,32 @@ AI обязан:
 - осмысленное empty state.
 
 Нельзя полагаться на то, что пользователь знает внутреннюю терминологию разработчиков.
+
+## UI integrity и brand freeze
+
+Начиная с утверждённого ALIVE v3.0, существующий visual shell считается стабильным продуктовым контрактом.
+
+Перед любым frontend изменением AI/разработчик обязан:
+
+- прочитать `docs/BRANDBOOK.md`;
+- использовать production-approved `RedesignApp.tsx` и `redesign.css` как визуальный baseline;
+- перечислить функции изменяемого экрана, которые обязаны сохраниться;
+- предпочитать additive extension существующих компонентов structural rewrite;
+- проверить desktop и mobile regression;
+- сравнить визуальный результат с последним утверждённым baseline.
+
+Без прямого owner gate запрещено:
+
+- создавать новый root app/shell вместо текущего;
+- переключать `main.tsx` на параллельное приложение;
+- создавать вторую базовую дизайн-систему поверх `redesign.css`;
+- менять глобальную палитру, typography scale, header composition или главный Today layout;
+- удалять/замещать существующий пользовательский функционал ради нового release scope;
+- считать более новый AI-generated UI автоматически более каноническим, чем утверждённый предыдущий release.
+
+Новый функционал должен выглядеть как естественная часть того же ALIVE.
+
+Если новый экран визуально воспринимается как другой продукт или существующая функция пропала, frontend gate считается **FAIL** независимо от успешного typecheck/build.
 
 ## Privacy-by-design
 
@@ -167,4 +194,5 @@ LLM может помогать с объяснениями, классифик�
 - изменения медицински значимых формулировок;
 - изменения коэффициентов ALIVE units;
 - публикации пользовательского UGC без отдельного consent;
-- замены утверждённой бренд-айдентики.
+- замены утверждённой бренд-айдентики;
+- создания нового root frontend shell или глобальной замены утверждённого визуального языка.
