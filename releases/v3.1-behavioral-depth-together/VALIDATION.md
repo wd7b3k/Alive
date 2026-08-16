@@ -31,18 +31,18 @@
 
 ## Frontend CI
 
-GitHub Actions run `31965095507`, job `95208940810`:
+Latest fully completed GitHub Actions validation at commit `b8ad8f8`:
 
 - PASS — locked dependency install
 - PASS — TypeScript typecheck
 - PASS — Vite production build
 
-The job completed successfully on the v3.1 branch after the new shell, Facts/Myths/Together UI and Together security hardening were present.
+GitHub Actions run `31965400087`, job `95209691295` completed successfully.
 
 ## Cloudflare deployment
 
-- PASS — Cloudflare Pages branch preview build/deploy reported successful by the official Cloudflare GitHub integration
-- PASS — branch preview URL generated
+- PASS — Cloudflare Pages branch preview build/deploy reported successful by the official Cloudflare GitHub integration at commit `b8ad8f8`
+- PASS — preview URL and stable branch-preview URL generated
 - LIMITATION — current tool environment cannot directly establish a browser session to the Cloudflare preview hostname, so visual/runtime interaction has not been independently inspected from this session
 
 ## Frontend manual/runtime
@@ -97,8 +97,8 @@ Logo task therefore remains open until a real browser rendering is confirmed. Bu
 - PASS — rollback documented
 - PASS — roadmap updated with v3.2 Admin + multi-client application layer
 - PASS — data model updated
-- PENDING — CURRENT_STATE final sync after all remaining runtime gates
-- PENDING — final AI response/handoff document
+- PASS — `CURRENT_STATE.md` synchronized with v3.1 branch status and remaining gates
+- PASS — final AI response/handoff stored in `docs/ai_sessions/2026-08-16/001-v31-behavioral-depth-together-response.md`
 
 ## Release gate
 
