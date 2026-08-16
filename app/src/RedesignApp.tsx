@@ -31,6 +31,7 @@ import { dailyUnits, replacementStats, statsForDays, triggerStats } from './metr
 import {
   contextualMyth,
   loadKnowledge,
+  loadTogether,
   markMythShown,
   pickDiverseReplacements,
   replacementMechanism,
@@ -39,6 +40,7 @@ import {
   type Knowledge,
   type Myth,
   type MythState,
+  type TogetherSummary,
 } from './v31-data';
 import { Icon, type IconName } from './ui-icons';
 
@@ -54,6 +56,27 @@ const FACT_CATEGORIES: Record<string, string> = {
   oral_health: 'Зубы и полость рта',
   behavior: 'Как работает зависимость',
   weight: 'Вес',
+};
+
+const MECHANISM_LABELS: Record<string, string> = {
+  food: 'Еда',
+  attention: 'Внимание',
+  movement: 'Движение',
+  reflection: 'Запись и наблюдение',
+  ritual: 'Ритуал',
+  social: 'Контакт',
+  drink: 'Напиток',
+  grounding: 'Опора',
+  meaning: 'Смыслы',
+  pause: 'Пауза',
+  reward: 'Награда',
+  sensory: 'Ощущения',
+  breathing: 'Дыхание',
+  context_change: 'Смена контекста',
+  evidence_treatment: 'Доказательная поддержка',
+  oral: 'Оральная замена',
+  focus: 'Фокус',
+  manual: 'Занять руки',
 };
 
 function go(path: string) {
@@ -202,7 +225,7 @@ function Header({ data, path }: { data: Bootstrap; path: string }) {
     <header className="r-header">
       <Brand />
       <nav className="r-desktop-nav">{MAIN_NAV.map(([href, label, icon]) => <button key={href} className={path === href ? 'active' : ''} onClick={() => go(href)}><Icon name={icon} size={18}/><span>{label}</span></button>)}</nav>
-      <div className="r-header-tools"><button className="r-method-link" onClick={() => go('/experiment')}>О методе</button><button className="r-avatar" onClick={() => go('/profile')} title="Профиль">{data.profile.avatar_url ? <img src={data.profile.avatar_url} alt="" referrerPolicy="no-referrer"/> : <Icon name="user" size={20}/>}</button></div>
+      <div className="r-header-tools"><button className={'r-method-link ' + (path === '/together' ? 'active' : '')} onClick={() => go('/together')}>Вместе</button><button className="r-method-link" onClick={() => go('/experiment')}>О методе</button><button className="r-avatar" onClick={() => go('/profile')} title="Профиль">{data.profile.avatar_url ? <img src={data.profile.avatar_url} alt="" referrerPolicy="no-referrer"/> : <Icon name="user" size={20}/>}</button></div>
     </header>
     <nav className="r-mobile-nav">{MAIN_NAV.map(([href, label, icon]) => <button key={href} className={path === href ? 'active' : ''} onClick={() => go(href)}><Icon name={icon} size={21}/><span>{label}</span></button>)}</nav>
   </>;
@@ -501,11 +524,30 @@ function FactsPage({ session, knowledge, error, reloadKnowledge }: { session: Se
   return <main className="r-page"><section className="r-title"><p className="r-kicker">Факты и мифы</p><h1>Знать достаточно, чтобы видеть выбор яснее</h1><p>Без страшилок, личных диагнозов и ложной точности. Факты показывают, что известно о рисках и пользе отказа; мифы разбирают обещания, которые поддерживают старый ритуал.</p><div className="r-knowledge-tabs"><button className={tab === 'facts' ? 'active' : ''} onClick={() => setTab('facts')}>Факты</button><button className={tab === 'myths' ? 'active' : ''} onClick={() => setTab('myths')}>Мифы</button></div></section>{error && <section className="r-section"><p className="r-error">{error}</p><ShellButton className="ghost small" onClick={reloadKnowledge}>Попробовать ещё раз</ShellButton></section>}{!error && tab === 'facts' && <><div className="r-filter-row"><button className={category === 'all' ? 'active' : ''} onClick={() => setCategory('all')}>Все</button>{categories.map((item) => <button key={item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{FACT_CATEGORIES[item] ?? item}</button>)}</div>{balancedFacts.length ? <section className="r-fact-grid">{balancedFacts.map((fact) => <FactCard key={fact.code} fact={fact}/>)}</section> : <section className="r-section"><div className="r-empty compact"><Icon name="eye"/><p>Факты пока не загрузились. Личные данные для этой библиотеки не требуются.</p></div></section>}</>}{!error && tab === 'myths' && (knowledge.myths.length ? <section className="r-myth-grid">{knowledge.myths.map((myth) => { const state = knowledge.mythState.find((item) => item.myth_code === myth.code); return <article key={myth.code} className="r-myth-card"><div className="r-card-meta"><EvidenceBadge level={myth.evidence_level}/><span>Ожидаемый эффект</span></div><h2>{myth.title}</h2><p className="r-reframe">{myth.short_reframe}</p><details><summary>Почему так кажется</summary><p>{myth.explanation}</p><a href={myth.source_url} target="_blank" rel="noreferrer">Источник: {myth.source_title} <Icon name="arrow" size={14}/></a></details><div className="r-belief-actions"><span>Это про тебя?</span><button className={state?.relevance === 'relevant' ? 'selected' : ''} onClick={() => mark(myth, 'relevant')}>Похоже на меня</button><button className={state?.relevance === 'not_relevant' ? 'selected' : ''} onClick={() => mark(myth, 'not_relevant')}>Не про меня</button></div></article>; })}</section> : <section className="r-section"><div className="r-empty compact"><Icon name="eye"/><p>Библиотека мифов пока не загрузилась.</p></div></section>)}</main>;
 }
 
+function TogetherPage({ data }: { data: Bootstrap }) {
+  const [summary, setSummary] = useState<TogetherSummary | null>(null);
+  const [error, setError] = useState('');
+  const own = statsForDays(data, 7);
+
+  useEffect(() => {
+    let active = true;
+    loadTogether(7)
+      .then((result) => { if (active) setSummary(result); })
+      .catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : 'Не удалось загрузить общий пульс'); });
+    return () => { active = false; };
+  }, []);
+
+  const baselineVisible = summary ? !summary.baseline.suppressed && summary.baseline.evaluable >= summary.privacy_threshold : false;
+  const safeMechanisms = summary?.mechanisms.filter((item) => item.users >= summary.privacy_threshold) ?? [];
+
+  return <main className="r-page"><section className="r-title"><p className="r-kicker">Вместе</p><h1>Один эксперимент, разные личные пути</h1><p>Здесь нет рейтинга людей. Сначала ты сравниваешь себя только с собственным исходным уровнем, а общие числа показывают, что другие тоже замечают автоматизмы, пробуют и возвращаются после употребления.</p></section><section className="r-together-you"><div><span>Ты · последние 7 дней</span><strong>{own.baselineDeltaPct === null ? 'Пока мало данных' : (own.baselineDeltaPct > 0 ? '+' : '') + fmt(own.baselineDeltaPct) + '% к исходному уровню'}</strong><p>{own.successfulResponses} осознанных ответов · {own.activeDays} активных дней</p></div><Icon name="user" size={30}/></section>{error && <section className="r-section"><p className="r-error">{error}</p></section>}{!error && !summary && <section className="r-section"><div className="r-empty compact"><Icon name="people"/><p>Собираю обезличенный общий пульс эксперимента.</p></div></section>}{summary && <><section className="r-group-pulse"><article><small>Участников</small><strong>{summary.participants_total}</strong><span>с завершённой настройкой</span></article><article><small>Активны сегодня</small><strong>{summary.active_today}</strong><span>без имён и деталей</span></article><article><small>Эпизодов за 7 дней</small><strong>{summary.episodes_period}</strong><span>замеченных моментов</span></article><article><small>Выбрано Замен</small><strong>{summary.replacement_attempts}</strong><span>попыток ответить иначе</span></article></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Относительно себя</p><h2>Как меняется употребление в группе</h2><p>Каждый участник сравнивается только со своим обычным уровнем.</p></div></div>{baselineVisible ? <div className="r-baseline-group"><div><strong>{summary.baseline.below}</strong><span>ниже своего уровня</span></div><div><strong>{summary.baseline.near}</strong><span>примерно на своём уровне</span></div><div><strong>{summary.baseline.above}</strong><span>выше своего уровня</span></div><div><strong>{summary.baseline.median_delta_pct === null ? '—' : (summary.baseline.median_delta_pct > 0 ? '+' : '') + fmt(summary.baseline.median_delta_pct) + '%'}</strong><span>медианное изменение</span></div></div> : <div className="r-privacy-empty"><Icon name="shield"/><div><strong>Пока недостаточно данных для группового сравнения</strong><p>Детальные агрегаты появляются только когда в выборке есть минимум {summary.privacy_threshold} участника.</p></div></div>}</section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Что пробуют</p><h2>Механизмы, которые встречаются в группе</h2><p>Показываем только категории, которыми пользовались не меньше {summary.privacy_threshold} участников.</p></div></div>{safeMechanisms.length ? <div className="r-mechanism-list">{safeMechanisms.map((item) => <div key={item.mechanism}><span><strong>{MECHANISM_LABELS[item.mechanism] ?? item.mechanism}</strong><small>{item.users} участников · {item.uses} использований</small></span><b>{item.avg_helpfulness === null ? '—' : fmt(item.avg_helpfulness, 1) + '/5'}</b></div>)}</div> : <div className="r-privacy-empty"><Icon name="people"/><div><strong>Групповых закономерностей пока мало</strong><p>ALIVE не показывает статистику одного-двух людей под видом общего результата.</p></div></div>}</section><section className="r-together-principle"><Icon name="shield"/><div><strong>Что никогда не попадает сюда</strong><p>Личные Смыслы, тексты Связок, заметки, имена, идентификаторы, конкретные триггеры и время эпизодов.</p></div></section></>}</main>;
+}
+
 function Experiment() { return <main className="r-reading"><Brand compact/><article><p className="r-kicker">Эксперимент над автоматизмом</p><h1>ALIVE ничего тебе не обещает.</h1><p className="r-lead">Мы проверяем простую гипотезу: если достаточно раз заметить повторяющуюся Связку, понять её функцию и удовлетворить ту же потребность другим ответом, автоматический сценарий может стать слабее.</p><h2>Что здесь считается успехом</h2><p>Не только «день без сигарет». Важны снижение интенсивности относительно своего исходного уровня, замеченные моменты тяги, прерванные Связки, рабочие Замены, увеличение промежутков без продукта и возвращение в систему после употребления.</p><h2>Что известно, а что является гипотезой ALIVE</h2><div className="r-evidence"><div><b>Хорошо подтверждено</b><p>Никотиновая зависимость формирует устойчивые контекстные и поведенческие ассоциации; отказ от курения снижает риски для здоровья.</p></div><div><b>Правдоподобно</b><p>Работа с триггерами, альтернативным поведением и осознаванием функции ритуала может помогать менять привычные ответы.</p></div><div><b>Эксперимент ALIVE</b><p>Наша конкретная система Связок, Смыслов, персонального ранжирования Замен и единиц ALIVE — собственная продуктовая гипотеза, которую нужно проверять на данных.</p></div></div><h2>Безопасность и медицина</h2><p>ALIVE не является лечением и не заменяет врача, психотерапию или доказательные методы отказа от табака. Никотин-заместительная терапия учитывается как поддержка, а не как срыв; дозировки сервис не назначает.</p><h2>Приватность</h2><blockquote>Эти данные слишком личные, чтобы превращать их в рекламный профиль.</blockquote><p>Личные заметки, Связки и Смыслы приватны по умолчанию. В общую базу что-либо попадает только после явного действия пользователя. Абсолютной безопасности не существует: технические поставщики инфраструктуры обрабатывают необходимые технические данные по своим правилам.</p><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Вернуться в ALIVE</ShellButton></div></article></main>; }
 
 function Profile({ session, data, editSetup }: { session: Session; data: Bootstrap; editSetup: () => void }) {
   async function logout(){await getSupabase()?.auth.signOut();go('/');}
-  return <main className="r-page"><section className="r-title"><p className="r-kicker">Профиль</p><h1>{data.profile.display_name}</h1><p>Здесь только настройки твоего эксперимента. Приватные Смыслы, Связки и заметки не превращаются в публичный профиль.</p></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Исходный уровень</p><h2>С чем сравнивается динамика</h2></div><ShellButton className="ghost small" onClick={editSetup}>Изменить</ShellButton></div><div className="r-raw">{data.products.map((p: NicotineProduct)=><div key={p.product_type}><Icon name={productIcon(p.product_type)}/><small>{productLabel(p.product_type)}</small><strong>{p.product_type==='cigarette'?`${Number(p.baseline.cigarettes_per_day??0)} / день`:p.product_type==='hookah'?`${Number(p.baseline.sessions_per_week??0)} / нед.`:`${Number(p.baseline.puffs_per_day??0)} затяжек / день`}</strong></div>)}</div></section><section className="r-section"><div className="r-profile-links"><button onClick={()=>go('/facts')}><Icon name="eye"/><span><strong>Факты и мифы</strong><small>Что известно и какие обещания поддерживают ритуал</small></span><Icon name="arrow"/></button><button onClick={()=>go('/experiment')}><Icon name="shield"/><span><strong>Как работает эксперимент</strong><small>Методология, ограничения и приватность</small></span><Icon name="arrow"/></button><button onClick={()=>go('/releases')}><Icon name="path"/><span><strong>История версий</strong><small>Что меняется в ALIVE</small></span><Icon name="arrow"/></button></div><ShellButton className="danger" onClick={logout}>Выйти из аккаунта</ShellButton></section></main>;
+  return <main className="r-page"><section className="r-title"><p className="r-kicker">Профиль</p><h1>{data.profile.display_name}</h1><p>Здесь только настройки твоего эксперимента. Приватные Смыслы, Связки и заметки не превращаются в публичный профиль.</p></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Исходный уровень</p><h2>С чем сравнивается динамика</h2></div><ShellButton className="ghost small" onClick={editSetup}>Изменить</ShellButton></div><div className="r-raw">{data.products.map((p: NicotineProduct)=><div key={p.product_type}><Icon name={productIcon(p.product_type)}/><small>{productLabel(p.product_type)}</small><strong>{p.product_type==='cigarette'?`${Number(p.baseline.cigarettes_per_day??0)} / день`:p.product_type==='hookah'?`${Number(p.baseline.sessions_per_week??0)} / нед.`:`${Number(p.baseline.puffs_per_day??0)} затяжек / день`}</strong></div>)}</div></section><section className="r-section"><div className="r-profile-links"><button onClick={()=>go('/together')}><Icon name="people"/><span><strong>Вместе</strong><small>Обезличенный пульс без рейтингов и чужих текстов</small></span><Icon name="arrow"/></button><button onClick={()=>go('/facts')}><Icon name="eye"/><span><strong>Факты и мифы</strong><small>Что известно и какие обещания поддерживают ритуал</small></span><Icon name="arrow"/></button><button onClick={()=>go('/experiment')}><Icon name="shield"/><span><strong>Как работает эксперимент</strong><small>Методология, ограничения и приватность</small></span><Icon name="arrow"/></button><button onClick={()=>go('/releases')}><Icon name="path"/><span><strong>История версий</strong><small>Что меняется в ALIVE</small></span><Icon name="arrow"/></button></div><ShellButton className="danger" onClick={logout}>Выйти из аккаунта</ShellButton></section></main>;
 }
 
 function Releases(){return <main className="r-reading"><Brand compact/><article><p className="r-kicker">История версий</p><h1>ALIVE развивается как эксперимент.</h1><div className="r-release"><b>3.0</b><div><h2>Универсальная платформа</h2><p>Google-вход, отдельная база данных, сигареты / кальян / электронка, Связки, Смыслы, контекстные Замены и персональная аналитика.</p></div></div><div className="r-release"><b>2.7</b><div><h2>Последний эталон предыдущей архитектуры</h2><p>Версия, от которой 3.0 обязана не регрессировать по глубине, вовлечению и качеству интерфейса.</p></div></div><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Назад в ALIVE</ShellButton></div></article></main>}
@@ -527,6 +569,7 @@ export default function RedesignApp() {
   if(path==='/links')page=<Links session={session} data={data} reload={()=>reload(session).then(()=>{})} openFlow={(trigger)=>setFlow({open:true,trigger})}/>;
   else if(path==='/path')page=<PathPage data={data}/>;
   else if(path==='/meanings')page=<Meanings session={session} data={data} reload={()=>reload(session).then(()=>{})}/>;
+  else if(path==='/together')page=<TogetherPage data={data}/>;
   else if(path==='/facts')page=<FactsPage session={session} knowledge={knowledge} error={knowledgeError} reloadKnowledge={()=>reloadKnowledgeForSession(session)}/>;
   else if(path==='/experiment')page=<Experiment/>;
   else if(path==='/profile')page=<Profile session={session} data={data} editSetup={()=>setSetup(true)}/>;
