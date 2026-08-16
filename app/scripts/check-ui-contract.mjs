@@ -1,12 +1,18 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 
 const root = resolve(process.cwd(), '..');
 const appRoot = process.cwd();
 const mainPath = resolve(appRoot, 'src/main.tsx');
 const appPath = resolve(appRoot, 'src/RedesignApp.tsx');
 const cssPath = resolve(appRoot, 'src/redesign.css');
+const logoPath = resolve(appRoot, 'src/assets/brand-logo-full.png');
 const brandbookPath = resolve(root, 'docs/BRANDBOOK.md');
+
+// Owner-approved horizontal ALIVE/Om asset from canonical v2.6/v2.7/v2.8 releases.
+// Do not change this hash to make CI green. A brand change requires an explicit owner gate.
+const CANONICAL_LOGO_SHA256 = '11c8624d6ecf84c6a6bb554ca72a7455a0e5c1923ed324fb58c8eeabc42191d2';
 
 const failures = [];
 const requireFile = (path, label) => {
@@ -16,12 +22,14 @@ const requireFile = (path, label) => {
 requireFile(mainPath, 'app/src/main.tsx');
 requireFile(appPath, 'app/src/RedesignApp.tsx');
 requireFile(cssPath, 'app/src/redesign.css');
+requireFile(logoPath, 'app/src/assets/brand-logo-full.png');
 requireFile(brandbookPath, 'docs/BRANDBOOK.md');
 
 if (!failures.length) {
   const main = readFileSync(mainPath, 'utf8');
   const app = readFileSync(appPath, 'utf8');
   const css = readFileSync(cssPath, 'utf8');
+  const logo = readFileSync(logoPath);
   const brandbook = readFileSync(brandbookPath, 'utf8');
 
   const mainRequired = [
@@ -68,6 +76,14 @@ if (!failures.length) {
     failures.push('Утверждённый ALIVE logo asset должен импортироваться из ./assets/brand-logo-full.png');
   }
 
+  const actualLogoSha256 = createHash('sha256').update(logo).digest('hex');
+  if (actualLogoSha256 !== CANONICAL_LOGO_SHA256) {
+    failures.push(
+      `Неверный или повреждённый ALIVE logo asset: SHA-256 ${actualLogoSha256}; ожидается канонический ${CANONICAL_LOGO_SHA256}. ` +
+      'Восстанови точный owner-approved logo-alive-om.png; не перерисовывай и не меняй ожидаемый hash.',
+    );
+  }
+
   const brandbookMarkers = ['Визуальная система v3.0', 'Новая функция не является поводом менять визуальный язык существующего экрана', 'additive'];
   for (const token of brandbookMarkers) {
     if (!brandbook.toLowerCase().includes(token.toLowerCase())) failures.push(`BRANDBOOK потерял обязательный guardrail: ${token}`);
@@ -77,9 +93,9 @@ if (!failures.length) {
 if (failures.length) {
   console.error('\nALIVE UI CONTRACT — FAIL\n');
   for (const failure of failures) console.error(`- ${failure}`);
-  console.error('\nИзменение root shell, дизайн-системы или удаление baseline-функций требует отдельного owner gate и обновления UI-contract проверки.\n');
+  console.error('\nИзменение root shell, дизайн-системы, канонического логотипа или удаление baseline-функций требует отдельного owner gate.\n');
   process.exit(1);
 }
 
 console.log('ALIVE UI CONTRACT — PASS');
-console.log('Root: RedesignApp · visual baseline: redesign.css · baseline capabilities preserved');
+console.log('Root: RedesignApp · visual baseline: redesign.css · canonical logo + baseline capabilities preserved');
