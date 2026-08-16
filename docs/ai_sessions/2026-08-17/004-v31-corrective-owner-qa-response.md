@@ -27,6 +27,7 @@ Facts/Myths были технически реализованы, но недо�
 
 - `d550d4a` — explicit primary product + neutral legacy behavior + Russian UI fallbacks.
 - `6e13dff` — visible Facts/Myths + Today knowledge + v3.1 release entry.
+- `1326f98` — видимые mobile labels `Факты` и `Вместе` без изменения четырёх main tabs.
 - CI `#134` — UI contract/typecheck/build PASS.
 - CI `#135` — UI contract/typecheck/build PASS.
 - Public preview 390×844 и 1440×960 — PASS.

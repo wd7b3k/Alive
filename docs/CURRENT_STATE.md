@@ -70,9 +70,9 @@ Draft PR: `#5`. PR не merge, `main` и production не изменены.
 
 ## Validation
 
-Текущий frontend head: `6e13dff42e5d22f4cae429116a0d59d4bd746f69`.
+Текущий frontend head: `1326f986f7575f8d79376118444e97839ed12b04`.
 
-GitHub Actions run `#135`:
+GitHub Actions run `#137`:
 
 - UI contract — PASS;
 - TypeScript typecheck — PASS;
@@ -107,7 +107,7 @@ Owner preview выявил две реальные недоделки, кото�
 - preview badge, fallback categories/mechanisms и user-facing errors русифицированы;
 - UI contract защищает primary-product, v3.1 capabilities и Russian labels.
 
-Corrective commits: `d550d4a`, `6e13dff`. CI runs `#134` и `#135` — PASS.
+Corrective commits: `d550d4a`, `6e13dff`. CI runs `#134`, `#135`, `#136` и `#137` — PASS.
 
 ## Открытые release gates
 

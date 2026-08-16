@@ -50,7 +50,7 @@
 - FAIL FOUND BY OWNER — preview badge и raw fallback/error values могли быть на английском.
 - PASS — preview badge и user-facing fallback/error labels русифицированы.
 - PASS — UI contract теперь защищает primary product, Facts/Myths, contextual Myths, Together, start year, lapse и Russian labels.
-- PASS — corrective CI runs `#134` и `#135`.
+- PASS — corrective CI runs `#134`, `#135`, `#136` и `#137`.
 
 ## Logo owner gate
 
@@ -67,15 +67,15 @@
 
 Frontend validation выполнялась после каждого vertical slice.
 
-Current frontend head: `6e13dff42e5d22f4cae429116a0d59d4bd746f69`.
+Current frontend head: `1326f986f7575f8d79376118444e97839ed12b04`.
 
-GitHub Actions run `#135`:
+GitHub Actions run `#137`:
 
 1. UI contract — PASS.
 2. TypeScript typecheck — PASS.
 3. Vite production build — PASS.
 
-Runs `#123–#128` также были зелёными для предшествующих slices. Corrective runs `#134` и `#135` зелёные. Runs `#129` и `#130` обнаружили JSX boundary errors в start-year slice; ошибки исправлены отдельными commits, run `#131` и current run `#132` зелёные.
+Runs `#123–#128` также были зелёными для предшествующих slices. Corrective runs `#134`, `#135`, `#136` и `#137` зелёные. Runs `#129` и `#130` обнаружили JSX boundary errors в start-year slice; ошибки исправлены отдельными commits, run `#131` и current run `#132` зелёные.
 
 В `app/package.json` нет отдельного automated test script/test runner. Статус «tests PASS» не заявляется; применимые automated gates — UI contract, typecheck и build.
 

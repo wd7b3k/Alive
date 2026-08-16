@@ -17,7 +17,7 @@
 ### Validation
 
 - Commit `d550d4a`, CI run `#134`: PASS.
-- Commit `6e13dff`, CI run `#135`: PASS.
+- Commit `6e13dff`, CI run `#137`: PASS.
 - Public login smoke 390×844 и 1440×960: PASS.
 - Authenticated regression: повторная owner verification required.
 
