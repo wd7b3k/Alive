@@ -8,6 +8,7 @@ on:
   pull_request:
     paths:
       - 'app/**'
+      - 'docs/BRANDBOOK.md'
       - '.github/workflows/frontend-ci.yml'
 
 permissions:
@@ -15,7 +16,7 @@ permissions:
 
 jobs:
   frontend:
-    name: Typecheck and build
+    name: UI contract, typecheck and build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,6 +35,9 @@ jobs:
 
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
+
+      - name: Enforce ALIVE UI contract
+        run: node scripts/check-ui-contract.mjs
 
       - name: Typecheck
         run: npm run typecheck

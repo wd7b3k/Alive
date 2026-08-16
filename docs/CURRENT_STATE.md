@@ -4,7 +4,11 @@
 
 ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
-Текущая стадия: **ALIVE v3.0 — PRODUCT ALPHA / IN DEVELOPMENT**.
+Канонический production line остаётся **ALIVE v3.0 — PRODUCT ALPHA / IN DEVELOPMENT** на commit `86b4608da61b34d6db14648a5d5f591ad6e63bcc`.
+
+В отдельной ветке `agent/v3.1-behavioral-depth-together` собран **ALIVE v3.1 — Behavioral Depth + Together / RELEASE CANDIDATE VALIDATION**.
+
+Draft PR: `#5`. PR не merge, `main` и production не изменены.
 
 `wd7b3k/Alive` — единственный source of truth. Код, migrations, product rules и release gates меняются сначала в repo; Dashboard/чат не переопределяют repo.
 
@@ -12,102 +16,113 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
 - Frontend: React + TypeScript + Vite.
 - Hosting: Cloudflare Pages.
-- Текущий production host: `https://alive-aw2.pages.dev`.
+- Production host: `https://alive-aw2.pages.dev`.
+- Branch preview: `https://agent-v3-1-behavioral-depth.alive-aw2.pages.dev/`.
 - Planned canonical host: `https://alive.hmnos.ru`.
 - Auth: Google → Supabase Auth.
 - Database: Supabase PostgreSQL + RLS.
 - Supabase project: `xkigijaqimzuveyzyzyk`, `eu-west-1`.
-- GitHub CI: Node `22.12.0`, `npm ci`, `typecheck`, production build.
+- GitHub CI: Node `22.12.0`, locked install, UI contract, typecheck, production build.
 
-Google OAuth проверен реальным входом: Auth user и ALIVE profile автоматически создаются, display name/avatar приходят из Google metadata.
+## Канонический frontend baseline
 
-## Ключевое решение после первого platform bootstrap
+Утверждённый v3.0 shell сохранён:
 
-Первый web-shell был технически рабочим, но продуктово значительно беднее legacy v2.7. Это признано regression.
+- `app/src/main.tsx` запускает `RedesignApp`;
+- `app/src/redesign.css` остаётся основной дизайн-системой;
+- `V31App` и `v31.css` не входят в active entrypoint;
+- четыре главных раздела `Сегодня / Связки / Путь / Смыслы` сохранены;
+- существующие guided flow, quick nicotine log, evening check-in, corrections, profile, methodology, releases, OAuth и logout сохранены машинным UI contract;
+- новый frontend добавлен в существующий shell, без нового root app и без redesign.
 
-Создан обязательный baseline `docs/V3_PARITY_BASELINE.md`:
+## Реализовано в v3.1
 
-**v3.0 не может считаться готовым, если новый пользователь получает менее глубокий продукт, чем v2.7.**
+### Evidence, catalogs и privacy
 
-Новая архитектура должна сохранить минимум глубины v2.7 и добавить утверждённые возможности v3.
+- versioned `myths_catalog` и `facts_catalog`;
+- 75 опубликованных Замен, 18 mechanisms;
+- private `user_myth_state` с RLS;
+- privacy-safe `get_together_summary(days)` с suppression threshold 3;
+- отдельные evidence reviews и A/B/C classification;
+- запрет превращать population evidence в личный медицинский прогноз.
 
-## Реализовано в текущей ветке `v3.0-platform`
+### Additive frontend slices
 
-### Product UI
+- product-aware CTA по `target_dependency`;
+- guided flow с ярким `Шаг N из M`, отдельной силой тяги, кликабельными достигнутыми шагами и downstream invalidation;
+- Replacement Engine с product/context/need/intensity/history ranking и top-3 разных mechanisms;
+- не более одного contextual Myth на короткий flow, private relevance actions;
+- вторичный `/facts` route с Facts/Myths, evidence level и source links;
+- вторичный `/together` route с личным baseline прежде group aggregates и privacy suppression;
+- optional cigarette `start_year`, approximate duration и pack-years без личного medical prediction;
+- lapse/context-disruption next experiment без shame/reset и с отдельной driving safety формулировкой.
 
-- universal onboarding / personal baseline;
-- cigarette / hookah / vape как отдельные raw products;
-- product role: `target_dependency` / `cessation_bridge`;
-- Сегодня — action screen, current metrics, attention links, recent episodes;
-- guided craving flow: product → trigger → need → 3 contextual replacements → outcome;
-- quick nicotine fact logging без выдумывания craving score;
-- evening check-in;
-- Связки — automatic trigger map + private user Links;
-- Смыслы — global universal catalog + private CRUD/UGC workflow;
-- Путь — 7-day динамика, raw products, personal replacement effectiveness, Freedom Fund, rewards;
-- Profile/baseline;
-- Эксперимент — methodology, assumptions, limitations, privacy;
-- Релизы;
-- deletion of erroneous/test episode with recalculation from remaining facts;
-- inline explanations / `nothing unexplained` pattern.
+### Logo
 
-### Content depth
+Владелец прямо утвердил приложенный PNG как канонический asset для этой интеграции. Exact bytes сохранены без resize/crop/recompress/optimization:
 
-Remote catalog after product-depth migrations:
+- path: `app/src/assets/brand-logo-full.png`;
+- size: 486931 bytes;
+- dimensions: 2048×682;
+- SHA-256: `6b58071efb328d970d921ea6e03d30e15a148d8c36a92f6e9ec05455a830d832`.
 
-- 29 published triggers;
-- 46 published replacements;
-- 96 trigger→replacement relations;
-- 13 universal Meanings;
-- 5 universal identity scripts;
-- 13 support messages;
-- 7 rewards.
+Этот owner gate заменил ранее зафиксированное ожидание другого hash. UI contract обновлён осознанно, а не ослаблен. Владелец подтвердил login, desktop authenticated header и mobile authenticated header.
 
-Legacy personal biography is intentionally not promoted into global content. Private personal content belongs to the individual user profile.
+## Validation
 
-### Data / privacy
+Текущий frontend head: `1326f986f7575f8d79376118444e97839ed12b04`.
 
-Applied remote migrations:
+GitHub Actions run `#137`:
 
-1. `v3_platform_initial`
-2. `v3_platform_security_indexes`
-3. `v3_product_depth_schema`
-4. `v3_product_depth_catalog_a`
-5. `v3_product_depth_catalog_b`
-6. `v3_product_depth_mapping`
-7. `v3_product_depth_meaning`
-8. `v3_support_state_and_account_control`
-9. `v3_remove_public_account_delete_rpc`
-
-RLS protects private user-owned entities. Service-role/OAuth secrets are not stored in frontend/repo.
-
-A proposed public `SECURITY DEFINER` self-delete RPC was rejected after Security Advisor flagged the exposed surface. It was removed by migration before alpha merge. Account deletion will use an authenticated Edge Function instead.
-
-Current Supabase Security Advisor has one remaining Auth warning: leaked-password protection is disabled. ALIVE currently exposes Google OAuth only, not password sign-in, so the warning does not represent an active password-login surface. Revisit before ever enabling password auth.
-
-## CI state
-
-Latest rich product frontend commit passes:
-
-- locked dependency install — PASS;
+- UI contract — PASS;
 - TypeScript typecheck — PASS;
 - Vite production build — PASS.
 
-## Still required before v3.0 can be called RELEASED
+В `package.json` нет отдельного automated test script/test runner; несуществующий test suite не объявляется пройденным.
 
-- real runtime smoke-test of new deep UI;
-- full user Link edit/disable controls (create/delete/UGC already implemented);
-- background NRT patch UI (DB/RLS support exists);
-- user data export UI;
-- authenticated Edge Function for full account deletion;
-- two-user RLS isolation test;
-- local full DB reset from migrations;
-- mobile/desktop parity review;
-- `alive.hmnos.ru` DNS/custom-domain cutover;
-- validation/docs sync.
+Public branch-preview smoke:
 
-`Together` remains v3.1. Admin/Product Intelligence remains v3.2.
+- 390×844 login — PASS;
+- 820×900 standalone methodology — PASS;
+- 1440×960 login — PASS;
+- logo loads with correct proportions; visible horizontal overflow не обнаружен.
 
-## Release discipline
+Owner visual smoke для login и authenticated desktop/mobile logo/header — PASS.
 
-Deploying a v3.0 alpha for real testing does **not** mean the release gate is complete. `v3.0 RELEASED` is reserved until `releases/v3.0-platform/REQUIREMENTS.md` and `VALIDATION.md` pass.
+## Corrective owner QA — 2026-08-17
+
+Owner preview выявил две реальные недоделки, которые не были видны по CI:
+
+- несколько продуктов ошибочно сохранялись с одинаковой ролью `target_dependency`, поэтому CTA выбирал случайный первый row и показывал кальян;
+- Facts/Myths существовали как route, но были недостаточно заметны в active shell;
+- preview badge и отдельные fallback/error labels нарушали правило русского интерфейса.
+
+Исправлено:
+
+- один явно выбранный основной продукт; остальные сохраняются как дополнительные;
+- старый неоднозначный profile получает нейтральный CTA `Разобрать тягу` и обязательный выбор продукта вместо случайного default;
+- Quick log также не подставляет случайный продукт;
+- `Факты и мифы` видны в desktop/mobile header и отдельном блоке Today;
+- v3.1 добавлен в Историю версий;
+- preview badge, fallback categories/mechanisms и user-facing errors русифицированы;
+- UI contract защищает primary-product, v3.1 capabilities и Russian labels.
+
+Corrective commits: `d550d4a`, `6e13dff`. CI runs `#134`, `#135`, `#136` и `#137` — PASS.
+
+## Открытые release gates
+
+v3.1 ещё не RELEASED и PR остаётся draft до:
+
+- полного authenticated post-change regression прохода Today/guided/quick log/correction/evening/Links/Path/Meanings/Profile/Facts/Together;
+- проверки guided back-step/downstream invalidation и save на реальных данных;
+- проверки Together suppressed/evaluable состояний;
+- полного responsive прохода 390/430/768–820/1280/1440+ для authenticated surfaces;
+- второго реального/test account для client-level isolation проверки `user_myth_state`;
+- owner review медицински значимого copy;
+- финального owner visual approval всего RC.
+
+Успешные migration, CI и branch preview сами по себе не разрешают merge или production deployment.
+
+## Следующий этап после v3.1
+
+Roadmap v3.2 сохраняет два отдельных контура: Admin + Product Intelligence и versioned application/API layer для Web/Telegram/native mobile/future clients. Этот redesign архитектуры не выполняется скрыто внутри v3.1.

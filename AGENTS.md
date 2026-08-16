@@ -29,13 +29,18 @@
 5. `docs/PRODUCT_STRATEGY.md`
 6. `docs/METHODOLOGY.md`
 7. `docs/PRODUCT_PRINCIPLES.md`
-8. `docs/PRIVACY_AND_DATA.md`
-9. релевантные architecture/data/module документы
-10. `docs/HYPOTHESES_AND_METRICS.md`
-11. `docs/ROADMAP.md`
-12. последний релевантный `docs/ai_sessions/**/**-response.md`
-13. документацию текущего release unit
-14. только затем — код.
+8. `docs/BRANDBOOK.md` — обязательно перед любыми frontend/UI/client-app изменениями
+9. `docs/RELEASE_ENGINEERING_RULES.md` — обязательно перед любым release/code change
+10. `docs/PRIVACY_AND_DATA.md`
+11. релевантные architecture/data/module документы
+12. `docs/HYPOTHESES_AND_METRICS.md`
+13. `docs/ROADMAP.md`
+14. последний релевантный `docs/ai_sessions/**/**-response.md`
+15. документацию текущего release unit
+16. diff последнего принятого релиза, затрагивавшего тот же сценарий
+17. только затем — код.
+
+Для UI-задачи исполнитель обязан восстановить не только код, но и фактический production-approved визуальный baseline.
 
 ## Статус проекта
 
@@ -99,6 +104,76 @@ AI обязан:
 
 Нельзя полагаться на то, что пользователь знает внутреннюю терминологию разработчиков.
 
+## UI integrity и brand freeze
+
+Начиная с утверждённого ALIVE v3.0, существующий visual shell считается стабильным продуктовым контрактом.
+
+Перед любым frontend изменением AI/разработчик обязан:
+
+- прочитать `docs/BRANDBOOK.md` и `docs/RELEASE_ENGINEERING_RULES.md`;
+- использовать production-approved `RedesignApp.tsx` и `redesign.css` как визуальный baseline;
+- составить baseline inventory: `сохраняется / изменяется / добавляется / удаляется`;
+- по умолчанию оставить секцию `удаляется` пустой;
+- перечислить функции изменяемого экрана, которые обязаны сохраниться;
+- найти последний merged PR/commit, где этот сценарий работал;
+- предпочитать additive extension существующих компонентов structural rewrite;
+- проверить desktop и mobile regression;
+- сравнить визуальный результат с последним утверждённым baseline.
+
+Без прямого owner gate запрещено:
+
+- создавать новый root app/shell вместо текущего;
+- переключать `main.tsx` на параллельное приложение;
+- создавать вторую базовую дизайн-систему поверх `redesign.css`;
+- менять глобальную палитру, typography scale, header composition или главный Today layout;
+- удалять/замещать существующий пользовательский функционал ради нового release scope;
+- считать более новый AI-generated UI автоматически более каноническим, чем утверждённый предыдущий release.
+
+Новый функционал должен выглядеть как естественная часть того же ALIVE.
+
+Если новый экран визуально воспринимается как другой продукт или существующая функция пропала, frontend gate считается **FAIL** независимо от успешного typecheck/build.
+
+## Машинный UI contract
+
+Каждый frontend CI обязан запускать:
+
+`node app/scripts/check-ui-contract.mjs`
+
+или эквивалентную проверку из `app/`.
+
+Этот gate должен как минимум защищать:
+
+- `RedesignApp` как активный root;
+- `redesign.css` как базовую дизайн-систему;
+- утверждённый logo asset;
+- четыре baseline-раздела `Сегодня / Связки / Путь / Смыслы`;
+- быструю запись никотина;
+- guided flow;
+- вечерний разбор;
+- удаление ошибочного эпизода;
+- пользовательские Связки и Смыслы;
+- Google OAuth и logout.
+
+Если изменение действительно должно нарушить этот contract, сначала требуется owner gate, затем осознанное обновление contract/test. Запрещено просто удалить failing check ради зелёного CI.
+
+## Release integration discipline
+
+Крупные функции интегрируются вертикальными срезами, а не одним большим rewrite.
+
+После каждого среза:
+
+1. UI contract
+2. typecheck
+3. build
+4. релевантный functional smoke-test
+5. проверка baseline-функций
+
+Нельзя считать release-ready по одному зелёному CI. Для UI нужны три независимых подтверждения:
+
+1. техническое — CI/tests/build;
+2. функциональное — regression matrix;
+3. визуальное — реальный preview + owner gate для заметного UI.
+
 ## Privacy-by-design
 
 - private by default;
@@ -118,7 +193,9 @@ AI обязан:
 - private module data нельзя менять из другого модуля в обход его публичного API/port;
 - schema/data semantics versioned;
 - raw behavioural events сохраняются отдельно от пересчитываемых моделей/эвристик;
-- изменения ALIVE unit models не должны переписывать raw history.
+- изменения ALIVE unit models не должны переписывать raw history;
+- новая БД/API-схема не является основанием для переписывания клиентского shell: сначала adapter/backward-compatible contract, затем additive UI integration;
+- перед multi-client этапом Web/Telegram/mobile бизнес-логика должна постепенно выноситься из конкретного frontend в versioned application/domain contracts, не ломая текущий клиент.
 
 ## LLM
 
@@ -137,7 +214,8 @@ LLM может помогать с объяснениями, классифик�
 - новая каноническая линия начинается с v3.0;
 - каждый релиз имеет changelog, validation, rollback и документацию;
 - номер версии не повышается задним числом и не придумывается вне фактического release unit;
-- логотип ALIVE считается утверждённым asset и не изменяется/не перегенерируется без прямой команды владельца.
+- логотип ALIVE считается утверждённым asset и не изменяется/не перегенерируется без прямой команды владельца;
+- release должен ощущаться как «тот же ALIVE, который теперь умеет больше», а не как новое приложение с повторно реализованными старыми функциями.
 
 ## AI audit trail
 
@@ -154,7 +232,8 @@ LLM может помогать с объяснениями, классифик�
 - foundation/code changes проходят validation;
 - создаётся PR;
 - принятой считается версия после merge в `main`;
-- response/handoff обязан указать branch, PR, validation и незавершённые пункты.
+- response/handoff обязан указать branch, PR, validation и незавершённые пункты;
+- draft PR не переводится в ready/merge до выполнения технического, функционального и визуального gates.
 
 ## Decision gates
 
@@ -167,4 +246,6 @@ LLM может помогать с объяснениями, классифик�
 - изменения медицински значимых формулировок;
 - изменения коэффициентов ALIVE units;
 - публикации пользовательского UGC без отдельного consent;
-- замены утверждённой бренд-айдентики.
+- замены утверждённой бренд-айдентики;
+- создания нового root frontend shell или глобальной замены утверждённого визуального языка;
+- удаления существующей пользовательской функции или основного navigation surface.

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import logoUrl from './assets/brand-logo-full.png';
 import { publicEnv } from './env';
@@ -10,7 +10,6 @@ import {
   deleteLink,
   deleteMeaning,
   loadBootstrap,
-  pickReplacements,
   productLabel,
   saveCheckin,
   saveGuidedEpisode,
@@ -29,7 +28,58 @@ import {
 } from './data';
 import { saveQuickUse } from './actions';
 import { dailyUnits, replacementStats, statsForDays, triggerStats } from './metrics';
+import {
+  contextualMyth,
+  factForMoment,
+  loadKnowledge,
+  loadTogether,
+  markMythShown,
+  pickDiverseReplacements,
+  replacementMechanism,
+  setMythRelevance,
+  smokingExposure,
+  type Fact,
+  type Knowledge,
+  type Myth,
+  type MythState,
+  type TogetherSummary,
+} from './v31-data';
 import { Icon, type IconName } from './ui-icons';
+
+const EMPTY_KNOWLEDGE: Knowledge = { facts: [], myths: [], mythState: [] };
+
+const FACT_CATEGORIES: Record<string, string> = {
+  heart: 'Сердце и сосуды',
+  mortality: 'Долгая жизнь',
+  mental_health: 'Психика и настроение',
+  treatment: 'Поддержка',
+  product: 'Никотиновые продукты',
+  others: 'Окружающие',
+  oral_health: 'Зубы и полость рта',
+  behavior: 'Как работает зависимость',
+  weight: 'Вес',
+};
+
+const MECHANISM_LABELS: Record<string, string> = {
+  food: 'Еда',
+  attention: 'Внимание',
+  movement: 'Движение',
+  reflection: 'Запись и наблюдение',
+  ritual: 'Ритуал',
+  social: 'Контакт',
+  drink: 'Напиток',
+  grounding: 'Опора',
+  meaning: 'Смыслы',
+  pause: 'Пауза',
+  reward: 'Награда',
+  sensory: 'Ощущения',
+  breathing: 'Дыхание',
+  context_change: 'Смена контекста',
+  evidence_treatment: 'Доказательная поддержка',
+  oral: 'Оральная замена',
+  focus: 'Фокус',
+  manual: 'Занять руки',
+};
 
 function go(path: string) {
   window.history.pushState({}, '', path);
@@ -68,6 +118,20 @@ function productIcon(product: ProductType): IconName {
   if (product === 'cigarette') return 'smoke';
   if (product === 'hookah') return 'hookah';
   return 'vape';
+}
+
+function primaryTargetProduct(data: Pick<Bootstrap, 'products'>): ProductType | null {
+  const targets = data.products.filter((product) => product.role === 'target_dependency');
+  if (targets.length === 1) return targets[0].product_type;
+  if (data.products.length === 1) return data.products[0].product_type;
+  return null;
+}
+
+function productCta(product: ProductType | null) {
+  if (product === 'cigarette') return 'Хочу закурить';
+  if (product === 'vape') return 'Хочу затянуться';
+  if (product === 'hookah') return 'Хочу покурить кальян';
+  return 'Разобрать тягу';
 }
 
 function triggerIcon(item: Pick<Trigger, 'code' | 'title'>): IconName {
@@ -111,12 +175,32 @@ function replacementIcon(item: Replacement): IconName {
 }
 
 function replacementKind(item: Replacement) {
-  if (item.category === 'nrt') return 'Никотин-заместительная терапия';
-  if (item.category === 'food') return 'Еда и напиток';
-  if (item.category === 'meaning') return 'Смысл';
-  if (item.category === 'physical') return 'Тело';
-  if (item.category === 'sensory') return 'Внимание и ощущения';
-  return 'Другой ответ';
+  const labels: Record<string, string> = {
+    breathing: 'Дыхание',
+    movement: 'Движение',
+    attention: 'Внимание',
+    grounding: 'Опора',
+    food: 'Еда',
+    oral: 'Оральная замена',
+    drink: 'Напиток',
+    ritual: 'Ритуал',
+    meaning: 'Смысл',
+    social: 'Контакт',
+    reflection: 'Наблюдение',
+    evidence_treatment: 'Доказательная поддержка',
+    focus: 'Фокус',
+    manual: 'Занять руки',
+    pause: 'Пауза',
+    reward: 'Награда',
+    context_change: 'Смена контекста',
+    sensory: 'Ощущения',
+  };
+  return labels[replacementMechanism(item)] ?? 'Другой ответ';
+}
+
+function lapseAdvice(triggerCode: string) {
+  if (triggerCode === 'driving') return 'Если тяга застала за рулём, сначала безопасно остановись и выйди из автомобиля. Не кури за рулём и не закрепляй салон как часть ритуала.';
+  return 'Один эпизод ничего не обнуляет. В следующий похожий момент попробуй изменить хотя бы одну деталь контекста: перейти в другое место, убрать телефон или сделать короткую паузу перед решением.';
 }
 
 function tobaccoSummary(event: Bootstrap['tobaccoEvents'][number] | undefined) {
@@ -156,7 +240,7 @@ function Header({ data, path }: { data: Bootstrap; path: string }) {
     <header className="r-header">
       <Brand />
       <nav className="r-desktop-nav">{MAIN_NAV.map(([href, label, icon]) => <button key={href} className={path === href ? 'active' : ''} onClick={() => go(href)}><Icon name={icon} size={18}/><span>{label}</span></button>)}</nav>
-      <div className="r-header-tools"><button className="r-method-link" onClick={() => go('/experiment')}>О методе</button><button className="r-avatar" onClick={() => go('/profile')} title="Профиль">{data.profile.avatar_url ? <img src={data.profile.avatar_url} alt="" referrerPolicy="no-referrer"/> : <Icon name="user" size={20}/>}</button></div>
+      <div className="r-header-tools"><button className={'r-method-link r-header-shortcut ' + (path === '/facts' ? 'active' : '')} onClick={() => go('/facts')} title="Факты и мифы"><Icon name="eye" size={17}/><span className="r-full-label">Факты и мифы</span><span className="r-short-label">Факты</span></button><button className={'r-method-link r-header-shortcut ' + (path === '/together' ? 'active' : '')} onClick={() => go('/together')} title="Вместе"><Icon name="people" size={17}/><span>Вместе</span></button><button className="r-method-link r-method-only" onClick={() => go('/experiment')}>О методе</button><button className="r-avatar" onClick={() => go('/profile')} title="Профиль">{data.profile.avatar_url ? <img src={data.profile.avatar_url} alt="" referrerPolicy="no-referrer"/> : <Icon name="user" size={20}/>}</button></div>
     </header>
     <nav className="r-mobile-nav">{MAIN_NAV.map(([href, label, icon]) => <button key={href} className={path === href ? 'active' : ''} onClick={() => go(href)}><Icon name={icon} size={21}/><span>{label}</span></button>)}</nav>
   </>;
@@ -170,16 +254,26 @@ function Login() {
     if (!supabase) return;
     setBusy(true); setError('');
     const result = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/` } });
-    if (result.error) { setError(result.error.message); setBusy(false); }
+    if (result.error) { setError('Не удалось открыть вход через Google. Попробуй ещё раз.'); setBusy(false); }
   }
   return <main className="r-login"><section className="r-login-card"><img src={logoUrl} className="r-login-logo" alt="ALIVE"/><p className="r-kicker">Некоммерческий эксперимент · метод ALIVE v1</p><h1>Не запрещать себе. Вернуть себе выбор.</h1><p className="r-lead">ALIVE помогает заметить, что именно запускает автоматический ритуал, понять, какое состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.</p><div className="r-login-actions"><ShellButton className="primary" onClick={start} disabled={busy}>{busy ? 'Открываю Google…' : 'Войти через Google'} <Icon name="arrow" size={18}/></ShellButton><ShellButton className="ghost" onClick={() => go('/experiment')}>Как устроен эксперимент</ShellButton></div>{error && <p className="r-error">{error}</p>}<p className="r-privacy">Google нужен только для входа. Поведенческие данные хранятся отдельно и защищаются правилами доступа PostgreSQL.</p></section></main>;
 }
 
 function Setup({ session, data, done, cancel }: { session: Session; data: Bootstrap | null; done: () => Promise<void>; cancel?: () => void }) {
   const existing = useMemo(() => new Map((data?.products ?? []).map((p) => [p.product_type, p])), [data]);
+  const existingTargets = (data?.products ?? []).filter((product) => product.role === 'target_dependency');
+  const initialPrimary = !data
+    ? 'cigarette'
+    : existingTargets.length === 1
+      ? existingTargets[0].product_type
+      : data.products.length === 1
+        ? data.products[0].product_type
+        : null;
   const [chosen, setChosen] = useState<Record<ProductType, boolean>>({ cigarette: existing.has('cigarette') || !data, hookah: existing.has('hookah'), vape: existing.has('vape') });
+  const [primary, setPrimary] = useState<ProductType | null>(initialPrimary);
   const [goal, setGoal] = useState(data?.settings.goal_text ?? '');
   const [cigs, setCigs] = useState(String(existing.get('cigarette')?.baseline?.cigarettes_per_day ?? ''));
+  const [startYear, setStartYear] = useState(String(existing.get('cigarette')?.baseline?.start_year ?? ''));
   const [pack, setPack] = useState(String(existing.get('cigarette')?.defaults?.pack_price_rub ?? ''));
   const [hookahs, setHookahs] = useState(String(existing.get('hookah')?.baseline?.sessions_per_week ?? ''));
   const [hookahPrice, setHookahPrice] = useState(String(existing.get('hookah')?.defaults?.hookah_default_price_rub ?? 2500));
@@ -187,16 +281,30 @@ function Setup({ session, data, done, cancel }: { session: Session; data: Bootst
   const [vapePrice, setVapePrice] = useState(String(existing.get('vape')?.defaults?.consumable_price_rub ?? 1500));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const selectedProducts = (['cigarette', 'hookah', 'vape'] as ProductType[]).filter((product) => chosen[product]);
+
+  function toggleProduct(product: ProductType) {
+    const next = { ...chosen, [product]: !chosen[product] };
+    const enabled = (['cigarette', 'hookah', 'vape'] as ProductType[]).filter((item) => next[item]);
+    setChosen(next);
+    if (primary && !next[primary]) setPrimary(enabled.length === 1 ? enabled[0] : null);
+    else if (!primary && enabled.length === 1) setPrimary(enabled[0]);
+  }
+
   async function save() {
     const products: OnboardingDraft['products'] = [];
-    if (chosen.cigarette) products.push({ productType: 'cigarette', role: 'target_dependency', baseline: { cigarettes_per_day: Number(cigs || 0) }, defaults: { pack_price_rub: Number(pack || 0), pack_size: 20 } });
-    if (chosen.hookah) products.push({ productType: 'hookah', role: 'target_dependency', baseline: { sessions_per_week: Number(hookahs || 0) }, defaults: { hookah_default_price_rub: Number(hookahPrice || 2500) } });
-    if (chosen.vape) products.push({ productType: 'vape', role: 'target_dependency', baseline: { puffs_per_day: Number(puffs || 0) }, defaults: { claimed_puffs: 5000, consumable_price_rub: Number(vapePrice || 1500), device_type: 'disposable' } });
+    if (!primary || !chosen[primary]) { setError('Выбери один основной продукт — он определяет главный призыв и первый шаг разбора тяги.'); return; }
+    const currentYear = new Date().getFullYear();
+    const year = Number(startYear);
+    if (chosen.cigarette && startYear.trim() && (!Number.isInteger(year) || year < 1900 || year > currentYear)) { setError('Укажи приблизительный год от 1900 до ' + currentYear + ' или оставь поле пустым.'); return; }
+    if (chosen.cigarette) products.push({ productType: 'cigarette', role: primary === 'cigarette' ? 'target_dependency' : 'cessation_bridge', baseline: { cigarettes_per_day: Number(cigs || 0), ...(startYear.trim() ? { start_year: year } : {}) }, defaults: { pack_price_rub: Number(pack || 0), pack_size: 20 } });
+    if (chosen.hookah) products.push({ productType: 'hookah', role: primary === 'hookah' ? 'target_dependency' : 'cessation_bridge', baseline: { sessions_per_week: Number(hookahs || 0) }, defaults: { hookah_default_price_rub: Number(hookahPrice || 2500) } });
+    if (chosen.vape) products.push({ productType: 'vape', role: primary === 'vape' ? 'target_dependency' : 'cessation_bridge', baseline: { puffs_per_day: Number(puffs || 0) }, defaults: { claimed_puffs: 5000, consumable_price_rub: Number(vapePrice || 1500), device_type: 'disposable' } });
     if (!products.length) { setError('Выбери хотя бы один никотиновый продукт.'); return; }
     setBusy(true); setError('');
-    try { await saveOnboarding(session, { goalText: goal, products }); await done(); } catch (e) { setError(e instanceof Error ? e.message : 'Не удалось сохранить настройки'); } finally { setBusy(false); }
+    try { await saveOnboarding(session, { goalText: goal, products }); await done(); } catch { setError('Не удалось сохранить настройки. Проверь данные и попробуй ещё раз.'); } finally { setBusy(false); }
   }
-  return <main className="r-setup-page"><section className="r-setup"><div className="r-setup-head"><div><p className="r-kicker">Настройка личной карты</p><h1>С чего ты начинаешь</h1><p>Это не норматив и не оценка. Исходный уровень нужен только для сравнения тебя с самим собой.</p></div>{cancel && <button className="r-icon-button" onClick={cancel}><Icon name="close"/></button>}</div><label className="r-field"><span>Что ты хочешь вернуть себе?</span><textarea value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="Например: больше энергии, свободное утро, спокойствие без сигареты, ощущение собственной силы"/></label><div className="r-product-grid">{(['cigarette','hookah','vape'] as ProductType[]).map((p) => <button key={p} className={`r-product-choice ${chosen[p] ? 'selected' : ''}`} onClick={() => setChosen((v) => ({ ...v, [p]: !v[p] }))}><span className="r-product-icon"><Icon name={productIcon(p)} size={25}/></span><strong>{productLabel(p)}</strong><small>{chosen[p] ? 'учитываем' : 'не учитывать'}</small></button>)}</div>{chosen.cigarette && <div className="r-inline-fields"><label className="r-field"><span>Сигарет в день сейчас</span><input type="number" min="0" value={cigs} onChange={(e) => setCigs(e.target.value)}/></label><label className="r-field"><span>Цена пачки, ₽</span><input type="number" min="0" value={pack} onChange={(e) => setPack(e.target.value)}/></label></div>}{chosen.hookah && <div className="r-inline-fields"><label className="r-field"><span>Кальянов в неделю</span><input type="number" min="0" value={hookahs} onChange={(e) => setHookahs(e.target.value)}/></label><label className="r-field"><span>Обычная стоимость, ₽</span><input type="number" min="0" value={hookahPrice} onChange={(e) => setHookahPrice(e.target.value)}/></label></div>}{chosen.vape && <div className="r-inline-fields"><label className="r-field"><span>Затяжек в день примерно</span><input type="number" min="0" value={puffs} onChange={(e) => setPuffs(e.target.value)}/></label><label className="r-field"><span>Стоимость устройства / расходника, ₽</span><input type="number" min="0" value={vapePrice} onChange={(e) => setVapePrice(e.target.value)}/></label></div>}<div className="r-note"><Icon name="shield"/><p>Единицы ALIVE — только внутренняя шкала поведения: сигарета = 1, кальянная сессия = 10, 10 затяжек электронной сигареты = 1. Это не медицинское сравнение вреда.</p></div>{error && <p className="r-error">{error}</p>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Сохранить и начать'} <Icon name="arrow" size={18}/></ShellButton>{cancel && <ShellButton className="ghost" onClick={cancel}>Отмена</ShellButton>}</div></section></main>;
+  return <main className="r-setup-page"><section className="r-setup"><div className="r-setup-head"><div><p className="r-kicker">Настройка личной карты</p><h1>С чего ты начинаешь</h1><p>Это не норматив и не оценка. Исходный уровень нужен только для сравнения тебя с самим собой.</p></div>{cancel && <button className="r-icon-button" onClick={cancel}><Icon name="close"/></button>}</div><label className="r-field"><span>Что ты хочешь вернуть себе?</span><textarea value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="Например: больше энергии, свободное утро, спокойствие без сигареты, ощущение собственной силы"/></label><div className="r-product-grid">{(['cigarette','hookah','vape'] as ProductType[]).map((p) => <button key={p} className={`r-product-choice ${chosen[p] ? 'selected' : ''}`} onClick={() => toggleProduct(p)}><span className="r-product-icon"><Icon name={productIcon(p)} size={25}/></span><strong>{productLabel(p)}</strong><small>{chosen[p] ? 'учитываем' : 'не учитывать'}</small></button>)}</div>{selectedProducts.length > 1 && <section className="r-primary-product"><div><strong>Какой продукт сейчас основной?</strong><p>Он определяет текст главной кнопки. Для остальных продуктов данные продолжат учитываться отдельно.</p></div><div className="r-primary-options">{selectedProducts.map((product) => <button type="button" key={product} className={primary === product ? 'selected' : ''} onClick={() => setPrimary(product)}><Icon name={productIcon(product)} size={18}/>{productLabel(product)}</button>)}</div></section>}{chosen.cigarette && <><div className="r-inline-fields"><label className="r-field"><span>Сигарет в день сейчас</span><input type="number" min="0" value={cigs} onChange={(e) => setCigs(e.target.value)}/></label><label className="r-field"><span>Цена пачки, ₽</span><input type="number" min="0" value={pack} onChange={(e) => setPack(e.target.value)}/></label></div><label className="r-field"><span>Когда начал регулярно курить · необязательно</span><input type="number" min="1900" max={new Date().getFullYear()} value={startYear} onChange={(e) => setStartYear(e.target.value)} placeholder="Например, 2001"/><small>Можно указать приблизительный год. Он нужен только для справочного стажа и сопоставления с исследованиями, не для личного медицинского прогноза.</small></label></>}{chosen.hookah && <div className="r-inline-fields"><label className="r-field"><span>Кальянов в неделю</span><input type="number" min="0" value={hookahs} onChange={(e) => setHookahs(e.target.value)}/></label><label className="r-field"><span>Обычная стоимость, ₽</span><input type="number" min="0" value={hookahPrice} onChange={(e) => setHookahPrice(e.target.value)}/></label></div>}{chosen.vape && <div className="r-inline-fields"><label className="r-field"><span>Затяжек в день примерно</span><input type="number" min="0" value={puffs} onChange={(e) => setPuffs(e.target.value)}/></label><label className="r-field"><span>Стоимость устройства / расходника, ₽</span><input type="number" min="0" value={vapePrice} onChange={(e) => setVapePrice(e.target.value)}/></label></div>}<div className="r-note"><Icon name="shield"/><p>Единицы ALIVE — только внутренняя шкала поведения: сигарета = 1, кальянная сессия = 10, 10 затяжек электронной сигареты = 1. Это не медицинское сравнение вреда.</p></div>{error && <p className="r-error">{error}</p>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Сохранить и начать'} <Icon name="arrow" size={18}/></ShellButton>{cancel && <ShellButton className="ghost" onClick={cancel}>Отмена</ShellButton>}</div></section></main>;
 }
 
 function EpisodeCard({ data, episode, remove }: { data: Bootstrap; episode: Bootstrap['episodes'][number]; remove: (id: string) => void }) {
@@ -224,22 +332,45 @@ function EpisodeCard({ data, episode, remove }: { data: Bootstrap; episode: Boot
 }
 
 function QuickUse({ session, data, close, saved }: { session: Session; data: Bootstrap; close: () => void; saved: () => Promise<void> }) {
-  const [product, setProduct] = useState<ProductType>(data.products[0]?.product_type ?? 'cigarette');
+  const [product, setProduct] = useState<ProductType | null>(primaryTargetProduct(data));
   const [trigger, setTrigger] = useState('');
   const [qty, setQty] = useState(1);
   const [puffs, setPuffs] = useState(10);
   const [busy, setBusy] = useState(false);
   async function save() {
+    if (!product) return;
     setBusy(true);
     try { await saveQuickUse(session, { product, triggerCode: trigger || undefined, cigaretteQuantity: product === 'cigarette' ? qty : undefined, hookahSessionCount: product === 'hookah' ? 1 : undefined, vapePuffs: product === 'vape' ? puffs : undefined }); await saved(); close(); } finally { setBusy(false); }
   }
-  return <Modal onClose={close}><div className="r-modal-head"><div><p className="r-kicker">Просто факт · без оценки</p><h2>Никотин уже был</h2><p>Здесь нет «замены». Мы отдельно записываем употребление, чтобы история оставалась честной.</p></div><button className="r-icon-button" onClick={close}><Icon name="close"/></button></div><div className="r-product-switch">{data.products.map((p) => <button key={p.product_type} className={product === p.product_type ? 'selected' : ''} onClick={() => setProduct(p.product_type)}><Icon name={productIcon(p.product_type)} size={20}/>{productLabel(p.product_type)}</button>)}</div><label className="r-field"><span>Что происходило перед этим? · необязательно</span><select value={trigger} onChange={(e) => setTrigger(e.target.value)}><option value="">Не указывать</option>{data.triggers.filter((t) => t.product_types.includes(product)).map((t) => <option key={t.code} value={t.code}>{t.title}</option>)}</select></label>{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(e) => setQty(Number(e.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0,puffs-5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs+5)}>+5</button><button onClick={() => setPuffs(puffs+10)}>+10</button></div>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Записать факт'}</ShellButton><ShellButton className="ghost" onClick={close}>Отмена</ShellButton></div></Modal>;
+  return <Modal onClose={close}><div className="r-modal-head"><div><p className="r-kicker">Просто факт · без оценки</p><h2>Никотин уже был</h2><p>Здесь нет «замены». Мы отдельно записываем употребление, чтобы история оставалась честной.</p></div><button className="r-icon-button" onClick={close}><Icon name="close"/></button></div><div className="r-product-switch">{data.products.map((p) => <button key={p.product_type} className={product === p.product_type ? 'selected' : ''} onClick={() => setProduct(p.product_type)}><Icon name={productIcon(p.product_type)} size={20}/>{productLabel(p.product_type)}</button>)}</div><label className="r-field"><span>Что происходило перед этим? · необязательно</span><select value={trigger} onChange={(e) => setTrigger(e.target.value)}><option value="">Не указывать</option>{data.triggers.filter((t) => product && t.product_types.includes(product)).map((t) => <option key={t.code} value={t.code}>{t.title}</option>)}</select></label>{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(e) => setQty(Number(e.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0,puffs-5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs+5)}>+5</button><button onClick={() => setPuffs(puffs+10)}>+10</button></div>}<div className="r-lapse-note"><Icon name={trigger === 'driving' ? 'car' : 'chain'} size={22}/><div><strong>Следующий эксперимент</strong><p>{lapseAdvice(trigger)}</p></div></div><div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy || !product}>{busy ? 'Сохраняю…' : product ? 'Записать факт' : 'Сначала выбери продукт'}</ShellButton><ShellButton className="ghost" onClick={close}>Отмена</ShellButton></div></Modal>;
 }
 
-function Guided({ session, data, close, saved, initialTrigger }: { session: Session; data: Bootstrap; close: () => void; saved: () => Promise<void>; initialTrigger?: string }) {
-  const initialProduct = data.products.find((p) => p.role === 'target_dependency')?.product_type ?? data.products[0]?.product_type ?? 'cigarette';
-  const [product, setProduct] = useState<ProductType>(initialProduct);
-  const [step, setStep] = useState(data.products.length > 1 ? 0 : 1);
+function Guided({ session, data, knowledge, close, saved, initialTrigger }: { session: Session; data: Bootstrap; knowledge: Knowledge; close: () => void; saved: () => Promise<void>; initialTrigger?: string }) {
+  const preferredProduct = primaryTargetProduct(data);
+  const initialTriggerItem = data.triggers.find((trigger) => trigger.code === initialTrigger);
+  const compatibleProducts = initialTriggerItem
+    ? data.products.filter((item) => initialTriggerItem.product_types.includes(item.product_type))
+    : data.products;
+  const initialProduct = initialTriggerItem
+    ? compatibleProducts.length === 1
+      ? compatibleProducts[0].product_type
+      : preferredProduct && initialTriggerItem.product_types.includes(preferredProduct)
+        ? preferredProduct
+        : null
+    : preferredProduct;
+  const hasProductStep = data.products.length > 1;
+  const flowSteps: Array<{ id: number; label: string }> = [
+    ...(hasProductStep ? [{ id: 0, label: 'Продукт' }] : []),
+    { id: 1, label: 'Ситуация' },
+    { id: 2, label: 'Сила тяги' },
+    { id: 3, label: 'Потребность' },
+    { id: 4, label: 'Замена' },
+    { id: 5, label: 'Результат' },
+  ];
+  const initialStep = initialTrigger && initialProduct ? 2 : hasProductStep ? 0 : 1;
+  const [product, setProduct] = useState<ProductType | null>(initialProduct);
+  const [step, setStep] = useState(initialStep);
+  const [maxReached, setMaxReached] = useState(initialStep);
   const [triggerCode, setTrigger] = useState(initialTrigger ?? '');
   const [needCode, setNeed] = useState('');
   const [before, setBefore] = useState(7);
@@ -250,17 +381,120 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   const [qty, setQty] = useState(1);
   const [puffs, setPuffs] = useState(10);
   const [busy, setBusy] = useState(false);
-  const candidates = useMemo(() => triggerCode && needCode ? pickReplacements(data, product, triggerCode, needCode) : [], [data, product, triggerCode, needCode]);
+  const [shownMyth, setShownMyth] = useState<Myth | null>(null);
+  const [shownMythContext, setShownMythContext] = useState('');
+  const [mythFeedback, setMythFeedback] = useState<'relevant' | 'not_relevant' | null>(null);
+  const shownMythOnce = useRef(false);
+  const candidates = useMemo(() => product && triggerCode && needCode ? pickDiverseReplacements(data, product, triggerCode, needCode, before) : [], [data, product, triggerCode, needCode, before]);
+  const candidateMyth = useMemo(() => product && triggerCode && needCode ? contextualMyth(knowledge, product, triggerCode, needCode) : null, [knowledge, product, triggerCode, needCode]);
   const selected = data.replacements.find((r) => r.code === replacementCode);
-  const triggers = data.triggers.filter((t) => t.product_types.includes(product));
+  const triggers = product ? data.triggers.filter((t) => t.product_types.includes(product)) : [];
+  const currentMythContext = (product ?? 'unselected') + ':' + triggerCode + ':' + needCode;
+  const contextualReminder = shownMythContext === currentMythContext ? shownMyth : null;
+  const currentStepIndex = Math.max(0, flowSteps.findIndex((item) => item.id === step));
+  const remainingSteps = flowSteps.length - currentStepIndex - 1;
+  const progress = Math.round(((currentStepIndex + 1) / flowSteps.length) * 100);
+  const remainingLabel = remainingSteps === 0
+    ? 'Последний шаг'
+    : 'Осталось ' + remainingSteps + ' ' + (remainingSteps === 1 ? 'шаг' : remainingSteps < 5 ? 'шага' : 'шагов');
+
+  useEffect(() => {
+    if (step !== 4 || !candidateMyth || shownMythOnce.current) return;
+    shownMythOnce.current = true;
+    setShownMyth(candidateMyth);
+    setShownMythContext(currentMythContext);
+    const currentState = knowledge.mythState.find((state) => state.myth_code === candidateMyth.code);
+    setMythFeedback(currentState?.relevance === 'relevant' || currentState?.relevance === 'not_relevant' ? currentState.relevance : null);
+    markMythShown(session, currentState, candidateMyth.code).catch(() => {});
+  }, [step, candidateMyth, currentMythContext, knowledge.mythState, session]);
+
+  async function chooseMythRelevance(value: 'relevant' | 'not_relevant') {
+    if (!contextualReminder) return;
+    const previous = mythFeedback;
+    setMythFeedback(value);
+    try {
+      await setMythRelevance(session, contextualReminder.code, value);
+    } catch {
+      setMythFeedback(previous);
+    }
+  }
+
+  function resetResult() {
+    setAfter(4);
+    setHelp(3);
+    setOutcome('successful_response');
+    setQty(1);
+    setPuffs(10);
+  }
+
+  function advance(next: number) {
+    setStep(next);
+    setMaxReached((current) => Math.max(current, next));
+  }
+
+  function goToStep(next: number) {
+    if (next <= maxReached) setStep(next);
+  }
+
+  function chooseProduct(value: ProductType) {
+    if (value !== product) {
+      setProduct(value);
+      setTrigger('');
+      setBefore(7);
+      setNeed('');
+      setReplacement(null);
+      resetResult();
+      setMaxReached(1);
+    }
+    advance(1);
+  }
+
+  function chooseTrigger(value: string) {
+    if (value !== triggerCode) {
+      setTrigger(value);
+      setBefore(7);
+      setNeed('');
+      setReplacement(null);
+      resetResult();
+      setMaxReached(2);
+    }
+    advance(2);
+  }
+
+  function changeStrength(value: number) {
+    if (value !== before) {
+      setBefore(value);
+      setNeed('');
+      setReplacement(null);
+      resetResult();
+      setMaxReached(2);
+    }
+  }
+
+  function chooseNeed(value: string) {
+    if (value !== needCode) {
+      setNeed(value);
+      setReplacement(null);
+      resetResult();
+      setMaxReached(4);
+    }
+    advance(4);
+  }
+
+  function chooseReplacement(value: string | null) {
+    if (value !== replacementCode) resetResult();
+    setReplacement(value);
+    advance(5);
+  }
+
   async function save() {
-    if (!triggerCode || !needCode) return;
+    if (step !== 5 || !product || !triggerCode || !needCode) return;
     setBusy(true);
     const tobacco: GuidedEpisodeDraft['tobacco'] = outcome === 'nicotine_used' ? { cigaretteQuantity: product === 'cigarette' ? qty : undefined, hookahSessionCount: product === 'hookah' ? 1 : undefined, vapePuffs: product === 'vape' ? puffs : undefined } : undefined;
     try { await saveGuidedEpisode(session, { product, triggerCode, needCode, cravingBefore: before, cravingAfter: after, helpfulness: help, replacementCode, outcome, tobacco }); await saved(); close(); } finally { setBusy(false); }
   }
-  const progress = Math.max(1, step);
-  return <Modal wide onClose={close}><div className="r-modal-head"><div><p className="r-kicker">Не экзамен. Один живой момент.</p><h2>{step < 3 ? 'Что происходит прямо сейчас?' : 'Выбери другой ответ'}</h2></div><button className="r-icon-button" onClick={close}><Icon name="close"/></button></div><div className="r-progress"><span className={progress>=1?'done':''}>1 · ситуация</span><span className={progress>=2?'done':''}>2 · потребность</span><span className={progress>=3?'done':''}>3 · ответ</span><span className={progress>=4?'done':''}>4 · результат</span></div>{step === 0 && <section className="r-flow"><h3>К чему сейчас тянет?</h3><div className="r-choice-grid products">{data.products.map((p) => <button key={p.product_type} onClick={() => { setProduct(p.product_type); setStep(1); }}><Icon name={productIcon(p.product_type)} size={28}/><strong>{productLabel(p.product_type)}</strong></button>)}</div></section>}{step === 1 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="eye"/></span><div><h3>В каком контексте включилась тяга?</h3><p>Не ищем виноватого. Ищем повторяющийся пусковой момент.</p></div></div><div className="r-choice-grid">{triggers.map((t) => <button key={t.code} onClick={() => { setTrigger(t.code); setStep(2); }}><span className="r-choice-icon"><Icon name={triggerIcon(t)} size={23}/></span><strong>{t.title}</strong><small>{t.description}</small></button>)}</div></section>}{step === 2 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="heart"/></span><div><h3>Что ты на самом деле сейчас ищешь?</h3><p>Сигарета может обещать паузу, разрядку, завершение, стимуляцию или контакт. Нам нужна функция, а не форма ритуала.</p></div></div><div className="r-choice-grid needs">{data.needs.map((n) => <button key={n.code} onClick={() => { setNeed(n.code); setStep(3); }}><span className="r-choice-icon"><Icon name={needIcon(n.code,n.title)} size={24}/></span><strong>{n.title}</strong><small>{n.description}</small></button>)}</div><div className="r-slider"><label><span>Сила тяги</span><b>{before}/10</b></label><input type="range" min="1" max="10" value={before} onChange={(e) => setBefore(Number(e.target.value))}/></div></section>}{step === 3 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon accent"><Icon name="spark"/></span><div><h3>Три варианта под этот момент</h3><p>Не список «полезных привычек». Эти ответы подобраны под ситуацию и потребность; со временем порядок будет меняться по твоим результатам.</p></div></div><div className="r-replacement-grid">{candidates.map((r) => <button key={r.code} onClick={() => { setReplacement(r.code); setStep(4); }}><span className="r-big-icon"><Icon name={replacementIcon(r)} size={30}/></span><div><span className="r-kind">{replacementKind(r)}{r.duration ? ` · ${r.duration}` : ''}</span><h3>{r.title}</h3><p>{r.summary || r.instruction}</p></div><Icon name="arrow" className="r-card-arrow" size={20}/></button>)}</div><button className="r-skip" onClick={() => { setReplacement(null); setStep(4); }}>Сейчас не хочу пробовать замену</button></section>}{step === 4 && <section className="r-flow"><div className="r-result-choice">{selected ? <><span className="r-big-icon"><Icon name={replacementIcon(selected)} size={30}/></span><div><small>Ты выбрал</small><h3>{selected.title}</h3><p>{selected.instruction}</p></div></> : <><span className="r-big-icon"><Icon name="pause" size={30}/></span><div><small>Без замены</small><h3>Просто наблюдаем результат</h3></div></>}</div><div className="r-two-sliders"><div className="r-slider"><label><span>Тяга после</span><b>{after}/10</b></label><input type="range" min="0" max="10" value={after} onChange={(e) => setAfter(Number(e.target.value))}/></div><div className="r-slider"><label><span>Насколько помогло</span><b>{help}/5</b></label><input type="range" min="0" max="5" value={help} onChange={(e) => setHelp(Number(e.target.value))}/></div></div><div className="r-outcomes"><button className={outcome==='successful_response'?'selected success':''} onClick={() => setOutcome('successful_response')}><Icon name="check" size={22}/><div><strong>Автоматизм прерван</strong><small>Никотиновый ответ не последовал</small></div></button><button className={outcome==='nicotine_used'?'selected used':''} onClick={() => setOutcome('nicotine_used')}><Icon name={productIcon(product)} size={22}/><div><strong>Никотин всё же был</strong><small>Это итог, а не «провал» и не замена</small></div></button><button className={outcome==='abandoned'?'selected':''} onClick={() => setOutcome('abandoned')}><Icon name="pause" size={22}/><div><strong>Просто закрыть</strong><small>Без оценки результата</small></div></button></div>{outcome === 'nicotine_used' && <div className="r-nicotine-detail"><p><b>Отдельно фиксируем сам продукт.</b> Он не попадёт в поле «Замена».</p>{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(e) => setQty(Number(e.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0,puffs-5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs+5)}>+5</button></div>}</div>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Сохранить эпизод'} <Icon name="arrow" size={18}/></ShellButton><ShellButton className="ghost" onClick={() => setStep(3)}>Выбрать другой ответ</ShellButton></div></section>}</Modal>;
+
+  return <Modal wide onClose={close}><div className="r-modal-head"><div><p className="r-kicker">Не экзамен. Один живой момент.</p><h2>{step < 4 ? 'Что происходит прямо сейчас?' : step === 4 ? 'Выбери другой ответ' : 'Что получилось?'}</h2></div><button className="r-icon-button" onClick={close}><Icon name="close"/></button></div><div className="r-progress-wrap" aria-label="Ход разбора тяги"><div className="r-progress-copy"><strong>Шаг {currentStepIndex + 1} из {flowSteps.length}</strong><span>{remainingLabel}</span></div><div className="r-progress-track" aria-hidden="true"><i style={{ width: progress + '%' }}/></div><div className="r-progress">{flowSteps.map((item) => { const available = item.id <= maxReached; const current = item.id === step; return <button key={item.id} type="button" disabled={!available} className={current ? 'current' : available ? 'complete' : ''} aria-current={current ? 'step' : undefined} onClick={() => goToStep(item.id)}><span>{item.id === 0 ? 1 : hasProductStep ? item.id + 1 : item.id}</span><small>{item.label}</small></button>; })}</div></div>{step === 0 && <section className="r-flow"><h3>К чему сейчас тянет?</h3><div className="r-choice-grid products">{data.products.map((p) => <button key={p.product_type} className={product === p.product_type ? 'selected' : ''} onClick={() => chooseProduct(p.product_type)}><Icon name={productIcon(p.product_type)} size={28}/><strong>{productLabel(p.product_type)}</strong></button>)}</div></section>}{step === 1 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="eye"/></span><div><h3>В каком контексте включилась тяга?</h3><p>Не ищем виноватого. Ищем повторяющийся пусковой момент.</p></div></div><div className="r-choice-grid">{triggers.map((t) => <button key={t.code} className={triggerCode === t.code ? 'selected' : ''} onClick={() => chooseTrigger(t.code)}><span className="r-choice-icon"><Icon name={triggerIcon(t)} size={23}/></span><strong>{t.title}</strong><small>{t.description}</small></button>)}</div></section>}{step === 2 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="energy"/></span><div><h3>Насколько сильна тяга прямо сейчас?</h3><p>Отдельная оценка помогает подобрать ответ под этот момент, а не под тягу «вообще».</p></div></div><div className="r-strength"><div className="r-strength-value"><small>Сейчас</small><strong>{before}<span>/10</span></strong></div><input aria-label="Сила тяги" type="range" min="1" max="10" value={before} onChange={(e) => changeStrength(Number(e.target.value))}/><div className="r-strength-labels"><span>1 · почти фоном</span><span>10 · трудно переключиться</span></div></div><div className="r-actions"><ShellButton className="primary" onClick={() => advance(3)}>Продолжить <Icon name="arrow" size={18}/></ShellButton></div></section>}{step === 3 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="heart"/></span><div><h3>Что ты на самом деле сейчас ищешь?</h3><p>Сигарета может обещать паузу, разрядку, завершение, стимуляцию или контакт. Нам нужна функция, а не форма ритуала.</p></div></div><div className="r-choice-grid needs">{data.needs.map((n) => <button key={n.code} className={needCode === n.code ? 'selected' : ''} onClick={() => chooseNeed(n.code)}><span className="r-choice-icon"><Icon name={needIcon(n.code,n.title)} size={24}/></span><strong>{n.title}</strong><small>{n.description}</small></button>)}</div></section>}{step === 4 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon accent"><Icon name="spark"/></span><div><h3>Три варианта под этот момент</h3><p>Не список «полезных привычек». Эти ответы подобраны под ситуацию и потребность; со временем порядок будет меняться по твоим результатам.</p></div></div>{contextualReminder && <aside className="r-context-myth"><span>Мягкое напоминание</span><h3>{contextualReminder.title}</h3><p>{contextualReminder.short_reframe}</p><details><summary>Почему так</summary><p>{contextualReminder.explanation}</p><a href={contextualReminder.source_url} target="_blank" rel="noreferrer">Источник: {contextualReminder.source_title} <Icon name="arrow" size={14}/></a></details><div className="r-context-myth-actions"><button className={mythFeedback === 'relevant' ? 'selected' : ''} onClick={() => chooseMythRelevance('relevant')}>Похоже на меня</button><button className={mythFeedback === 'not_relevant' ? 'selected' : ''} onClick={() => chooseMythRelevance('not_relevant')}>Не про меня</button></div></aside>}<div className="r-replacement-grid">{candidates.map((r) => <button key={r.code} className={replacementCode === r.code ? 'selected' : ''} onClick={() => chooseReplacement(r.code)}><span className="r-big-icon"><Icon name={replacementIcon(r)} size={30}/></span><div><span className="r-kind">{replacementKind(r)}{r.duration ? ' · ' + r.duration : ''}</span><h3>{r.title}</h3><p>{r.summary || r.instruction}</p></div><Icon name="arrow" className="r-card-arrow" size={20}/></button>)}</div><button className="r-skip" onClick={() => chooseReplacement(null)}>Сейчас не хочу пробовать замену</button></section>}{step === 5 && <section className="r-flow"><div className="r-result-choice">{selected ? <><span className="r-big-icon"><Icon name={replacementIcon(selected)} size={30}/></span><div><small>Ты выбрал</small><h3>{selected.title}</h3><p>{selected.instruction}</p></div></> : <><span className="r-big-icon"><Icon name="pause" size={30}/></span><div><small>Без замены</small><h3>Просто наблюдаем результат</h3></div></>}</div><div className="r-two-sliders"><div className="r-slider"><label><span>Тяга после</span><b>{after}/10</b></label><input type="range" min="0" max="10" value={after} onChange={(e) => setAfter(Number(e.target.value))}/></div><div className="r-slider"><label><span>Насколько помогло</span><b>{help}/5</b></label><input type="range" min="0" max="5" value={help} onChange={(e) => setHelp(Number(e.target.value))}/></div></div><div className="r-outcomes"><button className={outcome==='successful_response'?'selected success':''} onClick={() => setOutcome('successful_response')}><Icon name="check" size={22}/><div><strong>Автоматизм прерван</strong><small>Никотиновый ответ не последовал</small></div></button><button className={outcome==='nicotine_used'?'selected used':''} onClick={() => setOutcome('nicotine_used')}><Icon name={productIcon(product ?? 'cigarette')} size={22}/><div><strong>Никотин всё же был</strong><small>Это итог, а не «провал» и не замена</small></div></button><button className={outcome==='abandoned'?'selected':''} onClick={() => setOutcome('abandoned')}><Icon name="pause" size={22}/><div><strong>Просто закрыть</strong><small>Без оценки результата</small></div></button></div>{outcome === 'nicotine_used' && <div className="r-nicotine-detail"><p><b>Отдельно фиксируем сам продукт.</b> Он не попадёт в поле «Замена».</p><div className="r-lapse-note"><Icon name={triggerCode === 'driving' ? 'car' : 'eye'} size={22}/><div><strong>Следующий эксперимент</strong><p>{lapseAdvice(triggerCode)}</p></div></div>{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(e) => setQty(Number(e.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0,puffs-5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs+5)}>+5</button></div>}</div>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Сохранить эпизод'} <Icon name="arrow" size={18}/></ShellButton><ShellButton className="ghost" onClick={() => goToStep(4)}>Выбрать другой ответ</ShellButton></div></section>}</Modal>;
 }
 
 function Evening({ session, data, close, saved }: { session: Session; data: Bootstrap; close: () => void; saved: () => Promise<void> }) {
@@ -272,7 +506,7 @@ function Evening({ session, data, close, saved }: { session: Session; data: Boot
   return <Modal onClose={close}><div className="r-modal-head"><div><p className="r-kicker">Итоги дня · 3 минуты</p><h2>Не оценка дня. Карта обучения.</h2></div><button className="r-icon-button" onClick={close}><Icon name="close"/></button></div>{[['Раздражительность',irritability,setIrritability],['Энергия',energy,setEnergy],['Восстановление',recovery,setRecovery]].map(([label,value,setter])=><div className="r-slider" key={String(label)}><label><span>{String(label)}</span><b>{Number(value)}/10</b></label><input type="range" min="1" max="10" value={Number(value)} onChange={(e)=>(setter as (n:number)=>void)(Number(e.target.value))}/></div>)}<label className="r-field"><span>Где сегодня решение особенно осталось твоим?</span><textarea value={owned} onChange={(e)=>setOwned(e.target.value)}/></label><label className="r-field"><span>Какая Связка была самой сильной?</span><textarea value={strongest} onChange={(e)=>setStrongest(e.target.value)}/></label><label className="r-field"><span>Завтра: если X, то Y</span><textarea value={tomorrow} onChange={(e)=>setTomorrow(e.target.value)} placeholder="Если после кофе потянет — сначала две минуты у окна"/></label><div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy?'Сохраняю…':'Сохранить итоги'}</ShellButton></div></Modal>;
 }
 
-function Today({ session, data, reload, openFlow, openQuick, openEvening }: { session: Session; data: Bootstrap; reload: () => Promise<void>; openFlow: (trigger?: string) => void; openQuick: () => void; openEvening: () => void }) {
+function Today({ session, data, knowledge, reload, openFlow, openQuick, openEvening }: { session: Session; data: Bootstrap; knowledge: Knowledge; reload: () => Promise<void>; openFlow: (trigger?: string) => void; openQuick: () => void; openEvening: () => void }) {
   const today = statsForDays(data,1); const week=statsForDays(data,7); const tstats=triggerStats(data);
   const support=data.supports.filter((s)=>s.support_type==='daily'); const phrase=support.length?support[new Date().getDate()%support.length]?.body:null;
   const weak=tstats.filter((x)=>x.episodes>0).sort((a,b)=>(a.successRate??101)-(b.successRate??101)).slice(0,3);
@@ -280,7 +514,10 @@ function Today({ session, data, reload, openFlow, openQuick, openEvening }: { se
   const attention=weak.length?weak.map((x)=>x.trigger):fallback;
   async function remove(id:string){if(!window.confirm('Удалить ошибочную или тестовую запись? Все показатели пересчитаются автоматически.'))return;await deleteEpisode(session,id);await reload();}
   const delta=week.baselineDeltaPct;
-  return <main className="r-page"><section className="r-now"><div className="r-now-copy"><p className="r-kicker">Сегодня · {data.profile.display_name}</p><h1>{today.successfulResponses>0?`Сегодня выбор уже ${today.successfulResponses===1?'один раз':'несколько раз'} остался твоим.`:'Тебе не нужно победить день целиком.'}</h1><p>{data.settings.goal_text || 'Нужен только следующий момент, в котором ты заметишь автоматизм чуть раньше обычного.'}</p>{phrase&&<blockquote>{phrase}</blockquote>}</div><div className="r-now-actions"><button className="r-craving" onClick={()=>openFlow()}><span className="r-craving-icon"><Icon name="spark" size={30}/></span><span><small>Когда важно действовать прямо сейчас</small><strong>Меня тянет</strong><em>Разобрать момент и выбрать другой ответ</em></span><Icon name="arrow" size={24}/></button><div className="r-secondary-actions"><button onClick={openQuick}><Icon name="smoke"/><span><strong>Никотин уже был</strong><small>Просто записать факт</small></span></button><button onClick={openEvening}><Icon name="journal"/><span><strong>Итоги дня</strong><small>{data.todayCheckin?'Можно дополнить':'3 минуты вечером'}</small></span></button></div></div></section><section className="r-pulse"><div className="r-pulse-main"><span className="r-pulse-icon"><Icon name="check" size={26}/></span><div><small>Осознанных ответов сегодня</small><strong>{today.successfulResponses}</strong><p>{today.successfulResponses ? 'Это не серия запретов. Это моменты, где старый сценарий не решил за тебя.' : 'Первая запись появится после реального эпизода — ничего специально создавать не нужно.'}</p></div></div><div className="r-pulse-stat"><small>7 дней к исходному уровню</small><strong>{delta===null?'—':`${delta>0?'+':''}${fmt(delta)}%`}</strong><span>{delta!==null&&delta<0?'Никотиновая интенсивность ниже исходной':delta!==null&&delta>0?'Пока выше исходной — наблюдаем, без оценки':'Нужно больше данных'}</span></div><div className="r-pulse-stat"><small>Фонд свободы · 7 дней</small><strong>{week.baselineCost>0?money(week.freedomFund):'—'}</strong><span>Оценка по твоим расходам и исходному уровню</span></div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Карта внимания</p><h2>Где автоматизм сейчас сильнее всего</h2><p>Это не рейтинг «слабостей». Это места, где следующий эксперимент даст больше всего информации.</p></div><button onClick={()=>go('/links')}>Все Связки <Icon name="arrow" size={16}/></button></div><div className="r-attention-grid">{attention.map((t)=>{const st=tstats.find((x)=>x.trigger.code===t.code);return <button key={t.code} onClick={()=>openFlow(t.code)}><span className="r-choice-icon"><Icon name={triggerIcon(t)} size={24}/></span><div><strong>{t.title}</strong><p>{t.description}</p><small>{st?.episodes?`${st.episodes} эпиз. · ${st.successRate===null?'мало данных':`${fmt(st.successRate)}% прервано`}`:'Ещё не изучено'}</small></div><Icon name="arrow" size={18}/></button>})}</div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">История обучения</p><h2>Последние эпизоды</h2><p>Теперь карточка разделяет контекст, реальную замену и итог. Сигарета, кальян или электронка никогда не называются заменой.</p></div></div>{data.episodes.length?<div className="r-episode-list">{data.episodes.slice(0,8).map((e)=><EpisodeCard key={e.id} data={data} episode={e} remove={remove}/>)}</div>:<div className="r-empty"><Icon name="chain" size={30}/><h3>Пока нет живых эпизодов</h3><p>Ничего не нужно заполнять «для статистики». Используй ALIVE в следующий настоящий момент тяги.</p><ShellButton className="primary small" onClick={()=>openFlow()}>Разобрать первый момент</ShellButton></div>}</section></main>;
+  const targetProduct=primaryTargetProduct(data);
+  const ctaDetail=targetProduct?'Разобрать момент и выбрать другой ответ':'Сначала выбрать продукт, затем разобрать момент';
+  const momentFact=targetProduct?factForMoment(knowledge,targetProduct):knowledge.facts[0]??null;
+  return <main className="r-page"><section className="r-now"><div className="r-now-copy"><p className="r-kicker">Сегодня · {data.profile.display_name}</p><h1>{today.successfulResponses>0?`Сегодня выбор уже ${today.successfulResponses===1?'один раз':'несколько раз'} остался твоим.`:'Тебе не нужно победить день целиком.'}</h1><p>{data.settings.goal_text || 'Нужен только следующий момент, в котором ты заметишь автоматизм чуть раньше обычного.'}</p>{phrase&&<blockquote>{phrase}</blockquote>}</div><div className="r-now-actions"><button className="r-craving" onClick={()=>openFlow()}><span className="r-craving-icon"><Icon name="spark" size={30}/></span><span><small>Когда важно действовать прямо сейчас</small><strong>{productCta(targetProduct)}</strong><em>{ctaDetail}</em></span><Icon name="arrow" size={24}/></button><div className="r-secondary-actions"><button onClick={openQuick}><Icon name="smoke"/><span><strong>Никотин уже был</strong><small>Просто записать факт</small></span></button><button onClick={openEvening}><Icon name="journal"/><span><strong>Итоги дня</strong><small>{data.todayCheckin?'Можно дополнить':'3 минуты вечером'}</small></span></button></div></div></section><section className="r-pulse"><div className="r-pulse-main"><span className="r-pulse-icon"><Icon name="check" size={26}/></span><div><small>Осознанных ответов сегодня</small><strong>{today.successfulResponses}</strong><p>{today.successfulResponses ? 'Это не серия запретов. Это моменты, где старый сценарий не решил за тебя.' : 'Первая запись появится после реального эпизода — ничего специально создавать не нужно.'}</p></div></div><div className="r-pulse-stat"><small>7 дней к исходному уровню</small><strong>{delta===null?'—':`${delta>0?'+':''}${fmt(delta)}%`}</strong><span>{delta!==null&&delta<0?'Никотиновая интенсивность ниже исходной':delta!==null&&delta>0?'Пока выше исходной — наблюдаем, без оценки':'Нужно больше данных'}</span></div><div className="r-pulse-stat"><small>Фонд свободы · 7 дней</small><strong>{week.baselineCost>0?money(week.freedomFund):'—'}</strong><span>Оценка по твоим расходам и исходному уровню</span></div></section><section className="r-knowledge-preview"><div className="r-knowledge-preview-copy"><p className="r-kicker">Факты и мифы</p><h2>Понимать зависимость — тоже способ вернуть выбор</h2><p>Короткие карточки отделяют проверенные данные от интерпретаций и гипотез ALIVE. Без запугивания и личных медицинских прогнозов.</p><div className="r-knowledge-actions"><button onClick={()=>go('/facts')}><Icon name="eye" size={18}/>Все факты</button><button onClick={()=>go('/facts?tab=myths')}><Icon name="chain" size={18}/>Разобрать мифы</button></div></div>{momentFact&&<article><EvidenceBadge level={momentFact.evidence_level}/><small>{momentFact.benefit?'Что меняется после отказа':'Что известно о риске'}</small><h3>{momentFact.title}</h3><p>{momentFact.short_text}</p><button onClick={()=>go('/facts')}>Подробнее <Icon name="arrow" size={15}/></button></article>}</section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Карта внимания</p><h2>Где автоматизм сейчас сильнее всего</h2><p>Это не рейтинг «слабостей». Это места, где следующий эксперимент даст больше всего информации.</p></div><button onClick={()=>go('/links')}>Все Связки <Icon name="arrow" size={16}/></button></div><div className="r-attention-grid">{attention.map((t)=>{const st=tstats.find((x)=>x.trigger.code===t.code);return <button key={t.code} onClick={()=>openFlow(t.code)}><span className="r-choice-icon"><Icon name={triggerIcon(t)} size={24}/></span><div><strong>{t.title}</strong><p>{t.description}</p><small>{st?.episodes?`${st.episodes} эпиз. · ${st.successRate===null?'мало данных':`${fmt(st.successRate)}% прервано`}`:'Ещё не изучено'}</small></div><Icon name="arrow" size={18}/></button>})}</div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">История обучения</p><h2>Последние эпизоды</h2><p>Теперь карточка разделяет контекст, реальную замену и итог. Сигарета, кальян или электронка никогда не называются заменой.</p></div></div>{data.episodes.length?<div className="r-episode-list">{data.episodes.slice(0,8).map((e)=><EpisodeCard key={e.id} data={data} episode={e} remove={remove}/>)}</div>:<div className="r-empty"><Icon name="chain" size={30}/><h3>Пока нет живых эпизодов</h3><p>Ничего не нужно заполнять «для статистики». Используй ALIVE в следующий настоящий момент тяги.</p><ShellButton className="primary small" onClick={()=>openFlow()}>Разобрать первый момент</ShellButton></div>}</section></main>;
 }
 
 function Links({ session, data, reload, openFlow }: { session: Session; data: Bootstrap; reload: () => Promise<void>; openFlow: (trigger?: string) => void }) {
@@ -303,20 +540,74 @@ function Meanings({ session, data, reload }: { session: Session; data: Bootstrap
   return <main className="r-page"><section className="r-title meaning"><p className="r-kicker">Смыслы</p><h1>Не «почему нельзя». Ради чего становится интереснее жить иначе.</h1><p>Смысл — короткая личная опора, которую стоит увидеть в момент, когда мозг предлагает старый автоматический сценарий.</p><ShellButton className="ghost" onClick={()=>setAdding(!adding)}><Icon name="plus" size={18}/> Мой Смысл</ShellButton></section>{adding&&<section className="r-section r-form"><label className="r-field"><span>Заголовок</span><input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Я хочу увидеть себя без автоматизма"/></label><label className="r-field"><span>Что это значит для меня</span><textarea value={body} onChange={(e)=>setBody(e.target.value)}/></label><div className="r-actions"><ShellButton className="primary" onClick={add}>Сохранить</ShellButton><ShellButton className="ghost" onClick={()=>setAdding(false)}>Отмена</ShellButton></div></section>}{data.userMeanings.length>0&&<section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Мои</p><h2>Личные опоры</h2></div></div><div className="r-meaning-grid personal">{data.userMeanings.map((m)=><article key={m.id} className={!m.active?'inactive':''}><span className="r-meaning-symbol"><Icon name="meaning" size={25}/></span><h3>{m.title}</h3><p>{m.body}</p><div className="r-meaning-actions"><button onClick={()=>toggle(m)}>{m.active?'Скрыть':'Вернуть'}</button><button onClick={()=>submitMeaning(session,m)}>Предложить в общую базу</button><button onClick={()=>remove(m.id)}>Удалить</button></div></article>)}</div></section>}<section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Библиотека ALIVE</p><h2>Опоры, которые можно примерить на себя</h2></div></div><div className="r-meaning-grid">{data.meanings.map((m)=><article key={m.id}><span className="r-meaning-symbol"><Icon name="meaning" size={25}/></span><h3>{m.title}</h3><p>{m.body}</p></article>)}</div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Перепись сценария</p><h2>От старого паттерна к новому выбору</h2></div></div><div className="r-scripts">{data.identityScripts.map((s)=><details key={s.code}><summary>{s.title}</summary><div><span><small>Старый сценарий</small>{s.old_pattern}</span><Icon name="arrow"/><span><small>Новый выбор</small>{s.new_choice}</span></div></details>)}</div></section></main>;
 }
 
+function EvidenceBadge({ level }: { level: 'A' | 'B' | 'C' }) {
+  return <span className={'r-evidence-level ' + level.toLowerCase()}>{level === 'A' ? 'Хорошо изучено' : level === 'B' ? 'Есть данные' : 'Гипотеза ALIVE'}</span>;
+}
+
+function FactCard({ fact }: { fact: Fact }) {
+  return <article className={'r-fact-card ' + (fact.benefit ? 'benefit' : 'risk')}><div className="r-card-meta"><EvidenceBadge level={fact.evidence_level}/><span>{FACT_CATEGORIES[fact.category] ?? 'Другая тема'}</span></div><h2>{fact.title}</h2><p>{fact.short_text}</p><details><summary>Подробнее</summary><p>{fact.full_text}</p>{fact.sample_size && <small>Участников в исследовании: {new Intl.NumberFormat('ru-RU').format(fact.sample_size)}</small>}<a href={fact.source_url} target="_blank" rel="noreferrer">Источник: {fact.source_title} <Icon name="arrow" size={14}/></a></details></article>;
+}
+
+function FactsPage({ session, knowledge, error, reloadKnowledge }: { session: Session; knowledge: Knowledge; error: string; reloadKnowledge: () => Promise<void> }) {
+  const queryTab = new URLSearchParams(window.location.search).get('tab');
+  const [tab, setTab] = useState<'facts' | 'myths'>(queryTab === 'myths' ? 'myths' : 'facts');
+  const [category, setCategory] = useState('all');
+  const categories = Array.from(new Set(knowledge.facts.map((fact) => fact.category)));
+  const balancedFacts = useMemo(() => {
+    const filtered = knowledge.facts.filter((fact) => category === 'all' || fact.category === category);
+    const risks = filtered.filter((fact) => !fact.benefit);
+    const benefits = filtered.filter((fact) => fact.benefit);
+    const result: Fact[] = [];
+    for (let index = 0; index < Math.max(risks.length, benefits.length); index += 1) {
+      if (risks[index]) result.push(risks[index]);
+      if (benefits[index]) result.push(benefits[index]);
+    }
+    return result;
+  }, [knowledge.facts, category]);
+
+  async function mark(myth: Myth, relevance: MythState['relevance']) {
+    await setMythRelevance(session, myth.code, relevance);
+    await reloadKnowledge();
+  }
+
+  return <main className="r-page"><section className="r-title"><p className="r-kicker">Факты и мифы</p><h1>Знать достаточно, чтобы видеть выбор яснее</h1><p>Без страшилок, личных диагнозов и ложной точности. Факты показывают, что известно о рисках и пользе отказа; мифы разбирают обещания, которые поддерживают старый ритуал.</p><div className="r-knowledge-tabs"><button className={tab === 'facts' ? 'active' : ''} onClick={() => setTab('facts')}>Факты</button><button className={tab === 'myths' ? 'active' : ''} onClick={() => setTab('myths')}>Мифы</button></div></section>{error && <section className="r-section"><p className="r-error">{error}</p><ShellButton className="ghost small" onClick={reloadKnowledge}>Попробовать ещё раз</ShellButton></section>}{!error && tab === 'facts' && <><div className="r-filter-row"><button className={category === 'all' ? 'active' : ''} onClick={() => setCategory('all')}>Все</button>{categories.map((item) => <button key={item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{FACT_CATEGORIES[item] ?? 'Другая тема'}</button>)}</div>{balancedFacts.length ? <section className="r-fact-grid">{balancedFacts.map((fact) => <FactCard key={fact.code} fact={fact}/>)}</section> : <section className="r-section"><div className="r-empty compact"><Icon name="eye"/><p>Факты пока не загрузились. Личные данные для этой библиотеки не требуются.</p></div></section>}</>}{!error && tab === 'myths' && (knowledge.myths.length ? <section className="r-myth-grid">{knowledge.myths.map((myth) => { const state = knowledge.mythState.find((item) => item.myth_code === myth.code); return <article key={myth.code} className="r-myth-card"><div className="r-card-meta"><EvidenceBadge level={myth.evidence_level}/><span>Ожидаемый эффект</span></div><h2>{myth.title}</h2><p className="r-reframe">{myth.short_reframe}</p><details><summary>Почему так кажется</summary><p>{myth.explanation}</p><a href={myth.source_url} target="_blank" rel="noreferrer">Источник: {myth.source_title} <Icon name="arrow" size={14}/></a></details><div className="r-belief-actions"><span>Это про тебя?</span><button className={state?.relevance === 'relevant' ? 'selected' : ''} onClick={() => mark(myth, 'relevant')}>Похоже на меня</button><button className={state?.relevance === 'not_relevant' ? 'selected' : ''} onClick={() => mark(myth, 'not_relevant')}>Не про меня</button></div></article>; })}</section> : <section className="r-section"><div className="r-empty compact"><Icon name="eye"/><p>Библиотека мифов пока не загрузилась.</p></div></section>)}</main>;
+}
+
+function TogetherPage({ data }: { data: Bootstrap }) {
+  const [summary, setSummary] = useState<TogetherSummary | null>(null);
+  const [error, setError] = useState('');
+  const own = statsForDays(data, 7);
+
+  useEffect(() => {
+    let active = true;
+    loadTogether(7)
+      .then((result) => { if (active) setSummary(result); })
+      .catch((reason) => { if (active) setError('Не удалось загрузить общий пульс. Попробуй ещё раз.'); });
+    return () => { active = false; };
+  }, []);
+
+  const baselineVisible = summary ? !summary.baseline.suppressed && summary.baseline.evaluable >= summary.privacy_threshold : false;
+  const safeMechanisms = summary?.mechanisms.filter((item) => item.users >= summary.privacy_threshold) ?? [];
+
+  return <main className="r-page"><section className="r-title"><p className="r-kicker">Вместе</p><h1>Один эксперимент, разные личные пути</h1><p>Здесь нет рейтинга людей. Сначала ты сравниваешь себя только с собственным исходным уровнем, а общие числа показывают, что другие тоже замечают автоматизмы, пробуют и возвращаются после употребления.</p></section><section className="r-together-you"><div><span>Ты · последние 7 дней</span><strong>{own.baselineDeltaPct === null ? 'Пока мало данных' : (own.baselineDeltaPct > 0 ? '+' : '') + fmt(own.baselineDeltaPct) + '% к исходному уровню'}</strong><p>{own.successfulResponses} осознанных ответов · {own.activeDays} активных дней</p></div><Icon name="user" size={30}/></section>{error && <section className="r-section"><p className="r-error">{error}</p></section>}{!error && !summary && <section className="r-section"><div className="r-empty compact"><Icon name="people"/><p>Собираю обезличенный общий пульс эксперимента.</p></div></section>}{summary && <><section className="r-group-pulse"><article><small>Участников</small><strong>{summary.participants_total}</strong><span>с завершённой настройкой</span></article><article><small>Активны сегодня</small><strong>{summary.active_today}</strong><span>без имён и деталей</span></article><article><small>Эпизодов за 7 дней</small><strong>{summary.episodes_period}</strong><span>замеченных моментов</span></article><article><small>Выбрано Замен</small><strong>{summary.replacement_attempts}</strong><span>попыток ответить иначе</span></article></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Относительно себя</p><h2>Как меняется употребление в группе</h2><p>Каждый участник сравнивается только со своим обычным уровнем.</p></div></div>{baselineVisible ? <div className="r-baseline-group"><div><strong>{summary.baseline.below}</strong><span>ниже своего уровня</span></div><div><strong>{summary.baseline.near}</strong><span>примерно на своём уровне</span></div><div><strong>{summary.baseline.above}</strong><span>выше своего уровня</span></div><div><strong>{summary.baseline.median_delta_pct === null ? '—' : (summary.baseline.median_delta_pct > 0 ? '+' : '') + fmt(summary.baseline.median_delta_pct) + '%'}</strong><span>медианное изменение</span></div></div> : <div className="r-privacy-empty"><Icon name="shield"/><div><strong>Пока недостаточно данных для группового сравнения</strong><p>Детальные агрегаты появляются только когда в выборке есть минимум {summary.privacy_threshold} участника.</p></div></div>}</section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Что пробуют</p><h2>Механизмы, которые встречаются в группе</h2><p>Показываем только категории, которыми пользовались не меньше {summary.privacy_threshold} участников.</p></div></div>{safeMechanisms.length ? <div className="r-mechanism-list">{safeMechanisms.map((item) => <div key={item.mechanism}><span><strong>{MECHANISM_LABELS[item.mechanism] ?? 'Другой механизм'}</strong><small>{item.users} участников · {item.uses} использований</small></span><b>{item.avg_helpfulness === null ? '—' : fmt(item.avg_helpfulness, 1) + '/5'}</b></div>)}</div> : <div className="r-privacy-empty"><Icon name="people"/><div><strong>Групповых закономерностей пока мало</strong><p>ALIVE не показывает статистику одного-двух людей под видом общего результата.</p></div></div>}</section><section className="r-together-principle"><Icon name="shield"/><div><strong>Что никогда не попадает сюда</strong><p>Личные Смыслы, тексты Связок, заметки, имена, идентификаторы, конкретные триггеры и время эпизодов.</p></div></section></>}</main>;
+}
+
 function Experiment() { return <main className="r-reading"><Brand compact/><article><p className="r-kicker">Эксперимент над автоматизмом</p><h1>ALIVE ничего тебе не обещает.</h1><p className="r-lead">Мы проверяем простую гипотезу: если достаточно раз заметить повторяющуюся Связку, понять её функцию и удовлетворить ту же потребность другим ответом, автоматический сценарий может стать слабее.</p><h2>Что здесь считается успехом</h2><p>Не только «день без сигарет». Важны снижение интенсивности относительно своего исходного уровня, замеченные моменты тяги, прерванные Связки, рабочие Замены, увеличение промежутков без продукта и возвращение в систему после употребления.</p><h2>Что известно, а что является гипотезой ALIVE</h2><div className="r-evidence"><div><b>Хорошо подтверждено</b><p>Никотиновая зависимость формирует устойчивые контекстные и поведенческие ассоциации; отказ от курения снижает риски для здоровья.</p></div><div><b>Правдоподобно</b><p>Работа с триггерами, альтернативным поведением и осознаванием функции ритуала может помогать менять привычные ответы.</p></div><div><b>Эксперимент ALIVE</b><p>Наша конкретная система Связок, Смыслов, персонального ранжирования Замен и единиц ALIVE — собственная продуктовая гипотеза, которую нужно проверять на данных.</p></div></div><h2>Безопасность и медицина</h2><p>ALIVE не является лечением и не заменяет врача, психотерапию или доказательные методы отказа от табака. Никотин-заместительная терапия учитывается как поддержка, а не как срыв; дозировки сервис не назначает.</p><h2>Приватность</h2><blockquote>Эти данные слишком личные, чтобы превращать их в рекламный профиль.</blockquote><p>Личные заметки, Связки и Смыслы приватны по умолчанию. В общую базу что-либо попадает только после явного действия пользователя. Абсолютной безопасности не существует: технические поставщики инфраструктуры обрабатывают необходимые технические данные по своим правилам.</p><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Вернуться в ALIVE</ShellButton></div></article></main>; }
 
 function Profile({ session, data, editSetup }: { session: Session; data: Bootstrap; editSetup: () => void }) {
+  const exposure = smokingExposure(data);
   async function logout(){await getSupabase()?.auth.signOut();go('/');}
-  return <main className="r-page"><section className="r-title"><p className="r-kicker">Профиль</p><h1>{data.profile.display_name}</h1><p>Здесь только настройки твоего эксперимента. Приватные Смыслы, Связки и заметки не превращаются в публичный профиль.</p></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Исходный уровень</p><h2>С чем сравнивается динамика</h2></div><ShellButton className="ghost small" onClick={editSetup}>Изменить</ShellButton></div><div className="r-raw">{data.products.map((p: NicotineProduct)=><div key={p.product_type}><Icon name={productIcon(p.product_type)}/><small>{productLabel(p.product_type)}</small><strong>{p.product_type==='cigarette'?`${Number(p.baseline.cigarettes_per_day??0)} / день`:p.product_type==='hookah'?`${Number(p.baseline.sessions_per_week??0)} / нед.`:`${Number(p.baseline.puffs_per_day??0)} затяжек / день`}</strong></div>)}</div></section><section className="r-section"><div className="r-profile-links"><button onClick={()=>go('/experiment')}><Icon name="shield"/><span><strong>Как работает эксперимент</strong><small>Методология, ограничения и приватность</small></span><Icon name="arrow"/></button><button onClick={()=>go('/releases')}><Icon name="path"/><span><strong>История версий</strong><small>Что меняется в ALIVE</small></span><Icon name="arrow"/></button></div><ShellButton className="danger" onClick={logout}>Выйти из аккаунта</ShellButton></section></main>;
+  return <main className="r-page"><section className="r-title"><p className="r-kicker">Профиль</p><h1>{data.profile.display_name}</h1><p>Здесь только настройки твоего эксперимента. Приватные Смыслы, Связки и заметки не превращаются в публичный профиль.</p></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Исходный уровень</p><h2>С чем сравнивается динамика</h2></div><ShellButton className="ghost small" onClick={editSetup}>Изменить</ShellButton></div><div className="r-raw">{data.products.map((p: NicotineProduct)=><div key={p.product_type}><Icon name={productIcon(p.product_type)}/><small>{productLabel(p.product_type)}</small><strong>{p.product_type==='cigarette'?`${Number(p.baseline.cigarettes_per_day??0)} / день`:p.product_type==='hookah'?`${Number(p.baseline.sessions_per_week??0)} / нед.`:`${Number(p.baseline.puffs_per_day??0)} затяжек / день`}</strong></div>)}</div>{exposure.startYear && <div className="r-exposure"><span><small>Регулярное курение примерно с</small><strong>{exposure.startYear}</strong></span><span><small>Ориентировочный стаж</small><strong>{exposure.years} лет</strong></span><span><small>Пачка-лет · только справочно</small><strong>{exposure.packYears === null ? '—' : fmt(exposure.packYears,1)}</strong></span><p>Показатель «пачка-лет» используется только для понимания условий исследований и не является прогнозом твоего здоровья. Кальян и электронные сигареты в него не переводятся.</p></div>}</section><section className="r-section"><div className="r-profile-links"><button onClick={()=>go('/together')}><Icon name="people"/><span><strong>Вместе</strong><small>Обезличенный пульс без рейтингов и чужих текстов</small></span><Icon name="arrow"/></button><button onClick={()=>go('/facts')}><Icon name="eye"/><span><strong>Факты и мифы</strong><small>Что известно и какие обещания поддерживают ритуал</small></span><Icon name="arrow"/></button><button onClick={()=>go('/experiment')}><Icon name="shield"/><span><strong>Как работает эксперимент</strong><small>Методология, ограничения и приватность</small></span><Icon name="arrow"/></button><button onClick={()=>go('/releases')}><Icon name="path"/><span><strong>История версий</strong><small>Что меняется в ALIVE</small></span><Icon name="arrow"/></button></div><ShellButton className="danger" onClick={logout}>Выйти из аккаунта</ShellButton></section></main>;
 }
 
-function Releases(){return <main className="r-reading"><Brand compact/><article><p className="r-kicker">История версий</p><h1>ALIVE развивается как эксперимент.</h1><div className="r-release"><b>3.0</b><div><h2>Универсальная платформа</h2><p>Google-вход, отдельная база данных, сигареты / кальян / электронка, Связки, Смыслы, контекстные Замены и персональная аналитика.</p></div></div><div className="r-release"><b>2.7</b><div><h2>Последний эталон предыдущей архитектуры</h2><p>Версия, от которой 3.0 обязана не регрессировать по глубине, вовлечению и качеству интерфейса.</p></div></div><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Назад в ALIVE</ShellButton></div></article></main>}
+function Releases(){return <main className="r-reading"><Brand compact/><article><p className="r-kicker">История версий</p><h1>ALIVE развивается как эксперимент.</h1><div className="r-release"><b>3.1</b><div><h2>Больше глубины без нового приложения</h2><p>Понятный разбор тяги, разнообразные Замены, контекстные мифы, доказательные факты, обезличенный раздел «Вместе», основной продукт и более бережный разбор употребления.</p></div></div><div className="r-release"><b>3.0</b><div><h2>Универсальная платформа</h2><p>Google-вход, отдельная база данных, сигареты / кальян / электронка, Связки, Смыслы, контекстные Замены и персональная аналитика.</p></div></div><div className="r-release"><b>2.7</b><div><h2>Последний эталон предыдущей архитектуры</h2><p>Версия, от которой 3.0 обязана не регрессировать по глубине, вовлечению и качеству интерфейса.</p></div></div><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Назад в ALIVE</ShellButton></div></article></main>}
 
 export default function RedesignApp() {
-  const path=usePath(); const [session,setSession]=useState<Session|null>(null); const [data,setData]=useState<Bootstrap|null>(null); const [loading,setLoading]=useState(true); const [setup,setSetup]=useState(false); const [flow,setFlow]=useState<{open:boolean;trigger?:string}>({open:false}); const [quick,setQuick]=useState(false); const [evening,setEvening]=useState(false);
+  const path=usePath(); const [session,setSession]=useState<Session|null>(null); const [data,setData]=useState<Bootstrap|null>(null); const [knowledge,setKnowledge]=useState<Knowledge>(EMPTY_KNOWLEDGE); const [knowledgeError,setKnowledgeError]=useState(''); const [loading,setLoading]=useState(true); const [setup,setSetup]=useState(false); const [flow,setFlow]=useState<{open:boolean;trigger?:string}>({open:false}); const [quick,setQuick]=useState(false); const [evening,setEvening]=useState(false);
   const configured=Boolean(publicEnv.supabaseUrl&&publicEnv.supabasePublishableKey);
-  async function reload(s:Session=session as Session){const next=await loadBootstrap(s);setData(next);return next;}
-  useEffect(()=>{if(!configured){setLoading(false);return;}const supabase=getSupabase();if(!supabase)return;supabase.auth.getSession().then(async({data:{session:s}})=>{setSession(s);if(s)await reload(s);setLoading(false);});const {data:listener}=supabase.auth.onAuthStateChange((_event,s)=>{setSession(s);if(!s)setData(null);});return()=>listener.subscription.unsubscribe();},[configured]);
+  async function reloadKnowledgeForSession(s:Session=session as Session){try{const next=await loadKnowledge(s);setKnowledge(next);setKnowledgeError('');}catch(error){setKnowledgeError('Не удалось загрузить библиотеку знаний. Попробуй ещё раз.');}}
+  async function reload(s:Session=session as Session){const [next]=await Promise.all([loadBootstrap(s),reloadKnowledgeForSession(s)]);setData(next);return next;}
+  useEffect(()=>{if(!configured){setLoading(false);return;}const supabase=getSupabase();if(!supabase)return;supabase.auth.getSession().then(async({data:{session:s}})=>{setSession(s);if(s)await reload(s);setLoading(false);});const {data:listener}=supabase.auth.onAuthStateChange((_event,s)=>{setSession(s);if(!s){setData(null);setKnowledge(EMPTY_KNOWLEDGE);setKnowledgeError('');}});return()=>listener.subscription.unsubscribe();},[configured]);
   if(!configured)return <main className="r-login"><section className="r-login-card"><Brand/><h1>Не хватает настроек подключения.</h1><p>Интерфейс не получил адрес Supabase или публичный ключ. Секретные ключи сюда передавать нельзя.</p></section></main>;
   if(loading)return <main className="r-loading"><span/><p>Загружаю ALIVE…</p></main>;
   if(path==='/experiment'&&!session)return <Experiment/>;
@@ -328,10 +619,12 @@ export default function RedesignApp() {
   if(path==='/links')page=<Links session={session} data={data} reload={()=>reload(session).then(()=>{})} openFlow={(trigger)=>setFlow({open:true,trigger})}/>;
   else if(path==='/path')page=<PathPage data={data}/>;
   else if(path==='/meanings')page=<Meanings session={session} data={data} reload={()=>reload(session).then(()=>{})}/>;
+  else if(path==='/together')page=<TogetherPage data={data}/>;
+  else if(path==='/facts')page=<FactsPage session={session} knowledge={knowledge} error={knowledgeError} reloadKnowledge={()=>reloadKnowledgeForSession(session)}/>;
   else if(path==='/experiment')page=<Experiment/>;
   else if(path==='/profile')page=<Profile session={session} data={data} editSetup={()=>setSetup(true)}/>;
   else if(path==='/releases')page=<Releases/>;
-  else page=<Today session={session} data={data} reload={()=>reload(session).then(()=>{})} openFlow={(trigger)=>setFlow({open:true,trigger})} openQuick={()=>setQuick(true)} openEvening={()=>setEvening(true)}/>;
+  else page=<Today session={session} data={data} knowledge={knowledge} reload={()=>reload(session).then(()=>{})} openFlow={(trigger)=>setFlow({open:true,trigger})} openQuick={()=>setQuick(true)} openEvening={()=>setEvening(true)}/>;
   const standalone=path==='/experiment'||path==='/releases';
-  return <>{!standalone&&<Header data={data} path={path}/>} {page}{flow.open&&<Guided session={session} data={data} close={()=>setFlow({open:false})} saved={()=>reload(session).then(()=>{})} initialTrigger={flow.trigger}/>} {quick&&<QuickUse session={session} data={data} close={()=>setQuick(false)} saved={()=>reload(session).then(()=>{})}/>} {evening&&<Evening session={session} data={data} close={()=>setEvening(false)} saved={()=>reload(session).then(()=>{})}/>}</>;
+  return <>{!standalone&&<Header data={data} path={path}/>} {page}{flow.open&&<Guided session={session} data={data} knowledge={knowledge} close={()=>setFlow({open:false})} saved={()=>reload(session).then(()=>{})} initialTrigger={flow.trigger}/>} {quick&&<QuickUse session={session} data={data} close={()=>setQuick(false)} saved={()=>reload(session).then(()=>{})}/>} {evening&&<Evening session={session} data={data} close={()=>setEvening(false)} saved={()=>reload(session).then(()=>{})}/>}</>;
 }
