@@ -1,0 +1,15 @@
+.v31-preview-badge {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 9999;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: rgba(255, 183, 77, .94);
+  color: #1b1b1b;
+  font: 800 10px/1 system-ui, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 12px rgba(0,0,0,.18);
+  pointer-events: none;
+}
