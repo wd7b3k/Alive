@@ -87,3 +87,29 @@
 Current automation could not inspect authenticated post-change Today/guided/Facts/Together/Profile because the owner chose not to authenticate in the shared browser. This does not invalidate the owner-confirmed logo/header gate, but it means the complete authenticated regression matrix remains pending.
 
 PR #5 therefore stays draft. No merge/production promotion until full owner RC visual review and the pending functional matrix are closed.
+
+
+## Corrective regression — 2026-08-17
+
+Owner screenshot revealed that technical presence was incorrectly treated as user-facing completion.
+
+Findings:
+
+- product-aware CTA was not deterministic: all selected products had `target_dependency`, then the first database row won;
+- Facts/Myths existed behind Profile but were not discoverable from the main experience;
+- preview status remained in English and described an obsolete rollback phase;
+- raw metadata or backend error strings could leak English into the Russian UI.
+
+Remediation:
+
+- explicit single primary product in Setup;
+- neutral CTA and no preselection for ambiguous legacy profiles;
+- no arbitrary product in Quick log;
+- visible Facts/Myths shortcuts on desktop/mobile and a Today knowledge surface;
+- Russian preview/fallback/error labels;
+- v3.1 release-history entry;
+- expanded UI contract.
+
+Technical evidence: commits `d550d4a` and `6e13dff`; CI runs `#134` and `#135` PASS.
+
+This finding confirms the release rule: route existence and green build are not sufficient. The complete authenticated experience still requires owner review before merge.

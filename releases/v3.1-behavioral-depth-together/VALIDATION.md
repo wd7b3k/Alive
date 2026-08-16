@@ -37,6 +37,21 @@
 - PASS — lapse context-disruption next experiment без reset/shame.
 - PASS — знания загружаются отдельно и не ломают v3.0 bootstrap при ошибке.
 
+## Corrective owner QA — 2026-08-17
+
+- FAIL FOUND BY OWNER — CTA показывал кальян, когда несколько products имели роль `target_dependency`.
+- ROOT CAUSE — Setup назначал `target_dependency` каждому выбранному продукту, а Today/Guided/Quick log использовали первый row как fallback.
+- PASS — новый Setup требует один explicit primary product.
+- PASS — старые неоднозначные profiles получают нейтральный CTA и product-selection step.
+- PASS — Quick log не позволяет сохранить запись до выбора продукта.
+- FAIL FOUND BY OWNER — Facts/Myths route был недостаточно discoverable.
+- PASS — Facts/Myths добавлены в secondary desktop/mobile header, Today knowledge block и остаются в Profile.
+- PASS — contextual Myth в guided flow сохранён.
+- FAIL FOUND BY OWNER — preview badge и raw fallback/error values могли быть на английском.
+- PASS — preview badge и user-facing fallback/error labels русифицированы.
+- PASS — UI contract теперь защищает primary product, Facts/Myths, contextual Myths, Together, start year, lapse и Russian labels.
+- PASS — corrective CI runs `#134` и `#135`.
+
 ## Logo owner gate
 
 Изначальный release document ожидал другой historical hash. Затем владелец прямо предоставил и утвердил приложенный PNG словами «используй этот лого». Это обязательный owner identity gate и новый source of truth для данной ветки.
@@ -52,15 +67,15 @@
 
 Frontend validation выполнялась после каждого vertical slice.
 
-Current frontend head: `c5986676a5eae166fa3ca0a274b5d984c05aa83b`.
+Current frontend head: `6e13dff42e5d22f4cae429116a0d59d4bd746f69`.
 
-GitHub Actions run `#132`:
+GitHub Actions run `#135`:
 
 1. UI contract — PASS.
 2. TypeScript typecheck — PASS.
 3. Vite production build — PASS.
 
-Runs `#123–#128` также были зелёными для предшествующих slices. Runs `#129` и `#130` обнаружили JSX boundary errors в start-year slice; ошибки исправлены отдельными commits, run `#131` и current run `#132` зелёные.
+Runs `#123–#128` также были зелёными для предшествующих slices. Corrective runs `#134` и `#135` зелёные. Runs `#129` и `#130` обнаружили JSX boundary errors в start-year slice; ошибки исправлены отдельными commits, run `#131` и current run `#132` зелёные.
 
 В `app/package.json` нет отдельного automated test script/test runner. Статус «tests PASS» не заявляется; применимые automated gates — UI contract, typecheck и build.
 
@@ -72,6 +87,7 @@ Branch preview: `https://agent-v3-1-behavioral-depth.alive-aw2.pages.dev/`.
 - PASS — 820×900 standalone `/experiment`.
 - PASS — 1440×960 public login.
 - PASS — logo proportion and visibility.
+- PASS — public preview badge полностью на русском: `Предпросмотр v3.1 · кандидат в релиз`.
 - PASS — no visible horizontal overflow на проверенных public surfaces.
 - PASS BY OWNER — authenticated desktop/mobile logo and header.
 

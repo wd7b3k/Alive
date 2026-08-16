@@ -70,9 +70,9 @@ Draft PR: `#5`. PR не merge, `main` и production не изменены.
 
 ## Validation
 
-Текущий frontend head до документационного handoff: `c5986676a5eae166fa3ca0a274b5d984c05aa83b`.
+Текущий frontend head: `6e13dff42e5d22f4cae429116a0d59d4bd746f69`.
 
-GitHub Actions run `#132`:
+GitHub Actions run `#135`:
 
 - UI contract — PASS;
 - TypeScript typecheck — PASS;
@@ -88,6 +88,26 @@ Public branch-preview smoke:
 - logo loads with correct proportions; visible horizontal overflow не обнаружен.
 
 Owner visual smoke для login и authenticated desktop/mobile logo/header — PASS.
+
+## Corrective owner QA — 2026-08-17
+
+Owner preview выявил две реальные недоделки, которые не были видны по CI:
+
+- несколько продуктов ошибочно сохранялись с одинаковой ролью `target_dependency`, поэтому CTA выбирал случайный первый row и показывал кальян;
+- Facts/Myths существовали как route, но были недостаточно заметны в active shell;
+- preview badge и отдельные fallback/error labels нарушали правило русского интерфейса.
+
+Исправлено:
+
+- один явно выбранный основной продукт; остальные сохраняются как дополнительные;
+- старый неоднозначный profile получает нейтральный CTA `Разобрать тягу` и обязательный выбор продукта вместо случайного default;
+- Quick log также не подставляет случайный продукт;
+- `Факты и мифы` видны в desktop/mobile header и отдельном блоке Today;
+- v3.1 добавлен в Историю версий;
+- preview badge, fallback categories/mechanisms и user-facing errors русифицированы;
+- UI contract защищает primary-product, v3.1 capabilities и Russian labels.
+
+Corrective commits: `d550d4a`, `6e13dff`. CI runs `#134` и `#135` — PASS.
 
 ## Открытые release gates
 

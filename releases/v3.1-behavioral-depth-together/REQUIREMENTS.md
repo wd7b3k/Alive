@@ -9,6 +9,9 @@
 - [x] Сохранить четыре главных раздела и весь baseline v3.0.
 - [x] Весь новый user-facing copy на русском.
 - [x] CTA: `Хочу закурить` / `Хочу затянуться` / `Хочу покурить кальян`.
+- [x] При нескольких продуктах пользователь явно выбирает один основной; порядок rows БД не влияет на CTA.
+- [x] Старый неоднозначный profile показывает нейтральный `Разобрать тягу`, а не случайный продукт.
+- [x] Preview badge, fallback labels и user-facing errors отображаются по-русски.
 
 ## Evidence
 
@@ -40,6 +43,7 @@
 - [x] Versioned catalogs и private user relevance state.
 - [x] `Похоже на меня` / `Не про меня` без shame language.
 - [x] Вторичный `/facts` route не вытесняет четыре главных раздела.
+- [x] `Факты и мифы` видимы в desktop/mobile header, Today и Profile.
 - [x] Facts чередуют risks/benefits, показывают evidence level и source URL.
 - [x] Knowledge loading failure изолирован от v3.0 bootstrap.
 - [ ] Owner review медицински значимого user-facing copy.

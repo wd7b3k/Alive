@@ -1,5 +1,26 @@
 # Changelog ALIVE v3.1
 
+## Corrective RC pass — 2026-08-17
+
+### Fixed
+
+- Удалён случайный fallback `products[0]` для основного никотинового продукта.
+- Setup требует выбрать один основной продукт; дополнительные продукты сохраняются отдельно.
+- Старые неоднозначные profiles показывают `Разобрать тягу` и явный product step.
+- Quick log не подставляет кальян или другой случайный продукт.
+- `Факты и мифы` вынесены в видимый secondary header и knowledge-блок Today.
+- На mobile Facts/Myths и Together доступны компактными header shortcuts без изменения четырёх main tabs.
+- Preview badge, metadata fallbacks и user-facing errors русифицированы.
+- История версий показывает v3.1.
+- UI contract расширен на primary product, v3.1 discoverability и Russian labels.
+
+### Validation
+
+- Commit `d550d4a`, CI run `#134`: PASS.
+- Commit `6e13dff`, CI run `#135`: PASS.
+- Public login smoke 390×844 и 1440×960: PASS.
+- Authenticated regression: повторная owner verification required.
+
 ## Release candidate — 2026-08-16
 
 ### Added
