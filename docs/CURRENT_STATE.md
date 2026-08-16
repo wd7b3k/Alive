@@ -4,7 +4,15 @@
 
 ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
-Текущая стадия: **ALIVE v3.0 — PRODUCT ALPHA / IN DEVELOPMENT**.
+Канонический production line остаётся **ALIVE v3.0 — PRODUCT ALPHA / IN DEVELOPMENT**.
+
+Параллельно собран **ALIVE v3.1 — Behavioral Depth + Together / DRAFT VALIDATION** в отдельной ветке:
+
+`agent/v3.1-behavioral-depth-together`
+
+Draft PR: `#5`.
+
+v3.1 не считается RELEASED и не должен merge до закрытия runtime/privacy/owner-review gates.
 
 `wd7b3k/Alive` — единственный source of truth. Код, migrations, product rules и release gates меняются сначала в repo; Dashboard/чат не переопределяют repo.
 
@@ -17,21 +25,23 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 - Auth: Google → Supabase Auth.
 - Database: Supabase PostgreSQL + RLS.
 - Supabase project: `xkigijaqimzuveyzyzyk`, `eu-west-1`.
-- GitHub CI: Node `22.12.0`, `npm ci`, `typecheck`, production build.
+- GitHub CI: Node `22.12.0`, `npm ci`, typecheck, production build.
 
-Google OAuth проверен реальным входом: Auth user и ALIVE profile автоматически создаются, display name/avatar приходят из Google metadata.
+Google OAuth был проверен реальным входом на v3.0: Auth user и ALIVE profile автоматически создаются, display name/avatar приходят из Google metadata.
 
-## Ключевое решение после первого platform bootstrap
+На момент v3.1 validation в live project существует один реальный profile, поэтому честный two-user isolation runtime test нельзя закрыть без второго реального/test account.
+
+## v3.0 baseline
 
 Первый web-shell был технически рабочим, но продуктово значительно беднее legacy v2.7. Это признано regression.
 
 Создан обязательный baseline `docs/V3_PARITY_BASELINE.md`:
 
-**v3.0 не может считаться готовым, если новый пользователь получает менее глубокий продукт, чем v2.7.**
+**новая версия не может считаться готовой, если пользователь получает менее глубокий продукт, чем утверждённый предыдущий baseline**.
 
-Новая архитектура должна сохранить минимум глубины v2.7 и добавить утверждённые возможности v3.
+v3.1 поэтому не переписывает Links/Path/Meanings с нуля, а сохраняет богатый v3.0 UI и добавляет новые behavioral/knowledge/Together слои.
 
-## Реализовано в текущей ветке `v3.0-platform`
+## Реализовано в v3.0
 
 ### Product UI
 
@@ -39,75 +49,206 @@ Google OAuth проверен реальным входом: Auth user и ALIVE 
 - cigarette / hookah / vape как отдельные raw products;
 - product role: `target_dependency` / `cessation_bridge`;
 - Сегодня — action screen, current metrics, attention links, recent episodes;
-- guided craving flow: product → trigger → need → 3 contextual replacements → outcome;
-- quick nicotine fact logging без выдумывания craving score;
+- guided craving flow;
+- quick nicotine fact logging;
 - evening check-in;
 - Связки — automatic trigger map + private user Links;
-- Смыслы — global universal catalog + private CRUD/UGC workflow;
-- Путь — 7-day динамика, raw products, personal replacement effectiveness, Freedom Fund, rewards;
+- Смыслы — global catalog + private CRUD/UGC workflow;
+- Путь — динамика, raw products, replacement effectiveness, Freedom Fund, rewards;
 - Profile/baseline;
 - Эксперимент — methodology, assumptions, limitations, privacy;
 - Релизы;
-- deletion of erroneous/test episode with recalculation from remaining facts;
-- inline explanations / `nothing unexplained` pattern.
+- deletion of erroneous/test episode with recalculation;
+- inline explanations / `nothing unexplained`.
 
-### Content depth
+## Что добавлено в v3.1 branch
 
-Remote catalog after product-depth migrations:
+### Evidence / research
 
-- 29 published triggers;
-- 46 published replacements;
-- 96 trigger→replacement relations;
-- 13 universal Meanings;
-- 5 universal identity scripts;
-- 13 support messages;
-- 7 rewards.
+Созданы:
 
-Legacy personal biography is intentionally not promoted into global content. Private personal content belongs to the individual user profile.
+- `docs/research/NICOTINE_CESSATION_EVIDENCE_2026.md`;
+- `docs/research/SMOKING_MYTHS_AND_EXPECTANCIES_2026.md`.
 
-### Data / privacy
+Введена product classification:
 
-Applied remote migrations:
+- A — evidence по cessation outcome/class intervention;
+- B — evidence по acute craving/state/intermediate outcome;
+- C — behavioural heuristic ALIVE.
 
-1. `v3_platform_initial`
-2. `v3_platform_security_indexes`
-3. `v3_product_depth_schema`
-4. `v3_product_depth_catalog_a`
-5. `v3_product_depth_catalog_b`
-6. `v3_product_depth_mapping`
-7. `v3_product_depth_meaning`
-8. `v3_support_state_and_account_control`
-9. `v3_remove_public_account_delete_rpc`
+Прямо запрещено переносить population statistics в personal medical prediction.
 
-RLS protects private user-owned entities. Service-role/OAuth secrets are not stored in frontend/repo.
+### Replacement Engine v2
 
-A proposed public `SECURITY DEFINER` self-delete RPC was rejected after Security Advisor flagged the exposed surface. It was removed by migration before alpha merge. Account deletion will use an authenticated Edge Function instead.
+Remote catalog после v3.1 migrations:
 
-Current Supabase Security Advisor has one remaining Auth warning: leaked-password protection is disabled. ALIVE currently exposes Google OAuth only, not password sign-in, so the warning does not represent an active password-login surface. Revisit before ever enabling password auth.
+- 75 published replacements;
+- 18 distinct mechanisms;
+- evidence/mechanism/context metadata;
+- HumanOS-derived short grounding/breath/attention patterns;
+- расширенные food/oral/manual/drink/movement/focus/social/context-change варианты;
+- ranking учитывает product, trigger map, need, personal helpfulness, craving delta, outcome и recent repetition;
+- top-3 по возможности формируется из разных mechanisms.
 
-## CI state
+### Guided craving UX
 
-Latest rich product frontend commit passes:
+Новый v3.1 shell реализует:
+
+`Продукт → Ситуация → Сила тяги → Что нужно → Замена → Результат`
+
+- яркий progress;
+- `Шаг N из 6`;
+- уже достигнутые этапы кликабельны;
+- изменение product/trigger/need инвалидирует dependent replacement state;
+- новый русский CTA: `Хочу закурить` / `Хочу затянуться` / `Хочу покурить кальян`;
+- no terminal periods in new headings;
+- contextual Myth максимум один на короткий flow;
+- lapse не обнуляется;
+- отдельный driving safety reframe.
+
+### Мифы
+
+Новая global versioned entity `myths_catalog`.
+
+Published seed: 19 myths.
+
+Темы включают:
+
+- успокоение;
+- концентрацию;
+- паузу;
+- кофе;
+- после еды;
+- стиль/идентичность;
+- social smoking;
+- low-dose/light;
+- hookah/vape;
+- НЗТ;
+- вес;
+- fatalism;
+- lapse reset;
+- perceived control;
+- stress timing;
+- pleasure;
+- anxiety after cessation.
+
+Private `user_myth_state` хранит `Похоже на меня / Не про меня`, seen/frequency state и защищён RLS.
+
+### Факты
+
+Новая global versioned entity `facts_catalog`.
+
+Published seed: 19 source-linked facts.
+
+Факты являются мягким evidence layer и не требуют полного medical profile пользователя.
+
+Optional cigarette `start_year` и derived pack-years используются только как evidence matching metadata, а не как личный прогноз.
+
+### Вместе
+
+Реализован privacy-safe aggregate contract.
+
+Публичный API:
+
+`public.get_together_summary(days)` — SECURITY INVOKER.
+
+Privileged cross-user aggregation вынесен в неэкспонируемую `private` schema.
+
+Contract возвращает только whitelist aggregates:
+
+- participant/active counts;
+- episodes;
+- replacement attempts;
+- successful responses;
+- group distribution относительно собственного baseline;
+- mechanism-level aggregate use/helpfulness.
+
+Не возвращаются:
+
+- user ids;
+- имена;
+- Смыслы;
+- Связки;
+- notes;
+- individual triggers;
+- medication details;
+- event timestamps.
+
+Detailed group statistics suppress below cohort threshold 3.
+
+### Logo
+
+Approved `brand-logo-full.png` сохранён.
+
+v3.1 active frontend entrypoint теперь явно использует `V31App` и загружает `v31.css` после redesign CSS. Logo hardening фиксирует реальные размеры/visibility bundled asset.
+
+Cloudflare Pages сообщил успешный branch-preview deploy.
+
+Однако задача логотипа **не закрыта окончательно**, пока не выполнен независимый browser visual smoke-test login + authenticated shell + mobile.
+
+## v3.1 database migrations applied
+
+1. `v31_behavioral_content_schema`
+2. `v31_replacements_seed`
+3. `v31_myths_seed`
+4. `v31_facts_seed`
+5. `v31_together_aggregates`
+6. `v31_together_security_hardening`
+
+RLS защищает private user-owned entities. Service-role/OAuth secrets не добавлены во frontend/repo.
+
+Supabase Security Advisor после Together hardening больше не сообщает публичный SECURITY DEFINER warning.
+
+Остаётся ранее известный Auth warning: leaked-password protection disabled. Текущий продукт использует Google OAuth и не экспонирует password login; вернуться к этому gate до любого password auth.
+
+## v3.1 CI / deployment
+
+GitHub Actions для нового frontend shell:
 
 - locked dependency install — PASS;
 - TypeScript typecheck — PASS;
 - Vite production build — PASS.
 
-## Still required before v3.0 can be called RELEASED
+Cloudflare Pages branch preview deployment — SUCCESS по официальной GitHub integration.
 
-- real runtime smoke-test of new deep UI;
-- full user Link edit/disable controls (create/delete/UGC already implemented);
-- background NRT patch UI (DB/RLS support exists);
-- user data export UI;
-- authenticated Edge Function for full account deletion;
-- two-user RLS isolation test;
-- local full DB reset from migrations;
-- mobile/desktop parity review;
-- `alive.hmnos.ru` DNS/custom-domain cutover;
-- validation/docs sync.
+Текущая tool environment не даёт прямой browser session к preview hostname, поэтому visual/manual runtime gates остаются открытыми честно, а не объявляются пройденными по build status.
 
-`Together` remains v3.1. Admin/Product Intelligence remains v3.2.
+## Still required before v3.1 merge/release
+
+- real browser smoke-test of new guided flow;
+- back-step/downstream invalidation interaction test;
+- Facts/Myths interaction/source-link check;
+- Together suppressed state rendering check;
+- start-year edit/preservation check;
+- mobile navigation/parity review;
+- visual confirmation of approved logo on login/authenticated/mobile;
+- second-user RLS/client isolation test when genuine second account or safe test environment exists;
+- owner review of medically significant copy;
+- final validation/docs handoff.
+
+## Следующий этап после v3.1
+
+Roadmap v3.2 теперь явно включает два связанных контура:
+
+### Admin + Product Intelligence
+
+- operational/product admin;
+- funnels;
+- replacement/Myths/Facts intelligence;
+- UGC review;
+- incidents/system health;
+- product digests.
+
+### Multi-client Application Layer
+
+Цель:
+
+`Web / Telegram / native mobile / future clients → versioned application/API contracts → domain modules → one canonical PostgreSQL model`
+
+Business logic не должна копироваться между клиентами. Разные frontends становятся adapters над едиными use-cases и raw-event semantics.
+
+Архитектурный redesign этого слоя выполняется отдельным этапом после v3.1 evidence gate, а не скрыто внутри текущего релиза.
 
 ## Release discipline
 
-Deploying a v3.0 alpha for real testing does **not** mean the release gate is complete. `v3.0 RELEASED` is reserved until `releases/v3.0-platform/REQUIREMENTS.md` and `VALIDATION.md` pass.
+v3.1 остаётся draft PR до закрытия hard gates. Successful migration/build/deploy сами по себе не являются разрешением на merge или статус RELEASED.
