@@ -64,6 +64,11 @@ if (!failures.length) {
     ['пользовательские Связки', 'addLink'],
     ['пользовательские Смыслы', 'addMeaning'],
     ['guided craving flow', 'saveGuidedEpisode'],
+    ['Факты и мифы', 'Факты и мифы'],
+    ['контекстные мифы', 'Мягкое напоминание'],
+    ['раздел Вместе', "go('/together')"],
+    ['метаданные стажа', 'Когда начал регулярно курить'],
+    ['бережный разбор употребления', 'Следующий эксперимент'],
     ['явный основной продукт', 'primaryTargetProduct'],
     ['Google OAuth', 'signInWithOAuth'],
     ['выход из аккаунта', 'signOut'],
@@ -83,7 +88,12 @@ if (!failures.length) {
     if (app.includes(token)) failures.push(`Пользовательский UI не должен выводить raw English metadata/error: ${token}`);
   }
 
-  const cssTokens = ['--r-bg:#061013', '--r-lime:#c9ff5b', '--r-teal:#51ddd0', '.r-now', '.r-craving', '.r-modal'];
+  const visibleEnglishLabels = ['>Facts<', '>Myths<', '>Together<', '>Profile<', '>Method<', '>Release candidate<'];
+  for (const token of visibleEnglishLabels) {
+    if (app.includes(token) || main.includes(token)) failures.push(`Пользовательская подпись должна быть на русском: ${token}`);
+  }
+
+  const cssTokens = ['--r-bg:#061013', '--r-lime:#c9ff5b', '--r-teal:#51ddd0', '.r-now', '.r-craving', '.r-modal', '.r-knowledge-preview', '.r-header-shortcut'];
   for (const token of cssTokens) {
     if (!css.includes(token)) failures.push(`Нарушен визуальный baseline redesign.css: отсутствует ${token}`);
   }
