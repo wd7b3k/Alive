@@ -399,11 +399,15 @@ Mandatory first vertical slice:
 - R1 runtime adapter с безопасным legacy fallback;
 - явное разделение `craving` / `quick_use`;
 - структурированная client funnel telemetry и её русская admin-интерпретация;
-- 10 automated domain tests.
+- atomic/idempotent awareness RPC и unique canonical event key по `flow_id`;
+- outcome retry без повторного сохранения episode и без показа неподтверждённых метрик;
+- 11 automated domain tests.
 
-Фактически выполнены `npm ci`, typecheck, 10/10 tests и production build. Build сохраняет предупреждение о bundle chunk больше 500 kB.
+Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. Build сохраняет предупреждение о bundle chunk больше 500 kB.
 
-Canonical E2E ещё не получил PASS: подключённый Supabase project содержит только v3.1, R1 migrations не применялись к live, development branch требует owner cost confirmation. Preview, authenticated browser QA desktop/mobile, DB learning/admin verification, performance и GitHub Actions status остаются `НЕ ПРОВЕРЕНО`.
+Adversarial self-review и независимый статический review завершены: все подтверждённые P1/P2 исправлены, финальный reviewer не нашёл новых P1/P2. Это не заменяет DB validation.
+
+Canonical E2E ещё не получил PASS: подключённый Supabase project содержит только v3.1, R1/alpha migrations не применялись к live, development branch требует owner cost confirmation. Preview, authenticated browser QA desktop/mobile, DB learning/admin verification, performance и GitHub Actions status остаются `НЕ ПРОВЕРЕНО`.
 
 Поэтому scope на отдельные vape/hookah flows не расширен. Это stop condition release, а не незаметно перенесённая работа.
 
