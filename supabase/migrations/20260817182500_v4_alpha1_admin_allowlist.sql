@@ -6,7 +6,7 @@ create table private.alive_admin_allowlist (
   constraint alive_admin_allowlist_normalized_email
     check (
       email = pg_catalog.lower(pg_catalog.btrim(email))
-      and pg_catalog.position('@' in email) > 1
+      and pg_catalog.strpos(email, '@') > 1
     )
 );
 
