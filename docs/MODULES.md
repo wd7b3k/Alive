@@ -1,193 +1,310 @@
-# Карта модулей ALIVE v3
+# Каноническая карта модулей ALIVE
 
-## 1. Identity & Profile
+Этот документ фиксирует product/domain ownership. Технические границы реализации следуют `TECHNICAL_STRATEGY.md`.
+
+## 1. Identity & Consent
 
 Владеет:
 
-- identity mapping;
-- display profile;
-- role;
+- auth identity mapping;
+- profile/display data;
 - locale/timezone;
-- onboarding status.
+- consent versions;
+- privacy choices;
+- account lifecycle.
 
 Не владеет behavioural history.
 
-## 2. Onboarding & Baseline
+## 2. Dependence Profile
 
 Владеет:
 
-- target dependencies;
-- cessation bridges;
-- baseline usage;
-- product cost references;
-- пользовательскими настройками первой конфигурации.
+- enabled nicotine products;
+- product roles;
+- personal baseline;
+- quit/reduction goal;
+- journey state;
+- strategy preferences.
 
-## 3. Nicotine Product Model
+## 3. Nicotine Products
 
-Владеет каталогом типов:
+Владеет product definitions и product-specific semantics:
 
 - cigarette;
-- hookah;
 - vape;
-- NRT как intervention, но не target tobacco event.
+- hookah;
+- NRT/treatment role.
 
-Содержит versioned equivalence models.
+Raw usage facts хранятся отдельно от normalization/health heuristics.
 
 ## 4. Episode
 
-Canonical behavioural event:
+Canonical decision event:
 
-`trigger → craving → need → response → outcome`.
+`context → impulse → pause → recognition → decision → action → outcome`
+
+Не каждый episode обязан иметь все поля.
 
 Владеет:
 
-- episode lifecycle;
+- lifecycle;
 - target product;
-- private note;
-- craving/outcome facts.
+- context/trigger;
+- craving facts;
+- decision;
+- outcome;
+- optional private note;
+- correction/deletion state.
 
-## 5. Trigger & Need Catalog
+## 5. Links / Связки
 
-Общие справочники и пользовательские extensions.
+Владеет:
 
-Не публикует private пользовательский текст автоматически.
+- personal Links;
+- global templates;
+- trigger/context relation;
+- prepared `Когда X → делаю Y` response;
+- Link effectiveness;
+- weakening state;
+- explicit UGC submission.
 
-## 6. Replacement Engine
+## 6. Goals / Зачем
+
+Владеет:
+
+- goals;
+- values;
+- personal formulations;
+- active/order state;
+- contextual relevance;
+- explicit UGC submission where applicable.
+
+## 7. Evidence Registry
+
+Владеет:
+
+- evidence claims;
+- sources;
+- evidence strength;
+- limitations;
+- reviewed/versioned status;
+- approved user copy linkage.
+
+Medical claims не создаются другими модулями напрямую.
+
+## 8. Facts
+
+Владеет пользовательским представлением approved evidence facts и contextual eligibility.
+
+Не является source of medical truth — source находится в Evidence Registry.
+
+## 9. Myths / Reframe
+
+Владеет:
+
+- belief catalog;
+- user belief strength;
+- evidence relation;
+- linked Links/triggers;
+- personal experiments;
+- expectation vs outcome;
+- belief change.
+
+## 10. Micro-awareness
+
+Orchestration layer, выбирающий минимально достаточный contextual element:
+
+- Fact;
+- Myth/reframe;
+- personal insight;
+- Goal/Value.
+
+Учитывает repetition/fatigue.
+
+## 11. Intervention Engine
 
 Владеет:
 
 - candidate generation;
+- eligibility/safety rules;
+- product-specific logic;
+- prepared Link responses;
 - ranking;
-- eligibility rules;
-- explanation why suggested;
-- versioned ranking logic.
+- explanation;
+- model version.
 
-Не владеет raw episode history.
+Не владеет raw episode history, а читает его через contract/projections.
 
-## 7. Meanings
+## 12. Replacement Catalog
 
-Владеет:
+Каталог доступных behavioural actions:
 
-- global meanings catalog;
-- private user meanings;
-- order/active state;
-- submission into UGC review.
+- physical;
+- sensory;
+- environmental;
+- food/drink;
+- breathing;
+- cognitive;
+- emotional/acceptance;
+- music;
+- social;
+- values-related.
 
-## 8. Links
+`Replacement` — один тип intervention, не весь decision engine.
 
-Владеет:
+## 13. Treatment Support
 
-- private user Links;
-- global templates;
-- Link CRUD;
-- relationship to triggers/needs/replacements;
-- UGC submission.
+Владеет фактом выбранной пользователем cessation support strategy и adherence-related state.
 
-## 9. Food & Drink Replacements
+Может учитывать NRT и другие evidence-based approaches.
 
-Владеет:
+Не назначает дозировки и не считает NRT smoking relapse.
 
-- food/drink candidate catalog;
-- time-of-day eligibility;
-- daily limits/guardrails;
-- user preferences.
-
-Не назначает лечебную диету.
-
-## 10. NRT
-
-Владеет фактом использования:
-
-- spray;
-- gum;
-- patch.
-
-Не назначает дозировку и не считает NRT relapse.
-
-## 11. Tobacco Usage
+## 14. Tobacco / Nicotine Usage
 
 Владеет raw facts:
 
-- cigarettes quantity/cost;
-- hookah sessions/cost/duration;
-- vape puffs/device/consumable facts.
+### Cigarette
 
-Raw facts отделены от ALIVE units.
+quantity/time/cost.
 
-## 12. Metrics & Equivalence
+### Vape
 
-Владеет derived metrics:
+puffs/device interactions/groups/device/consumable/cost.
 
-- ALIVE units;
+### Hookah
+
+session/duration/cost/context.
+
+Raw facts сохраняются независимо от derived models.
+
+## 15. Outcome Learning
+
+Владеет rebuildable personal projections:
+
+- intervention effectiveness;
+- Link effectiveness/weakening;
+- expectation vs actual effect;
+- context-specific outcomes;
+- later cohort priors.
+
+Первичная learning logic structured/deterministic, не LLM-based.
+
+## 16. Metrics
+
+Владеет versioned derived metrics:
+
+- Time Saved;
+- Money Saved;
+- Health Minutes;
 - baseline delta;
-- money/time estimates;
-- successful responses;
-- broken Links;
-- streak/interval metrics.
+- smoke-free/nicotine-free state;
+- nicotine-free intervals;
+- optional ALIVE units.
 
-Каждая derived metric имеет definition/version.
+Health Minutes отдельно версионируются и не выводятся из ALIVE units автоматически.
 
-## 13. Together
+## 17. Journey / Путь
 
-Появляется в v3.1.
+Владеет presentation/projection logic долгосрочного прогресса:
 
-Владеет только разрешёнными group aggregates и re-engagement presentation logic.
+- freedom status;
+- weakened Links;
+- belief change;
+- returned time/money/Health Minutes;
+- relevant milestones.
 
-Не читает private content напрямую.
+## 18. Recovery
 
-## 14. UGC
+Владеет flow после target use/lapse:
+
+- immediate recovery state;
+- next-risk response;
+- return-to-plan;
+- no-shame presentation.
+
+## 19. Together
+
+Владеет только whitelist group/friend aggregates и re-engagement presentation.
+
+Не имеет прямого доступа к private free text.
+
+## 20. Referral
 
 Владеет:
 
-- explicit submissions;
-- moderation status;
-- attribution permission;
-- merge/publish workflow.
+- eligible value moments;
+- invite tokens;
+- click/attribution;
+- share events;
+- optional friend relationship invitation.
 
-Private original остаётся у исходного модуля.
+Referral не создаёт consent на sharing behavioural data.
 
-## 15. Experiment / Methodology
+## 21. Donation
 
-Владеет пользовательским объяснением:
+Будущий модуль добровольной поддержки разработки.
 
-- что проверяет ALIVE;
-- факты vs hypotheses vs heuristics;
-- privacy explanation;
-- methodology versions.
+Владеет provider integration/audit state после отдельного gate.
 
-## 16. Analytics
+Donation status не является entitlement к core ALIVE functions.
+
+## 22. Evidence/Hypothesis Governance
+
+Владеет разделением:
+
+- proven/external evidence;
+- evidence-informed design;
+- heuristic;
+- ALIVE hypothesis.
+
+Hypothesis Registry хранит experiment, metric, success/failure criteria и version.
+
+## 23. Analytics
 
 Владеет product usage events без sensitive free text.
 
-## 17. Admin & Product Intelligence
+Не является источником domain truth.
 
-Появляется в v3.2.
+## 24. Admin & Product Intelligence
 
 Владеет:
 
 - product/operational dashboards;
-- UGC Inbox;
-- content quality signals;
-- recommendations owner/admin.
+- evidence/content review tooling;
+- UGC inbox;
+- experiment visibility;
+- health/incident state.
 
-## 18. Health & Monitoring
+Private user history не является default admin surface.
 
-Появляется в v3.2.
+## 25. Channel Orchestration
 
-Владеет:
+Владеет mapping между Domain/Application commands и конкретным frontend/channel representation.
 
-- health checks;
-- operational incidents;
-- recovery state;
-- email notification orchestration.
+Web/Telegram/Mobile не копируют decision logic.
 
-## 19. Release & Configuration
+## 26. AI / Semantic Intelligence
+
+Появляется после product evidence gate.
+
+Владеет provider abstraction и constrained semantic tasks:
+
+- classify;
+- summarize;
+- match/retrieve;
+- structured generation.
+
+Не владеет evidence truth, authorization, canonical metrics или raw DB write access.
+
+## 27. Release & Configuration
 
 Владеет:
 
 - release version;
-- schema/methodology versions;
+- methodology/model versions;
 - feature flags;
-- runtime-safe public configuration.
+- runtime-safe public config;
+- experiment rollout state.
 
 Secrets не являются частью public configuration.
