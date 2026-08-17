@@ -86,6 +86,21 @@ function Dashboard({ data, period, setPeriod, reload, loading }: { data: AdminDa
       conversion: index === 0 ? 1 : funnelBase[index - 1][1] ? Math.min(1, count / funnelBase[index - 1][1]) : null,
     }));
 
+    const clientJourney = [
+      ['Открыли «Хочу закурить»', 'craving_flow_opened'],
+      ['Распознали контекст', 'context_selected'],
+      ['Увидели микроосознанность', 'awareness_shown'],
+      ['Выбрали действие', 'intervention_selected'],
+      ['Выполнили действие', 'intervention_completed'],
+      ['Сохранили outcome', 'outcome_saved'],
+      ['Увидели метрики свободы', 'freedom_metrics_visible'],
+    ].map(([label, type]) => ({
+      label,
+      type,
+      users: users(events, type).size,
+      events: events.filter((event) => event.event_type === type).length,
+    }));
+
     const products = (['cigarette', 'vape', 'hookah'] as const).map((product) => {
       const rows = craving.filter((event) => event.product_type === product);
       const decided = rows.filter((event) => event.outcome === 'successful_response' || event.outcome === 'nicotine_used');
@@ -128,6 +143,7 @@ function Dashboard({ data, period, setPeriod, reload, loading }: { data: AdminDa
       successShare: resolved ? success.length / resolved : null,
       repeatedUsers: [...byUser.values()].filter((count) => count >= 2).length,
       funnel,
+      clientJourney,
       products,
       reasons: [...reasonCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8),
       overdue,
@@ -162,6 +178,11 @@ function Dashboard({ data, period, setPeriod, reload, loading }: { data: AdminDa
       <Card title="Использовали работу с тягой" value={num(analysis.cravingUsers)} note={`${num(analysis.cravingCount)} завершённых эпизодов`} />
       <Card title="Эпизоды без никотина" value={pct(analysis.successShare)} note="среди эпизодов с однозначным исходом" accent />
       <Card title="Вернулись повторно" value={num(analysis.repeatedUsers)} note="минимум два завершённых эпизода тяги" />
+    </section>
+
+    <section className="a-panel">
+      <div className="a-panel-head"><div><span>4.0 alpha · помощь в момент тяги</span><h2>Доходит ли пользователь от импульса до свободы</h2></div><small>Только структурированные client events; quick log исключён</small></div>
+      {analysis.clientJourney[0].users === 0 ? <Empty>За этот период сценарий «Хочу закурить» ещё не открывали.</Empty> : <div className="a-funnel">{analysis.clientJourney.map((stage, index) => <div className="a-funnel-row" key={stage.type}><div className="a-funnel-label"><b>{index + 1}</b><span>{stage.label}</span></div><div className="a-funnel-bar"><i style={{ width: `${Math.max(2, stage.users / analysis.clientJourney[0].users * 100)}%` }} /></div><strong>{stage.users}</strong><small>{stage.events} событий</small></div>)}</div>}
     </section>
 
     <section className="a-panel">
