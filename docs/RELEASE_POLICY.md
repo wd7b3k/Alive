@@ -2,100 +2,141 @@
 
 ## 1. Каноническая история
 
-- v2.7 — последняя legacy production reference;
+- v2.7 — legacy production reference;
 - v2.8 не является production release;
-- новая продуктовая серия начинается с v3.0.
+- новая runtime-линия начинается с v3.0;
+- strategy/foundation release units могут существовать без изменения runtime SemVer.
 
-Экспериментальные локальные архивы не становятся релизами только потому, что получили имя ZIP.
+Экспериментальный архив/ветка/ZIP не становится release только из-за имени.
 
 ## 2. Release unit
 
-Каждое значимое изменение оформляется как отдельный release unit с:
+Каждое значимое изменение оформляется отдельным release unit с:
 
+- purpose;
+- strategy/hypothesis traceability;
 - scope;
-- changed files/modules;
-- schema/methodology changes;
+- changed modules/files;
+- schema/methodology/model changes;
 - validation;
-- privacy/security checks;
-- rollback;
+- privacy/security checks where relevant;
+- rollback/forward-fix;
 - known limitations;
-- release notes.
+- release notes/handoff.
 
-## 3. SemVer-like дисциплина
+## 3. Documentation-only foundation
 
-На раннем этапе:
+Разрешён отдельный documentation-only release unit, который:
 
-- `3.0` — platform/core-loop milestone;
-- `3.1` — Together milestone;
-- `3.2` — Admin/Intelligence milestone;
-- patch version (`3.0.1`) допускается только для фактически выпущенного `3.0`.
+- меняет strategy/methodology/contracts;
+- не меняет runtime code;
+- не меняет schema;
+- не deployится как новая runtime version;
+- служит foundation для следующих implementation releases.
 
-Нельзя создавать `3.0.1`, если `3.0` не был принят/выпущен.
+Он всё равно требует branch, validation, rollback и draft PR.
 
-## 4. Документация релиза
+## 4. Version discipline
 
-Минимум:
+Runtime version повышается только когда существует фактический runtime release milestone.
 
-- `README.md`;
-- `RELEASE_NOTES.md`;
-- `VALIDATION.md`;
-- `ROLLBACK.md`;
-- `INTEGRITY.md` при downloadable artifact;
-- `MIGRATION.md` при schema/data migration;
-- обновление `CURRENT_STATE.md`.
+Нельзя:
 
-Для v3 platform дополнительно:
+- повышать version только из-за документа;
+- создавать patch version для невыпущенной версии;
+- объявлять deployment/release задним числом;
+- смешивать methodology/model version и runtime app version.
 
-- `ARCHITECTURE.md`;
-- `DB_SCHEMA.md`;
-- `PRIVACY.md`/ссылка на канонический privacy contract;
-- `TEST_REPORT.md`.
+Derived model versions (`Health Minutes`, `Intervention Ranking`, methodology и др.) имеют собственное versioning.
 
-## 5. Database changes
+## 5. Документация release
+
+Минимум по значимому release unit:
+
+- scope/README;
+- validation;
+- rollback/forward-fix;
+- current-state sync;
+- AI prompt/response audit trail.
+
+Runtime release дополнительно включает применимые:
+
+- RELEASE_NOTES;
+- TEST_REPORT;
+- MIGRATION;
+- DB/schema docs;
+- privacy/security verification;
+- integrity metadata для downloadable artifacts.
+
+## 6. Database changes
 
 Все migrations versioned в git.
 
 Запрещено:
 
 - вручную менять production schema без migration record;
-- silent reinterpretation historical data;
-- destructive migration без backup/rollback.
+- silent reinterpretation historical raw data;
+- destructive migration без recovery path.
 
-## 6. Methodology changes
+## 7. Methodology / metric / evidence changes
 
-Изменения, меняющие смысл метрик/модели:
+Изменения, меняющие смысл user-facing или derived data, требуют:
 
-- новая methodology/equivalence version;
+- новой model/methodology/evidence version where applicable;
 - release note;
-- пересчёт derived projections допустим;
-- raw data не переписывается.
+- compatibility/recompute decision;
+- raw data сохранения;
+- owner gate для medically significant coefficient/copy changes.
 
-## 7. Brand assets
+## 8. Product strategy traceability
 
-Утверждённый Om-logo считается immutable asset между релизами, если владелец явно не запросил изменение.
+Implementation release обязан отвечать:
 
-## 8. Rollback
+- какую часть `PRODUCT_STRATEGY.md` реализует;
+- какую hypothesis проверяет или какой обязательный foundation создаёт;
+- какой outcome/metric должен измениться;
+- что является acceptance gate.
+
+Feature без понятной связи со стратегией не добавляется автоматически.
+
+## 9. Brand assets
+
+Утверждённый ALIVE/Om asset считается stable и не изменяется без прямого owner decision.
+
+## 10. Rollback
 
 До production deployment сохраняются:
 
-- previous git tag/commit;
-- DB migration rollback или forward-fix strategy;
-- config snapshot без секретов;
+- previous known-good commit/tag;
+- DB rollback или documented forward-fix strategy;
+- safe config snapshot без secrets;
 - deployment rollback procedure.
 
-## 9. Release gate
+Documentation-only release откатывается revert commit/PR и не требует runtime rollback.
 
-Нельзя считать релиз готовым только по syntax check.
+## 11. Release gate
 
-Минимально проверять:
+Нельзя считать release готовым по syntax/build check.
+
+Проверять применимое:
 
 - functional acceptance;
+- product-strategy consistency;
 - privacy/tenant isolation;
-- critical data integrity;
+- data integrity;
 - responsive UI;
 - no frontend secrets;
-- documentation consistency.
+- evidence/content integrity;
+- documentation consistency;
+- rollback.
 
-## 10. AI-generated releases
+## 12. AI-generated releases
 
-AI не должен самостоятельно повышать версию или объявлять production deployment состоявшимся без фактического подтверждения.
+AI не должен самостоятельно:
+
+- повышать version;
+- объявлять production deployment;
+- менять product/evidence coefficients без owner gate;
+- merge PR.
+
+AI обязан оставить handoff с branch, PR, validation и open gates.
