@@ -330,6 +330,7 @@ export type GuidedEpisodeDraft = {
   replacementCode: string | null;
   outcome: 'successful_response' | 'nicotine_used' | 'abandoned';
   note?: string;
+  episodeId?: string;
   tobacco?: {
     cigaretteQuantity?: number;
     hookahSessionCount?: number;
@@ -344,7 +345,9 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
   const supabase = requireClient();
   const userId = session.user.id;
   const completedAt = new Date().toISOString();
+  const episodeId = draft.episodeId ?? crypto.randomUUID();
   const episodePayload = {
+    id: episodeId,
     user_id: userId,
     episode_kind: 'craving',
     target_product: draft.product,
@@ -358,30 +361,49 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
     private_note: draft.note || null,
     completed_at: null,
   };
-  let episodeRes = await supabase.from('episodes').insert(episodePayload).select('id').single();
-  if (episodeRes.error?.message.includes('episode_kind')) {
-    const { episode_kind: _episodeKind, ...legacyPayload } = episodePayload;
-    episodeRes = await supabase.from('episodes').insert(legacyPayload).select('id').single();
+  const episodeRes = await supabase.from('episodes').insert(episodePayload);
+  if (episodeRes.error && episodeRes.error.code !== '23505') {
+    throw new Error(episodeRes.error.message);
   }
-  if (episodeRes.error || !episodeRes.data) throw new Error(episodeRes.error?.message || 'Не удалось сохранить эпизод');
-  const episodeId = episodeRes.data.id as string;
+  if (episodeRes.error?.code === '23505') {
+    const existing = await supabase.from('episodes').select('id').eq('id', episodeId).eq('user_id', userId).maybeSingle();
+    if (existing.error || !existing.data) throw new Error(existing.error?.message || 'Не удалось продолжить сохранение эпизода');
+  }
 
   if (draft.replacementCode) {
-    const replacement = await supabase.from('episode_actions').insert({
-      user_id: userId,
-      episode_id: episodeId,
+    const existingAction = await supabase.from('episode_actions')
+      .select('id')
+      .eq('episode_id', episodeId)
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+    if (existingAction.error) throw new Error(existingAction.error.message);
+    const actionPayload = {
       action_type: draft.replacementCode.startsWith('nrt_') ? 'nrt' : 'replacement',
       replacement_code: draft.replacementCode,
       payload: {},
-    });
-    if (replacement.error) throw new Error(replacement.error.message);
+    };
+    const action = existingAction.data
+      ? await supabase.from('episode_actions').update(actionPayload).eq('id', existingAction.data.id).eq('user_id', userId)
+      : await supabase.from('episode_actions').insert({
+          ...actionPayload,
+          user_id: userId,
+          episode_id: episodeId,
+        });
+    if (action.error) throw new Error(action.error.message);
   }
+
+  const existingTobacco = await supabase.from('tobacco_events')
+    .select('id')
+    .eq('episode_id', episodeId)
+    .eq('user_id', userId)
+    .limit(1)
+    .maybeSingle();
+  if (existingTobacco.error) throw new Error(existingTobacco.error.message);
 
   if (draft.outcome === 'nicotine_used') {
     const tobacco = draft.tobacco ?? {};
-    const event = await supabase.from('tobacco_events').insert({
-      user_id: userId,
-      episode_id: episodeId,
+    const tobaccoPayload = {
       product_type: draft.product,
       cigarette_quantity: draft.product === 'cigarette' ? tobacco.cigaretteQuantity ?? 1 : null,
       hookah_session_count: draft.product === 'hookah' ? tobacco.hookahSessionCount ?? 1 : null,
@@ -389,8 +411,22 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
       vape_puffs: draft.product === 'vape' ? tobacco.vapePuffs ?? 10 : null,
       vape_device_type: draft.product === 'vape' ? tobacco.vapeDeviceType ?? null : null,
       cost_actual_rub: tobacco.costActualRub ?? null,
-    });
+      deleted_at: null,
+    };
+    const event = existingTobacco.data
+      ? await supabase.from('tobacco_events').update(tobaccoPayload).eq('id', existingTobacco.data.id).eq('user_id', userId)
+      : await supabase.from('tobacco_events').insert({
+          ...tobaccoPayload,
+          user_id: userId,
+          episode_id: episodeId,
+        });
     if (event.error) throw new Error(event.error.message);
+  } else if (existingTobacco.data) {
+    const removed = await supabase.from('tobacco_events')
+      .update({ deleted_at: completedAt })
+      .eq('id', existingTobacco.data.id)
+      .eq('user_id', userId);
+    if (removed.error) throw new Error(removed.error.message);
   }
 
   const completed = await supabase.from('episodes').update({
