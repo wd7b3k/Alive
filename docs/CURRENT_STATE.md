@@ -409,7 +409,7 @@ Mandatory first vertical slice:
 
 Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. Исправленная исходная фиксация остаётся: head `694c34fbefadcec028052845aead31f949bb46ba`, frontend run #251 `success`. DB-tested head `dc49610876c7ab98b4085bd3736a7bb5697c10fc` прошёл frontend run #284 и database run #24. Build сохраняет предупреждение о bundle chunk больше 500 kB.
 
-Adversarial self-review и независимый статический review runtime/SQL завершены: head `dba84ef` не имеет подтверждённых P1/P2. Отдельный executable DB gate теперь дополняет, а не подменяет этот review.
+Adversarial self-review и независимый review завершены. DB/CI reviewer сначала нашёл 2 P1, 3 P2 и 1 P3; после security hardening focused re-review head `dc49610876c7ab98b4085bd3736a7bb5697c10fc` подтвердил закрытие всех шести findings. Executable gate дополняет, а не подменяет review.
 
 Canonical data slice получил programmatic PASS в бесплатном ephemeral CI: migration replay, RLS, privilege non-escalation, action ownership, learning/delete-recompute, idempotent concurrent retry, legacy-present migration и admin/private boundary проверены. Live project намеренно не изменялся. Public preview smoke PASS на desktop/mobile; полный authenticated browser E2E, Core Web Vitals и hosted Advisors остаются `НЕ ПРОВЕРЕНО`.
 
