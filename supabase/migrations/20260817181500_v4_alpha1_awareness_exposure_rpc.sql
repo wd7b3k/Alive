@@ -13,8 +13,8 @@ create or replace function public.alive_record_awareness_exposure(
 )
 returns uuid
 language plpgsql
-security invoker
-set search_path = public
+security definer
+set search_path = ''
 as $$
 declare
   v_user_id uuid := (select auth.uid());
@@ -53,7 +53,9 @@ begin
   end if;
 
   -- Serialize retries for one anonymous flow without exposing the flow id as private text.
-  perform pg_advisory_xact_lock(hashtextextended(v_user_id::text || ':' || p_flow_id::text, 0));
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(v_user_id::text || ':' || p_flow_id::text, 0)
+  );
 
   select nullif(event.metadata ->> 'impression_id', '')::uuid
   into v_impression_id
@@ -112,7 +114,7 @@ begin
     p_product_type,
     p_trigger_code,
     p_content_code,
-    jsonb_build_object(
+    pg_catalog.jsonb_build_object(
       'flow_id', p_flow_id::text,
       'impression_id', v_impression_id::text
     )
@@ -126,5 +128,5 @@ revoke all on function public.alive_record_awareness_exposure(text,text,text,uui
 grant execute on function public.alive_record_awareness_exposure(text,text,text,uuid) to authenticated;
 
 comment on function public.alive_record_awareness_exposure(text,text,text,uuid)
-is 'Идемпотентно и атомарно фиксирует показ published content с проверенным Evidence claim; payload не содержит private text.';
+is 'Ограниченный SECURITY DEFINER идемпотентно фиксирует approved показ для auth.uid(); payload не содержит private text.';
 
