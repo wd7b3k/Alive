@@ -4,47 +4,52 @@
 
 Следующий этап определён как R1 «Данные, доказательная база и контроль продукта».
 
-Причина: дальнейшая перестройка UX без правильной domain/content schema создала бы ещё один слой логики, который позднее пришлось бы мигрировать. Одновременно analytics нельзя откладывать: продуктовые гипотезы должны быть наблюдаемыми с момента запуска новых механизмов.
+Причина: дальнейшая перестройка пользовательского интерфейса без правильной структуры данных и контента создала бы ещё один временный слой логики. Аналитику также нельзя откладывать: новые продуктовые гипотезы должны становиться наблюдаемыми одновременно с их запуском.
 
-## Реализовано в branch
+## Реализовано в ветке
 
-### Database
+### Данные и персонализация
 
 Добавлены migrations для:
 
 - категорий и собственных Триггеров;
 - категорий, собственных Замен и пользовательских предпочтений;
-- context-aware intervention rules;
-- `Зачем` как goals/values/directions;
-- Evidence Registry;
-- пользовательского слоя Facts/Myths;
-- content impressions;
-- structured analytics events;
-- system errors;
-- DB-level product funnel capture;
-- compatibility analytics для legacy `goal_text`/`user_meanings`;
-- personal learning projections по Триггерам и Заменам.
+- контекстных правил вмешательств;
+- `Зачем` как целей, ценностей и направлений;
+- персональных статистических проекций по Триггерам и Заменам;
+- полного пересчёта learning projections после исправления/удаления raw events;
+- явного `episode_kind`, разделяющего работу с тягой, быстрый факт употребления и будущий осознанный эпизод;
+- совместимости со старыми `Смыслами`, `goal_text`, Facts/Myths и пользовательским состоянием старых Мифов.
 
-Все новые private entities защищаются RLS. Admin analytics не требует чтения чужих private notes.
+Raw episodes/actions остаются источником истины. Derived learning state rebuildable.
 
-### Evidence
+### Доказательная база
 
-Создан стартовый reviewed seed, включающий материалы по:
+Создан Evidence Registry с отдельными слоями:
 
-- приблизительной оценке ≈20 минут ожидаемой жизни на сигарету;
+`оригинальный источник → проверяемое утверждение → русская пользовательская подача`.
+
+Стартовый seed включает материалы по:
+
+- ≈20 минут ожидаемой жизни на сигарету;
 - пользе отказа в разных возрастах;
+- изменению смертности после прекращения;
+- сердечно-сосудистому риску и накопленному стажу;
+- малому числу сигарет;
 - КПТ;
-- персонализированным цифровым вмешательствам;
-- рекомендациям ВОЗ;
-- доказательным cessation treatments;
-- кратковременной физической активности при тяге;
-- психическому благополучию после отказа;
+- персонализированной цифровой помощи;
+- рекомендациям ВОЗ и доказательной фармакологической поддержке;
+- физической активности при тяге;
+- психическому состоянию;
+- нарушениям сна при отмене;
+- набору веса после отказа;
 - кальяну;
-- вейпу и dual use.
+- вейпу;
+- двойному употреблению.
 
-User copy отделена от scientific claim и source.
+Сильная пользовательская формулировка не подменяет scientific claim. Caveat хранится отдельно и обязателен для условных/популяционных оценок.
 
-### Content taxonomy
+### Контентная модель
 
 Добавлен `CONTENT_AND_PERSONALIZATION_MODEL.md`.
 
@@ -52,46 +57,83 @@ User copy отделена от scientific claim и source.
 
 `общий каталог → личная сущность → персональная статистика результата`.
 
-### Admin
+Библиотека Замен нормализована по категориям и контекстам. Пользователь может иметь собственный Триггер/Замену/Зачем как полноценную приватную сущность.
+
+### Аналитика
+
+Добавлены:
+
+- отдельный `analytics_events` без sensitive free text;
+- DB-level capture устойчивых этапов воронки;
+- раздельная семантика craving-flow и quick-use;
+- структурированный каталог причин остановки;
+- связь аналитических событий с domain IDs;
+- `system_errors`;
+- индексы для критичных внешних ключей.
+
+Точное раннее закрытие несохранённого modal-flow по UI-шагу пока требует отдельной клиентской телеметрии и честно остаётся открытым gate R1.
+
+### Админский раздел
 
 Созданы:
 
-- `/admin` route;
+- `/admin`;
 - `AdminDashboard.tsx`;
 - `admin-data.ts`;
-- отдельный русский dashboard style.
+- изолированные стили админского раздела.
 
 Dashboard показывает:
 
-- active users;
-- craving usage;
-- episodes without target nicotine action;
-- repeat usage;
-- new-user cohort funnel;
-- product breakdown;
-- structured abandonment reasons when available;
-- Facts/Myths usage;
-- Evidence freshness;
-- system errors;
-- p95 latency when collected.
+- активность;
+- использование реальной работы с тягой;
+- эпизоды без целевого употребления;
+- повторное использование;
+- когортную воронку новых пользователей;
+- результаты по сигаретам / электронке / кальяну;
+- структурированные причины остановки;
+- востребованность Фактов/Мифов;
+- актуальность Evidence Registry;
+- технические ошибки;
+- latency при наличии timing telemetry.
 
-### Documentation
+Private notes, личные тексты `Зачем` и чужие свободные тексты Связок dashboard не получает.
 
-Созданы release docs, validation/rollback, updated CURRENT_STATE и AI audit trail.
+### Локализация
+
+Новые user/admin strings русские. Дополнительно очищены старые пользовательские строки `reset`, `NRT`, `meaning` там, где они могли отображаться.
+
+Полный перевод существующего end-user runtime с `Смыслы` на `Зачем` относится к следующему пользовательскому release и не маскируется как завершённая часть R1.
+
+### Read-only проверка живой Supabase
+
+Без изменения schema/data подтверждены:
+
+- необходимые поля текущих таблиц;
+- `public.set_updated_at()`;
+- наличие legacy Facts/Myths state;
+- текущая роль единственного активного пользователя — `participant`.
+
+Поэтому `/admin` требует отдельного owner admin bootstrap после database/security gate; автоматического повышения пользователей не будет.
+
+Security Advisor на текущей базе показывает только прежнее предупреждение leaked-password protection; password sign-in сейчас не используется.
+
+Performance Advisor показал два существовавших неиндексированных foreign keys; R1 добавляет для них покрывающие индексы.
 
 ## Не выполнено намеренно
 
-- migrations не применены к живой БД до SQL/security validation;
-- текущий end-user UI не мигрирован целиком с `Смыслы` на `Зачем`;
-- current runtime Replacement Engine пока не переведён на новые context rules/projections;
-- exact UI-step abandonment telemetry ещё требует отдельного instrumentation pass;
-- local LLM не добавлялся.
+- migrations не применены к живой alpha/production БД;
+- frontend CI/typecheck/build пока не подтверждены инструментом;
+- migrations ещё должны быть последовательно проверены на отдельной development database;
+- exact early-exit UI telemetry ещё требует instrumentation pass;
+- текущий пользовательский UI ещё не переведён на новую domain model;
+- local LLM, Tribute и referral runtime не добавлялись.
 
 ## Следующий validation gate
 
-1. открыть stacked draft PR;
-2. получить CI typecheck/build;
-3. проверить migrations на development database/branch;
-4. проверить RLS и advisors;
-5. owner review стартовых Facts/Myths;
-6. только затем применять R1 schema к alpha.
+1. frontend typecheck/build;
+2. применение migrations на отдельной development DB;
+3. RLS isolation tests;
+4. повторные security/performance advisors;
+5. owner review Фактов/Мифов и caveats;
+6. безопасный owner admin bootstrap;
+7. только после этого — применение R1 к alpha и переход к следующему пользовательскому release.
