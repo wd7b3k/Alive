@@ -14,11 +14,34 @@ alter table private.alive_admin_allowlist enable row level security;
 revoke all on table private.alive_admin_allowlist from public, anon, authenticated;
 
 comment on table private.alive_admin_allowlist is
-  'Закрытый owner-approved allowlist для controlled admin bootstrap. Не экспонируется в Data API или analytics.';
+  'Закрытый owner-approved allowlist для confirmed Google OAuth admin bootstrap. Не экспонируется в Data API или analytics.';
 
 insert into private.alive_admin_allowlist(email)
 values ('wd7b3k@gmail.com')
 on conflict(email) do nothing;
+
+create or replace function private.alive_is_allowlisted_google_admin(
+  p_email text,
+  p_email_confirmed_at timestamptz,
+  p_app_metadata jsonb
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $admin_identity$
+  select p_email_confirmed_at is not null
+    and p_app_metadata ->> 'provider' = 'google'
+    and exists (
+      select 1
+      from private.alive_admin_allowlist a
+      where a.email = pg_catalog.lower(pg_catalog.btrim(p_email))
+    );
+$admin_identity$;
+
+revoke all on function private.alive_is_allowlisted_google_admin(text, timestamptz, jsonb)
+from public, anon, authenticated;
 
 create or replace function private.alive_sync_admin_allowlist()
 returns integer
@@ -32,9 +55,12 @@ begin
   update public.profiles p
   set role = 'admin'
   from auth.users u
-  join private.alive_admin_allowlist a
-    on a.email = pg_catalog.lower(pg_catalog.btrim(u.email))
   where p.id = u.id
+    and private.alive_is_allowlisted_google_admin(
+      u.email,
+      u.email_confirmed_at,
+      u.raw_app_meta_data
+    )
     and p.role is distinct from 'admin';
 
   get diagnostics v_updated = row_count;
@@ -54,10 +80,10 @@ declare
   v_role text;
 begin
   select case
-    when exists (
-      select 1
-      from private.alive_admin_allowlist a
-      where a.email = pg_catalog.lower(pg_catalog.btrim(new.email))
+    when private.alive_is_allowlisted_google_admin(
+      new.email,
+      new.email_confirmed_at,
+      new.raw_app_meta_data
     ) then 'admin'
     else 'participant'
   end
