@@ -12,19 +12,31 @@
 
 ## Обязательная точка входа для Codex
 
-Первым prompt для Codex использовать:
+Первым prompt использовать:
 
 `CODEX_LAUNCHER.md`
 
-Он начинается с обязательного **Environment preflight**.
+Он сначала определяет доступный execution mode по `docs/CODEX_EXECUTION_MODES.md`.
 
-Если в Codex Environment нет локального git checkout `wd7b3k/Alive`, release не начинается и Codex должен вернуть:
+### Основной owner workflow
 
-`BLOCKED: LOCAL_REPOSITORY_UNAVAILABLE`
+**Direct GitHub Mode** — нормальный режим работы ALIVE.
 
-GitHub Connector не является заменой локального checkout, локального diff, build/tests, migration validation или browser QA.
+Если локального checkout нет, но `wd7b3k/Alive` доступен через GitHub integration на чтение и запись, release продолжается непосредственно через отдельную branch, commits и draft PR.
 
-Только после успешного preflight Codex читает полный `CODEX_PROMPT.md` и остальные release/repository instructions.
+Владелец проекта не обязан вручную:
+
+- клонировать repository;
+- пользоваться GitHub Desktop;
+- настраивать CLI authentication;
+- запускать local Node/Supabase;
+- создавать отдельную локальную dev-среду.
+
+GitHub Actions, preview и Supabase tooling используются как remote quality gates, когда доступны.
+
+Local Repository Mode остаётся дополнительной возможностью, если полноценный checkout уже существует.
+
+Отсутствие `.git` в временной папке само по себе blocker не является.
 
 ## Канонический путь
 
@@ -32,7 +44,7 @@ GitHub Connector не является заменой локального check
 
 ## Первый mandatory vertical slice
 
-До расширения на остальные состояния должен полностью работать и быть проверен сценарий:
+До расширения на остальные состояния должен полностью работать сценарий:
 
 > **сигарета после еды → короткая пауза → распознанный контекст → approved Fact/Myth/Зачем → персонально ранжированное действие → outcome → Time/Money/Health Minutes → learning projection → admin event**
 
@@ -59,12 +71,13 @@ Release проверяет:
 
 ## Основные документы
 
-1. `CODEX_LAUNCHER.md` — обязательный первый prompt и environment fail-fast
+1. `CODEX_LAUNCHER.md` — первый prompt и выбор execution mode
 2. `CODEX_PROMPT.md` — полная спецификация реализации
 3. `REQUIREMENTS.md`
 4. `IMPLEMENTATION_PLAN.md`
 5. `VALIDATION.md`
 6. `ROLLBACK.md`
+7. `../../docs/CODEX_EXECUTION_MODES.md` — допустимые способы работы
 
 ## Non-goals
 
@@ -81,9 +94,11 @@ Release проверяет:
 
 ## Definition of Done
 
-Release не называется готовым, пока:
+Release не называется полностью проверенным, пока:
 
-- Environment preflight имеет PASS;
-- critical vertical slice реально работает end-to-end;
+- определён execution mode и подтверждён доступ к правильной base/target branch;
+- critical vertical slice связан end-to-end;
 - критические пункты `VALIDATION.md` имеют фактический PASS либо явно принятое owner limitation;
 - handoff честно различает PASS / FAIL / НЕ ПРОВЕРЕНО.
+
+Недоступность локального checkout не является причиной останавливать безопасную работу в Direct GitHub Mode.
