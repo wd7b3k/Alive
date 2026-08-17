@@ -236,6 +236,20 @@ Build не доказывает удобство.
 
 В Direct GitHub Mode использовать Supabase tooling/development branch/project вместо требования локальной БД.
 
+### Fail semantics инструментов
+
+Зелёный GitHub conclusion сам по себе не доказывает, что вложенный инструмент реально применял gate.
+
+Для каждой CI-команды, которая должна останавливать workflow при дефекте, Codex обязан:
+
+- явно задать fail semantics инструмента (`--fail-on error`, strict mode или документированный эквивалент), если default допускает exit code 0 при diagnostics;
+- проверить в логе фактически исполненную команду, а не только YAML и conclusion;
+- проверить ожидаемый success marker и отсутствие diagnostics запрещённого уровня;
+- не использовать фильтр, `continue-on-error` или подавление exit code без отдельного обоснования и видимого статуса;
+- считать прошлый green run недействительным evidence, если обнаружена false-green semantics, и повторить gate на свежем runner.
+
+Урок PR #8: `supabase db lint --level error` выводил ошибку отсутствующей relation, но завершался успешно из-за default `--fail-on none`. Каноническая команда ALIVE: `supabase db lint --level error --fail-on error`.
+
 ## 13. Evidence/content gate
 
 Медицински значимый пользовательский content должен иметь:
