@@ -66,12 +66,12 @@ begin
   insert into public.profiles(id, display_name, avatar_url, locale, role)
   values (
     new.id,
-    pg_catalog.coalesce(
+    coalesce(
       new.raw_user_meta_data ->> 'full_name',
       new.raw_user_meta_data ->> 'name',
-      pg_catalog.split_part(pg_catalog.coalesce(new.email, 'participant'), '@', 1)
+      pg_catalog.split_part(coalesce(new.email, 'participant'), '@', 1)
     ),
-    pg_catalog.coalesce(
+    coalesce(
       new.raw_user_meta_data ->> 'avatar_url',
       new.raw_user_meta_data ->> 'picture'
     ),
