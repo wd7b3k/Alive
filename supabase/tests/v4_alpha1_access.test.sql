@@ -113,7 +113,7 @@ select throws_ok(
       '20000000-0000-0000-0000-000000000099',
       '10000000-0000-0000-0000-000000000002',
       'cigarette','after_meal','open','craving'
-    )$,
+    )$$,
   '42501',
   'new row violates row-level security policy for table "episodes"',
   'participant cannot insert an episode for another user'
@@ -134,7 +134,7 @@ select results_eq(
 reset role;
 set local role anon;
 select throws_ok(
-  $select count(*) from public.episodes$,
+  $$select count(*) from public.episodes$$,
   '42501',
   'permission denied for table episodes',
   'anonymous cannot read private episodes'
@@ -157,7 +157,7 @@ select throws_ok(
     values (
       '10000000-0000-0000-0000-000000000002',
       'test_event','тест','ci','{"flow_id":"test-cross-event"}'::jsonb
-    )$,
+    )$$,
   '42501',
   'new row violates row-level security policy for table "analytics_events"',
   'participant cannot insert analytics for another user'
@@ -176,7 +176,7 @@ select throws_ok(
       'cigarette',
       'after_meal',
       '40000000-0000-0000-0000-000000000099'::uuid
-    )$,
+    )$$,
   '42501',
   'permission denied for function alive_record_awareness_exposure',
   'anonymous cannot execute awareness RPC'
