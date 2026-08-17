@@ -110,6 +110,18 @@ const content = [
   { code: 'b', content_type: 'миф', title_ru: 'B', hook_ru: 'B', explanation_ru: 'B', motivation_ru: 'B', caveat_ru: 'B', product_types: ['cigarette'], published: true, sort_order: 20 },
 ];
 
+test('context-specific learning outranks a larger generic sample', () => {
+  const result = rank({
+    learning: [
+      { global_replacement_code: 'walk', product_type: 'cigarette', trigger_key: 'любой', attempts: 10, successful_responses: 9, helpfulness_sum: 40, helpfulness_count: 10 },
+      { global_replacement_code: 'walk', product_type: 'cigarette', trigger_key: 'g:after_meal', attempts: 3, successful_responses: 2, helpfulness_sum: 11, helpfulness_count: 3 },
+    ],
+  });
+  const walk = result.find((item) => item.replacement.code === 'walk');
+  assert.equal(walk.explanationKind, 'personal');
+  assert.match(walk.explanation, /2 из 3/);
+});
+
 test('awareness selection respects context and fatigue', () => {
   const selection = selectAwareness({
     content,
