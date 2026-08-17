@@ -138,7 +138,7 @@ CI, development DB/RLS/advisors, preview browser desktop/mobile, loading/empty/e
 
 - app/src/data.ts: typed R1 reads/writes и explicit episode kind.
 - app/src/release4-domain.ts: pure metrics/ranking/awareness/analytics/product semantics.
-- app/src/release4-domain.test.ts: domain tests.
+- app/src/release4-domain.test.mjs: domain tests.
 - app/src/RedesignApp.tsx: canonical flow, CTA, metrics, Зачем terminology, feedback states.
 - app/src/metrics.ts: reuse existing raw/baseline helpers без параллельной ALIVE-units medical model.
 - app/src/AdminDashboard.tsx и app/src/admin-data.ts: structured alpha funnel.
@@ -148,7 +148,7 @@ CI, development DB/RLS/advisors, preview browser desktop/mobile, loading/empty/e
 
 ## Затрагиваемая схема/API
 
-Новая migration на Checkpoint C пока не планируется: используются существующие R1 contracts из base.
+После adversarial review добавлена одна additive migration `20260817181500_v4_alpha1_awareness_exposure_rpc.sql`: она атомарно и идемпотентно связывает approved content impression с `awareness_shown`, а partial unique index защищает `awareness_shown` и `outcome_saved` от повторов по stable `flow_id`. Live не изменялся; migration ждёт development DB gate.
 
 Read:
 - profiles, user_settings, user_nicotine_products;
@@ -163,8 +163,8 @@ Write:
 - episodes;
 - episode_actions;
 - tobacco_events только для состоявшегося употребления;
-- content_impressions;
-- analytics_events со structured allowlist;
+- content_impressions и `awareness_shown` атомарно через ограниченный RPC;
+- analytics_events со structured allowlist и idempotency для canonical final event;
 - user_goals для новой поверхности Зачем.
 
 Если R1 contract окажется недостаточным, сначала обновляется этот plan и применяется Supabase/Postgres review до SQL.
@@ -262,7 +262,7 @@ Browser после preview:
 - GitHub connector: read/write, commits, diff, CI, draft PR.
 - GitHub yeet: local-only prerequisites неприменимы; используется connector-equivalent по Direct GitHub Mode.
 - Supabase skill: активен; changelog/docs сверены, project/migrations/tables/advisors inspected.
-- Supabase Postgres best practices: подключить только при новой migration/schema review.
+- Supabase Postgres best practices: применён к новой migration, RLS, privileges, transaction/idempotency и index review.
 - browser: подключить после preview.
 - web-perf: только после preview и измеряемой проблемы.
 - Cloudflare/Wrangler: не использовать без runtime/config change.
@@ -275,7 +275,7 @@ Repo contract: PASS. Remote development DB: FAIL/ожидает cost gate.
 
 ### B — contracts/tests
 
-PASS: plan committed before runtime; pure domain contracts implemented; typecheck, 10/10 tests and production build passed in the validation mirror.
+PASS: plan committed before runtime; pure domain contracts implemented; typecheck, 11/11 tests and production build passed in the validation mirror.
 
 ### C — canonical cigarette slice
 
@@ -291,7 +291,7 @@ Canonical admin slice входит в C; широкий product expansion пос
 
 ### F — QA/self-review
 
-Adversarial self-review: PASS после трёх исправлений. Independent review: в работе. Preview/browser/performance: НЕ ПРОВЕРЕНО.
+Adversarial self-review: PASS. Independent static review: PASS после исправления всех подтверждённых P1/P2 и финальной проверки head `dba84ef`. Migration execution/RLS concurrency, preview/browser/performance: НЕ ПРОВЕРЕНО.
 
 ## Validation commands
 
@@ -309,16 +309,16 @@ CI workflow должен запускаться на pull_request при изм�
 - До merge: закрыть draft PR или не merge target branch.
 - Runtime: revert соответствующий small commit; R1 base contracts не удалять.
 - Feature behavior: deterministic fallback позволяет отключить awareness/personal ranking без LLM.
-- DB: live project не изменяется; development branch можно удалить после validation.
+- DB: live project не изменяется; development branch можно удалить после validation; RPC/index удаляются только после остановки alpha frontend и owner decision.
 - R1 migrations additive; rollback live требует отдельного review, предпочтителен forward-fix.
 - User data: никаких destructive transforms; legacy data сохраняются.
-- При partial write UI показывает ошибку и не объявляет outcome saved; cleanup/forward-fix должен быть наблюдаем.
+- При неподтверждённом final event UI делает три попытки, предлагает повтор и не показывает метрики; stable `flow_id` не создаёт дубль.
 
 ## Unknown assumptions / open gates
 
 - Owner ещё не подтвердил Supabase development branch cost 0.01344 USD/час.
 - Preview provider/URL и environment variables target branch пока неизвестны.
-- GitHub connector не даёт compare/commit endpoints из-за integration permissions; snapshot diff выполняется по repository file SHA, PR diff — после открытия PR.
+- GitHub Actions API linked integration возвращает 403; compare и repository file SHA доступны, но CI status нельзя объявить PASS.
 - Точная доступность authenticated test users для browser QA неизвестна.
 - Текущий remote project не является безопасным местом для R1 validation.
 - Expansion scope остаётся заблокированным до canonical PASS.
