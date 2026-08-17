@@ -8,6 +8,29 @@
 
 Нельзя считать checklist выполненным по косвенным признакам.
 
+## Фактический checkpoint — 2026-08-17
+
+| Gate | Статус | Факт |
+|---|---|---|
+| Direct GitHub branch / draft PR | PASS | `agent/v4.0.0-alpha.1`, draft PR #8, base `agent/r1-data-evidence-admin` |
+| Implementation plan до runtime-кода | PASS | План был единственным release-diff перед domain/runtime implementation |
+| Scope / non-goals | PASS | Local LLM, Tribute, referral, Telegram, Together redesign, wearables, ML, paywall и unrelated refactor не добавлены |
+| Canonical cigarette implementation | PASS | Реализован компактный flow: CTA → контекст → approved content/Зачем → deterministic action → outcome → metrics → learning-compatible raw writes → admin events |
+| `npm ci --no-audit --no-fund` | PASS | Выполнено во временном validation-зеркале точного head branch |
+| `npm run typecheck` | PASS | Exit code 0 |
+| `npm test` | PASS | 10/10 Node domain tests |
+| `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
+| Adversarial self-review | PASS | Исправлены contextual-learning precedence, StrictMode duplicate telemetry и порядок partial writes |
+| GitHub Actions status | НЕ ПРОВЕРЕНО | Actions API возвращает 403 для linked integration; combined status пуст |
+| R1 development DB / migrations / RLS | НЕ ПРОВЕРЕНО | Live project содержит только v3.1 и не изменялся; Supabase branch требует owner cost confirmation |
+| Canonical authenticated E2E | НЕ ПРОВЕРЕНО | Нет development R1 DB и preview с test environment |
+| Browser desktop/mobile | НЕ ПРОВЕРЕНО | Browser доступен, но private PR не авторизован и release preview отсутствует |
+| Performance / accessibility preview | НЕ ПРОВЕРЕНО | Preview отсутствует |
+| Vape / hookah runtime expansion | НЕ ПРОВЕРЕНО | Намеренно не начато до фактического canonical E2E PASS |
+| Independent reviewer | В РАБОТЕ | Final diff передан отдельному reviewer-agent; подтверждённые findings будут исправлены |
+
+Этот checkpoint не является acceptance release. Checklist ниже остаётся полным acceptance contract; непроверенные строки нельзя выводить из программного PASS.
+
 ## 1. Base / R1 readiness
 
 - [ ] Strategy Foundation понятна и не конфликтует с release.
