@@ -352,11 +352,11 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
     custom_trigger_text: draft.triggerCode === 'other' ? draft.customTriggerText || 'Другое' : null,
     need_code: draft.needCode || null,
     craving_before: draft.cravingBefore,
-    craving_after: draft.cravingAfter,
-    helpfulness: draft.helpfulness,
-    outcome: draft.outcome,
+    craving_after: null,
+    helpfulness: null,
+    outcome: 'open',
     private_note: draft.note || null,
-    completed_at: completedAt,
+    completed_at: null,
   };
   let episodeRes = await supabase.from('episodes').insert(episodePayload).select('id').single();
   if (episodeRes.error?.message.includes('episode_kind')) {
@@ -392,6 +392,14 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
     });
     if (event.error) throw new Error(event.error.message);
   }
+
+  const completed = await supabase.from('episodes').update({
+    craving_after: draft.cravingAfter,
+    helpfulness: draft.helpfulness,
+    outcome: draft.outcome,
+    completed_at: completedAt,
+  }).eq('id', episodeId).eq('user_id', userId);
+  if (completed.error) throw new Error(completed.error.message);
 
   return episodeId;
 }
