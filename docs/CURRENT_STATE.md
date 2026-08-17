@@ -190,11 +190,11 @@ Performance Advisor показал существовавшие unindexed foreig
 
 R1 migrations **не применены к live alpha/production**. Платная Supabase development/preview branch не создавалась.
 
-Бесплатный ephemeral database gate подтверждён в GitHub Actions `ALIVE database CI` run #11 на DB-tested head `3c74af9ad97e05a0a86c0a2191c4f9dd436dd412`:
+Бесплатный ephemeral database gate подтверждён в GitHub Actions `ALIVE database CI` run #24 на DB-tested head `dc49610876c7ab98b4085bd3736a7bb5697c10fc`:
 
 - pinned Supabase CLI `2.111.0`;
 - fresh stack и отдельный replay всей migration chain через `supabase db reset --local`;
-- 49/49 pgTAP assertions: RLS isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, delete/recompute, admin/private boundary;
+- 61/61 pgTAP assertions: RLS isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, soft-delete/recompute, blocked hard delete, non-escalating admin boundary, cross-user action denial и legacy-present migration;
 - `supabase db lint --level error` без schema errors;
 - `supabase stop --no-backup` завершён, runner уничтожен;
 - remote link, Supabase secrets, artifacts и постоянные Docker volumes не использовались.
@@ -407,11 +407,11 @@ Mandatory first vertical slice:
 - outcome retry без повторного сохранения episode и без показа неподтверждённых метрик;
 - 11 automated domain tests.
 
-Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. Исправленная исходная фиксация остаётся: head `694c34fbefadcec028052845aead31f949bb46ba`, frontend run #251 `success`. DB-tested head `3c74af9ad97e05a0a86c0a2191c4f9dd436dd412` прошёл frontend run #271 и database run #11. Build сохраняет предупреждение о bundle chunk больше 500 kB.
+Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. Исправленная исходная фиксация остаётся: head `694c34fbefadcec028052845aead31f949bb46ba`, frontend run #251 `success`. DB-tested head `dc49610876c7ab98b4085bd3736a7bb5697c10fc` прошёл frontend run #284 и database run #24. Build сохраняет предупреждение о bundle chunk больше 500 kB.
 
 Adversarial self-review и независимый статический review runtime/SQL завершены: head `dba84ef` не имеет подтверждённых P1/P2. Отдельный executable DB gate теперь дополняет, а не подменяет этот review.
 
-Canonical data slice получил programmatic PASS в бесплатном ephemeral CI: migration replay, RLS, learning/delete-recompute, idempotent concurrent retry и admin/private boundary проверены. Live project намеренно не изменялся. Полный authenticated browser E2E desktop/mobile, preview performance и hosted Advisors остаются `НЕ ПРОВЕРЕНО`.
+Canonical data slice получил programmatic PASS в бесплатном ephemeral CI: migration replay, RLS, privilege non-escalation, action ownership, learning/delete-recompute, idempotent concurrent retry, legacy-present migration и admin/private boundary проверены. Live project намеренно не изменялся. Public preview smoke PASS на desktop/mobile; полный authenticated browser E2E, Core Web Vitals и hosted Advisors остаются `НЕ ПРОВЕРЕНО`.
 
 Поэтому scope на отдельные vape/hookah flows не расширен. Это stop condition release, а не незаметно перенесённая работа.
 
