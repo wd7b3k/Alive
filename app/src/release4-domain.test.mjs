@@ -106,8 +106,8 @@ test('personal explanation appears only after sufficient real outcomes', () => {
 });
 
 const content = [
-  { code: 'a', content_type: 'факт', title_ru: 'A', hook_ru: 'A', explanation_ru: 'A', motivation_ru: 'A', caveat_ru: 'A', product_types: ['cigarette'], published: true, sort_order: 10 },
-  { code: 'b', content_type: 'миф', title_ru: 'B', hook_ru: 'B', explanation_ru: 'B', motivation_ru: 'B', caveat_ru: 'B', product_types: ['cigarette'], published: true, sort_order: 20 },
+  { code: 'a', content_type: 'факт', title_ru: 'A', hook_ru: 'A', explanation_ru: 'A', motivation_ru: 'A', caveat_ru: 'A', claim_code: 'claim-a', product_types: ['cigarette'], published: true, sort_order: 10 },
+  { code: 'b', content_type: 'миф', title_ru: 'B', hook_ru: 'B', explanation_ru: 'B', motivation_ru: 'B', caveat_ru: 'B', claim_code: 'claim-b', product_types: ['cigarette'], published: true, sort_order: 20 },
 ];
 
 test('context-specific learning outranks a larger generic sample', () => {
@@ -160,6 +160,7 @@ test('analytics mapping allowlists structured fields and drops private text', ()
     episode_kind: 'craving',
     funnel_stage: 'результат импульса',
     surface: 'веб',
+    flow_id: 'flow-1',
     private_note: 'секрет',
     goal_body: 'личное Зачем',
     link_situation: 'личная Связка',
@@ -167,6 +168,7 @@ test('analytics mapping allowlists structured fields and drops private text', ()
   assert.equal(event.product_type, 'cigarette');
   assert.equal(event.funnel_stage, 'результат импульса');
   assert.equal(event.surface, 'веб');
+  assert.equal(event.metadata.flow_id, 'flow-1');
   assert.equal(event.private_note, undefined);
   assert.equal(event.goal_body, undefined);
   assert.deepEqual(event.metadata, { episode_kind: 'craving' });
