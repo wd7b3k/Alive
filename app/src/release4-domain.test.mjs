@@ -3,11 +3,18 @@ import assert from 'node:assert/strict';
 import {
   ANALYTICS_EVENT_TYPES,
   PRODUCT_SEMANTICS,
+  analyticsWriteConfirmed,
   buildAnalyticsEvent,
   calculateFreedomMetrics,
   rankInterventions,
   selectAwareness,
 } from './release4-domain.ts';
+
+test('analytics retries treat a unique flow event as already confirmed', () => {
+  assert.equal(analyticsWriteConfirmed(null), true);
+  assert.equal(analyticsWriteConfirmed({ code: '23505' }), true);
+  assert.equal(analyticsWriteConfirmed({ code: '42501' }), false);
+});
 
 const cigarette = {
   product_type: 'cigarette',
