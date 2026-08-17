@@ -26,7 +26,12 @@ create index user_awareness_state_recent_idx on public.user_awareness_state(user
 -- Мигрируем только смыслово однозначные соответствия.
 -- Если новый материал существенно меняет утверждение, старый state намеренно не переносится.
 -- Legacy-таблица могла существовать только в remote history, поэтому fresh replay обязан работать и без неё.
-do $legacy_migration$
+create or replace function private.alive_migrate_legacy_awareness_state()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $legacy_migration$
 begin
   if pg_catalog.to_regclass('public.user_myth_state') is null then
     return;
@@ -56,5 +61,9 @@ begin
   $copy$;
 end
 $legacy_migration$;
+
+revoke all on function private.alive_migrate_legacy_awareness_state() from public, anon, authenticated;
+
+select private.alive_migrate_legacy_awareness_state();
 
 comment on table public.user_awareness_state is 'Персональное состояние утверждённого Fact/Myth-контента. Legacy myth state переносится только при однозначном смысловом соответствии.';
