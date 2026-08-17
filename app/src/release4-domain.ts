@@ -291,6 +291,7 @@ export type AwarenessContent = {
   explanation_ru: string;
   motivation_ru: string;
   caveat_ru: string;
+  claim_code: string;
   product_types: ProductType[];
   published: boolean;
   sort_order: number;
@@ -415,6 +416,7 @@ export function buildAnalyticsEvent(type: AnalyticsEventType, input: Record<stri
     'coverage',
     'ranking_reason',
     'episode_kind',
+    'flow_id',
   ];
   const event: Record<string, unknown> = { event_type: type };
   for (const key of directKeys) {
