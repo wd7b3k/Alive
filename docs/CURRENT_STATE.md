@@ -1,6 +1,6 @@
 # Текущее состояние ALIVE
 
-## Статус
+## Статус репозитория
 
 ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
@@ -8,39 +8,56 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
 Текущий runtime baseline на `main`: **ALIVE v3.0 product alpha / in development**.
 
-Отдельно существует draft PR v3.1 с behavioral-depth/Together/Facts/Myths work. Он не считается принятым production state до merge/owner gate.
+Отдельный draft PR v3.1 с behavioral-depth/Together/Facts/Myths не является принятым production state до merge/owner gate.
 
 ## Strategy Foundation
 
-Ветка `agent/product-strategy-foundation` фиксирует новую каноническую продуктовую и техническую стратегию.
+Ветка:
 
-Каноническая формула продукта:
+`agent/product-strategy-foundation`
+
+Draft PR:
+
+`#6`
+
+Назначение:
+
+- новая Product Strategy;
+- Technical Strategy;
+- Evidence/Hypothesis boundaries;
+- product-specific nicotine model;
+- permanent freedom metrics;
+- referral/donation/AI direction.
+
+Каноническая формула:
 
 > **Пауза → Реальность → Зачем → Выбор → Опыт → Обучение → Свобода**
 
 Strategy Foundation остаётся отдельным owner/merge gate.
 
-## Текущий implementation release unit R1
+## R1 — данные, доказательная база и контроль продукта
 
-Ветка:
+Рабочая ветка:
 
 `agent/r1-data-evidence-admin`
+
+Base:
+
+`agent/product-strategy-foundation`
 
 Draft PR:
 
 `#7 — ALIVE R1: данные, доказательная база и контроль продукта`
 
-Основание:
-
-`agent/product-strategy-foundation`
+PR mergeable, но остаётся draft до validation gates.
 
 Цель R1:
 
-> **создать правильную структуру данных, доказательной базы и наблюдаемости продукта до дальнейшей глубокой перестройки пользовательских сценариев**
+> **создать правильную структуру данных, доказательной базы, персонального обучения и наблюдаемости до пользовательской перестройки 4.x**
 
 ### Персонализируемый domain
 
-В ветке реализованы:
+В ветке реализованы/спроектированы:
 
 - категории Триггеров;
 - собственные Триггеры пользователя;
@@ -51,9 +68,9 @@ Draft PR:
 - новая сущность `Зачем` (`goals_catalog` / `user_goals`);
 - совместимость со старыми `Смыслами` и `goal_text`;
 - персональные проекции эффективности Триггеров и Замен в разрезе пользователя, продукта и контекста;
-- полный пересчёт этих проекций после исправления или удаления исходного эпизода.
+- полный пересчёт проекций после исправления или удаления исходного эпизода.
 
-Raw episodes/actions остаются источником истины. Персональные рейтинги являются rebuildable projections и не заменяют исходные события.
+Raw episodes/actions остаются source of truth. Personal rankings — rebuildable projections.
 
 ### Типы эпизодов
 
@@ -64,7 +81,7 @@ R1 вводит явный `episode_kind`:
 - `conscious_use` — будущий осознанный эпизод употребления;
 - `unknown` — временная совместимость.
 
-Это необходимо, чтобы quick log не выдавался в аналитике за использование ALIVE непосредственно во время тяги.
+Это защищает аналитику от смешивания quick log и реального обращения за помощью при тяге.
 
 ### Evidence Registry
 
@@ -72,97 +89,85 @@ R1 вводит явный `episode_kind`:
 
 - источники;
 - проверяемые утверждения;
-- связь утверждение → источник;
+- claim-source links;
 - отдельный русский пользовательский слой Фактов/Мифов;
-- уровень доказательности;
-- ограничения;
-- дата проверки и следующей ревизии;
+- evidence level;
+- limitations;
+- review dates;
 - контекст показа;
 - история показов/полезности;
-- перенос совместимого пользовательского состояния из старого `user_myth_state` в новый `user_awareness_state`.
+- перенос совместимого пользовательского состояния из legacy `user_myth_state` в новый слой.
 
-Стартовая база опирается преимущественно на исследования, систематические обзоры и рекомендации 2023–2025 годов. Более ранний источник используется только там, где остаётся сильным актуальным количественным основанием.
+Стартовая база преимущественно опирается на исследования, систематические обзоры и рекомендации последних лет; landmark studies сохраняются там, где остаются сильным актуальным основанием.
 
-Расширенные темы:
+Темы включают:
 
-- приблизительная оценка ≈20 минут ожидаемой жизни на сигарету;
-- польза отказа в разных возрастах;
-- снижение смертности после прекращения;
-- сердечно-сосудистый риск и накопленный стаж;
-- высокий относительный риск даже при малом числе сигарет;
+- ≈20 минут ожидаемой жизни на сигарету как population-level heuristic basis;
+- пользу отказа в разных возрастах;
+- снижение смертности;
+- сердечно-сосудистый риск;
+- риск при малом числе сигарет;
 - КПТ;
-- персонализированные цифровые вмешательства;
-- доказательная фармакологическая поддержка;
-- физическая активность при тяге;
-- психическое состояние после отказа;
-- нарушения сна в ранний период отмены;
-- набор веса после отказа;
+- персонализированные digital interventions;
+- доказательную фармакологическую поддержку;
+- физическую активность при тяге;
+- психическое состояние;
+- сон;
+- вес;
 - кальян;
 - вейп;
-- двойное употребление сигарет и электронки.
+- dual use.
 
-### Пример «≈20 минут»
-
-Карточка одновременно содержит:
-
-1. понятную величину;
-2. человеческий смысл времени;
-3. явное ограничение, что это средняя популяционная оценка, а не персональный прогноз и не буквальный линейный таймер;
-4. ссылку на оригинальную публикацию.
-
-Научное утверждение и мотивирующая пользовательская формулировка хранятся отдельно.
-
-### Локализация
-
-Пользовательские и админские формулировки должны быть русскими.
-
-Оригинальное англоязычное название научной публикации допускается только как внутреннее библиографическое поле. В интерфейсе используется русское название/описание источника.
-
-В R1 дополнительно очищены старые пользовательские формулировки вроде `reset`, `NRT`, `meaning` там, где они могли попасть в интерфейс.
-
-Полный localization sweep существующего end-user runtime остаётся gate следующего пользовательского release, поскольку текущий runtime ещё содержит старую терминологию `Смыслы`.
+Научный claim и мотивирующая русская user copy хранятся отдельно.
 
 ### Админский контур
 
 Создан отдельный маршрут `/admin`.
 
-Он показывает:
+Он предназначен для ответа на вопросы:
+
+- используют ли ALIVE;
+- доходят ли до реальной ценности;
+- где и почему выпадают;
+- какие interventions связаны с лучшими outcomes;
+- насколько актуальна Evidence Registry;
+- здоров ли технически продукт.
+
+Dashboard показывает/должен показывать:
 
 - активность;
-- реальное использование сценария тяги;
+- реальное использование craving help;
 - долю эпизодов без целевого употребления;
-- повторное использование;
-- когортную воронку новых пользователей;
-- результаты по сигаретам / электронке / кальяну;
-- структурированные причины остановки;
-- использование и полезность Фактов/Мифов;
-- актуальность Evidence Registry;
-- технические ошибки;
-- 95-й процентиль времени ответа после подключения client timing telemetry.
+- repeat use;
+- cohort funnel;
+- product breakdown;
+- structured exit reasons;
+- Facts/Myths usage/usefulness;
+- Evidence freshness;
+- technical errors;
+- p95 latency после подключения client timing telemetry.
 
-Админка не загружает private notes, чужие личные тексты `Зачем` или содержимое чужих Связок.
-
-В текущей живой БД на момент проверки нет пользователя с `role=admin`; есть одна активная учётная запись с `role=participant`. После успешного R1 database gate владельцу нужен отдельный контролируемый admin bootstrap. Автоматически повышать существующих участников до администратора запрещено.
+Private notes, личные тексты `Зачем` и свободные тексты чужих Связок в dashboard не загружаются.
 
 ### Product analytics
 
-В БД введён отдельный поток `analytics_events` без sensitive free text.
+Введён отдельный `analytics_events` поток без sensitive free text.
 
 DB-level capture фиксирует устойчивые domain milestones:
 
 - регистрацию;
-- завершение onboarding;
+- onboarding completion;
 - создание `Зачем`;
 - создание Связки;
-- завершение наблюдаемого эпизода тяги;
-- быстрый факт употребления отдельно от работы с тягой;
-- использование вмешательства;
-- фиксацию никотинового продукта;
+- завершение craving episode;
+- quick use отдельно;
+- intervention use;
+- nicotine product event;
 - вечернюю отметку.
 
-Добавлен каталог структурированных причин остановки. Сохранённый outcome `abandoned` уже различается как осознанное закрытие без оценки.
+Добавлен каталог структурированных причин остановки.
 
-Точное событие раннего закрытия modal-flow до сохранения результата ещё требует client step telemetry. Это остаётся открытым пунктом R1 и не маскируется как готовая функция.
+Точный шаг раннего закрытия modal до сохранения результата ещё требует client step telemetry.
 
 ## Read-only проверка живой Supabase
 
@@ -171,43 +176,236 @@ DB-level capture фиксирует устойчивые domain milestones:
 - `profiles.role/status/onboarding_completed_at` существуют;
 - необходимые episode/action/link/meaning/settings поля существуют;
 - `public.set_updated_at()` существует;
-- старые `facts_catalog`, `myths_catalog`, `user_myth_state` существуют и учтены в migration strategy.
+- legacy `facts_catalog`, `myths_catalog`, `user_myth_state` существуют и учтены в migration strategy.
 
-Текущий Security Advisor показывает только ранее известное предупреждение о leaked-password protection. ALIVE сейчас использует Google OAuth и не имеет активного password sign-in surface; предупреждение необходимо пересмотреть до любого включения паролей.
+В живой БД на момент проверки нет пользователя с `role=admin`; есть одна активная учётная запись с `role=participant`.
 
-Текущий Performance Advisor показал два существовавших неиндексированных внешних ключа. R1 добавляет индексы для них и для новых ключевых связей. Unused-index notices на маленькой alpha-базе сами по себе не являются основанием удалять индексы.
+Автоматически повышать существующих пользователей до администратора запрещено. После database gate нужен контролируемый owner admin bootstrap.
+
+Security Advisor показывал только ранее известное предупреждение leaked-password protection. ALIVE сейчас использует Google OAuth, а password sign-in surface не активен.
+
+Performance Advisor показал существовавшие unindexed foreign keys; R1 добавляет/планирует необходимые индексы. Unused-index notices на маленькой alpha-базе не являются автоматическим основанием удалять индексы.
+
+## R1 открытые gates
+
+R1 migrations **не применены к live alpha/production**.
+
+До принятия R1 остаются:
+
+- последовательное применение migrations на development DB/branch;
+- RLS isolation tests;
+- security/performance advisors после R1 migrations;
+- фактический frontend typecheck/build PASS;
+- browser QA `/admin`;
+- client step telemetry для раннего выхода craving flow;
+- owner review Evidence user copy;
+- controlled owner admin bootstrap после DB gate.
+
+GitHub connector ранее не вернул Actions status, поэтому CI PASS не заявляется без фактического результата.
+
+## Новый жёсткий documentation rule
+
+Владелец утвердил:
+
+> **значимое решение, изменение, исследование или релиз без отражения в отдельных файлах git не считается завершённым**
+
+Добавлены:
+
+- `docs/PROJECT_EVOLUTION.md`;
+- `docs/DEVELOPMENT_RULES.md`;
+- `docs/AGENT_CONTINUITY.md`;
+- `docs/CODEX_QUALITY_PROTOCOL.md`;
+- `docs/CODEX_SKILL_ROUTING.md`;
+- `docs/DESIGN_RESEARCH_AND_REQUIREMENTS.md`;
+- `docs/RESEARCH_MONITORING.md`;
+- dated design/competitor research baseline;
+- ADR перехода к 4.x и нового agent quality process.
+
+README обновлён как основной индекс проекта.
+
+## Scoped Codex contracts
+
+Добавлены:
+
+- `app/AGENTS.md`;
+- `supabase/AGENTS.md`;
+- `docs/AGENTS.md`.
+
+Причина: один большой root `AGENTS.md` недостаточно надёжно задаёт требования для frontend, PostgreSQL/RLS и documentation work.
+
+Scoped files задают локальные invariants и programmatic checks.
+
+## Codex quality process
+
+Ретроспектива ранних AI-сессий выявила паттерн:
+
+> широкий prompt → большой diff → часть критических runtime/DB/browser проверок переносится на следующий gate
+
+Это признано главным риском agent-driven разработки.
+
+Новый обязательный loop:
+
+`orient → implementation plan → one vertical slice → tests → validation → adversarial self-review → independent review → documentation → factual handoff`
+
+Большой diff не является критерием успеха.
+
+Portable Agent Skill:
+
+`skills/alive-release-quality/SKILL.md`
+
+Если Codex environment поддерживает Skills, его рекомендуется установить/использовать для каждого значимого ALIVE release.
+
+## Specialized skills
+
+Маршрутизация описана в `docs/CODEX_SKILL_ROUTING.md`.
+
+Ключевые направления:
+
+- Supabase/Postgres best practices для schema/RLS;
+- GitHub CI/review/publish workflows;
+- Cloudflare/Wrangler при изменении runtime/config;
+- web performance после preview;
+- browser/Computer Use/Playwright для реального UX QA, если доступны.
+
+Нерелевантные skills не должны загружаться только «для полноты».
+
+## Research monitoring
+
+Создана scheduled task **ALIVE Research Watch**.
+
+Расписание:
+
+- еженедельно;
+- понедельник утром;
+- timezone Europe/Berlin;
+- уведомление только при значимых новых данных или продуктовых изменениях.
+
+Мониторятся:
+
+- peer-reviewed cessation research;
+- guidelines;
+- digital personalization/JITAI;
+- behavioural methods;
+- treatment;
+- AI safety/usefulness;
+- wearables/sensors;
+- Smoke Free, Kwit, QuitNow, EX Program, Pivot и новые заметные продукты;
+- UX/platform trends.
+
+Любой значимый finding получает решение:
+
+`внедрить / проверить экспериментом / наблюдать / не использовать`
+
+и после принятия фиксируется в repo.
+
+## Design baseline
+
+Создан `docs/DESIGN_RESEARCH_AND_REQUIREMENTS.md` и dated research note.
+
+Benchmark включает:
+
+- Smoke Free;
+- Kwit;
+- QuitNow;
+- EX Program;
+- Pivot;
+- современные исследования digital cessation/personalization/JITAI;
+- platform onboarding/feedback/accessibility patterns.
+
+Главный design principle:
+
+> **ALIVE должен быть умнее внутри, чем выглядит снаружи**
+
+В high-load состоянии тяги cognitive load должен уменьшаться.
+
+User/admin UI — качественный русский без machine jargon.
+
+## Решение о серии 4.x
+
+Следующий пользовательский цикл получает номер **4.x**.
+
+Причина: новая версия меняет product backbone, а не просто расширяет v3.
+
+ADR:
+
+`docs/decisions/2026-08-17-v4-series-and-agent-quality.md`
+
+Roadmap обновлён.
+
+## 4.0.0-alpha.1
+
+Release unit уже подготовлен:
+
+`releases/v4.0.0-alpha.1/`
+
+Содержит:
+
+- README;
+- REQUIREMENTS;
+- IMPLEMENTATION_PLAN template;
+- VALIDATION;
+- ROLLBACK;
+- master `CODEX_PROMPT.md`.
+
+Цель alpha.1:
+
+> **первый сквозной пользовательский контур новой модели**
+
+Mandatory first vertical slice:
+
+`сигарета после еды → Хочу закурить → контекст → микроосознанность → intervention → outcome → Time/Money/Health Minutes → learning → admin analytics`
+
+Только после PASS этого slice расширяется оставшийся alpha.1 scope.
+
+### Alpha.1 включает
+
+- Home нового смысла;
+- primary CTA `Хочу закурить`;
+- `Смыслы → Зачем`;
+- постоянные три метрики;
+- contextual approved Fact/Myth/Зачем;
+- deterministic Intervention Engine v1;
+- personal-outcome ranking where justified;
+- distinct cigarette/vape/hookah semantics;
+- structured funnel telemetry;
+- admin interpretation;
+- automated tests для новой domain logic;
+- browser/mobile QA;
+- adversarial self-review;
+- independent reviewer where available.
+
+### Alpha.1 не включает
+
+- local LLM;
+- Tribute;
+- referral;
+- Telegram;
+- full Together redesign;
+- wearables/sensors;
+- complex ML;
+- paywall/subscription;
+- public social layer.
 
 ## Живая инфраструктура main
 
 - Frontend: React + TypeScript + Vite.
 - Hosting: Cloudflare Pages.
-- Production/alpha host: `https://alive-aw2.pages.dev`.
+- Current alpha host: `https://alive-aw2.pages.dev`.
 - Planned canonical host: `https://alive.hmnos.ru`.
 - Auth: Google → Supabase Auth.
 - Database: Supabase PostgreSQL + RLS.
 - GitHub CI: dependency install, typecheck, production build.
 
-## Что пока не сделано в R1
+## Следующий порядок
 
-- R1 migrations не применены к живой alpha/production БД;
-- SQL migrations должны пройти последовательное применение на отдельной development database/branch;
-- после применения нужно повторно запустить security/performance advisors и RLS isolation tests;
-- admin dashboard ещё должен получить фактический CI/typecheck/build PASS; GitHub connector пока не вернул Actions status, поэтому PASS не заявляется;
-- client step telemetry ещё не фиксирует точный шаг раннего закрытия несохранённого craving flow;
-- текущий пользовательский UI ещё использует название `Смыслы` и должен отдельно перейти на `Зачем`;
-- текущий runtime recommendation flow ещё не использует новые context rules/learning projections;
-- стартовый Evidence content seed должен пройти owner review тона и caveats перед публикацией в живую БД;
-- admin bootstrap владельца выполняется только после database/security gate.
+1. Закрыть R1 validation gates.
+2. Принять/merge Strategy Foundation и R1 либо явно разрешить stacked 4.0 development.
+3. Запустить `4.0.0-alpha.1` строго по `CODEX_PROMPT.md` и quality protocol.
+4. Не добавлять local LLM до Product Evidence Gate.
+5. Не добавлять Tribute/referral раньше соответствующих roadmap stages.
 
-## После принятия R1
+## Главный текущий риск
 
-Следующий пользовательский release подключает новую domain model последовательно:
+Не скорость кодирования, а **ложная уверенность от большого agent-generated diff без end-to-end validation**.
 
-1. `Зачем` и персональные сущности в UI;
-2. product-specific impulse flows;
-3. постоянные Time / Money / Health Minutes;
-4. контекстную микроосознанность Факт/Миф/Зачем;
-5. новый Intervention Engine;
-6. outcome-aware ranking;
-7. Recovery / Путь / Вместе;
-8. только после product evidence gate — local LLM.
+Следующие релизы оптимизируются прежде всего против этого риска.
