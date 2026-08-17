@@ -190,7 +190,7 @@ Performance Advisor показал существовавшие unindexed foreig
 
 R1 migrations **не применены к live alpha/production**. Платная Supabase development/preview branch не создавалась.
 
-Бесплатный ephemeral database gate подтверждён в GitHub Actions `ALIVE database CI` run #35 на strict-gate head `2ca5f83c2c4d8947282d44d8c7ab370eb75e10df`:
+Бесплатный ephemeral database gate подтверждён в GitHub Actions `ALIVE database CI` run #44 на final DB-tested head `c86ce07cbb5aded2a1172a9d7a77f9786d1db062`:
 
 - pinned Supabase CLI `2.111.0`;
 - fresh stack и отдельный replay всей migration chain через `supabase db reset --local`;
@@ -409,7 +409,7 @@ Mandatory first vertical slice:
 - outcome retry без повторного сохранения episode и без показа неподтверждённых метрик;
 - 11 automated domain tests.
 
-Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. Strict-gate head `2ca5f83c2c4d8947282d44d8c7ab370eb75e10df` прошёл frontend run #295 и database run #35; DB log подтверждает fresh replay, 61/61 pgTAP и `No schema errors found` при `--fail-on error`. Build сохраняет предупреждение о bundle chunk больше 500 kB.
+Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. Final DB-tested head `c86ce07cbb5aded2a1172a9d7a77f9786d1db062` прошёл frontend run #304 и database run #44; DB log подтверждает fresh replay, 61/61 pgTAP и `No schema errors found` при `--fail-on error`. Последующие изменения checkpoint-документов не меняют runtime/schema. Build сохраняет предупреждение о bundle chunk больше 500 kB.
 
 Adversarial self-review и независимый review завершены. DB/CI reviewer сначала нашёл 2 P1, 3 P2 и 1 P3; после security hardening focused re-review подтвердил закрытие всех шести findings. Следующая независимая проверка нашла отдельный false-green lint gate; strict semantics и сам legacy lint defect исправлены. Executable gate считается evidence только после проверки команды, fail semantics и полного лога.
 
