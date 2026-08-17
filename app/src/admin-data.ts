@@ -15,6 +15,7 @@ export type AdminAnalyticsEvent = {
   reason_code: string | null;
   duration_ms: number | null;
   numeric_value: number | null;
+  metadata: Record<string, unknown>;
   occurred_at: string;
 };
 
@@ -90,7 +91,7 @@ export async function loadAdminDashboard(session: Session, periodDays = 30): Pro
   }
 
   const [eventsRes, errorsRes, claimsRes, contentRes, impressionsRes, reasonsRes] = await Promise.all([
-    supabase.from('analytics_events').select('id,user_id,event_type,funnel_stage,surface,product_type,trigger_code,replacement_code,content_code,outcome,reason_code,duration_ms,numeric_value,occurred_at').gte('occurred_at', since).order('occurred_at', { ascending: false }).limit(10_000),
+    supabase.from('analytics_events').select('id,user_id,event_type,funnel_stage,surface,product_type,trigger_code,replacement_code,content_code,outcome,reason_code,duration_ms,numeric_value,metadata,occurred_at').gte('occurred_at', since).order('occurred_at', { ascending: false }).limit(10_000),
     supabase.from('system_errors').select('id,surface,error_type,error_code,message_fingerprint,duration_ms,occurred_at,resolved_at').gte('occurred_at', since).order('occurred_at', { ascending: false }).limit(2_000),
     supabase.from('evidence_claims').select('code,topic,evidence_level,last_reviewed_at,review_due_at,status').eq('status', 'проверено').order('review_due_at'),
     supabase.from('awareness_content').select('code,content_type,title_ru,claim_code,published').eq('published', true).order('sort_order'),
