@@ -192,7 +192,7 @@ function Dashboard({ data, period, setPeriod, reload, loading }: { data: AdminDa
     </section>
 
     <section className="a-panel">
-      <div className="a-panel-head"><div><span>4.0 alpha · помощь в момент тяги</span><h2>Доходит ли один и тот же запуск от импульса до свободы</h2></div><small>Только структурированные client events; quick log исключён</small></div>
+      <div className="a-panel-head"><div><span>4.0 alpha · помощь в момент тяги</span><h2>Доходит ли один и тот же запуск от импульса до свободы</h2></div><small>Только структурированные события интерфейса; быстрая запись употребления исключена</small></div>
       {analysis.clientJourney[0].flows === 0 ? <Empty>За этот период сценарий «Хочу закурить» ещё не открывали.</Empty> : <div className="a-funnel">{analysis.clientJourney.map((stage, index) => <div className="a-funnel-row" key={stage.type}><div className="a-funnel-label"><b>{index + 1}</b><span>{stage.label}</span></div><div className="a-funnel-bar"><i style={{ width: `${Math.max(2, Math.min(100, stage.flows / analysis.clientJourney[0].flows * 100))}%` }} /></div><strong>{stage.flows}</strong><small>запусков</small></div>)}</div>}
     </section>
 
