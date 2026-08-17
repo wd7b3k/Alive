@@ -122,12 +122,10 @@ export async function loadRelease4Data(session: Session): Promise<Release4Data> 
   return {
     r1Ready: [
       contextRulesResult,
-      preferenceResult,
       learningResult,
       contentResult,
       contextsResult,
       impressionsResult,
-      goalsResult,
     ].every((result) => result.ok),
     contextRules: contextRulesResult.rows,
     replacementPreferences,
@@ -146,12 +144,16 @@ export async function trackRelease4Event(
 ) {
   const supabase = getSupabase();
   if (!supabase) return false;
-  const event = buildAnalyticsEvent(type, input);
-  const result = await supabase.from('analytics_events').insert({
-    user_id: session.user.id,
-    ...event,
-  });
-  return !result.error;
+  try {
+    const event = buildAnalyticsEvent(type, input);
+    const result = await supabase.from('analytics_events').insert({
+      user_id: session.user.id,
+      ...event,
+    });
+    return !result.error;
+  } catch {
+    return false;
+  }
 }
 
 export async function recordAwarenessShown(
@@ -171,9 +173,10 @@ export async function recordAwarenessShown(
     moment: 'микроосознанность',
     product_type: input.productType,
     trigger_code: input.triggerCode,
-  });
-  if (impression.error) return false;
-  return trackRelease4Event(session, 'awareness_shown', {
+  }).select('id').single();
+  if (impression.error || !impression.data) return false;
+
+  const tracked = await trackRelease4Event(session, 'awareness_shown', {
     funnel_stage: 'микроосознанность',
     surface: 'веб',
     product_type: input.productType,
@@ -181,4 +184,11 @@ export async function recordAwarenessShown(
     content_code: input.contentCode,
     flow_id: input.flowId,
   });
+  if (!tracked) {
+    await supabase.from('content_impressions')
+      .delete()
+      .eq('id', impression.data.id)
+      .eq('user_id', session.user.id);
+  }
+  return tracked;
 }
