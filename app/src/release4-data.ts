@@ -13,6 +13,7 @@ import {
 } from './release4-domain';
 
 export type Release4Data = {
+  r1Ready: boolean;
   contextRules: ContextRule[];
   replacementPreferences: ReplacementPreference[];
   replacementLearning: ReplacementLearning[];
@@ -23,6 +24,7 @@ export type Release4Data = {
 };
 
 const EMPTY_RELEASE4_DATA: Release4Data = {
+  r1Ready: false,
   contextRules: [],
   replacementPreferences: [],
   replacementLearning: [],
@@ -37,12 +39,17 @@ type OptionalResult<T> = {
   error: unknown;
 };
 
-async function optionalRows<T>(query: unknown): Promise<T[]> {
+type RowsResult<T> = {
+  rows: T[];
+  ok: boolean;
+};
+
+async function optionalRows<T>(query: unknown): Promise<RowsResult<T>> {
   try {
     const result = await (query as PromiseLike<OptionalResult<T>>);
-    return result.error ? [] : result.data ?? [];
+    return { rows: result.error ? [] : result.data ?? [], ok: !result.error };
   } catch {
-    return [];
+    return { rows: [], ok: false };
   }
 }
 
@@ -52,13 +59,13 @@ export async function loadRelease4Data(session: Session): Promise<Release4Data> 
   const userId = session.user.id;
 
   const [
-    contextRules,
-    preferenceRows,
-    replacementLearning,
-    awarenessContent,
-    awarenessContexts,
-    awarenessImpressions,
-    personalGoals,
+    contextRulesResult,
+    preferenceResult,
+    learningResult,
+    contentResult,
+    contextsResult,
+    impressionsResult,
+    goalsResult,
   ] = await Promise.all([
     optionalRows<ContextRule>(
       supabase.from('intervention_context_rules')
@@ -78,8 +85,10 @@ export async function loadRelease4Data(session: Session): Promise<Release4Data> 
     ),
     optionalRows<AwarenessContent>(
       supabase.from('awareness_content')
-        .select('code,content_type,title_ru,hook_ru,explanation_ru,motivation_ru,caveat_ru,product_types,published,sort_order')
+        .select('code,content_type,title_ru,hook_ru,explanation_ru,motivation_ru,caveat_ru,claim_code,product_types,published,sort_order,evidence_claims!inner(status)')
         .eq('published', true)
+        .not('claim_code', 'is', null)
+        .eq('evidence_claims.status', 'проверено')
         .order('sort_order'),
     ),
     optionalRows<AwarenessContext>(
@@ -105,19 +114,28 @@ export async function loadRelease4Data(session: Session): Promise<Release4Data> 
     ),
   ]);
 
-  const replacementPreferences: ReplacementPreference[] = preferenceRows.map((row) => ({
+  const replacementPreferences: ReplacementPreference[] = preferenceResult.rows.map((row) => ({
     replacement_code: row.replacement_code,
     preference: !row.enabled ? 'avoid' : row.pinned ? 'prefer' : 'neutral',
   }));
 
   return {
-    contextRules,
+    r1Ready: [
+      contextRulesResult,
+      preferenceResult,
+      learningResult,
+      contentResult,
+      contextsResult,
+      impressionsResult,
+      goalsResult,
+    ].every((result) => result.ok),
+    contextRules: contextRulesResult.rows,
     replacementPreferences,
-    replacementLearning,
-    awarenessContent,
-    awarenessContexts,
-    awarenessImpressions,
-    personalGoals,
+    replacementLearning: learningResult.rows,
+    awarenessContent: contentResult.rows,
+    awarenessContexts: contextsResult.rows,
+    awarenessImpressions: impressionsResult.rows,
+    personalGoals: goalsResult.rows,
   };
 }
 
@@ -142,6 +160,7 @@ export async function recordAwarenessShown(
     contentCode: string;
     productType: 'cigarette' | 'vape' | 'hookah';
     triggerCode: string;
+    flowId: string;
   },
 ) {
   const supabase = getSupabase();
@@ -153,12 +172,13 @@ export async function recordAwarenessShown(
     product_type: input.productType,
     trigger_code: input.triggerCode,
   });
-  await trackRelease4Event(session, 'awareness_shown', {
+  if (impression.error) return false;
+  return trackRelease4Event(session, 'awareness_shown', {
     funnel_stage: 'микроосознанность',
     surface: 'веб',
     product_type: input.productType,
     trigger_code: input.triggerCode,
     content_code: input.contentCode,
+    flow_id: input.flowId,
   });
-  return !impression.error;
 }
