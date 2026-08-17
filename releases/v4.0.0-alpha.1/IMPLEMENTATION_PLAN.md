@@ -243,13 +243,15 @@ Remote validation:
 - npm run build;
 - GitHub Actions на PR — PASS, run #246.
 
-DB validation после development branch:
-- sequential R1 migrations;
-- owner CRUD;
-- cross-user/anon denial;
-- trigger/rebuild;
-- analytics privacy;
-- security/performance advisors.
+DB validation в бесплатном ephemeral GitHub Actions gate:
+- PASS: вся migration chain replay с нуля;
+- PASS: owner read/write/correction/delete для покрытого vertical slice;
+- PASS: cross-user и anonymous denial;
+- PASS: RPC grants, sequential и concurrent `flow_id` retry;
+- PASS: trigger/replacement rebuild после delete/restore;
+- PASS: structured analytics и admin/private boundary;
+- PASS: schema lint и teardown без backup;
+- НЕ ПРОВЕРЕНО: hosted security/performance advisors.
 
 Browser после preview:
 - canonical desktop/mobile;
@@ -272,7 +274,7 @@ Browser после preview:
 
 ### A — R1 readiness
 
-Repo contract: PASS. Paid branch: запрещена. Free ephemeral database CI: план утверждён владельцем, ожидает фактического run.
+Repo contract: PASS. Paid branch: запрещена. Free ephemeral database CI: PASS, run #11, 49/49 pgTAP assertions, fresh replay, lint и teardown.
 
 ### B — contracts/tests
 
@@ -280,7 +282,7 @@ PASS: plan committed before runtime; pure domain contracts implemented; typechec
 
 ### C — canonical cigarette slice
 
-Runtime implementation and programmatic checks: PASS. Development DB persistence, learning rebuild, admin rows and authenticated desktop/mobile browser path: НЕ ПРОВЕРЕНО. Не расширять scope до их фактического PASS.
+Runtime implementation и programmatic data checks: PASS. Ephemeral CI подтвердил persistence semantics, learning rebuild, admin/private boundary и idempotent retry. Authenticated desktop/mobile browser path: НЕ ПРОВЕРЕНО. Не расширять scope до его фактического PASS.
 
 ### D — vape/hookah semantics
 
@@ -292,7 +294,7 @@ Canonical admin slice входит в C; широкий product expansion пос
 
 ### F — QA/self-review
 
-Adversarial self-review: PASS. Independent static review: PASS после исправления всех подтверждённых P1/P2 и финальной проверки head `dba84ef`. GitHub Actions: PASS, run #246. Migration execution/RLS concurrency, preview/browser/performance: НЕ ПРОВЕРЕНО.
+Adversarial self-review: PASS. Independent runtime/SQL review: PASS после исправления подтверждённых P1/P2. Frontend GitHub Actions: PASS, run #271. Database CI: PASS, run #11; fresh replay, 49 pgTAP tests, lint и teardown. Preview/browser/performance и hosted Advisors: НЕ ПРОВЕРЕНО.
 
 ## Validation commands
 
@@ -319,7 +321,7 @@ CI workflow должен запускаться на pull_request при изм�
 
 - Owner запретил платную Supabase branch; единственный разрешённый DB gate — ephemeral GitHub Actions без remote link/secrets.
 - Preview provider/URL и environment variables target branch пока неизвестны.
-- GitHub Actions workflow runs доступны; run #246 на alpha head завершён `success`, legacy combined statuses остаются пустыми.
+- GitHub Actions доступны: DB-tested head `3c74af9ad97e05a0a86c0a2191c4f9dd436dd412` прошёл frontend run #271 и database run #11.
 - Точная доступность authenticated test users для browser QA неизвестна.
 - Текущий remote project не является безопасным местом для R1 validation.
 - Expansion scope остаётся заблокированным до canonical PASS.
