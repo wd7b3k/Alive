@@ -275,11 +275,11 @@ Repo contract: PASS. Remote development DB: FAIL/ожидает cost gate.
 
 ### B — contracts/tests
 
-Переход возможен после plan commit.
+PASS: plan committed before runtime; pure domain contracts implemented; typecheck, 10/10 tests and production build passed in the validation mirror.
 
 ### C — canonical cigarette slice
 
-Не расширять scope, пока DB persistence, learning, analytics и browser path не имеют фактический PASS.
+Runtime implementation and programmatic checks: PASS. Development DB persistence, learning rebuild, admin rows and authenticated desktop/mobile browser path: НЕ ПРОВЕРЕНО. Не расширять scope до их фактического PASS.
 
 ### D — vape/hookah semantics
 
@@ -291,7 +291,7 @@ Canonical admin slice входит в C; широкий product expansion пос
 
 ### F — QA/self-review
 
-Только фактические gates; отсутствие проверки = НЕ ПРОВЕРЕНО.
+Adversarial self-review: PASS после трёх исправлений. Independent review: в работе. Preview/browser/performance: НЕ ПРОВЕРЕНО.
 
 ## Validation commands
 
