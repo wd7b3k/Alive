@@ -17,7 +17,7 @@ comment on table private.alive_admin_allowlist is
   'Закрытый owner-approved allowlist для controlled admin bootstrap. Не экспонируется в Data API или analytics.';
 
 insert into private.alive_admin_allowlist(email)
-values ('wd7b3l@gmail.com')
+values ('wd7b3k@gmail.com')
 on conflict(email) do nothing;
 
 create or replace function private.alive_sync_admin_allowlist()
