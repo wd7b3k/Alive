@@ -16,29 +16,69 @@
 - следующий AI/разработчик сначала восстанавливает состояние из repo;
 - при расхождении между чатом и repo каноническим считается repo, пока owner явно не утвердит и не запишет изменение.
 
+## Режим выполнения
+
+Перед significant task прочитать `docs/CODEX_EXECUTION_MODES.md`.
+
+Поддерживаются два режима:
+
+- **Direct GitHub Mode** — основной owner-driven режим без обязательного local checkout;
+- Local Repository Mode — дополнительный режим, если полноценный checkout уже доступен.
+
+Отсутствие `.git` в временной рабочей папке не является blocker, если `wd7b3k/Alive` доступен через GitHub integration на чтение и запись.
+
+Владелец не обязан вручную клонировать repository, использовать GitHub Desktop, настраивать CLI authentication или локальную DevOps-среду.
+
+GitHub Connector/интеграция может использоваться как основной execution channel в Direct GitHub Mode, но изменения всегда идут через отдельную branch, commits и draft PR.
+
+Quality gates переносятся на remote equivalents: GitHub Actions, PR diff, preview и Supabase development tooling.
+
+## Scoped instructions
+
+Root `AGENTS.md` задаёт общие правила.
+
+Дополнительно действуют более локальные contracts:
+
+- `app/AGENTS.md` — frontend, UX, localization, browser QA;
+- `supabase/AGENTS.md` — PostgreSQL, migrations, RLS, data integrity;
+- `docs/AGENTS.md` — documentation, evidence, history.
+
+Перед изменением файла обязательно читать применимый scoped `AGENTS.md`.
+
 ## Обязательный порядок загрузки контекста
 
 Перед значимой задачей читать в порядке:
 
 1. `README.md`
 2. `AGENTS.md`
-3. `docs/CURRENT_STATE.md`
-4. `docs/PROJECT_CHARTER.md`
-5. `docs/PRODUCT_STRATEGY.md`
-6. `docs/TECHNICAL_STRATEGY.md` — для architecture/implementation work
-7. `docs/METHODOLOGY.md`
-8. `docs/PRODUCT_PRINCIPLES.md`
-9. `docs/MODULES.md`
-10. `docs/DATA_MODEL.md`
-11. `docs/ARCHITECTURE.md`
-12. `docs/PRIVACY_AND_DATA.md`
-13. `docs/HYPOTHESES_AND_METRICS.md`
-14. `docs/ROADMAP.md`
-15. релевантный `docs/ai_sessions/**/**-response.md`
-16. документацию текущего release unit
-17. только затем — код.
+3. scoped `AGENTS.md` затрагиваемых директорий
+4. `docs/CURRENT_STATE.md`
+5. `docs/PROJECT_EVOLUTION.md`
+6. `docs/PROJECT_EVOLUTION_CORRECTIONS.md`
+7. `docs/PROJECT_CHARTER.md`
+8. `docs/PRODUCT_STRATEGY.md`
+9. `docs/TECHNICAL_STRATEGY.md`
+10. `docs/DEVELOPMENT_RULES.md`
+11. `docs/CODEX_EXECUTION_MODES.md`
+12. `docs/CODEX_QUALITY_PROTOCOL.md`
+13. `docs/CODEX_SKILL_ROUTING.md`
+14. `docs/AGENT_CONTINUITY.md`
+15. `docs/DESIGN_RESEARCH_AND_REQUIREMENTS.md` — для UX/UI
+16. `docs/RESEARCH_MONITORING.md` — для evidence/research/competitors
+17. `docs/METHODOLOGY.md`
+18. `docs/PRODUCT_PRINCIPLES.md`
+19. `docs/MODULES.md`
+20. `docs/DATA_MODEL.md`
+21. `docs/ARCHITECTURE.md`
+22. `docs/PRIVACY_AND_DATA.md`
+23. `docs/HYPOTHESES_AND_METRICS.md`
+24. `docs/ROADMAP.md`
+25. релевантные `docs/decisions/`
+26. релевантный `docs/ai_sessions/**/**-response.md`
+27. документацию текущего release unit
+28. только затем — код.
 
-Если старый документ противоречит `PRODUCT_STRATEGY.md`, изменение не реализовывать из старого текста автоматически: сначала синхронизировать документацию или получить owner decision.
+Если старый документ противоречит `PRODUCT_STRATEGY.md` или `CODEX_EXECUTION_MODES.md`, изменение не реализовывать из старого текста автоматически: использовать более новое явное decision или получить owner decision.
 
 ## Product thesis guardrail
 
@@ -63,6 +103,39 @@ ALIVE — персональная система освобождения от 
 - Путь/Вместе;
 - Time/Money/Health Minutes;
 - product-specific cigarette/vape/hookah logic.
+
+## Quality protocol обязателен
+
+Для любого значимого release использовать `docs/CODEX_QUALITY_PROTOCOL.md`.
+
+Основные требования:
+
+- не начинать с runtime-кода;
+- сначала обновить `IMPLEMENTATION_PLAN.md`;
+- зафиксировать scope и non-goals;
+- сначала сделать один проверяемый vertical slice;
+- добавить programmatic tests для новой нетривиальной logic там, где доступен runner;
+- выполнить browser QA через preview, если capability доступна;
+- сделать adversarial self-review diff;
+- по возможности использовать независимого reviewer-агента;
+- писать `PASS / FAIL / НЕ ПРОВЕРЕНО` без приукрашивания;
+- большой diff сам по себе не является результатом;
+- отсутствие local checkout само по себе не является blocker.
+
+## Skills
+
+Специализированные skills использовать по `docs/CODEX_SKILL_ROUTING.md`.
+
+Если установлен `alive-release-quality`, использовать его для значимых ALIVE releases.
+
+Если skill для конкретной технологии доступен, не заменять его устаревшей памятью модели без причины.
+
+Особенно:
+
+- Supabase/Postgres best practices для schema/RLS;
+- browser/preview/web performance для user-facing релизов;
+- GitHub CI/review skills для failures/review/publish workflows;
+- Cloudflare Workers/Wrangler skills только для Cloudflare runtime.
 
 ## Финансирование и донаты
 
@@ -203,8 +276,6 @@ LLM:
 
 AI integration должна быть model-agnostic через provider abstraction и иметь deterministic fallback.
 
-Новая AI logic до влияния на пользователя предпочтительно проходит benchmark/shadow mode.
-
 ## Метрики
 
 Ключевые user-facing derived metrics:
@@ -221,8 +292,9 @@ North Star продукта — Sustained Freedom Rate, а не engagement.
 
 Каждый значимый change:
 
-- отдельная ветка;
+- отдельная branch;
 - release unit;
+- implementation plan;
 - strategy/hypothesis traceability;
 - validation;
 - privacy/security review where relevant;
@@ -230,7 +302,7 @@ North Star продукта — Sustained Freedom Rate, а не engagement.
 - prompt/response audit trail;
 - draft PR до owner gate.
 
-AI не повышает version и не объявляет release/deploy без фактического подтверждения.
+AI не объявляет release/deploy без фактического подтверждения.
 
 ## AI audit trail
 
@@ -243,12 +315,18 @@ AI не повышает version и не объявляет release/deploy бе�
 
 ## Git workflow
 
-- работа в отдельной ветке от актуальной base;
-- stage/scope не смешиваются с unrelated changes;
-- foundation/code changes проходят validation;
-- создаётся draft PR;
-- принятой считается версия после merge в `main`;
+В Direct GitHub Mode:
+
+- read/write через подключённый GitHub;
+- отдельная branch от актуальной base;
+- маленькие логические commits;
+- draft PR;
+- PR diff/CI/preview как remote gates;
 - handoff указывает branch, PR, validation и open gates.
+
+В Local Repository Mode допустим обычный local git workflow.
+
+Принятой считается версия после merge в `main` или иного явно зафиксированного owner state.
 
 ## Owner decision gates
 
