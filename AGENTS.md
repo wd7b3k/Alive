@@ -16,27 +16,48 @@
 - следующий AI/разработчик сначала восстанавливает состояние из repo;
 - при расхождении между чатом и repo каноническим считается repo, пока owner явно не утвердит и не запишет изменение.
 
+## Scoped instructions
+
+Root `AGENTS.md` задаёт общие правила.
+
+Дополнительно действуют более локальные contracts:
+
+- `app/AGENTS.md` — frontend, UX, localization, browser QA;
+- `supabase/AGENTS.md` — PostgreSQL, migrations, RLS, data integrity;
+- `docs/AGENTS.md` — documentation, evidence, history.
+
+Перед изменением файла обязательно читать применимый scoped `AGENTS.md`.
+
 ## Обязательный порядок загрузки контекста
 
 Перед значимой задачей читать в порядке:
 
 1. `README.md`
 2. `AGENTS.md`
-3. `docs/CURRENT_STATE.md`
-4. `docs/PROJECT_CHARTER.md`
-5. `docs/PRODUCT_STRATEGY.md`
-6. `docs/TECHNICAL_STRATEGY.md` — для architecture/implementation work
-7. `docs/METHODOLOGY.md`
-8. `docs/PRODUCT_PRINCIPLES.md`
-9. `docs/MODULES.md`
-10. `docs/DATA_MODEL.md`
-11. `docs/ARCHITECTURE.md`
-12. `docs/PRIVACY_AND_DATA.md`
-13. `docs/HYPOTHESES_AND_METRICS.md`
-14. `docs/ROADMAP.md`
-15. релевантный `docs/ai_sessions/**/**-response.md`
-16. документацию текущего release unit
-17. только затем — код.
+3. scoped `AGENTS.md` затрагиваемых директорий
+4. `docs/CURRENT_STATE.md`
+5. `docs/PROJECT_EVOLUTION.md`
+6. `docs/PROJECT_CHARTER.md`
+7. `docs/PRODUCT_STRATEGY.md`
+8. `docs/TECHNICAL_STRATEGY.md`
+9. `docs/DEVELOPMENT_RULES.md`
+10. `docs/CODEX_QUALITY_PROTOCOL.md`
+11. `docs/CODEX_SKILL_ROUTING.md`
+12. `docs/AGENT_CONTINUITY.md`
+13. `docs/DESIGN_RESEARCH_AND_REQUIREMENTS.md` — для UX/UI
+14. `docs/RESEARCH_MONITORING.md` — для evidence/research/competitors
+15. `docs/METHODOLOGY.md`
+16. `docs/PRODUCT_PRINCIPLES.md`
+17. `docs/MODULES.md`
+18. `docs/DATA_MODEL.md`
+19. `docs/ARCHITECTURE.md`
+20. `docs/PRIVACY_AND_DATA.md`
+21. `docs/HYPOTHESES_AND_METRICS.md`
+22. `docs/ROADMAP.md`
+23. релевантные `docs/decisions/`
+24. релевантный `docs/ai_sessions/**/**-response.md`
+25. документацию текущего release unit
+26. только затем — код.
 
 Если старый документ противоречит `PRODUCT_STRATEGY.md`, изменение не реализовывать из старого текста автоматически: сначала синхронизировать документацию или получить owner decision.
 
@@ -63,6 +84,38 @@ ALIVE — персональная система освобождения от 
 - Путь/Вместе;
 - Time/Money/Health Minutes;
 - product-specific cigarette/vape/hookah logic.
+
+## Quality protocol обязателен
+
+Для любого значимого release использовать `docs/CODEX_QUALITY_PROTOCOL.md`.
+
+Основные требования:
+
+- не начинать с кода;
+- сначала создать/обновить `IMPLEMENTATION_PLAN.md`;
+- зафиксировать scope и non-goals;
+- сначала сделать один проверяемый vertical slice;
+- добавить programmatic tests для новой нетривиальной logic;
+- выполнить browser QA для user-facing flow, если tool доступен;
+- сделать adversarial self-review diff;
+- по возможности использовать независимого reviewer-агента;
+- писать `PASS / FAIL / НЕ ПРОВЕРЕНО` без приукрашивания;
+- большой diff сам по себе не является результатом.
+
+## Skills
+
+Специализированные skills использовать по `docs/CODEX_SKILL_ROUTING.md`.
+
+Если установлен `alive-release-quality`, использовать его для значимых ALIVE releases.
+
+Если skill для конкретной технологии доступен, не заменять его устаревшей памятью модели без причины.
+
+Особенно:
+
+- Supabase/Postgres best practices для schema/RLS;
+- Cloudflare Workers/Wrangler skills для Cloudflare runtime;
+- web performance/browser QA для user-facing preview;
+- GitHub CI/review skills для failures/review/publish workflows.
 
 ## Финансирование и донаты
 
@@ -223,6 +276,7 @@ North Star продукта — Sustained Freedom Rate, а не engagement.
 
 - отдельная ветка;
 - release unit;
+- implementation plan;
 - strategy/hypothesis traceability;
 - validation;
 - privacy/security review where relevant;
