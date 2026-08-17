@@ -21,9 +21,13 @@
 | `npm test` | PASS | 11/11 Node domain tests, включая idempotent retry semantics |
 | `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
 | Adversarial self-review | PASS | Исправлены precedence learning, duplicate telemetry, staged/idempotent writes, evidence verification, correlated funnel, retry и fail-closed states |
-| GitHub Actions | PASS | Final head `694c34fbefadcec028052845aead31f949bb46ba`: `ALIVE frontend CI` run #251 завершён `success`; combined legacy statuses пуст |
+| GitHub Actions | PASS | Исправленная исходная фиксация: head `694c34fbefadcec028052845aead31f949bb46ba`, frontend run #251 `success`. DB-tested head `3c74af9ad97e05a0a86c0a2191c4f9dd436dd412`: frontend run #271 и database run #11 завершены `success` |
 | SQL/RLS static review | PASS | Atomic/idempotent exposure RPC и least-privilege boundary проверены Supabase best-practices workflow и отдельным reviewer; новых P1/P2 нет |
-| R1 development DB / migrations / RLS | НЕ ПРОВЕРЕНО | Migration, RLS behavior, concurrent retry и advisors не запускались; live project содержит только v3.1 и не изменялся; Supabase branch требует owner cost confirmation |
+| Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #11: pinned Supabase CLI `2.111.0`, stack start и отдельный `supabase db reset --local` применили всю migration chain с нуля |
+| Ephemeral DB: pgTAP / RLS | PASS | 3 файла, 49 assertions: isolation, authenticated/anonymous boundaries, RPC grants, sequential и concurrent `flow_id`, delete/recompute, admin/private boundary |
+| Ephemeral DB: lint / teardown | PASS | `supabase db lint --level error`: `No schema errors found`; `supabase stop --no-backup` завершён до уничтожения runner |
+| Live / paid Supabase branch | PASS | Не создавались и не изменялись; validation не использует remote link, secrets, artifacts или постоянные volumes |
+| Hosted Security / Performance Advisors | НЕ ПРОВЕРЕНО | Ephemeral schema lint не подменяет hosted Supabase Advisors после будущего controlled deployment |
 | Canonical authenticated E2E | НЕ ПРОВЕРЕНО | Нет development R1 DB и preview с test environment |
 | Browser desktop/mobile | НЕ ПРОВЕРЕНО | Browser доступен, но private PR не авторизован и release preview отсутствует |
 | Performance / accessibility preview | НЕ ПРОВЕРЕНО | Preview отсутствует |
@@ -35,10 +39,10 @@
 ## 1. Base / R1 readiness
 
 - [ ] Strategy Foundation понятна и не конфликтует с release.
-- [ ] R1 schema доступна в development environment либо ограничение явно принято.
-- [ ] R1 migrations последовательны.
-- [ ] RLS baseline не хуже текущего.
-- [ ] Legacy data compatibility понятна.
+- [x] R1 schema воспроизводится в ephemeral CI без платной branch.
+- [x] R1 migrations последовательны при fresh replay.
+- [x] RLS boundary подтверждён pgTAP.
+- [x] Legacy data compatibility и clean-schema fallback подтверждены replay.
 
 ## 2. Scope
 
@@ -172,15 +176,15 @@
 
 Если schema меняется:
 
-- [ ] development migrations PASS;
-- [ ] owner CRUD PASS;
-- [ ] cross-user read denied;
-- [ ] cross-user write denied;
-- [ ] unauthenticated denied;
-- [ ] security advisor reviewed;
-- [ ] performance advisor reviewed;
-- [ ] indexes justified;
-- [ ] rollback/forward-fix documented.
+- [x] ephemeral fresh migrations PASS;
+- [x] owner read/write/correction/delete paths PASS в покрытом vertical slice;
+- [x] cross-user read denied;
+- [x] cross-user write denied;
+- [x] unauthenticated denied;
+- [ ] hosted security advisor reviewed;
+- [ ] hosted performance advisor reviewed;
+- [x] schema lint и индексы проверены;
+- [x] rollback/forward-fix documented.
 
 ## 13. Automated tests
 
