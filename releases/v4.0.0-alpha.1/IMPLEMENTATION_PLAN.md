@@ -274,7 +274,7 @@ Browser после preview:
 
 ### A — R1 readiness
 
-Repo contract: PASS. Paid branch: запрещена. Free ephemeral database CI: PASS, run #24, 61/61 pgTAP assertions, fresh replay, security hardening, lint и teardown.
+Repo contract: PASS. Paid branch: запрещена. Free ephemeral database CI: PASS на strict run #35: 61/61 pgTAP assertions, fresh replay, security hardening, `db lint --level error --fail-on error` без schema errors и teardown.
 
 ### B — contracts/tests
 
@@ -294,7 +294,7 @@ Canonical admin slice входит в C; широкий product expansion пос
 
 ### F — QA/self-review
 
-Adversarial self-review: PASS. Independent runtime/SQL review: PASS после исправления подтверждённых P1/P2. Frontend GitHub Actions: PASS, run #284. Database CI: PASS, run #24; fresh replay, 61 pgTAP tests, lint и teardown. Public preview smoke desktop/mobile: PASS. Authenticated browser, performance trace и hosted Advisors: НЕ ПРОВЕРЕНО.
+Adversarial self-review: PASS. Independent runtime/SQL review: PASS после исправления подтверждённых P1/P2; последующий false-green lint finding также исправлен. Frontend GitHub Actions: PASS, run #295. Database CI: PASS, strict run #35; fresh replay, 61 pgTAP tests, `--fail-on error` lint и teardown. Public preview smoke desktop/mobile: PASS. Authenticated browser, performance trace и hosted Advisors: НЕ ПРОВЕРЕНО.
 
 ## Validation commands
 
@@ -317,11 +317,13 @@ CI workflow должен запускаться на pull_request при изм�
 - User data: никаких destructive transforms; legacy data сохраняются.
 - При неподтверждённом final event UI делает три попытки, предлагает повтор и не показывает метрики; stable `flow_id` не создаёт дубль.
 
+False-green lesson: GitHub `success` не считается достаточным evidence для вложенного CLI. Fail semantics задаются явно, а handoff проверяет фактическую команду, success marker и отсутствие запрещённых diagnostics в полном логе.
+
 ## Unknown assumptions / open gates
 
 - Owner запретил платную Supabase branch; единственный разрешённый DB gate — ephemeral GitHub Actions без remote link/secrets.
 - Preview provider/URL и environment variables target branch пока неизвестны.
-- GitHub Actions доступны: DB-tested head `dc49610876c7ab98b4085bd3736a7bb5697c10fc` прошёл frontend run #284 и database run #24.
+- GitHub Actions доступны: strict-gate head `2ca5f83c2c4d8947282d44d8c7ab370eb75e10df` прошёл frontend run #295 и database run #35; DB command/log проверены.
 - Точная доступность authenticated test users для browser QA неизвестна.
 - Текущий remote project не является безопасным местом для R1 validation.
 - Expansion scope остаётся заблокированным до canonical PASS.
