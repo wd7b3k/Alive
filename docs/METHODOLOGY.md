@@ -1,192 +1,359 @@
-# Экспериментальная методология ALIVE
+# Методология ALIVE
 
-## 1. Статус методологии
+## 1. Статус
 
-`ALIVE Method v1` — рабочая экспериментальная методология, а не доказанный лечебный протокол.
+ALIVE — evidence-informed экспериментальная продуктовая система, а не доказанный лечебный протокол.
 
-Цель — проверить, можно ли ослаблять никотиновый автоматизм через систематическое наблюдение контекста, определение функции поведения, альтернативный ответ и персональное обучение на outcome.
+Документ разделяет:
 
-## 2. Основные предположения
+- установленное знание;
+- evidence-informed product design;
+- рабочие эвристики;
+- собственные гипотезы ALIVE.
 
-### M1. Зависимость проявляется через повторяемые Связки
+Главный product outcome — устойчивая свобода от целевого никотинового продукта; клиническая эффективность ALIVE должна проверяться отдельно.
 
-Полезно анализировать не абстрактное «я хочу курить», а конкретный сценарий:
+## 2. Базовая модель
 
-`контекст → состояние/потребность → импульс → действие`.
+Никотиновое действие может поддерживаться сочетанием:
 
-### M2. Никотиновое действие выполняет не только фармакологическую функцию
+- физиологической зависимости/withdrawal;
+- выученных ассоциаций;
+- автоматизированных ритуалов;
+- ожиданий от употребления;
+- эмоциональной/функциональной роли;
+- социальной среды;
+- идентичности и ценностей.
 
-В разных эпизодах человек может искать:
+ALIVE не требует находить психологическую `потребность` в каждом эпизоде.
 
-- снятие напряжения;
-- паузу;
-- стимуляцию;
-- удовольствие;
-- переключение;
-- завершение;
-- одиночество;
-- контакт;
-- ритуал;
-- сенсорную/оральную стимуляцию.
+Рабочая causal sketch:
 
-### M3. Функцию можно частично закрывать другим действием
+`контекст + состояние + физиология + ассоциации + ожидания → импульс`
 
-Замена не обязана быть универсальной и не обязана работать всегда.
+## 3. Decision loop
 
-### M4. Персональные outcomes важнее общих советов
+ALIVE стремится создать небольшое пространство между импульсом и автоматическим действием:
 
-ALIVE измеряет, что реально произошло после действия, и постепенно повышает релевантность предложений.
+`импульс → пауза → распознавание → микроосознанность → решение → действие → outcome`
 
-### M5. Срыв не обнуляет данные
+После outcome:
 
-Эпизод употребления показывает контекст, силу автоматизма и слабые места intervention logic.
+`outcome → обучение → обновление Связки/ранжирования/убеждения → поддерживающее подкрепление`
 
-### M6. Смысл и идентичность могут поддерживать изменение
+Это внутренняя модель. Пользователь не обязан проходить отдельный UI step на каждой стадии.
 
-Собственные причины и образ желаемой жизни рассматриваются как один из инструментов, а не как магическая мотивация.
+## 4. Микроосознанность
 
-## 3. Core measurement
+Рабочая гипотеза ALIVE: короткое контекстное возвращение объективной информации и личного Зачем непосредственно в момент выбора может уменьшать автоматизм и психологическое дистанцирование последствий.
 
-Для craving episode минимально фиксируются:
+Микроосознанность может включать:
 
-- target nicotine product;
-- trigger/context;
-- craving before;
-- need/function;
-- предложенные replacements;
-- выбранное action;
-- craving after;
-- helpfulness;
-- nicotine use after intervention;
-- optional private note.
+- approved Fact;
+- contextual Myth/reframe;
+- personal outcome insight;
+- own Goal/Value.
 
-## 4. Success не равен только abstinence streak
+Эффективность именно этой композиции должна проверяться экспериментально.
 
-Измеряются:
+## 5. Связки
 
-- usage относительно baseline;
-- количество замеченных craving episodes;
-- доля successful responses;
-- broken Links;
-- craving reduction;
-- helpfulness;
-- интервалы без продукта;
-- возвращение после паузы;
-- стабильность использования сервиса;
-- персональная эффективность replacements.
+Связка моделирует повторяющийся context→impulse/action pattern.
 
-## 5. Никотинзаместительная терапия
+Цель — не только распознавание, но и формирование подготовленного ответа:
 
-NRT рассматривается как допустимый evidence-informed инструмент прекращения курения и отдельный intervention type.
+`Когда X → делаю Y`
 
-Поддерживаются:
+Для Связки измеряются:
 
-- spray;
-- gum;
-- patch.
+- frequency;
+- craving strength;
+- target action probability;
+- tested responses;
+- response outcomes;
+- weakening over time.
 
-ALIVE не назначает дозировки и не заменяет инструкцию препарата/медицинскую консультацию.
+## 6. Перепрошивка / Reframe
 
-Использование NRT не считается smoking relapse.
+Пользовательская метафора `Перепрошивка` означает работу с ожиданиями, убеждениями и автоматическими реакциями.
 
-## 6. Пищевые и питьевые Замены
+Рабочая схема:
 
-Пищевые действия используются ограниченно, чтобы не заменять никотиновый автоматизм постоянным заеданием.
+`убеждение → evidence/objectivization → personal experiment → outcome → revised belief`
+
+Пример:
+
+`«сигарета снимает стресс» → альтернативный response → сравнение ожидания и результата → personal evidence`
+
+ALIVE не утверждает, что каждая пользовательская мысль является мифом; контент должен иметь evidence basis или быть явно обозначен как hypothesis/personal observation.
+
+## 7. Факты
+
+Medical/health Fact публикуется только из Evidence Registry и имеет:
+
+- source;
+- evidence class;
+- population/context;
+- limitations;
+- reviewed date;
+- approved user copy version.
+
+LLM не является source of truth.
+
+## 8. Мифы
+
+Myth — пользовательское или распространённое убеждение, для которого существует evidence-based коррекция или проверяемая personal hypothesis.
+
+Полезно хранить:
+
+- belief strength before;
+- linked triggers/Links;
+- relevant evidence;
+- experiments;
+- expectation;
+- real outcome;
+- belief strength after.
+
+## 9. Зачем
+
+`Зачем` объединяет:
+
+- concrete goals;
+- values;
+- identity direction;
+- user-written formulations.
+
+В методологии это motivational/value layer, а не самостоятельное доказанное лечение.
+
+## 10. Intervention Engine
+
+ALIVE выбирает среди нескольких механизмов ответа, а не только списка Замены.
 
 Категории:
 
-- fruit;
-- vegetables;
-- dairy;
-- protein;
-- water/tea.
+- prepared Link response;
+- behavioural;
+- physical;
+- sensory;
+- environmental;
+- cognitive;
+- acceptance/mindfulness;
+- breathing;
+- food/drink with guardrails;
+- music;
+- social support;
+- Goal/Value reminder;
+- action according to the user's chosen cessation treatment.
 
-Алгоритм учитывает time of day, количество пищевых replacements за день и пользовательские настройки.
+Ranking постепенно персонализируется на outcomes.
 
-`fruit_cutoff_time` — behavioural preference, а не медицинский запрет на фрукты вечером.
+## 11. Treatment Support
 
-## 7. Hookah
+ALIVE признаёт биологическую зависимость и может объяснять evidence-based cessation options, поддерживать факт выбранной стратегии и adherence.
 
-Кальян хранится как отдельный raw tobacco event.
+ALIVE:
 
-Рабочая модель `ALIVE Equivalence v1`:
+- не назначает препараты;
+- не назначает дозировки;
+- не заменяет инструкцию/врача/фармацевта;
+- не считает NRT smoking relapse;
+- различает smoke-free и nicotine-free goals.
 
-`1 hookah session = 10 ALIVE units`.
+## 12. Осознанный эпизод употребления
 
-Это не утверждение о медицинском эквиваленте вреда, дозе никотина, CO или объёме дыма.
+Если пользователь принимает решение употребить продукт, ALIVE может при минимальном friction собрать:
 
-Default cost для быстрого старта может быть `2500 RUB`, но фактическая стоимость редактируется при записи.
+- expected benefit;
+- actual perceived benefit;
+- optional craving/state change.
 
-## 8. Vape
+Рабочая гипотеза: repeated expectation→outcome comparison может уменьшать переоценённую субъективную ценность употребления.
 
-Электронка хранится как отдельный тип с raw puffs.
+Это гипотеза ALIVE, а не доказанный cessation protocol.
 
-Поддерживаются:
+## 13. Recovery
 
-- disposable;
-- pod/cartridge;
-- refillable.
+Lapse не удаляет предыдущий прогресс.
 
-Рабочая модель `ALIVE Equivalence v1`:
+Рабочая цель recovery flow — предотвратить переход единичного эпизода в полное возвращение к прежней модели.
 
-`10 vape puffs = 1 ALIVE unit`.
+Методологический focus:
 
-Это behavioural normalization, а не перевод затяжек в сигареты по вреду/никотину.
+- факт без shame;
+- ближайший контекст;
+- следующая рискованная ситуация;
+- конкретное recovery action;
+- возвращение к plan.
 
-Raw puffs всегда сохраняются, чтобы модель можно было изменить без потери истории.
+## 14. Cigarette model
 
-Для disposable может предлагаться стартовый reference `5000 puffs / 1500 RUB`, но пользователь должен иметь возможность заменить оба значения фактическими.
+Основная raw behavioural unit — cigarette event.
 
-## 9. Target dependency vs cessation bridge
+Сигарета наиболее удобна для discrete impulse→decision analysis.
 
-Один никотиновый продукт может быть:
+Хранятся raw quantity/time/cost facts и связь с episode, если она есть.
 
-- `target_dependency` — от него пользователь хочет отказаться/сократить;
-- `cessation_bridge` — временный инструмент перехода от другого продукта.
+## 15. Vape model
 
-ALIVE не должен автоматически считать bridge usage срывом целевой зависимости.
+Вейп не моделируется как просто «мелкие сигареты».
 
-## 10. ALIVE units
+Важные raw/derived signals:
 
-ALIVE units нужны только для внутренней сопоставимой behavioural статистики разных продуктов.
+- puffs;
+- device interactions/groups;
+- device/consumable type;
+- nicotine-free intervals;
+- context;
+- role: target dependency vs cessation bridge;
+- cost.
 
-В UI обязательно:
+Главная behavioural особенность — высокая доступность и размытая граница эпизода.
 
-> ALIVE units — условная внутренняя единица для сопоставления поведения. Она не показывает медицинский вред и не означает, что разные продукты эквивалентны по воздействию на организм.
+## 16. Hookah model
 
-Versioned model обязателен.
+Кальян хранится как session-level raw event.
 
-## 11. Персонификация
+Особенность — decision point часто возникает до начала курения: invitation/venue/order/preparation.
 
-Система учится на фактах конкретного пользователя:
+Хранятся session count, duration, actual cost and context.
 
-- какой trigger;
-- какая need;
-- какое время;
-- какой продукт;
-- какая Замена;
-- какое изменение craving;
-- какая helpfulness;
-- был ли nicotine use после.
+Нельзя выводить health equivalence только из объёма дыма или ALIVE units.
 
-Персонализация не должна скрывать пользователю причины рекомендации. Желательно объяснять: «предлагаем это, потому что в похожих эпизодах тебе помогало».
+## 17. ALIVE units
 
-## 12. Страница «Эксперимент»
+ALIVE units, если используются, — только versioned behavioural normalization для сопоставления динамики нескольких продуктов.
 
-Продукт открыто объясняет:
+Они не означают:
 
-- ALIVE ничего не гарантирует;
-- это проверка рабочей гипотезы;
-- пользователь может прекратить участие и удалить данные;
-- потенциальный upside отказа от курения велик, но ALIVE не присваивает себе медицинскую причинность;
-- methodology содержит факты, рабочие предположения и эвристики — они маркируются отдельно.
+- одинаковую дозу никотина;
+- одинаковую токсическую экспозицию;
+- одинаковый риск;
+- одинаковые Health Minutes.
 
-## 13. Versioning
+Raw product values всегда доступны отдельно.
 
-Изменение ключевой методологии требует новой версии:
+## 18. Три метрики свободы
 
-- `ALIVE Method v1`;
-- `ALIVE Equivalence v1`;
-- последующие версии.
+### Time Saved
 
-Нельзя silent-mutate смысл исторических данных.
+Контрфактическая оценка времени относительно personal baseline.
+
+Используются personal parameters, а при их отсутствии — явно маркированные defaults.
+
+### Money Saved
+
+Контрфактическая стоимость предотвращённого употребления на основе actual/personal cost model.
+
+При необходимости отдельно показывается cost treatment и net saving.
+
+### Health Minutes
+
+Мотивационная population-level heuristic.
+
+Обязательные свойства:
+
+- `≈` в пользовательском отображении;
+- versioned model;
+- evidence source;
+- product coverage;
+- явное пояснение, что это не индивидуальный прогноз.
+
+Сигаретный коэффициент нельзя переносить на vape/hookah/ALIVE units без отдельного evidence model.
+
+## 19. Baseline
+
+Все контрфактические показатели должны быть привязаны к понятному baseline.
+
+Baseline может обновляться, но изменение методики не должно silent-reinterpret raw history.
+
+## 20. Core measurement episode
+
+Не каждый episode требует всех полей.
+
+Потенциальные факты:
+
+- product;
+- context/trigger;
+- Link;
+- craving before/after;
+- expected benefit;
+- intervention;
+- decision;
+- target usage after;
+- helpfulness;
+- actual perceived benefit;
+- optional private note.
+
+Принцип: собирать минимально достаточные данные для следующего полезного решения.
+
+## 21. Success не равен streak
+
+Измеряются:
+
+- smoke-free/nicotine-free outcome;
+- usage vs baseline;
+- impulse→no-use share;
+- recovery rate;
+- craving dynamics;
+- weakened Links;
+- nicotine-free intervals;
+- intervention effectiveness;
+- belief change;
+- time/money/Health Minutes;
+- retention only как secondary feasibility signal.
+
+## 22. Outcome learning
+
+Персонализация строится прежде всего на structured outcomes, а не на свободной генерации AI.
+
+Example:
+
+`context → Link → intervention → craving delta → target action → helpfulness`
+
+Движок должен уметь объяснять повышение/понижение candidate rank.
+
+## 23. Group / Together
+
+Группа работает только на разрешённых агрегатах и не превращается в соревнование.
+
+Private Notes, Goals, Links, treatment state и детальные episodes не публикуются автоматически.
+
+## 24. Referral hypothesis
+
+Referral CTA после фактического value realization — growth hypothesis, а не cessation intervention.
+
+Он не показывается в strong craving, lapse, crisis или treatment decision.
+
+Growth metrics вторичны относительно cessation outcomes.
+
+## 25. Donation
+
+Добровольная поддержка разработки не является частью treatment methodology.
+
+Donation не изменяет доступность/качество core cessation functions.
+
+## 26. Versioning
+
+Версионируются минимум:
+
+- Methodology;
+- Evidence claims/content;
+- ALIVE Units Model;
+- Baseline Model;
+- Time Saved Model;
+- Money Saved Model;
+- Health Minutes Model;
+- Intervention Ranking Model.
+
+Нельзя silent-mutate исторический смысл данных.
+
+## 27. Evidence / Hypothesis boundary
+
+Каждое существенное утверждение классифицируется как одно из:
+
+- evidence-backed fact;
+- evidence-informed design principle;
+- heuristic;
+- ALIVE hypothesis.
+
+Гипотеза становится частью proven ALIVE methodology только после заранее определённого evidence gate.
