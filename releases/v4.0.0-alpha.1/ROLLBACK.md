@@ -99,6 +99,14 @@
 
 Не менять canonical production domain до owner acceptance.
 
+## Ephemeral CI
+
+Database validation не создаёт долговечного окружения: teardown выполняется `supabase stop --no-backup` с `if: always()`, затем GitHub runner уничтожается.
+
+Legacy migrations `20260817180000` и `20260817180500` условно работают с `user_myth_state`: при наличии historical table выполняются перенос/индекс, при fresh schema безопасно пропускаются. Не заменять это созданием фиктивной legacy table.
+
+Падение CI не требует очистки live или диска владельца. Исправление migration/test harness оформляется отдельным commit и подтверждается новым полным run.
+
 ## После rollback
 
 Обязательно обновить:
