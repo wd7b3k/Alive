@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 import {
+  analyticsWriteConfirmed,
   buildAnalyticsEvent,
   type AnalyticsEventType,
   type AwarenessContent,
@@ -150,7 +151,7 @@ export async function trackRelease4Event(
       user_id: session.user.id,
       ...event,
     });
-    return !result.error;
+    return analyticsWriteConfirmed(result.error);
   } catch {
     return false;
   }
