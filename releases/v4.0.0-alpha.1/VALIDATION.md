@@ -21,7 +21,7 @@
 | `npm test` | PASS | 11/11 Node domain tests, включая idempotent retry semantics |
 | `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
 | Adversarial self-review | PASS | Помимо runtime fixes проверены и исправлены admin privilege escalation, cross-user action link, hard-delete projection risk, legacy path и CI supply-chain/teardown semantics |
-| GitHub Actions | НЕ ПРОВЕРЕНО | Current hotfix head `e5632aad7a6dcf39fee48146c169a6c9aa1f081b`: frontend run #315 завершён `success`, но `ALIVE database CI` run #55 на 2026-08-17 ещё `in_progress`; предыдущие strict DB-tested runs остаются полезным историческим evidence, но эта строка отражает только текущий head |
+| GitHub Actions | НЕ ПРОВЕРЕНО | Logo hotfix commit `e5632aad7a6dcf39fee48146c169a6c9aa1f081b`: frontend run #315 завершён `success`, но `ALIVE database CI` run #55 на 2026-08-17 ещё `in_progress`; предыдущие strict DB-tested runs остаются полезным историческим evidence, но эта строка отражает только status для logo hotfix commit |
 | Brand/logo asset | PASS | Причина дефекта локализована в растровом `brand-logo-full.png`; render-path в `RedesignApp.tsx` переведён на deterministic `brand-logo-classic-om.svg` с утверждённым классическим Ом, без изменения остального UI |
 | SQL/RLS static review | PASS | Atomic/idempotent exposure RPC и least-privilege boundary проверены Supabase best-practices workflow и отдельным reviewer; новых P1/P2 нет |
 | Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #44: pinned Supabase CLI `2.111.0`, fresh stack и отдельный `supabase db reset --local` применили всю migration chain с нуля, включая security hardening |
