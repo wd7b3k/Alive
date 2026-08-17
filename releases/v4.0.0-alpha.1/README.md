@@ -94,9 +94,9 @@ Release проверяет:
 
 ## Текущий статус реализации
 
-Canonical cigarette slice реализован в draft PR #8. Frontend checks PASS: typecheck, 11/11 domain tests, production build и GitHub Actions run #284.
+Canonical cigarette slice реализован в draft PR #8. Frontend checks PASS: typecheck, 11/11 domain tests, production build и GitHub Actions run #295 на strict-gate head `2ca5f83c2c4d8947282d44d8c7ab370eb75e10df`.
 
-Бесплатный database gate PASS в `ALIVE database CI` run #24: fresh migration replay, 61/61 pgTAP assertions, RLS/auth/grants, sequential/concurrent retry, privilege non-escalation, action ownership, legacy-present migration, soft-delete/recompute, schema lint и teardown без backup. Платная Supabase branch не создавалась, live project не изменялся.
+Бесплатный database gate PASS в `ALIVE database CI` strict run #35: fresh migration replay, 61/61 pgTAP assertions, RLS/auth/grants, sequential/concurrent retry, privilege non-escalation, action ownership, legacy-present migration, soft-delete/recompute, `supabase db lint --level error --fail-on error` с `No schema errors found` и teardown без backup. Runs #24/#32 не считаются strict-lint evidence. Платная Supabase branch не создавалась, live project не изменялся.
 
 Release ещё не является reviewable preview:
 
