@@ -1,0 +1,53 @@
+name: ALIVE database CI
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/database-ci.yml'
+  push:
+    branches:
+      - main
+      - agent/r1-data-evidence-admin
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/database-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  database:
+    name: Fresh migrations and pgTAP
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pinned Supabase CLI
+        uses: supabase/setup-cli@v3.0.0
+        with:
+          version: 2.111.0
+
+      - name: Start ephemeral Supabase stack
+        run: supabase start
+
+      - name: Replay every migration from scratch
+        run: supabase db reset --local
+
+      - name: Run pgTAP and RLS tests
+        run: supabase test db
+
+      - name: Lint database functions and schema
+        run: supabase db lint --level error
+
+      - name: Destroy ephemeral stack
+        if: always()
+        run: supabase stop --no-backup || true
