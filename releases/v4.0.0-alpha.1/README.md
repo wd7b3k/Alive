@@ -94,7 +94,7 @@ Release проверяет:
 
 ## Текущий статус реализации
 
-Canonical cigarette slice реализован в draft PR #8 и программно проверен: typecheck PASS, 11/11 domain tests PASS, production build PASS.
+Canonical cigarette slice реализован в draft PR #8 и программно проверен: typecheck PASS, 11/11 domain tests PASS, production build PASS; GitHub Actions run #246 PASS.
 
 Release ещё не является reviewable preview:
 
