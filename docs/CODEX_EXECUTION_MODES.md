@@ -101,6 +101,26 @@ Codex останавливается только если без следующ
 6. независимый reviewer-agent;
 7. owner review.
 
+## Бесплатный ephemeral database gate
+
+Если платная Supabase development/preview branch не разрешена владельцем, database validation в Direct GitHub Mode выполняется бесплатным воспроизводимым CI-контуром:
+
+`GitHub Actions → pinned Supabase CLI → ephemeral local stack → fresh migration replay → pgTAP/RLS tests → lint → supabase stop --no-backup → runner destroyed`.
+
+Обязательные свойства:
+
+- workflow и tests находятся в repository;
+- hosted Supabase project, production schema и пользовательские данные не затрагиваются;
+- remote credentials и project link не требуются;
+- runner не публикует Docker volumes, database dump или build artifact;
+- migration replay выполняется с нуля через `supabase db reset --local`;
+- RLS проверяет owner/cross-user/anonymous/admin boundaries;
+- security-definer RPC проверяется по grants, ownership scope, idempotency и concurrent retry;
+- correction/delete проверяет rebuildable projections;
+- teardown выполняется через `if: always()` и окончательно гарантируется уничтожением GitHub-hosted runner.
+
+Такой workflow является допустимым development database gate для migration/RLS behavior. Hosted Supabase Security/Performance Advisors он не подменяет; вместо них можно выполнить локальный `supabase db lint`, а hosted advisor status остаётся отдельным фактом.
+
 ## Не превращать validation в барьер
 
 Главная задача quality gates — ловить ошибки, а не заставлять владельца становиться разработчиком.
