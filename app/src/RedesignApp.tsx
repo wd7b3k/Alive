@@ -265,6 +265,7 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   const [error, setError] = useState('');
   const [completion, setCompletion] = useState<ReturnType<typeof freedomForDays> | null>(null);
   const [refreshWarning, setRefreshWarning] = useState('');
+  const [pendingOutcomeEpisodeId, setPendingOutcomeEpisodeId] = useState<string | null>(null);
   const [telemetryReady, setTelemetryReady] = useState<boolean | null>(null);
   const openedTracked = useRef(false);
   const awarenessShownTracked = useRef('');
@@ -504,6 +505,68 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
     close();
   }
 
+  async function confirmOutcome(persistedEpisodeId: string) {
+    let outcomeTracked = false;
+    for (const delayMs of [0, 300, 900]) {
+      if (delayMs) await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+      outcomeTracked = await track('outcome_saved', {
+        funnel_stage: 'результат сохранён',
+        surface: 'веб',
+        product_type: product,
+        trigger_code: triggerCode,
+        replacement_code: replacementCode,
+        outcome,
+        episode_id: persistedEpisodeId,
+        numeric_value: after - before,
+        episode_kind: 'craving',
+      });
+      if (outcomeTracked) break;
+    }
+    if (!outcomeTracked) {
+      setPendingOutcomeEpisodeId(persistedEpisodeId);
+      setCompletion(null);
+      setRefreshWarning('Результат сохранён, но финальное событие аналитики не подтверждено. Попробуй отправить событие ещё раз; повторно сохранять эпизод не нужно.');
+      setStep('complete');
+      return;
+    }
+
+    setPendingOutcomeEpisodeId(null);
+    let next: Bootstrap;
+    try {
+      next = await saved();
+    } catch {
+      setCompletion(null);
+      setRefreshWarning('Результат и финальное событие сохранены, но показатели не обновились. Перезагрузи страницу — повторно сохранять эпизод не нужно.');
+      setStep('complete');
+      return;
+    }
+    const metrics = freedomForDays(next, 7);
+    setCompletion(metrics);
+    setStep('complete');
+    void track('freedom_metrics_visible', {
+      funnel_stage: 'свобода показана',
+      surface: 'веб',
+      product_type: product,
+      trigger_code: triggerCode,
+      outcome,
+      episode_id: persistedEpisodeId,
+      model_version: metrics.models.health,
+      coverage: metrics.coverage,
+      episode_kind: 'craving',
+    });
+  }
+
+  async function retryOutcome() {
+    if (!pendingOutcomeEpisodeId) return;
+    setBusy(true);
+    setRefreshWarning('');
+    try {
+      await confirmOutcome(pendingOutcomeEpisodeId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function save() {
     if (!data.release4.r1Ready || telemetryReady !== true || !triggerCode || !replacementCode) return;
     setBusy(true);
@@ -529,47 +592,7 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
         outcome,
         tobacco,
       });
-      const outcomeTracked = await track('outcome_saved', {
-        funnel_stage: 'результат сохранён',
-        surface: 'веб',
-        product_type: product,
-        trigger_code: triggerCode,
-        replacement_code: replacementCode,
-        outcome,
-        episode_id: persistedEpisodeId,
-        numeric_value: after - before,
-        episode_kind: 'craving',
-      });
-      if (!outcomeTracked) {
-        setCompletion(null);
-        setRefreshWarning('Результат сохранён, но финальное событие аналитики не подтверждено. Метрики намеренно не показаны; повторно сохранять эпизод не нужно.');
-        setStep('complete');
-        return;
-      }
-
-      let next: Bootstrap;
-      try {
-        next = await saved();
-      } catch {
-        setCompletion(null);
-        setRefreshWarning('Результат сохранён, но показатели не обновились. Перезагрузи страницу — повторно сохранять эпизод не нужно.');
-        setStep('complete');
-        return;
-      }
-      const metrics = freedomForDays(next, 7);
-      setCompletion(metrics);
-      setStep('complete');
-      void track('freedom_metrics_visible', {
-        funnel_stage: 'свобода показана',
-        surface: 'веб',
-        product_type: product,
-        trigger_code: triggerCode,
-        outcome,
-        episode_id: persistedEpisodeId,
-        model_version: metrics.models.health,
-        coverage: metrics.coverage,
-        episode_kind: 'craving',
-      });
+      await confirmOutcome(persistedEpisodeId);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Не удалось сохранить результат');
     } finally {
@@ -586,7 +609,7 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
     {step === 'intervention' && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon accent"><Icon name="spark"/></span><div><h3>Что можно сделать прямо сейчас</h3><p>Порядок объясняется контекстом и твоими реальными результатами, если данных уже достаточно.</p></div></div><div className="r-replacement-grid">{candidates.map((item) => <button key={item.replacement.code} onClick={() => chooseIntervention(item.replacement.code)}><span className="r-big-icon"><Icon name={replacementIcon(item.replacement)} size={30}/></span><div><span className="r-kind">{replacementKind(item.replacement)}{item.replacement.duration ? ' · ' + item.replacement.duration : ''}</span><h3>{item.replacement.title}</h3><p>{item.replacement.summary || item.replacement.instruction}</p><small className="r-ranking-reason">{item.explanation}</small></div><Icon name="arrow" className="r-card-arrow" size={20}/></button>)}</div>{!candidates.length && <div className="r-empty compact"><p>Для этого контекста пока нет доступного действия. Закрой окно и попробуй снова после обновления каталога.</p></div>}</section>}
     {step === 'doing' && selected && <section className="r-flow"><div className="r-result-choice"><span className="r-big-icon"><Icon name={replacementIcon(selected)} size={30}/></span><div><small>Сейчас только это</small><h3>{selected.title}</h3><p>{selected.instruction}</p>{selected.safety && <small>{selected.safety}</small>}</div></div><div className="r-actions"><ShellButton className="primary" onClick={completeIntervention}>Я попробовал(а) <Icon name="arrow" size={18}/></ShellButton><ShellButton className="ghost" onClick={() => setStep('intervention')}>Другое действие</ShellButton></div></section>}
     {step === 'outcome' && selected && <section className="r-flow"><div className="r-two-sliders"><div className="r-slider"><label><span>Тяга после действия</span><b>{after}/10</b></label><input type="range" min="0" max="10" value={after} onChange={(event) => setAfter(Number(event.target.value))}/></div><div className="r-slider"><label><span>Насколько помогло</span><b>{help}/5</b></label><input type="range" min="0" max="5" value={help} onChange={(event) => setHelp(Number(event.target.value))}/></div></div><div className="r-outcomes"><button className={outcome === 'successful_response' ? 'selected success' : ''} onClick={() => setOutcome('successful_response')}><Icon name="check" size={22}/><div><strong>Сигареты не было</strong><small>Новый ответ получил один подтверждённый опыт</small></div></button><button className={outcome === 'nicotine_used' ? 'selected used' : ''} onClick={() => setOutcome('nicotine_used')}><Icon name={productIcon(product)} size={22}/><div><strong>Никотин всё же был</strong><small>Это данные для следующего выбора, не провал</small></div></button></div>{outcome === 'nicotine_used' && <div className="r-nicotine-detail">{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(event) => setQty(Number(event.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0, puffs - 5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs + 5)}>+5</button></div>}</div>}{error && <p className="r-error">{error}</p>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Сохранить результат'} <Icon name="arrow" size={18}/></ShellButton></div></section>}
-    {step === 'complete' && <section className="r-flow">{completion ? <div className="r-completion-card"><span className="r-status-icon"><Icon name="check" size={24}/></span><h3>{outcome === 'successful_response' ? 'Выбор остался твоим' : 'Опыт сохранён без оценки'}</h3><p>{selectedRanking?.explanation}</p><div className="r-freedom-grid"><div><small>Вернул время</small><strong>{fmt(completion.timeMinutes)} мин</strong></div><div><small>Сохранил деньги</small><strong>{money(completion.moneyRub)}</strong></div><div><small>≈ Сохранил здоровую жизнь</small><strong>{fmt(completion.healthMinutes)} мин</strong></div></div><small>За 7 дней. ≈ здоровая жизнь считается только для подтверждённых невыкуренных сигарет по популяционной оценке, а не как личный прогноз.</small></div> : <div className="r-completion-card"><span className="r-status-icon"><Icon name="check" size={24}/></span><h3>Результат сохранён</h3><p className="r-error">{refreshWarning}</p><small>Метрики намеренно не показаны, пока свежие данные не загружены.</small></div>}<div className="r-actions"><ShellButton className="primary" onClick={close}>Вернуться в сегодня</ShellButton></div></section>}
+    {step === 'complete' && <section className="r-flow">{completion ? <div className="r-completion-card"><span className="r-status-icon"><Icon name="check" size={24}/></span><h3>{outcome === 'successful_response' ? 'Выбор остался твоим' : 'Опыт сохранён без оценки'}</h3><p>{selectedRanking?.explanation}</p><div className="r-freedom-grid"><div><small>Вернул время</small><strong>{fmt(completion.timeMinutes)} мин</strong></div><div><small>Сохранил деньги</small><strong>{money(completion.moneyRub)}</strong></div><div><small>≈ Сохранил здоровую жизнь</small><strong>{fmt(completion.healthMinutes)} мин</strong></div></div><small>За 7 дней. ≈ здоровая жизнь считается только для подтверждённых невыкуренных сигарет по популяционной оценке, а не как личный прогноз.</small></div> : <div className="r-completion-card"><span className="r-status-icon"><Icon name="check" size={24}/></span><h3>Результат сохранён</h3><p className="r-error">{refreshWarning}</p><small>Метрики намеренно не показаны, пока свежие данные не загружены.</small></div>}<div className="r-actions">{pendingOutcomeEpisodeId && <ShellButton className="primary" onClick={() => void retryOutcome()} disabled={busy}>{busy ? 'Отправляю…' : 'Отправить событие ещё раз'}</ShellButton>}<ShellButton className={pendingOutcomeEpisodeId ? 'ghost' : 'primary'} onClick={close}>Вернуться в сегодня</ShellButton></div></section>}
   </Modal>;
 }
 function Evening({ session, data, close, saved }: { session: Session; data: Bootstrap; close: () => void; saved: () => Promise<void> }) {
@@ -661,3 +684,4 @@ export default function RedesignApp() {
   const standalone=path==='/experiment'||path==='/releases';
   return <>{!standalone&&<Header data={data} path={path}/>} {page}{flow.open&&<Guided session={session} data={data} close={()=>setFlow({open:false})} saved={()=>reload(session)} initialTrigger={flow.trigger}/>} {quick&&<QuickUse session={session} data={data} close={()=>setQuick(false)} saved={()=>reload(session).then(()=>{})}/>} {evening&&<Evening session={session} data={data} close={()=>setEvening(false)} saved={()=>reload(session).then(()=>{})}/>}</>;
 }
+
