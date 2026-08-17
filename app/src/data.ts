@@ -366,8 +366,9 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
     throw new Error(episodeRes.error.message);
   }
   if (episodeRes.error?.code === '23505') {
-    const existing = await supabase.from('episodes').select('id').eq('id', episodeId).eq('user_id', userId).maybeSingle();
+    const existing = await supabase.from('episodes').select('id,outcome').eq('id', episodeId).eq('user_id', userId).maybeSingle();
     if (existing.error || !existing.data) throw new Error(existing.error?.message || 'Не удалось продолжить сохранение эпизода');
+    if (existing.data.outcome && existing.data.outcome !== 'open') return episodeId;
   }
 
   if (draft.replacementCode) {
