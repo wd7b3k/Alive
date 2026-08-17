@@ -24,6 +24,10 @@ begin
     raise exception 'Неизвестный тип продукта' using errcode = '22023';
   end if;
 
+  if p_flow_id is null then
+    raise exception 'Не указан идентификатор запуска' using errcode = '22023';
+  end if;
+
   if not exists (
     select 1
     from public.awareness_content content
@@ -32,6 +36,14 @@ begin
       and content.published = true
       and claim.status = 'проверено'
       and p_product_type = any(content.product_types)
+      and exists (
+        select 1
+        from public.awareness_content_contexts context
+        where context.content_code = content.code
+          and context.moment = 'микроосознанность'
+          and (context.trigger_code is null or context.trigger_code = p_trigger_code)
+          and (context.product_type is null or context.product_type = p_product_type)
+      )
   ) then
     raise exception 'Материал не опубликован или не подтверждён' using errcode = '22023';
   end if;
