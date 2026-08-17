@@ -386,6 +386,27 @@ Mandatory first vertical slice:
 - paywall/subscription;
 - public social layer.
 
+
+### Фактическое выполнение alpha.1 — 2026-08-17
+
+Созданы:
+
+- branch `agent/v4.0.0-alpha.1` от `agent/r1-data-evidence-admin`;
+- draft PR #8;
+- полный implementation plan до runtime-кода;
+- pure domain layer для freedom metrics, deterministic intervention ranking, awareness fatigue и analytics allowlist;
+- компактный canonical cigarette flow с CTA `Хочу закурить`;
+- R1 runtime adapter с безопасным legacy fallback;
+- явное разделение `craving` / `quick_use`;
+- структурированная client funnel telemetry и её русская admin-интерпретация;
+- 10 automated domain tests.
+
+Фактически выполнены `npm ci`, typecheck, 10/10 tests и production build. Build сохраняет предупреждение о bundle chunk больше 500 kB.
+
+Canonical E2E ещё не получил PASS: подключённый Supabase project содержит только v3.1, R1 migrations не применялись к live, development branch требует owner cost confirmation. Preview, authenticated browser QA desktop/mobile, DB learning/admin verification, performance и GitHub Actions status остаются `НЕ ПРОВЕРЕНО`.
+
+Поэтому scope на отдельные vape/hookah flows не расширен. Это stop condition release, а не незаметно перенесённая работа.
+
 ## Живая инфраструктура main
 
 - Frontend: React + TypeScript + Vite.
