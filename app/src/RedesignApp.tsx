@@ -293,7 +293,22 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   }), [data, product, triggerCode]);
   const candidates = useMemo(() => triggerCode ? rankInterventions({
     replacements: data.replacements,
-    contextRules: data.release4.contextRules,
+    contextRules: [
+      ...data.release4.contextRules,
+      ...data.triggerReplacementMap.map((item) => ({
+        trigger_code: item.trigger_code,
+        replacement_code: item.replacement_code,
+        product_type: null,
+        min_craving: null,
+        max_craving: null,
+        priority: item.priority + 100,
+        enabled: true,
+      })),
+      ...(product === 'cigarette' && triggerCode === 'after_meal' ? [
+        { trigger_code: 'after_meal', replacement_code: 'water', product_type: 'cigarette' as const, min_craving: null, max_craving: null, priority: 210, enabled: true },
+        { trigger_code: 'after_meal', replacement_code: 'short_walk', product_type: 'cigarette' as const, min_craving: null, max_craving: null, priority: 220, enabled: true },
+      ] : []),
+    ],
     preferences: data.release4.replacementPreferences,
     learning: data.release4.replacementLearning,
     product,
