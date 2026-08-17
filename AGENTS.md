@@ -4,76 +4,121 @@
 
 ## REPO = единственный source of truth
 
-Репозиторий `wd7b3k/Alive` является **единственным каноническим источником истины ALIVE**.
+Репозиторий `wd7b3k/Alive` является единственным каноническим источником истины.
 
-Обязательные следствия:
+Следствия:
 
 - решение, которого нет в git, не считается принятым состоянием проекта;
 - чат, память AI, локальный файл, ZIP, Supabase Dashboard, Cloudflare Dashboard и другие внешние сервисы не являются самостоятельным source of truth;
-- внешняя конфигурация, влияющая на работу продукта, должна иметь безопасное версионируемое отражение в `docs/` или config-файлах репозитория без секретов;
-- schema БД меняется только versioned migrations из репозитория;
-- production deployment должен быть связан с конкретным commit/release;
-- каждый следующий AI/разработчик сначала восстанавливает состояние из репозитория и только затем использует чат как дополнительный контекст;
-- при расхождении между чатом и репозиторием каноническим считается репозиторий, пока владелец явно не утвердит изменение и оно не будет записано в git.
-
-Исторический источник до отделения продукта: `wd7b3k/humanos/projectsv2.0/products/alive/`. После завершения миграции он считается архивным и неканоническим.
+- внешняя конфигурация, влияющая на работу продукта, имеет безопасное отражение в repo без secrets;
+- schema меняется только versioned migrations;
+- production deployment связан с конкретным commit/release;
+- следующий AI/разработчик сначала восстанавливает состояние из repo;
+- при расхождении между чатом и repo каноническим считается repo, пока owner явно не утвердит и не запишет изменение.
 
 ## Обязательный порядок загрузки контекста
 
-Перед любой значимой задачей читать:
+Перед значимой задачей читать в порядке:
 
 1. `README.md`
 2. `AGENTS.md`
 3. `docs/CURRENT_STATE.md`
 4. `docs/PROJECT_CHARTER.md`
 5. `docs/PRODUCT_STRATEGY.md`
-6. `docs/METHODOLOGY.md`
-7. `docs/PRODUCT_PRINCIPLES.md`
-8. `docs/PRIVACY_AND_DATA.md`
-9. релевантные architecture/data/module документы
-10. `docs/HYPOTHESES_AND_METRICS.md`
-11. `docs/ROADMAP.md`
-12. последний релевантный `docs/ai_sessions/**/**-response.md`
-13. документацию текущего release unit
-14. только затем — код.
+6. `docs/TECHNICAL_STRATEGY.md` — для architecture/implementation work
+7. `docs/METHODOLOGY.md`
+8. `docs/PRODUCT_PRINCIPLES.md`
+9. `docs/MODULES.md`
+10. `docs/DATA_MODEL.md`
+11. `docs/ARCHITECTURE.md`
+12. `docs/PRIVACY_AND_DATA.md`
+13. `docs/HYPOTHESES_AND_METRICS.md`
+14. `docs/ROADMAP.md`
+15. релевантный `docs/ai_sessions/**/**-response.md`
+16. документацию текущего release unit
+17. только затем — код.
 
-## Статус проекта
+Если старый документ противоречит `PRODUCT_STRATEGY.md`, изменение не реализовывать из старого текста автоматически: сначала синхронизировать документацию или получить owner decision.
 
-ALIVE является некоммерческим экспериментальным проектом, возникшим из личной потребности автора справиться с никотиновой зависимостью.
+## Product thesis guardrail
 
-До отдельного решения владельца запрещено:
+ALIVE — персональная система освобождения от никотиновой зависимости.
 
-- оптимизировать продукт под выручку;
-- добавлять рекламу;
-- строить рекламные профили;
-- продавать или передавать sensitive data для коммерческого таргетинга;
-- делать monetization requirement частью архитектуры.
+Каноническая короткая формула:
 
-Изменение некоммерческого статуса требует явного обновления `PROJECT_CHARTER.md` и отдельного ADR.
+> **Пауза → Реальность → Зачем → Выбор → Опыт → Обучение → Свобода**
+
+Нельзя сводить продукт обратно к `need → 3 replacements` или обычному quit tracker.
+
+Ключевые active mechanisms:
+
+- Связки;
+- микроосознанность;
+- Факты/Мифы;
+- Зачем;
+- Intervention Engine;
+- treatment support;
+- outcome learning;
+- Recovery;
+- Путь/Вместе;
+- Time/Money/Health Minutes;
+- product-specific cigarette/vape/hookah logic.
+
+## Финансирование и донаты
+
+ALIVE не строится вокруг paywall, рекламы или продажи sensitive data.
+
+Планируется добровольная поддержка разработки через Tribute после отдельного owner/privacy/security gate.
+
+До фактической интеграции запрещено:
+
+- добавлять payment dependency в core architecture;
+- делать donation entitlement к cessation functions;
+- ухудшать бесплатную core experience;
+- совмещать donation CTA с craving decision.
+
+Фактическое подключение payment/donation provider требует Charter/Privacy/ADR sync.
+
+## Самомаркетинг
+
+Referral/self-marketing допустим только после value realization и является secondary loop.
+
+Запрещено показывать invite CTA:
+
+- в сильную тягу;
+- после lapse;
+- в crisis state;
+- при medical/treatment decision.
+
+Referral link не раскрывает sensitive private data.
 
 ## Авторство и заимствования
 
-ALIVE — авторская система в смысле композиции, продуктовой логики и конкретной реализации, но не заявляет исключительного происхождения всех идей.
+ALIVE — авторская композиция продуктовой логики, но не заявляет исключительного происхождения всех методов.
 
 AI обязан:
 
-- отделять оригинальные продуктовые решения от общеизвестных/заимствованных методик;
-- не выдавать широко известные психологические, медицинские или behavioural техники за изобретение ALIVE;
-- добавлять источники и атрибуцию, когда конкретное заимствование идентифицировано;
-- не копировать защищённые тексты/протоколы без проверки допустимости использования.
+- отделять оригинальные product hypotheses от известных психологических/медицинских методов;
+- не выдавать общеизвестные техники за изобретение ALIVE;
+- добавлять источники/атрибуцию при идентифицированном заимствовании;
+- не копировать защищённые протоколы/тексты без проверки допустимости.
 
 ## Evidence-first
 
-Факты, гипотезы и эвристики всегда разделяются.
+Факты, design principles, эвристики и гипотезы всегда различаются.
 
-Каждое медицинское или научное утверждение, способное повлиять на здоровье пользователя, должно иметь проверяемое основание. Для актуальных медицинских вопросов использовать свежие авторитетные источники.
+Каждое медицински значимое утверждение должно иметь проверяемое основание и проходить Evidence Registry/content governance.
+
+LLM не является source of truth для medical claims.
 
 Рабочие эвристики ALIVE должны называться эвристиками.
 
 Примеры:
 
-- `1 hookah = 10 ALIVE units` — behavioural heuristic, не эквивалент вреда;
-- `10 vape puffs = 1 ALIVE unit` — behavioural heuristic, не эквивалент никотина или вреда.
+- ALIVE units — behavioural normalization, не medical harm equivalence;
+- Health Minutes — population-level motivational heuristic с versioned evidence/model, не индивидуальный прогноз.
+
+Нельзя переносить cigarette Health Minutes коэффициент на vape/hookah/ALIVE units без отдельной evidence model.
 
 ## Никаких медицинских обещаний
 
@@ -82,62 +127,110 @@ AI обязан:
 - вылечит зависимость;
 - гарантированно поможет бросить;
 - заменяет врача/психотерапевта/доказательную фармакотерапию;
-- гарантирует увеличение продолжительности жизни.
+- гарантирует увеличение продолжительности жизни;
+- точно прогнозирует персональные Health Minutes.
 
-Допустимо объяснять потенциальную пользу отказа от курения как общий медицинский факт при корректной атрибуции.
+## Product-specific nicotine behavior
+
+Нельзя реализовывать cigarette/vape/hookah как один flow с заменённым названием.
+
+- cigarette — преимущественно discrete episode;
+- vape — device interaction + puffs + interval model;
+- hookah — session model с pre-session decision point.
+
+Cross-product normalization не является medical equivalence.
 
 ## UX: nothing unexplained
 
-Любая специфическая сущность, метрика или термин должны быть понятны человеку без знакомства с проектом.
+Для неочевидной сущности:
 
-Для каждой неочевидной сущности предусматривать:
+- понятное русское название;
+- короткое объяснение;
+- `Подробнее`/tooltip;
+- meaningful empty state.
 
-- понятное название;
-- короткое объяснение на месте;
-- `Подробнее`/tooltip для глубины;
-- осмысленное empty state.
+Craving flow: minimum cognitive/input load.
 
-Нельзя полагаться на то, что пользователь знает внутреннюю терминологию разработчиков.
+Внутренняя decision chain не означает обязательные шаги UI.
 
 ## Privacy-by-design
 
 - private by default;
 - data minimization;
-- чувствительный текст не попадает в общую аналитику;
-- пользовательские Смыслы/Связки не публикуются автоматически;
-- UGC попадает в admin review только после явного `Предложить в общую базу`;
-- группа `Вместе` работает только на разрешённых агрегатах;
-- service secrets никогда не попадают во frontend/git/logs;
-- реальные чувствительные данные и токены в git запрещены.
+- sensitive free text не попадает в generic analytics;
+- Goals/Links/notes не публикуются автоматически;
+- UGC только после explicit submit;
+- Together только на whitelist aggregates;
+- referral не создаёт friend-data consent;
+- service secrets не попадают во frontend/git/logs;
+- real sensitive exports/tokens в git запрещены.
 
 ## Архитектурная дисциплина
 
-- не строить инфраструктуру «на будущее» без gate;
-- предпочитать простую модульную архитектуру;
-- границы модулей и ownership должны быть явными;
-- private module data нельзя менять из другого модуля в обход его публичного API/port;
-- schema/data semantics versioned;
-- raw behavioural events сохраняются отдельно от пересчитываемых моделей/эвристик;
-- изменения ALIVE unit models не должны переписывать raw history.
+- `TECHNICAL_STRATEGY.md` подчинён Product Strategy;
+- modular monolith first;
+- не строить infrastructure «на будущее» без measured gate;
+- module ownership/public contracts явные;
+- raw facts отдельно от rebuildable projections;
+- derived models versioned;
+- correction/delete запускает recompute;
+- business logic channel-independent;
+- core работает при отказе secondary services.
 
-## LLM
+## LLM / AI
 
-LLM может помогать с объяснениями, классификацией UGC и разработкой, но:
+Local/open-weight LLM вводится **после product evidence gate**, не раньше.
 
-- не является source of truth для статистики;
-- не имеет прямого privileged доступа к БД;
-- не принимает security/privacy решения;
-- не назначает медицинскую дозировку;
+До этого core learning строится на structured outcomes и deterministic logic.
+
+LLM может помогать:
+
+- semantic classification;
+- summary;
+- retrieval/matching approved content;
+- structured extraction;
+- constrained explanation/conversation.
+
+LLM:
+
+- не Evidence Registry;
+- не metric calculator;
+- не authorization engine;
+- не privacy/security authority;
+- не имеет direct service-role DB access;
+- не назначает дозировки;
 - не публикует UGC автоматически.
+
+AI integration должна быть model-agnostic через provider abstraction и иметь deterministic fallback.
+
+Новая AI logic до влияния на пользователя предпочтительно проходит benchmark/shadow mode.
+
+## Метрики
+
+Ключевые user-facing derived metrics:
+
+- Time Saved;
+- Money Saved;
+- Health Minutes.
+
+Они всегда пересчитываемы из raw facts/baseline и versioned models.
+
+North Star продукта — Sustained Freedom Rate, а не engagement.
 
 ## Релизы
 
-- v2.7 — legacy reference/rollback;
-- v2.8 не является production release;
-- новая каноническая линия начинается с v3.0;
-- каждый релиз имеет changelog, validation, rollback и документацию;
-- номер версии не повышается задним числом и не придумывается вне фактического release unit;
-- логотип ALIVE считается утверждённым asset и не изменяется/не перегенерируется без прямой команды владельца.
+Каждый значимый change:
+
+- отдельная ветка;
+- release unit;
+- strategy/hypothesis traceability;
+- validation;
+- privacy/security review where relevant;
+- rollback/forward-fix;
+- prompt/response audit trail;
+- draft PR до owner gate.
+
+AI не повышает version и не объявляет release/deploy без фактического подтверждения.
 
 ## AI audit trail
 
@@ -146,25 +239,27 @@ LLM может помогать с объяснениями, классифик�
 - `docs/ai_sessions/YYYY-MM-DD/NNN-...-prompt.md`
 - `docs/ai_sessions/YYYY-MM-DD/NNN-...-response.md`
 
-Ни одно значимое принятое решение не должно оставаться только в чате.
+Ни одно значимое принятое решение не остаётся только в чате.
 
 ## Git workflow
 
-- работа ведётся в отдельной ветке от актуального `main`;
+- работа в отдельной ветке от актуальной base;
+- stage/scope не смешиваются с unrelated changes;
 - foundation/code changes проходят validation;
-- создаётся PR;
+- создаётся draft PR;
 - принятой считается версия после merge в `main`;
-- response/handoff обязан указать branch, PR, validation и незавершённые пункты.
+- handoff указывает branch, PR, validation и open gates.
 
-## Decision gates
+## Owner decision gates
 
-Обязательное согласование владельца до:
+Явное согласование требуется до:
 
-- смены privacy модели;
+- изменения privacy model;
 - destructive migration;
-- смены домена/identity provider;
-- введения коммерческой модели;
-- изменения медицински значимых формулировок;
-- изменения коэффициентов ALIVE units;
-- публикации пользовательского UGC без отдельного consent;
-- замены утверждённой бренд-айдентики.
+- смены identity provider/domain strategy;
+- paywall/subscription/ads/data monetization;
+- фактической donation/payment integration;
+- medically significant copy/model changes;
+- изменения Health Minutes/ALIVE units coefficients;
+- публикации sensitive UGC без explicit consent;
+- изменения утверждённой brand identity.
