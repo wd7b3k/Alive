@@ -21,7 +21,8 @@
 | `npm test` | PASS | 11/11 Node domain tests, включая idempotent retry semantics |
 | `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
 | Adversarial self-review | PASS | Помимо runtime fixes проверены и исправлены admin privilege escalation, cross-user action link, hard-delete projection risk, legacy path и CI supply-chain/teardown semantics |
-| GitHub Actions | PASS | Final DB-tested head `c86ce07cbb5aded2a1172a9d7a77f9786d1db062`: frontend run #304 и database run #44 завершены `success`; DB conclusion подтверждён разбором полного job log |
+| GitHub Actions | НЕ ПРОВЕРЕНО | Current hotfix head `e5632aad7a6dcf39fee48146c169a6c9aa1f081b`: frontend run #315 завершён `success`, но `ALIVE database CI` run #55 на 2026-08-17 ещё `in_progress`; предыдущие strict DB-tested runs остаются полезным историческим evidence, но эта строка отражает только текущий head |
+| Brand/logo asset | PASS | Причина дефекта локализована в растровом `brand-logo-full.png`; render-path в `RedesignApp.tsx` переведён на deterministic `brand-logo-classic-om.svg` с утверждённым классическим Ом, без изменения остального UI |
 | SQL/RLS static review | PASS | Atomic/idempotent exposure RPC и least-privilege boundary проверены Supabase best-practices workflow и отдельным reviewer; новых P1/P2 нет |
 | Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #44: pinned Supabase CLI `2.111.0`, fresh stack и отдельный `supabase db reset --local` применили всю migration chain с нуля, включая security hardening |
 | Ephemeral DB: pgTAP / RLS | PASS | Run #44: 5 файлов, 61/61 assertions — isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, soft-delete/recompute, blocked hard delete, non-escalating admin boundary, cross-user action denial и legacy-present migration |
@@ -29,8 +30,8 @@
 | Live / paid Supabase branch | PASS | Не создавались и не изменялись; validation не использует remote link, secrets, artifacts или постоянные volumes |
 | Hosted Security / Performance Advisors | НЕ ПРОВЕРЕНО | Ephemeral schema lint не подменяет hosted Supabase Advisors после будущего controlled deployment |
 | Canonical authenticated E2E | НЕ ПРОВЕРЕНО | Preview доступен, но browser session не имеет authenticated test user; вход через Google не выполнялся |
-| Public preview smoke | PASS | Cloudflare branch preview открыт реальным browser tooling на 1440×900 и 390×844: загрузка, CTA, info route и отсутствие horizontal overflow подтверждены |
-| Browser desktop/mobile | НЕ ПРОВЕРЕНО | Public shell проверен, но canonical authenticated flow и admin route не пройдены |
+| Public preview smoke | PASS | [agent-v4-0-0-alpha-1.alive-aw2.pages.dev](https://agent-v4-0-0-alpha-1.alive-aw2.pages.dev/) открыт реальным browser tooling 2026-08-17; экран входа загрузился, исправленный классический Ом виден корректно, композиция остального hero не изменилась |
+| Browser desktop/mobile | НЕ ПРОВЕРЕНО | Public shell проверен после logo hotfix, но canonical authenticated flow и admin route не пройдены |
 | Performance / accessibility preview | НЕ ПРОВЕРЕНО | Preview доступен, но требуемый Chrome DevTools MCP для trace/Core Web Vitals в окружении отсутствует |
 | Vape / hookah runtime expansion | НЕ ПРОВЕРЕНО | Намеренно не начато до фактического canonical E2E PASS |
 | Independent reviewer | PASS | Ранний DB/CI review закрыл 2 P1, 3 P2 и 1 P3. Последующая независимая проверка выявила false-green lint semantics в run #32; дефект и gate исправлены, strict run #35 проверен по полному логу |
