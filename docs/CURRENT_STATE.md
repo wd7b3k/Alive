@@ -190,14 +190,16 @@ Performance Advisor показал существовавшие unindexed foreig
 
 R1 migrations **не применены к live alpha/production**. Платная Supabase development/preview branch не создавалась.
 
-Бесплатный ephemeral database gate подтверждён в GitHub Actions `ALIVE database CI` run #24 на DB-tested head `dc49610876c7ab98b4085bd3736a7bb5697c10fc`:
+Бесплатный ephemeral database gate подтверждён в GitHub Actions `ALIVE database CI` run #35 на strict-gate head `2ca5f83c2c4d8947282d44d8c7ab370eb75e10df`:
 
 - pinned Supabase CLI `2.111.0`;
 - fresh stack и отдельный replay всей migration chain через `supabase db reset --local`;
 - 61/61 pgTAP assertions: RLS isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, soft-delete/recompute, blocked hard delete, non-escalating admin boundary, cross-user action denial и legacy-present migration;
-- `supabase db lint --level error` без schema errors;
+- фактически исполнен `supabase db lint --level error --fail-on error`; log: `No schema errors found`;
 - `supabase stop --no-backup` завершён, runner уничтожен;
 - remote link, Supabase secrets, artifacts и постоянные Docker volumes не использовались.
+
+Runs #24/#32 больше не считаются strict-lint evidence: независимая проверка обнаружила false-green из-за default `--fail-on none`. Legacy helper теперь принимает существующую source relation как `regclass`, поэтому compatibility сохранена без скрытой lint-ссылки на отсутствующую таблицу.
 
 До принятия R1 остаются:
 
@@ -407,9 +409,9 @@ Mandatory first vertical slice:
 - outcome retry без повторного сохранения episode и без показа неподтверждённых метрик;
 - 11 automated domain tests.
 
-Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. Исправленная исходная фиксация остаётся: head `694c34fbefadcec028052845aead31f949bb46ba`, frontend run #251 `success`. DB-tested head `dc49610876c7ab98b4085bd3736a7bb5697c10fc` прошёл frontend run #284 и database run #24. Build сохраняет предупреждение о bundle chunk больше 500 kB.
+Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. Strict-gate head `2ca5f83c2c4d8947282d44d8c7ab370eb75e10df` прошёл frontend run #295 и database run #35; DB log подтверждает fresh replay, 61/61 pgTAP и `No schema errors found` при `--fail-on error`. Build сохраняет предупреждение о bundle chunk больше 500 kB.
 
-Adversarial self-review и независимый review завершены. DB/CI reviewer сначала нашёл 2 P1, 3 P2 и 1 P3; после security hardening focused re-review head `dc49610876c7ab98b4085bd3736a7bb5697c10fc` подтвердил закрытие всех шести findings. Executable gate дополняет, а не подменяет review.
+Adversarial self-review и независимый review завершены. DB/CI reviewer сначала нашёл 2 P1, 3 P2 и 1 P3; после security hardening focused re-review подтвердил закрытие всех шести findings. Следующая независимая проверка нашла отдельный false-green lint gate; strict semantics и сам legacy lint defect исправлены. Executable gate считается evidence только после проверки команды, fail semantics и полного лога.
 
 Canonical data slice получил programmatic PASS в бесплатном ephemeral CI: migration replay, RLS, privilege non-escalation, action ownership, learning/delete-recompute, idempotent concurrent retry, legacy-present migration и admin/private boundary проверены. Live project намеренно не изменялся. Public preview smoke PASS на desktop/mobile; полный authenticated browser E2E, Core Web Vitals и hosted Advisors остаются `НЕ ПРОВЕРЕНО`.
 
