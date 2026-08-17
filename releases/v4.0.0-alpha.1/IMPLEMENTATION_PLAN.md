@@ -13,7 +13,7 @@
 - repository read access: PASS
 - repository write access: PASS
 - target state before work: уникальных изменений относительно base не было; target отставала на процессные документы Direct GitHub Mode
-- CI capability: GitHub Actions frontend workflow доступен; до alpha.1 он проверяет typecheck и production build, test step будет добавлен вместе с pure logic
+- CI capability: GitHub Actions frontend workflow доступен; alpha.1 добавил domain test step, run #246 завершён success
 - browser capability: in-app browser доступен
 - preview capability: НЕ ПРОВЕРЕНО; URL preview ещё не создан
 - Supabase capability: connector доступен; project xkigijaqimzuveyzyzyk ACTIVE_HEALTHY
@@ -240,7 +240,7 @@ Remote validation:
 - npm run typecheck;
 - npm test;
 - npm run build;
-- GitHub Actions на PR.
+- GitHub Actions на PR — PASS, run #246.
 
 DB validation после development branch:
 - sequential R1 migrations;
@@ -291,7 +291,7 @@ Canonical admin slice входит в C; широкий product expansion пос
 
 ### F — QA/self-review
 
-Adversarial self-review: PASS. Independent static review: PASS после исправления всех подтверждённых P1/P2 и финальной проверки head `dba84ef`. Migration execution/RLS concurrency, preview/browser/performance: НЕ ПРОВЕРЕНО.
+Adversarial self-review: PASS. Independent static review: PASS после исправления всех подтверждённых P1/P2 и финальной проверки head `dba84ef`. GitHub Actions: PASS, run #246. Migration execution/RLS concurrency, preview/browser/performance: НЕ ПРОВЕРЕНО.
 
 ## Validation commands
 
@@ -318,7 +318,7 @@ CI workflow должен запускаться на pull_request при изм�
 
 - Owner ещё не подтвердил Supabase development branch cost 0.01344 USD/час.
 - Preview provider/URL и environment variables target branch пока неизвестны.
-- GitHub Actions API linked integration возвращает 403; compare и repository file SHA доступны, но CI status нельзя объявить PASS.
+- GitHub Actions workflow runs доступны; run #246 на alpha head завершён `success`, legacy combined statuses остаются пустыми.
 - Точная доступность authenticated test users для browser QA неизвестна.
 - Текущий remote project не является безопасным местом для R1 validation.
 - Expansion scope остаётся заблокированным до canonical PASS.
