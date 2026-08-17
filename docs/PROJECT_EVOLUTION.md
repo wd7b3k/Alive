@@ -299,6 +299,32 @@ Referral остаётся secondary loop и не вмешивается в cravi
 - явные `PASS / FAIL / НЕ ПРОВЕРЕНО`;
 - documentation/handoff как часть Definition of Done.
 
+## Environment gate после первого запуска 4.0
+
+Первый запуск Codex для `4.0.0-alpha.1` выявил новый класс ошибки процесса: агент оказался в sandbox без локального checkout ALIVE и начал рассматривать GitHub Connector как возможный путь продолжения реализации.
+
+Это показало, что preflight должен проверять не только продуктовый контекст и план, но **само физическое окружение разработки**.
+
+Принято правило:
+
+> **нет локального git checkout `wd7b3k/Alive` — нет implementation release**
+
+Теперь до любого чтения release context Codex обязан подтвердить:
+
+- наличие локального repository;
+- корректный remote;
+- branch/base state;
+- возможность выполнять локальные build/tests;
+- наличие обязательных repo-файлов.
+
+При отсутствии checkout обязательный результат:
+
+`BLOCKED: LOCAL_REPOSITORY_UNAVAILABLE`
+
+GitHub Connector остаётся полезным для PR, CI и remote metadata, но больше не рассматривается как замена рабочей копии.
+
+Это решение закреплено отдельно в `docs/decisions/2026-08-17-codex-local-checkout-gate.md` и `docs/CODEX_QUALITY_PROTOCOL.md`.
+
 ## Будущий AI layer
 
 Local/open-weight LLM не является способом «сделать ALIVE умным с самого начала».
