@@ -9,7 +9,7 @@
 3. Ephemeral `supabase start`.
 4. Fresh replay: `supabase db reset --local`.
 5. `supabase test db`.
-6. `supabase db lint --level error`.
+6. `supabase db lint --level error --fail-on error`.
 7. `supabase stop --no-backup` с `if: always()`.
 8. Runner уничтожается.
 
@@ -23,7 +23,18 @@ Remote link, Supabase secrets, artifacts, постоянные Docker volumes и
 - `v4_alpha1_security_regressions.test.sql`: privilege escalation, cross-user action ownership и blocked physical episode delete.
 - `v4_alpha1_legacy_migration.test.sql`: реальный legacy-present copy path и idempotent retry.
 
-Фактический reference: `ALIVE database CI` run #24, head `dc49610876c7ab98b4085bd3736a7bb5697c10fc`, 61/61 assertions PASS, schema lint PASS, teardown PASS.
+Фактический strict-gate reference: `ALIVE database CI` run #35, implementation head `2ca5f83c2c4d8947282d44d8c7ab370eb75e10df`, 61/61 assertions PASS, `No schema errors found`, teardown PASS. Последний documentation commit в этом файле повторно запускает тот же gate на итоговом PR head.
+
+## Fail semantics
+
+GitHub `success` не заменяет проверку вложенного инструмента. Валидатор обязан подтвердить в полном job log:
+
+- фактически исполнена команда с `--fail-on error`;
+- присутствует `No schema errors found`;
+- нет diagnostics уровня error;
+- replay, tests и teardown завершились успешно.
+
+Runs #24/#32 не являются strict-lint evidence: прежняя команда использовала default `--fail-on none` и могла вернуть exit code 0 при lint error. Фильтры, `continue-on-error` и подавление exit code не допускаются.
 
 ## Boundaries
 
