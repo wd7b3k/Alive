@@ -529,7 +529,7 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
         outcome,
         tobacco,
       });
-      await track('outcome_saved', {
+      const outcomeTracked = await track('outcome_saved', {
         funnel_stage: 'результат сохранён',
         surface: 'веб',
         product_type: product,
@@ -540,6 +540,12 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
         numeric_value: after - before,
         episode_kind: 'craving',
       });
+      if (!outcomeTracked) {
+        setCompletion(null);
+        setRefreshWarning('Результат сохранён, но финальное событие аналитики не подтверждено. Метрики намеренно не показаны; повторно сохранять эпизод не нужно.');
+        setStep('complete');
+        return;
+      }
 
       let next: Bootstrap;
       try {
