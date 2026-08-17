@@ -8,7 +8,7 @@ do $setup$
 begin
   perform extensions.dblink_connect(
     'setup',
-    'host=127.0.0.1 port=5432 dbname=postgres user=postgres password=postgres'
+    'host=supabase_db_alive-ci port=5432 dbname=postgres user=postgres password=postgres'
   );
   perform extensions.dblink_exec(
     'setup',
@@ -54,11 +54,11 @@ begin
 
   perform extensions.dblink_connect(
     'concurrent_one',
-    'host=127.0.0.1 port=5432 dbname=postgres user=postgres password=postgres'
+    'host=supabase_db_alive-ci port=5432 dbname=postgres user=postgres password=postgres'
   );
   perform extensions.dblink_connect(
     'concurrent_two',
-    'host=127.0.0.1 port=5432 dbname=postgres user=postgres password=postgres'
+    'host=supabase_db_alive-ci port=5432 dbname=postgres user=postgres password=postgres'
   );
   perform extensions.dblink_exec('concurrent_one', 'set role authenticated');
   perform extensions.dblink_exec('concurrent_two', 'set role authenticated');
