@@ -94,13 +94,13 @@ Release проверяет:
 
 ## Текущий статус реализации
 
-Canonical cigarette slice реализован в draft PR #8. Frontend checks PASS: typecheck, 11/11 domain tests, production build и GitHub Actions run #271.
+Canonical cigarette slice реализован в draft PR #8. Frontend checks PASS: typecheck, 11/11 domain tests, production build и GitHub Actions run #284.
 
-Бесплатный database gate PASS в `ALIVE database CI` run #11: fresh migration replay, 49/49 pgTAP assertions, RLS/auth/grants, sequential/concurrent retry, delete/recompute, admin/private boundary, schema lint и teardown без backup. Платная Supabase branch не создавалась, live project не изменялся.
+Бесплатный database gate PASS в `ALIVE database CI` run #24: fresh migration replay, 61/61 pgTAP assertions, RLS/auth/grants, sequential/concurrent retry, privilege non-escalation, action ownership, legacy-present migration, soft-delete/recompute, schema lint и teardown без backup. Платная Supabase branch не создавалась, live project не изменялся.
 
 Release ещё не является reviewable preview:
 
-- authenticated desktop/mobile browser E2E не выполнен;
+- public preview smoke desktop/mobile PASS; authenticated browser E2E не выполнен;
 - hosted Supabase Advisors и preview performance не подтверждены;
 - independent static runtime/SQL review PASS; отдельный DB/CI review зафиксирован в validation;
 - vape/hookah expansion не начат до PASS canonical browser E2E.
