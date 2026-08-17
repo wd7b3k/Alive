@@ -171,7 +171,7 @@ test('analytics mapping allowlists structured fields and drops private text', ()
   assert.equal(event.metadata.flow_id, 'flow-1');
   assert.equal(event.private_note, undefined);
   assert.equal(event.goal_body, undefined);
-  assert.deepEqual(event.metadata, { episode_kind: 'craving' });
+  assert.deepEqual(event.metadata, { episode_kind: 'craving', flow_id: 'flow-1' });
 });
 
 test('product semantics preserve different decision points', () => {
