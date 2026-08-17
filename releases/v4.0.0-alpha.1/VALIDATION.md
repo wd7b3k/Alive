@@ -20,7 +20,7 @@
 | `npm run typecheck` | PASS | Exit code 0 |
 | `npm test` | PASS | 11/11 Node domain tests, включая idempotent retry semantics |
 | `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
-| Adversarial self-review | PASS | Исправлены precedence learning, duplicate telemetry, staged/idempotent writes, evidence verification, correlated funnel, retry и fail-closed states |
+| Adversarial self-review | PASS | Помимо runtime fixes проверены и исправлены admin privilege escalation, cross-user action link, hard-delete projection risk, legacy path и CI supply-chain/teardown semantics |
 | GitHub Actions | PASS | Исправленная исходная фиксация: head `694c34fbefadcec028052845aead31f949bb46ba`, frontend run #251 `success`. DB-tested head `dc49610876c7ab98b4085bd3736a7bb5697c10fc`: frontend run #284 и database run #24 завершены `success` |
 | SQL/RLS static review | PASS | Atomic/idempotent exposure RPC и least-privilege boundary проверены Supabase best-practices workflow и отдельным reviewer; новых P1/P2 нет |
 | Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #24: pinned Supabase CLI `2.111.0`, stack start и отдельный `supabase db reset --local` применили всю migration chain с нуля, включая security hardening |
@@ -33,7 +33,9 @@
 | Browser desktop/mobile | НЕ ПРОВЕРЕНО | Public shell проверен, но canonical authenticated flow и admin route не пройдены |
 | Performance / accessibility preview | НЕ ПРОВЕРЕНО | Preview доступен, но требуемый Chrome DevTools MCP для trace/Core Web Vitals в окружении отсутствует |
 | Vape / hookah runtime expansion | НЕ ПРОВЕРЕНО | Намеренно не начато до фактического canonical E2E PASS |
-| Independent reviewer | PASS | Runtime/SQL head `dba84ef` статически проверен без P1/P2; final head `694c34fbefadcec028052845aead31f949bb46ba` добавил только документацию и прошёл Actions run #251 |
+| Independent reviewer | PASS | Initial DB/CI review нашёл 2 P1, 3 P2 и 1 P3; исправлены privilege escalation, action ownership, hard delete boundary, legacy-present test, action pinning и teardown visibility. Focused re-review head `dc49610876c7ab98b4085bd3736a7bb5697c10fc`: все 6 findings закрыты |
+
+Residual risks DB gate: composite FK требует preflight исторических remote rows перед deployment; legacy test не воспроизводит полный pre-R1 snapshot; `ubuntu-latest` mutable; PostgREST/Auth transport не покрыт pgTAP.
 
 Этот checkpoint не является acceptance release. Checklist ниже остаётся полным acceptance contract; непроверенные строки нельзя выводить из программного PASS.
 
