@@ -108,7 +108,7 @@ function needIcon(code: string, title: string): IconName {
   return 'heart';
 }
 
-function replacementIcon(item: Replacement): IconName {
+function replacementIcon(item: Pick<Replacement, 'code' | 'title' | 'category'>): IconName {
   const s = `${item.code} ${item.title} ${item.category}`.toLowerCase();
   if (s.includes('дых') || s.includes('breath')) return 'breath';
   if (s.includes('чай') || s.includes('вода') || s.includes('напит')) return 'tea';
@@ -122,7 +122,7 @@ function replacementIcon(item: Replacement): IconName {
   return 'spark';
 }
 
-function replacementKind(item: Replacement) {
+function replacementKind(item: Pick<Replacement, 'category'>) {
   if (item.category === 'nrt') return 'Никотин-заместительная терапия';
   if (item.category === 'food') return 'Еда и напиток';
   if (item.category === 'meaning') return 'Зачем';
