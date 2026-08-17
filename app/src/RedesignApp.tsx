@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import logoUrl from './assets/brand-logo-full.png';
 import { publicEnv } from './env';
@@ -264,6 +264,7 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [completion, setCompletion] = useState<ReturnType<typeof freedomForDays> | null>(null);
+  const openedTracked = useRef(false);
   const trigger = data.triggers.find((item) => item.code === triggerCode);
   const triggers = data.triggers.filter((item) => item.product_types.includes(product));
   const inferredNeed = data.needs.find((item) => triggerCode === 'after_meal' && /заверш|точк|ритуал/i.test(item.title))?.code ?? null;
@@ -325,6 +326,8 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   const selected = selectedRanking?.replacement;
 
   useEffect(() => {
+    if (openedTracked.current) return;
+    openedTracked.current = true;
     void trackRelease4Event(session, 'craving_flow_opened', {
       funnel_stage: 'открытие помощи',
       surface: 'веб',
