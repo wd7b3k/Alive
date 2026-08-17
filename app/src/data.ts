@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
+import { loadRelease4Data, type Release4Data } from './release4-data';
 
 export type ProductType = 'cigarette' | 'hookah' | 'vape';
 export type EpisodeOutcome = 'open' | 'successful_response' | 'nicotine_used' | 'abandoned';
@@ -193,6 +194,7 @@ export type Bootstrap = {
   actions: EpisodeAction[];
   tobaccoEvents: TobaccoEvent[];
   todayCheckin: DailyCheckin | null;
+  release4: Release4Data;
 };
 
 function requireClient() {
@@ -212,6 +214,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
   const userId = session.user.id;
   const since = new Date(Date.now() - 45 * 86_400_000).toISOString();
   const today = new Date().toISOString().slice(0, 10);
+  const release4Promise = loadRelease4Data(session);
 
   const [
     profileRes,
@@ -251,6 +254,8 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     supabase.from('daily_checkins').select('id,user_id,checkin_date,irritability,energy,recovery,owned_moment,strongest_link,tomorrow_plan').eq('user_id', userId).eq('checkin_date', today).maybeSingle(),
   ]);
 
+  const release4 = await release4Promise;
+
   return {
     profile: unwrap(profileRes as never, 'profile') as Profile,
     settings: unwrap(settingsRes as never, 'settings') as UserSettings,
@@ -269,6 +274,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     actions: (actionsRes.data ?? []) as EpisodeAction[],
     tobaccoEvents: (tobaccoRes.data ?? []) as TobaccoEvent[],
     todayCheckin: (checkinRes.data ?? null) as DailyCheckin | null,
+    release4,
   };
 }
 
@@ -317,7 +323,7 @@ export type GuidedEpisodeDraft = {
   product: ProductType;
   triggerCode: string;
   customTriggerText?: string;
-  needCode: string;
+  needCode?: string;
   cravingBefore: number;
   cravingAfter: number | null;
   helpfulness: number | null;
@@ -338,8 +344,9 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
   const supabase = requireClient();
   const userId = session.user.id;
   const completedAt = new Date().toISOString();
-  const episodeRes = await supabase.from('episodes').insert({
+  const episodePayload = {
     user_id: userId,
+    episode_kind: 'craving',
     target_product: draft.product,
     trigger_code: draft.triggerCode === 'other' ? null : draft.triggerCode,
     custom_trigger_text: draft.triggerCode === 'other' ? draft.customTriggerText || 'Другое' : null,
@@ -350,7 +357,12 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
     outcome: draft.outcome,
     private_note: draft.note || null,
     completed_at: completedAt,
-  }).select('id').single();
+  };
+  let episodeRes = await supabase.from('episodes').insert(episodePayload).select('id').single();
+  if (episodeRes.error?.message.includes('episode_kind')) {
+    const { episode_kind: _episodeKind, ...legacyPayload } = episodePayload;
+    episodeRes = await supabase.from('episodes').insert(legacyPayload).select('id').single();
+  }
   if (episodeRes.error || !episodeRes.data) throw new Error(episodeRes.error?.message || 'Не удалось сохранить эпизод');
   const episodeId = episodeRes.data.id as string;
 
