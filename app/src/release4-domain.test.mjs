@@ -146,11 +146,15 @@ test('analytics mapping allowlists structured fields and drops private text', ()
     trigger_code: 'after_meal',
     outcome: 'successful_response',
     episode_kind: 'craving',
+    funnel_stage: 'результат импульса',
+    surface: 'веб',
     private_note: 'секрет',
     goal_body: 'личное Зачем',
     link_situation: 'личная Связка',
   });
   assert.equal(event.product_type, 'cigarette');
+  assert.equal(event.funnel_stage, 'результат импульса');
+  assert.equal(event.surface, 'веб');
   assert.equal(event.private_note, undefined);
   assert.equal(event.goal_body, undefined);
   assert.deepEqual(event.metadata, { episode_kind: 'craving' });
