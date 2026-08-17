@@ -54,6 +54,13 @@ export type AdminContentImpression = {
   shown_at: string;
 };
 
+export type AdminReason = {
+  code: string;
+  title_ru: string;
+  category_ru: string;
+  description_ru: string;
+};
+
 export type AdminDashboardData = {
   administratorName: string;
   events: AdminAnalyticsEvent[];
@@ -61,6 +68,7 @@ export type AdminDashboardData = {
   claims: AdminEvidenceClaim[];
   content: AdminAwarenessContent[];
   impressions: AdminContentImpression[];
+  reasons: AdminReason[];
   periodDays: number;
 };
 
@@ -86,7 +94,7 @@ export async function loadAdminDashboard(session: Session, periodDays = 30): Pro
     throw new Error('У этой учётной записи нет доступа к админскому разделу');
   }
 
-  const [eventsRes, errorsRes, claimsRes, contentRes, impressionsRes] = await Promise.all([
+  const [eventsRes, errorsRes, claimsRes, contentRes, impressionsRes, reasonsRes] = await Promise.all([
     supabase
       .from('analytics_events')
       .select('id,user_id,event_type,funnel_stage,surface,product_type,trigger_code,replacement_code,content_code,outcome,reason_code,duration_ms,numeric_value,occurred_at')
@@ -115,9 +123,14 @@ export async function loadAdminDashboard(session: Session, periodDays = 30): Pro
       .gte('shown_at', since)
       .order('shown_at', { ascending: false })
       .limit(10_000),
+    supabase
+      .from('analytics_reason_catalog')
+      .select('code,title_ru,category_ru,description_ru')
+      .eq('active', true)
+      .order('sort_order'),
   ]);
 
-  const firstError = eventsRes.error || errorsRes.error || claimsRes.error || contentRes.error || impressionsRes.error;
+  const firstError = eventsRes.error || errorsRes.error || claimsRes.error || contentRes.error || impressionsRes.error || reasonsRes.error;
   if (firstError) throw new Error(`Не удалось собрать админскую аналитику: ${firstError.message}`);
 
   return {
@@ -127,6 +140,7 @@ export async function loadAdminDashboard(session: Session, periodDays = 30): Pro
     claims: (claimsRes.data ?? []) as AdminEvidenceClaim[],
     content: (contentRes.data ?? []) as AdminAwarenessContent[],
     impressions: (impressionsRes.data ?? []) as AdminContentImpression[],
+    reasons: (reasonsRes.data ?? []) as AdminReason[],
     periodDays,
   };
 }
