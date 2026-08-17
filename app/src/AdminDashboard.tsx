@@ -86,20 +86,31 @@ function Dashboard({ data, period, setPeriod, reload, loading }: { data: AdminDa
       conversion: index === 0 ? 1 : funnelBase[index - 1][1] ? Math.min(1, count / funnelBase[index - 1][1]) : null,
     }));
 
+    const flowTypes = new Map<string, Set<string>>();
+    events.forEach((event) => {
+      const flowId = typeof event.metadata?.flow_id === 'string' ? event.metadata.flow_id : null;
+      if (!flowId) return;
+      const types = flowTypes.get(flowId) ?? new Set<string>();
+      types.add(event.event_type);
+      flowTypes.set(flowId, types);
+    });
+    let survivingFlows = new Set(
+      [...flowTypes.entries()]
+        .filter(([, types]) => types.has('craving_flow_opened'))
+        .map(([flowId]) => flowId),
+    );
     const clientJourney = [
       ['Открыли «Хочу закурить»', 'craving_flow_opened'],
       ['Распознали контекст', 'context_selected'],
       ['Увидели микроосознанность', 'awareness_shown'],
       ['Выбрали действие', 'intervention_selected'],
       ['Выполнили действие', 'intervention_completed'],
-      ['Сохранили outcome', 'outcome_saved'],
+      ['Сохранили результат', 'outcome_saved'],
       ['Увидели метрики свободы', 'freedom_metrics_visible'],
-    ].map(([label, type]) => ({
-      label,
-      type,
-      users: users(events, type).size,
-      events: events.filter((event) => event.event_type === type).length,
-    }));
+    ].map(([label, type]) => {
+      survivingFlows = new Set([...survivingFlows].filter((flowId) => flowTypes.get(flowId)?.has(type)));
+      return { label, type, flows: survivingFlows.size };
+    });
 
     const products = (['cigarette', 'vape', 'hookah'] as const).map((product) => {
       const rows = craving.filter((event) => event.product_type === product);
@@ -181,8 +192,8 @@ function Dashboard({ data, period, setPeriod, reload, loading }: { data: AdminDa
     </section>
 
     <section className="a-panel">
-      <div className="a-panel-head"><div><span>4.0 alpha · помощь в момент тяги</span><h2>Доходит ли пользователь от импульса до свободы</h2></div><small>Только структурированные client events; quick log исключён</small></div>
-      {analysis.clientJourney[0].users === 0 ? <Empty>За этот период сценарий «Хочу закурить» ещё не открывали.</Empty> : <div className="a-funnel">{analysis.clientJourney.map((stage, index) => <div className="a-funnel-row" key={stage.type}><div className="a-funnel-label"><b>{index + 1}</b><span>{stage.label}</span></div><div className="a-funnel-bar"><i style={{ width: `${Math.max(2, stage.users / analysis.clientJourney[0].users * 100)}%` }} /></div><strong>{stage.users}</strong><small>{stage.events} событий</small></div>)}</div>}
+      <div className="a-panel-head"><div><span>4.0 alpha · помощь в момент тяги</span><h2>Доходит ли один и тот же запуск от импульса до свободы</h2></div><small>Только структурированные client events; quick log исключён</small></div>
+      {analysis.clientJourney[0].flows === 0 ? <Empty>За этот период сценарий «Хочу закурить» ещё не открывали.</Empty> : <div className="a-funnel">{analysis.clientJourney.map((stage, index) => <div className="a-funnel-row" key={stage.type}><div className="a-funnel-label"><b>{index + 1}</b><span>{stage.label}</span></div><div className="a-funnel-bar"><i style={{ width: `${Math.max(2, Math.min(100, stage.flows / analysis.clientJourney[0].flows * 100))}%` }} /></div><strong>{stage.flows}</strong><small>запусков</small></div>)}</div>}
     </section>
 
     <section className="a-panel">
