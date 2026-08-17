@@ -280,6 +280,28 @@ Repo contract: PASS. Paid branch: запрещена. Free ephemeral database CI
 
 PASS: plan committed before runtime; pure domain contracts implemented; typecheck, 11/11 tests and production build passed in the validation mirror.
 
+### B.1 — controlled admin bootstrap для authenticated E2E
+
+Цель: дать ровно одному явно указанному owner email роль `admin` после подтверждённого Google OAuth, не повышая остальных пользователей и не превращая user-editable metadata в authorization authority.
+
+Контракт:
+
+- allowlist хранится в schema `private`, не доступна `anon`/`authenticated` и не читается frontend;
+- точное сравнение выполняется с нормализованным `auth.users.email`, полученным Supabase Auth от OAuth provider;
+- новый allowlisted user получает `profiles.role='admin'` внутри auth-user trigger;
+- idempotent private sync поддерживает controlled bootstrap, если профиль существовал до migration;
+- helper и trigger function не доступны client roles;
+- email не попадает в `analytics_events`, admin dashboard или generic telemetry;
+- participant остаётся participant и не может изменить `role/status`;
+- migration additive; rollback/forward-fix — удалить allowlist entry и контролируемо вернуть конкретный profile в participant только отдельной owner-approved migration.
+
+Validation до live:
+
+- fresh replay, strict schema lint и pgTAP на ephemeral GitHub runner;
+- future allowlisted user, ordinary user, existing-user sync, client grants и idempotency;
+- independent security review;
+- только после PASS — отдельное owner confirmation на применение полной R1/4 chain к live alpha и на OAuth login.
+
 ### C — canonical cigarette slice
 
 Runtime implementation и programmatic data checks: PASS. Ephemeral CI подтвердил persistence semantics, learning rebuild, admin/private boundary и idempotent retry. Authenticated desktop/mobile browser path: НЕ ПРОВЕРЕНО. Не расширять scope до его фактического PASS.
