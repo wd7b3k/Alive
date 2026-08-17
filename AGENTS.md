@@ -16,6 +16,23 @@
 - следующий AI/разработчик сначала восстанавливает состояние из repo;
 - при расхождении между чатом и repo каноническим считается repo, пока owner явно не утвердит и не запишет изменение.
 
+## Режим выполнения
+
+Перед significant task прочитать `docs/CODEX_EXECUTION_MODES.md`.
+
+Поддерживаются два режима:
+
+- **Direct GitHub Mode** — основной owner-driven режим без обязательного local checkout;
+- Local Repository Mode — дополнительный режим, если полноценный checkout уже доступен.
+
+Отсутствие `.git` в временной рабочей папке не является blocker, если `wd7b3k/Alive` доступен через GitHub integration на чтение и запись.
+
+Владелец не обязан вручную клонировать repository, использовать GitHub Desktop, настраивать CLI authentication или локальную DevOps-среду.
+
+GitHub Connector/интеграция может использоваться как основной execution channel в Direct GitHub Mode, но изменения всегда идут через отдельную branch, commits и draft PR.
+
+Quality gates переносятся на remote equivalents: GitHub Actions, PR diff, preview и Supabase development tooling.
+
 ## Scoped instructions
 
 Root `AGENTS.md` задаёт общие правила.
@@ -37,29 +54,31 @@ Root `AGENTS.md` задаёт общие правила.
 3. scoped `AGENTS.md` затрагиваемых директорий
 4. `docs/CURRENT_STATE.md`
 5. `docs/PROJECT_EVOLUTION.md`
-6. `docs/PROJECT_CHARTER.md`
-7. `docs/PRODUCT_STRATEGY.md`
-8. `docs/TECHNICAL_STRATEGY.md`
-9. `docs/DEVELOPMENT_RULES.md`
-10. `docs/CODEX_QUALITY_PROTOCOL.md`
-11. `docs/CODEX_SKILL_ROUTING.md`
-12. `docs/AGENT_CONTINUITY.md`
-13. `docs/DESIGN_RESEARCH_AND_REQUIREMENTS.md` — для UX/UI
-14. `docs/RESEARCH_MONITORING.md` — для evidence/research/competitors
-15. `docs/METHODOLOGY.md`
-16. `docs/PRODUCT_PRINCIPLES.md`
-17. `docs/MODULES.md`
-18. `docs/DATA_MODEL.md`
-19. `docs/ARCHITECTURE.md`
-20. `docs/PRIVACY_AND_DATA.md`
-21. `docs/HYPOTHESES_AND_METRICS.md`
-22. `docs/ROADMAP.md`
-23. релевантные `docs/decisions/`
-24. релевантный `docs/ai_sessions/**/**-response.md`
-25. документацию текущего release unit
-26. только затем — код.
+6. `docs/PROJECT_EVOLUTION_CORRECTIONS.md`
+7. `docs/PROJECT_CHARTER.md`
+8. `docs/PRODUCT_STRATEGY.md`
+9. `docs/TECHNICAL_STRATEGY.md`
+10. `docs/DEVELOPMENT_RULES.md`
+11. `docs/CODEX_EXECUTION_MODES.md`
+12. `docs/CODEX_QUALITY_PROTOCOL.md`
+13. `docs/CODEX_SKILL_ROUTING.md`
+14. `docs/AGENT_CONTINUITY.md`
+15. `docs/DESIGN_RESEARCH_AND_REQUIREMENTS.md` — для UX/UI
+16. `docs/RESEARCH_MONITORING.md` — для evidence/research/competitors
+17. `docs/METHODOLOGY.md`
+18. `docs/PRODUCT_PRINCIPLES.md`
+19. `docs/MODULES.md`
+20. `docs/DATA_MODEL.md`
+21. `docs/ARCHITECTURE.md`
+22. `docs/PRIVACY_AND_DATA.md`
+23. `docs/HYPOTHESES_AND_METRICS.md`
+24. `docs/ROADMAP.md`
+25. релевантные `docs/decisions/`
+26. релевантный `docs/ai_sessions/**/**-response.md`
+27. документацию текущего release unit
+28. только затем — код.
 
-Если старый документ противоречит `PRODUCT_STRATEGY.md`, изменение не реализовывать из старого текста автоматически: сначала синхронизировать документацию или получить owner decision.
+Если старый документ противоречит `PRODUCT_STRATEGY.md` или `CODEX_EXECUTION_MODES.md`, изменение не реализовывать из старого текста автоматически: использовать более новое явное decision или получить owner decision.
 
 ## Product thesis guardrail
 
@@ -91,16 +110,17 @@ ALIVE — персональная система освобождения от 
 
 Основные требования:
 
-- не начинать с кода;
-- сначала создать/обновить `IMPLEMENTATION_PLAN.md`;
+- не начинать с runtime-кода;
+- сначала обновить `IMPLEMENTATION_PLAN.md`;
 - зафиксировать scope и non-goals;
 - сначала сделать один проверяемый vertical slice;
-- добавить programmatic tests для новой нетривиальной logic;
-- выполнить browser QA для user-facing flow, если tool доступен;
+- добавить programmatic tests для новой нетривиальной logic там, где доступен runner;
+- выполнить browser QA через preview, если capability доступна;
 - сделать adversarial self-review diff;
 - по возможности использовать независимого reviewer-агента;
 - писать `PASS / FAIL / НЕ ПРОВЕРЕНО` без приукрашивания;
-- большой diff сам по себе не является результатом.
+- большой diff сам по себе не является результатом;
+- отсутствие local checkout само по себе не является blocker.
 
 ## Skills
 
@@ -113,9 +133,9 @@ ALIVE — персональная система освобождения от 
 Особенно:
 
 - Supabase/Postgres best practices для schema/RLS;
-- Cloudflare Workers/Wrangler skills для Cloudflare runtime;
-- web performance/browser QA для user-facing preview;
-- GitHub CI/review skills для failures/review/publish workflows.
+- browser/preview/web performance для user-facing релизов;
+- GitHub CI/review skills для failures/review/publish workflows;
+- Cloudflare Workers/Wrangler skills только для Cloudflare runtime.
 
 ## Финансирование и донаты
 
@@ -256,8 +276,6 @@ LLM:
 
 AI integration должна быть model-agnostic через provider abstraction и иметь deterministic fallback.
 
-Новая AI logic до влияния на пользователя предпочтительно проходит benchmark/shadow mode.
-
 ## Метрики
 
 Ключевые user-facing derived metrics:
@@ -274,7 +292,7 @@ North Star продукта — Sustained Freedom Rate, а не engagement.
 
 Каждый значимый change:
 
-- отдельная ветка;
+- отдельная branch;
 - release unit;
 - implementation plan;
 - strategy/hypothesis traceability;
@@ -284,7 +302,7 @@ North Star продукта — Sustained Freedom Rate, а не engagement.
 - prompt/response audit trail;
 - draft PR до owner gate.
 
-AI не повышает version и не объявляет release/deploy без фактического подтверждения.
+AI не объявляет release/deploy без фактического подтверждения.
 
 ## AI audit trail
 
@@ -297,12 +315,18 @@ AI не повышает version и не объявляет release/deploy бе�
 
 ## Git workflow
 
-- работа в отдельной ветке от актуальной base;
-- stage/scope не смешиваются с unrelated changes;
-- foundation/code changes проходят validation;
-- создаётся draft PR;
-- принятой считается версия после merge в `main`;
+В Direct GitHub Mode:
+
+- read/write через подключённый GitHub;
+- отдельная branch от актуальной base;
+- маленькие логические commits;
+- draft PR;
+- PR diff/CI/preview как remote gates;
 - handoff указывает branch, PR, validation и open gates.
+
+В Local Repository Mode допустим обычный local git workflow.
+
+Принятой считается версия после merge в `main` или иного явно зафиксированного owner state.
 
 ## Owner decision gates
 
