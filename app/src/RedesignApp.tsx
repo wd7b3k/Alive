@@ -30,7 +30,7 @@ import {
 import { saveQuickUse } from './actions';
 import { dailyUnits, replacementStats, statsForDays, triggerStats } from './metrics';
 import { Icon, type IconName } from './ui-icons';
-import { calculateFreedomMetrics, rankInterventions, selectAwareness } from './release4-domain';
+import { calculateFreedomMetrics, rankInterventions, selectAwareness, type AnalyticsEventType } from './release4-domain';
 import { recordAwarenessShown, trackRelease4Event } from './release4-data';
 
 function go(path: string) {
@@ -264,7 +264,12 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [completion, setCompletion] = useState<ReturnType<typeof freedomForDays> | null>(null);
+  const [refreshWarning, setRefreshWarning] = useState('');
   const openedTracked = useRef(false);
+  const exposureTracked = useRef('');
+  const interventionsTracked = useRef('');
+  const flowId = useRef(crypto.randomUUID()).current;
+  const episodeId = useRef(crypto.randomUUID()).current;
   const trigger = data.triggers.find((item) => item.code === triggerCode);
   const triggers = data.triggers.filter((item) => item.product_types.includes(product));
   const inferredNeed = data.needs.find((item) => triggerCode === 'after_meal' && /заверш|точк|ритуал/i.test(item.title))?.code ?? null;
@@ -325,21 +330,87 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   const selectedRanking = candidates.find((item) => item.replacement.code === replacementCode);
   const selected = selectedRanking?.replacement;
 
+  function track(type: AnalyticsEventType, input: Record<string, unknown>) {
+    return trackRelease4Event(session, type, { ...input, flow_id: flowId });
+  }
+
   useEffect(() => {
     if (openedTracked.current) return;
     openedTracked.current = true;
-    void trackRelease4Event(session, 'craving_flow_opened', {
+    void track('craving_flow_opened', {
       funnel_stage: 'открытие помощи',
       surface: 'веб',
       product_type: initialProduct,
       episode_kind: 'craving',
     });
-  }, [session, initialProduct]);
+    if (initialTrigger) {
+      void track('context_selected', {
+        funnel_stage: 'распознавание контекста',
+        surface: 'веб',
+        product_type: initialProduct,
+        trigger_code: initialTrigger,
+        episode_kind: 'craving',
+      });
+    }
+  }, [session, initialProduct, initialTrigger]);
+
+  useEffect(() => {
+    if (step !== 'awareness' || !triggerCode || !data.release4.r1Ready || !awareness) return;
+    const awarenessKey = product + ':' + triggerCode + ':' + (awareness.kind === 'content' ? awareness.content.code : awareness.goal.id);
+    if (exposureTracked.current === awarenessKey) return;
+    exposureTracked.current = awarenessKey;
+    void (async () => {
+      const shown = awareness.kind === 'content'
+        ? await recordAwarenessShown(session, {
+            contentCode: awareness.content.code,
+            productType: product,
+            triggerCode,
+            flowId,
+          })
+        : await track('awareness_shown', {
+            funnel_stage: 'микроосознанность',
+            surface: 'веб',
+            product_type: product,
+            trigger_code: triggerCode,
+            source: 'personal_goal',
+            episode_kind: 'craving',
+          });
+      if (shown) {
+        await track('first_useful_response', {
+          funnel_stage: 'первая полезная реакция',
+          surface: 'веб',
+          product_type: product,
+          trigger_code: triggerCode,
+          content_code: awareness.kind === 'content' ? awareness.content.code : undefined,
+          source: awareness.kind === 'goal' ? 'personal_goal' : 'evidence_registry',
+          episode_kind: 'craving',
+        });
+      }
+    })();
+  }, [step, triggerCode, product, awareness, data.release4.r1Ready, session, flowId]);
+
+  useEffect(() => {
+    if (step !== 'intervention' || !candidates.length) return;
+    const shownKey = product + ':' + triggerCode + ':' + candidates.map((item) => item.replacement.code).join(',');
+    if (interventionsTracked.current === shownKey) return;
+    interventionsTracked.current = shownKey;
+    candidates.forEach((item) => {
+      void track('intervention_shown', {
+        funnel_stage: 'варианты действия показаны',
+        surface: 'веб',
+        product_type: product,
+        trigger_code: triggerCode,
+        replacement_code: item.replacement.code,
+        ranking_reason: item.explanationKind,
+        episode_kind: 'craving',
+      });
+    });
+  }, [step, candidates, product, triggerCode]);
 
   function chooseProduct(next: ProductType) {
     setProduct(next);
     setStep('context');
-    void trackRelease4Event(session, 'product_selected', {
+    void track('product_selected', {
       funnel_stage: 'выбор продукта',
       surface: 'веб',
       product_type: next,
@@ -350,15 +421,8 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   function chooseContext(code: string) {
     setTrigger(code);
     setStep('awareness');
-    void trackRelease4Event(session, 'context_selected', {
+    void track('context_selected', {
       funnel_stage: 'распознавание контекста',
-      surface: 'веб',
-      product_type: product,
-      trigger_code: code,
-      episode_kind: 'craving',
-    });
-    void trackRelease4Event(session, 'first_useful_response', {
-      funnel_stage: 'первая полезная реакция',
       surface: 'веб',
       product_type: product,
       trigger_code: code,
@@ -367,30 +431,14 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   }
 
   function continueFromAwareness() {
-    if (awareness?.kind === 'content') {
-      void recordAwarenessShown(session, {
-        contentCode: awareness.content.code,
-        productType: product,
-        triggerCode,
-      });
-    } else {
-      void trackRelease4Event(session, 'awareness_shown', {
-        funnel_stage: 'микроосознанность',
-        surface: 'веб',
-        product_type: product,
-        trigger_code: triggerCode,
-        source: awareness?.kind === 'goal' ? 'personal_goal' : 'product_why',
-        episode_kind: 'craving',
-      });
-    }
-    setStep('intervention');
+    if (data.release4.r1Ready && awareness) setStep('intervention');
   }
 
   function chooseIntervention(code: string) {
     const ranked = candidates.find((item) => item.replacement.code === code);
     setReplacement(code);
     setStep('doing');
-    void trackRelease4Event(session, 'intervention_selected', {
+    void track('intervention_selected', {
       funnel_stage: 'выбор действия',
       surface: 'веб',
       product_type: product,
@@ -403,7 +451,7 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
 
   function completeIntervention() {
     setStep('outcome');
-    void trackRelease4Event(session, 'intervention_completed', {
+    void track('intervention_completed', {
       funnel_stage: 'действие выполнено',
       surface: 'веб',
       product_type: product,
@@ -415,7 +463,7 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
 
   function closeFlow(reason: string) {
     if (step !== 'complete') {
-      void trackRelease4Event(session, 'flow_abandoned', {
+      void track('flow_abandoned', {
         funnel_stage: step,
         surface: 'веб',
         product_type: product,
@@ -429,9 +477,10 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
   }
 
   async function save() {
-    if (!triggerCode || !replacementCode) return;
+    if (!data.release4.r1Ready || !triggerCode || !replacementCode) return;
     setBusy(true);
     setError('');
+    setRefreshWarning('');
     const tobacco: GuidedEpisodeDraft['tobacco'] = outcome === 'nicotine_used'
       ? {
           cigaretteQuantity: product === 'cigarette' ? qty : undefined,
@@ -440,7 +489,8 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
         }
       : undefined;
     try {
-      const episodeId = await saveGuidedEpisode(session, {
+      const persistedEpisodeId = await saveGuidedEpisode(session, {
+        episodeId,
         product,
         triggerCode,
         needCode: inferredNeed ?? undefined,
@@ -451,28 +501,35 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
         outcome,
         tobacco,
       });
-      await trackRelease4Event(session, 'outcome_saved', {
+      await track('outcome_saved', {
         funnel_stage: 'результат сохранён',
         surface: 'веб',
         product_type: product,
         trigger_code: triggerCode,
         replacement_code: replacementCode,
         outcome,
-        episode_id: episodeId,
+        episode_id: persistedEpisodeId,
         numeric_value: after - before,
         episode_kind: 'craving',
       });
-      const next = await saved();
+
+      let next: Bootstrap;
+      try {
+        next = await saved();
+      } catch {
+        next = data;
+        setRefreshWarning('Результат сохранён, но показатели пока не обновились. Повтори загрузку страницы — повторно сохранять эпизод не нужно.');
+      }
       const metrics = freedomForDays(next, 7);
       setCompletion(metrics);
       setStep('complete');
-      void trackRelease4Event(session, 'freedom_metrics_visible', {
+      void track('freedom_metrics_visible', {
         funnel_stage: 'свобода показана',
         surface: 'веб',
         product_type: product,
         trigger_code: triggerCode,
         outcome,
-        episode_id: episodeId,
+        episode_id: persistedEpisodeId,
         model_version: metrics.models.health,
         coverage: metrics.coverage,
         episode_kind: 'craving',
@@ -489,11 +546,11 @@ function Guided({ session, data, close, saved, initialTrigger }: { session: Sess
     <div className="r-progress"><span className={step !== 'product' && step !== 'context' ? 'done' : ''}>1 · контекст</span><span className={['intervention','doing','outcome','complete'].includes(step) ? 'done' : ''}>2 · реальность</span><span className={['doing','outcome','complete'].includes(step) ? 'done' : ''}>3 · действие</span><span className={step === 'complete' ? 'done' : ''}>4 · результат</span></div>
     {step === 'product' && <section className="r-flow"><h3>К чему сейчас тянет?</h3><div className="r-choice-grid products">{data.products.map((item) => <button key={item.product_type} onClick={() => chooseProduct(item.product_type)}><Icon name={productIcon(item.product_type)} size={28}/><strong>{productLabel(item.product_type)}</strong></button>)}</div></section>}
     {step === 'context' && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="eye"/></span><div><h3>Что только что произошло?</h3><p>Один тап. Не ищем виноватого, распознаём пусковой момент.</p></div></div><div className="r-choice-grid">{triggers.map((item) => <button key={item.code} onClick={() => chooseContext(item.code)}><span className="r-choice-icon"><Icon name={triggerIcon(item)} size={23}/></span><strong>{item.title}</strong><small>{item.description}</small></button>)}</div><div className="r-slider"><label><span>Сила тяги сейчас</span><b>{before}/10</b></label><input type="range" min="1" max="10" value={before} onChange={(event) => setBefore(Number(event.target.value))}/></div></section>}
-    {step === 'awareness' && <section className="r-flow"><div className="r-awareness-card"><span>{awareness?.kind === 'content' ? awareness.content.content_type : 'Зачем'}</span><h3>{awareness?.kind === 'content' ? awareness.content.title_ru : awareness?.kind === 'goal' ? awareness.goal.title_ru : 'Вернуть себе выбор в следующую минуту'}</h3><p>{awareness?.kind === 'content' ? awareness.content.hook_ru : awareness?.kind === 'goal' ? awareness.goal.body_ru : 'Не нужно решать всю жизнь сейчас. Достаточно выбрать, что произойдёт в этом конкретном моменте.'}</p>{awareness?.kind === 'content' && <><p className="r-awareness-detail">{awareness.content.explanation_ru}</p>{awareness.content.caveat_ru && <small>{awareness.content.caveat_ru}</small>}</>}</div><div className="r-actions"><ShellButton className="primary" onClick={continueFromAwareness}>Выбрать действие <Icon name="arrow" size={18}/></ShellButton></div></section>}
+    {step === 'awareness' && <section className="r-flow">{!data.release4.r1Ready ? <div className="r-awareness-card"><span>Сценарий временно недоступен</span><h3>Нужен проверенный контур данных</h3><p>ALIVE не покажет медицинский текст и не объявит результат без Evidence Registry, learning и admin analytics. Попробуй снова после подключения development R1.</p></div> : !awareness ? <div className="r-awareness-card"><span>Нужен проверенный материал</span><h3>Для этого момента пока нет approved Факта, Мифа или личного Зачем</h3><p>Мы не подменим их случайным советом. Добавь своё Зачем или дождись публикации проверенного материала.</p></div> : <><div className="r-awareness-card"><span>{awareness.kind === 'content' ? awareness.content.content_type : 'Зачем'}</span><h3>{awareness.kind === 'content' ? awareness.content.title_ru : awareness.goal.title_ru}</h3><p>{awareness.kind === 'content' ? awareness.content.hook_ru : awareness.goal.body_ru}</p>{awareness.kind === 'content' && <><p className="r-awareness-detail">{awareness.content.explanation_ru}</p>{awareness.content.caveat_ru && <small>{awareness.content.caveat_ru}</small>}</>}</div><div className="r-actions"><ShellButton className="primary" onClick={continueFromAwareness}>Выбрать действие <Icon name="arrow" size={18}/></ShellButton></div></>}</section>}
     {step === 'intervention' && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon accent"><Icon name="spark"/></span><div><h3>Что можно сделать прямо сейчас</h3><p>Порядок объясняется контекстом и твоими реальными результатами, если данных уже достаточно.</p></div></div><div className="r-replacement-grid">{candidates.map((item) => <button key={item.replacement.code} onClick={() => chooseIntervention(item.replacement.code)}><span className="r-big-icon"><Icon name={replacementIcon(item.replacement)} size={30}/></span><div><span className="r-kind">{replacementKind(item.replacement)}{item.replacement.duration ? ' · ' + item.replacement.duration : ''}</span><h3>{item.replacement.title}</h3><p>{item.replacement.summary || item.replacement.instruction}</p><small className="r-ranking-reason">{item.explanation}</small></div><Icon name="arrow" className="r-card-arrow" size={20}/></button>)}</div>{!candidates.length && <div className="r-empty compact"><p>Для этого контекста пока нет доступного действия. Закрой окно и попробуй снова после обновления каталога.</p></div>}</section>}
     {step === 'doing' && selected && <section className="r-flow"><div className="r-result-choice"><span className="r-big-icon"><Icon name={replacementIcon(selected)} size={30}/></span><div><small>Сейчас только это</small><h3>{selected.title}</h3><p>{selected.instruction}</p>{selected.safety && <small>{selected.safety}</small>}</div></div><div className="r-actions"><ShellButton className="primary" onClick={completeIntervention}>Я попробовал(а) <Icon name="arrow" size={18}/></ShellButton><ShellButton className="ghost" onClick={() => setStep('intervention')}>Другое действие</ShellButton></div></section>}
     {step === 'outcome' && selected && <section className="r-flow"><div className="r-two-sliders"><div className="r-slider"><label><span>Тяга после действия</span><b>{after}/10</b></label><input type="range" min="0" max="10" value={after} onChange={(event) => setAfter(Number(event.target.value))}/></div><div className="r-slider"><label><span>Насколько помогло</span><b>{help}/5</b></label><input type="range" min="0" max="5" value={help} onChange={(event) => setHelp(Number(event.target.value))}/></div></div><div className="r-outcomes"><button className={outcome === 'successful_response' ? 'selected success' : ''} onClick={() => setOutcome('successful_response')}><Icon name="check" size={22}/><div><strong>Сигареты не было</strong><small>Новый ответ получил один подтверждённый опыт</small></div></button><button className={outcome === 'nicotine_used' ? 'selected used' : ''} onClick={() => setOutcome('nicotine_used')}><Icon name={productIcon(product)} size={22}/><div><strong>Никотин всё же был</strong><small>Это данные для следующего выбора, не провал</small></div></button></div>{outcome === 'nicotine_used' && <div className="r-nicotine-detail">{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(event) => setQty(Number(event.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0, puffs - 5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs + 5)}>+5</button></div>}</div>}{error && <p className="r-error">{error}</p>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Сохранить результат'} <Icon name="arrow" size={18}/></ShellButton></div></section>}
-    {step === 'complete' && completion && <section className="r-flow"><div className="r-completion-card"><span className="r-status-icon"><Icon name="check" size={24}/></span><h3>{outcome === 'successful_response' ? 'Выбор остался твоим' : 'Опыт сохранён без оценки'}</h3><p>{selectedRanking?.explanation}</p><div className="r-freedom-grid"><div><small>Вернул время</small><strong>{fmt(completion.timeMinutes)} мин</strong></div><div><small>Сохранил деньги</small><strong>{money(completion.moneyRub)}</strong></div><div><small>≈ Сохранил здоровую жизнь</small><strong>{fmt(completion.healthMinutes)} мин</strong></div></div><small>За 7 дней. ≈Здоровая жизнь считается только для подтверждённых невыкуренных сигарет по популяционной оценке, а не как личный прогноз.</small></div><div className="r-actions"><ShellButton className="primary" onClick={close}>Вернуться в сегодня</ShellButton></div></section>}
+    {step === 'complete' && completion && <section className="r-flow"><div className="r-completion-card"><span className="r-status-icon"><Icon name="check" size={24}/></span><h3>{outcome === 'successful_response' ? 'Выбор остался твоим' : 'Опыт сохранён без оценки'}</h3><p>{selectedRanking?.explanation}</p>{refreshWarning && <p className="r-error">{refreshWarning}</p>}<div className="r-freedom-grid"><div><small>Вернул время</small><strong>{fmt(completion.timeMinutes)} мин</strong></div><div><small>Сохранил деньги</small><strong>{money(completion.moneyRub)}</strong></div><div><small>≈ Сохранил здоровую жизнь</small><strong>{fmt(completion.healthMinutes)} мин</strong></div></div><small>За 7 дней. ≈Здоровая жизнь считается только для подтверждённых невыкуренных сигарет по популяционной оценке, а не как личный прогноз.</small></div><div className="r-actions"><ShellButton className="primary" onClick={close}>Вернуться в сегодня</ShellButton></div></section>}
   </Modal>;
 }
 function Evening({ session, data, close, saved }: { session: Session; data: Bootstrap; close: () => void; saved: () => Promise<void> }) {
