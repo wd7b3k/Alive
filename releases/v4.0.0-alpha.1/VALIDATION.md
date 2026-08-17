@@ -21,11 +21,11 @@
 | `npm test` | PASS | 11/11 Node domain tests, включая idempotent retry semantics |
 | `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
 | Adversarial self-review | PASS | Помимо runtime fixes проверены и исправлены admin privilege escalation, cross-user action link, hard-delete projection risk, legacy path и CI supply-chain/teardown semantics |
-| GitHub Actions | PASS | Исправленная исходная фиксация: head `694c34fbefadcec028052845aead31f949bb46ba`, frontend run #251 `success`. DB-tested head `dc49610876c7ab98b4085bd3736a7bb5697c10fc`: frontend run #284 и database run #24 завершены `success` |
+| GitHub Actions | PASS | Strict-gate head `2ca5f83c2c4d8947282d44d8c7ab370eb75e10df`: frontend run #295 и database run #35 завершены `success`; DB conclusion подтверждён разбором полного job log |
 | SQL/RLS static review | PASS | Atomic/idempotent exposure RPC и least-privilege boundary проверены Supabase best-practices workflow и отдельным reviewer; новых P1/P2 нет |
-| Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #24: pinned Supabase CLI `2.111.0`, stack start и отдельный `supabase db reset --local` применили всю migration chain с нуля, включая security hardening |
-| Ephemeral DB: pgTAP / RLS | PASS | 5 файлов, 61 assertions: isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, soft-delete/recompute, blocked hard delete, non-escalating admin boundary, cross-user action denial и legacy-present migration |
-| Ephemeral DB: lint / teardown | PASS | `supabase db lint --level error`: `No schema errors found`; `supabase stop --no-backup` завершён до уничтожения runner |
+| Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #35: pinned Supabase CLI `2.111.0`, fresh stack и отдельный `supabase db reset --local` применили всю migration chain с нуля, включая security hardening |
+| Ephemeral DB: pgTAP / RLS | PASS | Run #35: 5 файлов, 61/61 assertions — isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, soft-delete/recompute, blocked hard delete, non-escalating admin boundary, cross-user action denial и legacy-present migration |
+| Ephemeral DB: lint / teardown | PASS | Run #35 фактически исполнил `supabase db lint --level error --fail-on error`; log: `No schema errors found`; `supabase stop --no-backup` завершён до уничтожения runner |
 | Live / paid Supabase branch | PASS | Не создавались и не изменялись; validation не использует remote link, secrets, artifacts или постоянные volumes |
 | Hosted Security / Performance Advisors | НЕ ПРОВЕРЕНО | Ephemeral schema lint не подменяет hosted Supabase Advisors после будущего controlled deployment |
 | Canonical authenticated E2E | НЕ ПРОВЕРЕНО | Preview доступен, но browser session не имеет authenticated test user; вход через Google не выполнялся |
@@ -33,9 +33,11 @@
 | Browser desktop/mobile | НЕ ПРОВЕРЕНО | Public shell проверен, но canonical authenticated flow и admin route не пройдены |
 | Performance / accessibility preview | НЕ ПРОВЕРЕНО | Preview доступен, но требуемый Chrome DevTools MCP для trace/Core Web Vitals в окружении отсутствует |
 | Vape / hookah runtime expansion | НЕ ПРОВЕРЕНО | Намеренно не начато до фактического canonical E2E PASS |
-| Independent reviewer | PASS | Initial DB/CI review нашёл 2 P1, 3 P2 и 1 P3; исправлены privilege escalation, action ownership, hard delete boundary, legacy-present test, action pinning и teardown visibility. Focused re-review head `dc49610876c7ab98b4085bd3736a7bb5697c10fc`: все 6 findings закрыты |
+| Independent reviewer | PASS | Ранний DB/CI review закрыл 2 P1, 3 P2 и 1 P3. Последующая независимая проверка выявила false-green lint semantics в run #32; дефект и gate исправлены, strict run #35 проверен по полному логу |
 
 Residual risks DB gate: composite FK требует preflight исторических remote rows перед deployment; legacy test не воспроизводит полный pre-R1 snapshot; `ubuntu-latest` mutable; PostgREST/Auth transport не покрыт pgTAP.
+
+False-green correction: runs #24/#32 не считаются strict-lint evidence. Причина — default `--fail-on none`; постоянное правило fail semantics зафиксировано в `docs/CODEX_QUALITY_PROTOCOL.md` и AI session 008.
 
 Этот checkpoint не является acceptance release. Checklist ниже остаётся полным acceptance contract; непроверенные строки нельзя выводить из программного PASS.
 
