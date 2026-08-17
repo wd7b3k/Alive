@@ -167,28 +167,15 @@ export async function recordAwarenessShown(
 ) {
   const supabase = getSupabase();
   if (!supabase) return false;
-  const impression = await supabase.from('content_impressions').insert({
-    user_id: session.user.id,
-    content_code: input.contentCode,
-    moment: 'микроосознанность',
-    product_type: input.productType,
-    trigger_code: input.triggerCode,
-  }).select('id').single();
-  if (impression.error || !impression.data) return false;
-
-  const tracked = await trackRelease4Event(session, 'awareness_shown', {
-    funnel_stage: 'микроосознанность',
-    surface: 'веб',
-    product_type: input.productType,
-    trigger_code: input.triggerCode,
-    content_code: input.contentCode,
-    flow_id: input.flowId,
-  });
-  if (!tracked) {
-    await supabase.from('content_impressions')
-      .delete()
-      .eq('id', impression.data.id)
-      .eq('user_id', session.user.id);
+  try {
+    const result = await supabase.rpc('alive_record_awareness_exposure', {
+      p_content_code: input.contentCode,
+      p_product_type: input.productType,
+      p_trigger_code: input.triggerCode,
+      p_flow_id: input.flowId,
+    });
+    return !result.error;
+  } catch {
+    return false;
   }
-  return tracked;
 }
