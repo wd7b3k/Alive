@@ -18,10 +18,10 @@
 - preview capability: НЕ ПРОВЕРЕНО; URL preview ещё не создан
 - Supabase capability: connector доступен; project xkigijaqimzuveyzyzyk ACTIVE_HEALTHY
 - Supabase readiness: FAIL для R1 — remote содержит migrations только до v3.1, R1 tables отсутствуют
-- Supabase development branch: не создана; подтверждённая стоимость 0.01344 USD/час требует owner cost gate
+- Supabase development branch: запрещена owner decision; платная branch/preview не создаётся
 - local checkout / local Node: отсутствуют и не требуются в Direct GitHub Mode
 - relevant skills: alive-release-quality, GitHub, Supabase; browser подключается после preview; web-perf только после измеряемого preview; Cloudflare skills не нужны, пока runtime/config Cloudflare не меняется
-- known limitation: до отдельной development DB canonical persistence/RLS/admin E2E нельзя честно назвать PASS; live schema не изменяется
+- database gate: бесплатный GitHub-hosted ephemeral Supabase; live schema не изменяется, runner/DB уничтожаются после проверки
 
 ## Я понял ALIVE так
 
@@ -49,8 +49,9 @@ Release нужен сейчас, потому что R1 уже описывае�
 
 1. Проверить repo migrations, фактический remote schema и RLS/advisors.
 2. Не применять R1 к live project.
-3. Для E2E использовать отдельную Supabase development branch только после cost confirmation.
-4. До development DB разрешены code/CI проверки, но DB и browser E2E остаются НЕ ПРОВЕРЕНО.
+3. Не создавать платную Supabase development/preview branch.
+4. Воспроизвести schema с нуля в GitHub Actions через pinned Supabase CLI, ephemeral stack, `db reset --local`, pgTAP/RLS tests, lint и `stop --no-backup`.
+5. До фактического PASS этого workflow DB и browser E2E остаются НЕ ПРОВЕРЕНО.
 
 ### Checkpoint B — contracts и tests
 
@@ -271,7 +272,7 @@ Browser после preview:
 
 ### A — R1 readiness
 
-Repo contract: PASS. Remote development DB: FAIL/ожидает cost gate.
+Repo contract: PASS. Paid branch: запрещена. Free ephemeral database CI: план утверждён владельцем, ожидает фактического run.
 
 ### B — contracts/tests
 
@@ -309,14 +310,14 @@ CI workflow должен запускаться на pull_request при изм�
 - До merge: закрыть draft PR или не merge target branch.
 - Runtime: revert соответствующий small commit; R1 base contracts не удалять.
 - Feature behavior: deterministic fallback позволяет отключить awareness/personal ranking без LLM.
-- DB: live project не изменяется; development branch можно удалить после validation; RPC/index удаляются только после остановки alpha frontend и owner decision.
+- DB: live project не изменяется; CI stack выполняет `stop --no-backup` при любом исходе и уничтожается вместе с runner; RPC/index в git откатываются отдельным commit/forward-fix.
 - R1 migrations additive; rollback live требует отдельного review, предпочтителен forward-fix.
 - User data: никаких destructive transforms; legacy data сохраняются.
 - При неподтверждённом final event UI делает три попытки, предлагает повтор и не показывает метрики; stable `flow_id` не создаёт дубль.
 
 ## Unknown assumptions / open gates
 
-- Owner ещё не подтвердил Supabase development branch cost 0.01344 USD/час.
+- Owner запретил платную Supabase branch; единственный разрешённый DB gate — ephemeral GitHub Actions без remote link/secrets.
 - Preview provider/URL и environment variables target branch пока неизвестны.
 - GitHub Actions workflow runs доступны; run #246 на alpha head завершён `success`, legacy combined statuses остаются пустыми.
 - Точная доступность authenticated test users для browser QA неизвестна.
