@@ -83,55 +83,23 @@ export async function loadAdminDashboard(session: Session, periodDays = 30): Pro
   const userId = session.user.id;
   const since = new Date(Date.now() - periodDays * 86_400_000).toISOString();
 
-  const profile = await supabase
-    .from('profiles')
-    .select('display_name,role,status')
-    .eq('id', userId)
-    .single();
-
-  if (profile.error) throw new Error(`Не удалось проверить права: ${profile.error.message}`);
+  const profile = await supabase.from('profiles').select('display_name,role,status').eq('id', userId).single();
+  if (profile.error) throw new Error('Не удалось проверить права доступа к админскому разделу');
   if (!profile.data || profile.data.role !== 'admin' || profile.data.status !== 'active') {
     throw new Error('У этой учётной записи нет доступа к админскому разделу');
   }
 
   const [eventsRes, errorsRes, claimsRes, contentRes, impressionsRes, reasonsRes] = await Promise.all([
-    supabase
-      .from('analytics_events')
-      .select('id,user_id,event_type,funnel_stage,surface,product_type,trigger_code,replacement_code,content_code,outcome,reason_code,duration_ms,numeric_value,occurred_at')
-      .gte('occurred_at', since)
-      .order('occurred_at', { ascending: false })
-      .limit(10_000),
-    supabase
-      .from('system_errors')
-      .select('id,surface,error_type,error_code,message_fingerprint,duration_ms,occurred_at,resolved_at')
-      .gte('occurred_at', since)
-      .order('occurred_at', { ascending: false })
-      .limit(2_000),
-    supabase
-      .from('evidence_claims')
-      .select('code,topic,evidence_level,last_reviewed_at,review_due_at,status')
-      .eq('status', 'проверено')
-      .order('review_due_at'),
-    supabase
-      .from('awareness_content')
-      .select('code,content_type,title_ru,claim_code,published')
-      .eq('published', true)
-      .order('sort_order'),
-    supabase
-      .from('content_impressions')
-      .select('content_code,useful,product_type,trigger_code,shown_at')
-      .gte('shown_at', since)
-      .order('shown_at', { ascending: false })
-      .limit(10_000),
-    supabase
-      .from('analytics_reason_catalog')
-      .select('code,title_ru,category_ru,description_ru')
-      .eq('active', true)
-      .order('sort_order'),
+    supabase.from('analytics_events').select('id,user_id,event_type,funnel_stage,surface,product_type,trigger_code,replacement_code,content_code,outcome,reason_code,duration_ms,numeric_value,occurred_at').gte('occurred_at', since).order('occurred_at', { ascending: false }).limit(10_000),
+    supabase.from('system_errors').select('id,surface,error_type,error_code,message_fingerprint,duration_ms,occurred_at,resolved_at').gte('occurred_at', since).order('occurred_at', { ascending: false }).limit(2_000),
+    supabase.from('evidence_claims').select('code,topic,evidence_level,last_reviewed_at,review_due_at,status').eq('status', 'проверено').order('review_due_at'),
+    supabase.from('awareness_content').select('code,content_type,title_ru,claim_code,published').eq('published', true).order('sort_order'),
+    supabase.from('content_impressions').select('content_code,useful,product_type,trigger_code,shown_at').gte('shown_at', since).order('shown_at', { ascending: false }).limit(10_000),
+    supabase.from('analytics_reason_catalog').select('code,title_ru,category_ru,description_ru').eq('active', true).order('sort_order'),
   ]);
 
   const firstError = eventsRes.error || errorsRes.error || claimsRes.error || contentRes.error || impressionsRes.error || reasonsRes.error;
-  if (firstError) throw new Error(`Не удалось собрать админскую аналитику: ${firstError.message}`);
+  if (firstError) throw new Error('Не удалось собрать данные админского раздела');
 
   return {
     administratorName: profile.data.display_name,
