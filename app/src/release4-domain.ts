@@ -393,6 +393,10 @@ export const ANALYTICS_EVENT_TYPES = [
   'use_episode_logged',
 ] as const;
 
+export function analyticsWriteConfirmed(error: { code?: string } | null) {
+  return error === null || error?.code === '23505';
+}
+
 export type AnalyticsEventType = typeof ANALYTICS_EVENT_TYPES[number];
 
 export function buildAnalyticsEvent(type: AnalyticsEventType, input: Record<string, unknown>) {
@@ -451,3 +455,4 @@ export const PRODUCT_SEMANTICS = {
   outcomeUnit: string;
   healthMinutesCovered: boolean;
 }>;
+
