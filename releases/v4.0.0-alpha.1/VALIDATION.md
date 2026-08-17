@@ -21,11 +21,11 @@
 | `npm test` | PASS | 11/11 Node domain tests, включая idempotent retry semantics |
 | `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
 | Adversarial self-review | PASS | Помимо runtime fixes проверены и исправлены admin privilege escalation, cross-user action link, hard-delete projection risk, legacy path и CI supply-chain/teardown semantics |
-| GitHub Actions | PASS | Strict-gate head `2ca5f83c2c4d8947282d44d8c7ab370eb75e10df`: frontend run #295 и database run #35 завершены `success`; DB conclusion подтверждён разбором полного job log |
+| GitHub Actions | PASS | Final DB-tested head `c86ce07cbb5aded2a1172a9d7a77f9786d1db062`: frontend run #304 и database run #44 завершены `success`; DB conclusion подтверждён разбором полного job log |
 | SQL/RLS static review | PASS | Atomic/idempotent exposure RPC и least-privilege boundary проверены Supabase best-practices workflow и отдельным reviewer; новых P1/P2 нет |
-| Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #35: pinned Supabase CLI `2.111.0`, fresh stack и отдельный `supabase db reset --local` применили всю migration chain с нуля, включая security hardening |
-| Ephemeral DB: pgTAP / RLS | PASS | Run #35: 5 файлов, 61/61 assertions — isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, soft-delete/recompute, blocked hard delete, non-escalating admin boundary, cross-user action denial и legacy-present migration |
-| Ephemeral DB: lint / teardown | PASS | Run #35 фактически исполнил `supabase db lint --level error --fail-on error`; log: `No schema errors found`; `supabase stop --no-backup` завершён до уничтожения runner |
+| Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #44: pinned Supabase CLI `2.111.0`, fresh stack и отдельный `supabase db reset --local` применили всю migration chain с нуля, включая security hardening |
+| Ephemeral DB: pgTAP / RLS | PASS | Run #44: 5 файлов, 61/61 assertions — isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, soft-delete/recompute, blocked hard delete, non-escalating admin boundary, cross-user action denial и legacy-present migration |
+| Ephemeral DB: lint / teardown | PASS | Run #44 фактически исполнил `supabase db lint --level error --fail-on error`; log: `No schema errors found`; `supabase stop --no-backup` завершён до уничтожения runner |
 | Live / paid Supabase branch | PASS | Не создавались и не изменялись; validation не использует remote link, secrets, artifacts или постоянные volumes |
 | Hosted Security / Performance Advisors | НЕ ПРОВЕРЕНО | Ephemeral schema lint не подменяет hosted Supabase Advisors после будущего controlled deployment |
 | Canonical authenticated E2E | НЕ ПРОВЕРЕНО | Preview доступен, но browser session не имеет authenticated test user; вход через Google не выполнялся |
