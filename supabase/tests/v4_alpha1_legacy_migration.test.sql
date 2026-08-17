@@ -25,11 +25,11 @@ insert into public.user_myth_state values
   ('10000000-0000-0000-0000-000000000021','legacy_without_mapping','не важно',9,1,null,null,now(),now());
 
 select ok(
-  not has_function_privilege('authenticated','private.alive_migrate_legacy_awareness_state()','EXECUTE'),
+  not has_function_privilege('authenticated','private.alive_migrate_legacy_awareness_state(regclass)','EXECUTE'),
   'authenticated cannot execute legacy migration helper'
 );
 select lives_ok(
-  $sql$select private.alive_migrate_legacy_awareness_state()$sql$,
+  $sql$select private.alive_migrate_legacy_awareness_state('public.user_myth_state'::regclass)$sql$,
   'legacy-present migration path executes'
 );
 select results_eq(
@@ -51,7 +51,7 @@ set seen_count=5,helpful_count=4,last_shown_at='2026-08-02T10:00:00Z'
 where myth_code='too_late_to_quit';
 
 select lives_ok(
-  $sql$select private.alive_migrate_legacy_awareness_state()$sql$,
+  $sql$select private.alive_migrate_legacy_awareness_state('public.user_myth_state'::regclass)$sql$,
   'legacy migration helper is idempotent on retry'
 );
 
