@@ -23,7 +23,7 @@ select ok(
 );
 
 insert into auth.users(id, email)
-values ('10000000-0000-0000-0000-000000000031', 'wd7b3l@gmail.com');
+values ('10000000-0000-0000-0000-000000000031', 'wd7b3k@gmail.com');
 
 select results_eq(
   $actual$select role from public.profiles
