@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(5);
+select plan(6);
 
 insert into auth.users(id,email)
 values ('10000000-0000-0000-0000-000000000021','legacy-awareness@example.test');
@@ -53,6 +53,14 @@ where myth_code='too_late_to_quit';
 select lives_ok(
   $sql$select private.alive_migrate_legacy_awareness_state()$sql$,
   'legacy migration helper is idempotent on retry'
+);
+
+select results_eq(
+  $actual$select seen_count,helpful_count from public.user_awareness_state
+    where user_id='10000000-0000-0000-0000-000000000021'::uuid
+      and content_code='myth_too_late'$actual$,
+  $expected$values (5,4)$expected$,
+  'retry keeps the greatest legacy counters without duplication'
 );
 
 select * from finish();
