@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import logoUrl from './assets/brand-logo-full.png';
+import logoUrl from './assets/brand-logo-classic-om.svg';
 import { publicEnv } from './env';
 import { getSupabase } from './supabase';
 import {
@@ -684,4 +684,3 @@ export default function RedesignApp() {
   const standalone=path==='/experiment'||path==='/releases';
   return <>{!standalone&&<Header data={data} path={path}/>} {page}{flow.open&&<Guided session={session} data={data} close={()=>setFlow({open:false})} saved={()=>reload(session)} initialTrigger={flow.trigger}/>} {quick&&<QuickUse session={session} data={data} close={()=>setQuick(false)} saved={()=>reload(session).then(()=>{})}/>} {evening&&<Evening session={session} data={data} close={()=>setEvening(false)} saved={()=>reload(session).then(()=>{})}/>}</>;
 }
-
