@@ -403,9 +403,9 @@ Mandatory first vertical slice:
 - outcome retry без повторного сохранения episode и без показа неподтверждённых метрик;
 - 11 automated domain tests.
 
-Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. GitHub Actions `ALIVE frontend CI` run #246 завершён `success`. Build сохраняет предупреждение о bundle chunk больше 500 kB.
+Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. Final head `694c34fbefadcec028052845aead31f949bb46ba` прошёл GitHub Actions `ALIVE frontend CI` run #251 со статусом `success`. Build сохраняет предупреждение о bundle chunk больше 500 kB.
 
-Adversarial self-review и независимый статический review завершены: все подтверждённые P1/P2 исправлены, финальный reviewer не нашёл новых P1/P2. Это не заменяет DB validation.
+Adversarial self-review и независимый статический review завершены: runtime/SQL head `dba84ef` не имеет подтверждённых P1/P2 и входит без runtime/SQL изменений в final head `694c34fbefadcec028052845aead31f949bb46ba`. Это не заменяет DB validation.
 
 Canonical E2E ещё не получил PASS: подключённый Supabase project содержит только v3.1, R1/alpha migrations не применялись к live, development branch требует owner cost confirmation. Preview, authenticated browser QA desktop/mobile, DB learning/admin verification и performance остаются `НЕ ПРОВЕРЕНО`.
 
