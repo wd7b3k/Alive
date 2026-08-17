@@ -21,16 +21,17 @@
 | `npm test` | PASS | 11/11 Node domain tests, включая idempotent retry semantics |
 | `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
 | Adversarial self-review | PASS | Исправлены precedence learning, duplicate telemetry, staged/idempotent writes, evidence verification, correlated funnel, retry и fail-closed states |
-| GitHub Actions | PASS | Исправленная исходная фиксация: head `694c34fbefadcec028052845aead31f949bb46ba`, frontend run #251 `success`. DB-tested head `3c74af9ad97e05a0a86c0a2191c4f9dd436dd412`: frontend run #271 и database run #11 завершены `success` |
+| GitHub Actions | PASS | Исправленная исходная фиксация: head `694c34fbefadcec028052845aead31f949bb46ba`, frontend run #251 `success`. DB-tested head `dc49610876c7ab98b4085bd3736a7bb5697c10fc`: frontend run #284 и database run #24 завершены `success` |
 | SQL/RLS static review | PASS | Atomic/idempotent exposure RPC и least-privilege boundary проверены Supabase best-practices workflow и отдельным reviewer; новых P1/P2 нет |
-| Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #11: pinned Supabase CLI `2.111.0`, stack start и отдельный `supabase db reset --local` применили всю migration chain с нуля |
-| Ephemeral DB: pgTAP / RLS | PASS | 3 файла, 49 assertions: isolation, authenticated/anonymous boundaries, RPC grants, sequential и concurrent `flow_id`, delete/recompute, admin/private boundary |
+| Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #24: pinned Supabase CLI `2.111.0`, stack start и отдельный `supabase db reset --local` применили всю migration chain с нуля, включая security hardening |
+| Ephemeral DB: pgTAP / RLS | PASS | 5 файлов, 61 assertions: isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, soft-delete/recompute, blocked hard delete, non-escalating admin boundary, cross-user action denial и legacy-present migration |
 | Ephemeral DB: lint / teardown | PASS | `supabase db lint --level error`: `No schema errors found`; `supabase stop --no-backup` завершён до уничтожения runner |
 | Live / paid Supabase branch | PASS | Не создавались и не изменялись; validation не использует remote link, secrets, artifacts или постоянные volumes |
 | Hosted Security / Performance Advisors | НЕ ПРОВЕРЕНО | Ephemeral schema lint не подменяет hosted Supabase Advisors после будущего controlled deployment |
-| Canonical authenticated E2E | НЕ ПРОВЕРЕНО | Нет development R1 DB и preview с test environment |
-| Browser desktop/mobile | НЕ ПРОВЕРЕНО | Browser доступен, но private PR не авторизован и release preview отсутствует |
-| Performance / accessibility preview | НЕ ПРОВЕРЕНО | Preview отсутствует |
+| Canonical authenticated E2E | НЕ ПРОВЕРЕНО | Preview доступен, но browser session не имеет authenticated test user; вход через Google не выполнялся |
+| Public preview smoke | PASS | Cloudflare branch preview открыт реальным browser tooling на 1440×900 и 390×844: загрузка, CTA, info route и отсутствие horizontal overflow подтверждены |
+| Browser desktop/mobile | НЕ ПРОВЕРЕНО | Public shell проверен, но canonical authenticated flow и admin route не пройдены |
+| Performance / accessibility preview | НЕ ПРОВЕРЕНО | Preview доступен, но требуемый Chrome DevTools MCP для trace/Core Web Vitals в окружении отсутствует |
 | Vape / hookah runtime expansion | НЕ ПРОВЕРЕНО | Намеренно не начато до фактического canonical E2E PASS |
 | Independent reviewer | PASS | Runtime/SQL head `dba84ef` статически проверен без P1/P2; final head `694c34fbefadcec028052845aead31f949bb46ba` добавил только документацию и прошёл Actions run #251 |
 
@@ -41,7 +42,7 @@
 - [ ] Strategy Foundation понятна и не конфликтует с release.
 - [x] R1 schema воспроизводится в ephemeral CI без платной branch.
 - [x] R1 migrations последовательны при fresh replay.
-- [x] RLS boundary подтверждён pgTAP.
+- [x] RLS boundary, privilege non-escalation и action/episode ownership подтверждены pgTAP.
 - [x] Legacy data compatibility и clean-schema fallback подтверждены replay.
 
 ## 2. Scope
@@ -177,7 +178,7 @@
 Если schema меняется:
 
 - [x] ephemeral fresh migrations PASS;
-- [x] owner read/write/correction/delete paths PASS в покрытом vertical slice;
+- [x] owner read/write/soft-delete/recompute paths PASS в покрытом vertical slice; physical episode delete для client role запрещён;
 - [x] cross-user read denied;
 - [x] cross-user write denied;
 - [x] unauthenticated denied;
