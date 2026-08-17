@@ -94,13 +94,14 @@ Release проверяет:
 
 ## Текущий статус реализации
 
-Canonical cigarette slice реализован в draft PR #8 и программно проверен: typecheck PASS, 10/10 domain tests PASS, production build PASS.
+Canonical cigarette slice реализован в draft PR #8 и программно проверен: typecheck PASS, 11/11 domain tests PASS, production build PASS.
 
 Release ещё не является reviewable preview:
 
 - R1 schema отсутствует в подключённом live project и намеренно туда не применялась;
 - development Supabase branch ожидает отдельного owner cost gate;
 - authenticated desktop/mobile E2E, DB learning/admin verification, preview performance и GitHub Actions status не подтверждены;
+- independent static review PASS: все подтверждённые P1/P2 исправлены; DB gates этим не заменяются;
 - vape/hookah expansion не начат до PASS canonical E2E.
 
 ## Definition of Done
