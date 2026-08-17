@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(9);
+select plan(10);
 
 select ok(
   not has_table_privilege('authenticated', 'private.alive_admin_allowlist', 'SELECT'),
@@ -49,11 +49,16 @@ insert into private.alive_admin_allowlist(email)
 values ('existing-owner@example.test');
 
 select results_eq(
-  $actual$select private.alive_sync_admin_allowlist(), role
-    from public.profiles
+  $actual$select private.alive_sync_admin_allowlist()$actual$,
+  array[1],
+  'controlled sync updates the newly allowlisted existing profile'
+);
+
+select results_eq(
+  $actual$select role from public.profiles
     where id = '10000000-0000-0000-0000-000000000033'::uuid$actual$,
-  $expected$values (1, 'admin'::text)$expected$,
-  'controlled sync promotes only the newly allowlisted existing profile'
+  array['admin'::text],
+  'existing allowlisted profile is admin after controlled sync'
 );
 
 select results_eq(
