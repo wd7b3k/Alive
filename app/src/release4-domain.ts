@@ -401,6 +401,8 @@ export function buildAnalyticsEvent(type: AnalyticsEventType, input: Record<stri
     'duration_ms',
     'numeric_value',
     'episode_id',
+    'funnel_stage',
+    'surface',
   ];
   const metadataKeys = [
     'stage',
