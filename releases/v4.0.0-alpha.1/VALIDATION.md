@@ -21,7 +21,7 @@
 | `npm test` | PASS | 11/11 Node domain tests, включая idempotent retry semantics |
 | `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
 | Adversarial self-review | PASS | Исправлены precedence learning, duplicate telemetry, staged/idempotent writes, evidence verification, correlated funnel, retry и fail-closed states |
-| GitHub Actions status | НЕ ПРОВЕРЕНО | Actions API возвращает 403 для linked integration; combined status пуст |
+| GitHub Actions | PASS | `ALIVE frontend CI` run #246 завершён `success` на commit `ddd0ac69`; combined legacy statuses пуст |
 | SQL/RLS static review | PASS | Atomic/idempotent exposure RPC и least-privilege boundary проверены Supabase best-practices workflow и отдельным reviewer; новых P1/P2 нет |
 | R1 development DB / migrations / RLS | НЕ ПРОВЕРЕНО | Migration, RLS behavior, concurrent retry и advisors не запускались; live project содержит только v3.1 и не изменялся; Supabase branch требует owner cost confirmation |
 | Canonical authenticated E2E | НЕ ПРОВЕРЕНО | Нет development R1 DB и preview с test environment |
