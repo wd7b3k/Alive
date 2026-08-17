@@ -26,44 +26,52 @@ create index user_awareness_state_recent_idx on public.user_awareness_state(user
 -- Мигрируем только смыслово однозначные соответствия.
 -- Если новый материал существенно меняет утверждение, старый state намеренно не переносится.
 -- Legacy-таблица могла существовать только в remote history, поэтому fresh replay обязан работать и без неё.
-create or replace function private.alive_migrate_legacy_awareness_state()
+-- regclass делает наличие источника явным контрактом вызова и не оставляет lint скрытую ссылку на отсутствующую relation.
+create or replace function private.alive_migrate_legacy_awareness_state(p_source regclass)
 returns void
 language plpgsql
 security definer
 set search_path = ''
 as $legacy_migration$
 begin
-  if pg_catalog.to_regclass('public.user_myth_state') is null then
-    return;
-  end if;
-
-  execute $copy$
-    insert into public.user_awareness_state(
-      user_id,content_code,relevance,seen_count,helpful_count,last_shown_at,dismissed_until,created_at,updated_at
-    )
-    select s.user_id,m.new_code,s.relevance,s.seen_count,s.helpful_count,s.last_shown_at,s.dismissed_until,s.created_at,s.updated_at
-    from public.user_myth_state s
-    join (values
-      ('too_late_to_quit','myth_too_late'),
-      ('nrt_same_as_smoking','myth_nrt_relapse'),
-      ('vape_is_harmless','myth_vape_harmless'),
-      ('hookah_is_mild','myth_hookah_water'),
-      ('one_does_not_count','myth_few_cigarettes_safe'),
-      ('without_smoking_more_anxious','myth_mental_health'),
-      ('weight_is_inevitable','myth_weight_gain')
-    ) as m(old_code,new_code) on m.old_code=s.myth_code
-    on conflict(user_id,content_code) do update set
-      seen_count=greatest(public.user_awareness_state.seen_count,excluded.seen_count),
-      helpful_count=greatest(public.user_awareness_state.helpful_count,excluded.helpful_count),
-      last_shown_at=greatest(public.user_awareness_state.last_shown_at,excluded.last_shown_at),
-      dismissed_until=greatest(public.user_awareness_state.dismissed_until,excluded.dismissed_until),
-      updated_at=now()
-  $copy$;
+  execute format(
+    $copy$
+      insert into public.user_awareness_state(
+        user_id,content_code,relevance,seen_count,helpful_count,last_shown_at,dismissed_until,created_at,updated_at
+      )
+      select s.user_id,m.new_code,s.relevance,s.seen_count,s.helpful_count,s.last_shown_at,s.dismissed_until,s.created_at,s.updated_at
+      from %s s
+      join (values
+        ('too_late_to_quit','myth_too_late'),
+        ('nrt_same_as_smoking','myth_nrt_relapse'),
+        ('vape_is_harmless','myth_vape_harmless'),
+        ('hookah_is_mild','myth_hookah_water'),
+        ('one_does_not_count','myth_few_cigarettes_safe'),
+        ('without_smoking_more_anxious','myth_mental_health'),
+        ('weight_is_inevitable','myth_weight_gain')
+      ) as m(old_code,new_code) on m.old_code=s.myth_code
+      on conflict(user_id,content_code) do update set
+        seen_count=greatest(public.user_awareness_state.seen_count,excluded.seen_count),
+        helpful_count=greatest(public.user_awareness_state.helpful_count,excluded.helpful_count),
+        last_shown_at=greatest(public.user_awareness_state.last_shown_at,excluded.last_shown_at),
+        dismissed_until=greatest(public.user_awareness_state.dismissed_until,excluded.dismissed_until),
+        updated_at=now()
+    $copy$,
+    p_source
+  );
 end
 $legacy_migration$;
 
-revoke all on function private.alive_migrate_legacy_awareness_state() from public, anon, authenticated;
+revoke all on function private.alive_migrate_legacy_awareness_state(regclass) from public, anon, authenticated;
 
-select private.alive_migrate_legacy_awareness_state();
+do $legacy_source$
+declare
+  v_source regclass := pg_catalog.to_regclass('public.user_myth_state');
+begin
+  if v_source is not null then
+    perform private.alive_migrate_legacy_awareness_state(v_source);
+  end if;
+end
+$legacy_source$;
 
 comment on table public.user_awareness_state is 'Персональное состояние утверждённого Fact/Myth-контента. Legacy myth state переносится только при однозначном смысловом соответствии.';
