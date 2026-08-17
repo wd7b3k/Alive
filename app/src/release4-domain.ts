@@ -260,7 +260,11 @@ export function rankInterventions(input: {
       .filter((item) => item.global_replacement_code === replacement.code
         && item.product_type === input.product
         && (item.trigger_key === 'g:' + input.triggerCode || item.trigger_key === 'любой'))
-      .sort((a, b) => b.attempts - a.attempts)[0];
+      .sort((a, b) => {
+        const exactKey = 'g:' + input.triggerCode;
+        const contextPriority = Number(b.trigger_key === exactKey) - Number(a.trigger_key === exactKey);
+        return contextPriority || b.attempts - a.attempts;
+      })[0];
 
     if (learning && learning.attempts >= 3) {
       const successRate = learning.successful_responses / learning.attempts;
