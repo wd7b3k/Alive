@@ -1,306 +1,458 @@
 # Roadmap ALIVE
 
-Roadmap подчинён product/evidence gates. Версия или направление не становятся обязательными только потому, что описаны заранее.
+Roadmap ALIVE подчинён product/evidence gates.
+
+Номер версии не доказывает готовность. Следующий этап открывается после acceptance предыдущего либо явного owner decision.
+
+## Уровни roadmap
+
+Используются два взаимосвязанных уровня.
+
+### Capability gates
+
+Внутренние технологические и продуктовые возможности, которые должны быть построены в правильном порядке.
+
+### Пользовательские версии
+
+Сквозные вертикальные срезы, в которых несколько capability работают вместе и дают реальный пользовательский опыт.
+
+Это позволяет не выпускать «версию одного модуля», но и не строить всю систему одним большим diff.
+
+---
+
+# FOUNDATION
 
 ## F0 — Product Strategy Foundation
 
+Статус: **готов в отдельной ветке / ожидает owner merge gate**.
+
 Цель:
 
-- зафиксировать финальную product thesis;
-- заменить узкую модель `need→replacement` на decision/learning model;
-- синхронизировать Methodology, Principles, Hypotheses и Technical Strategy;
-- зафиксировать product-specific cigarette/vape/hookah models;
-- зафиксировать три постоянные метрики свободы;
-- определить referral/self-marketing;
-- определить будущую donation support model;
-- определить staged local-LLM strategy;
-- устранить противоречия старой документации.
+- новая product thesis;
+- Technical Strategy;
+- product-specific cigarette/vape/hookah model;
+- Time/Money/Health Minutes;
+- referral/self-marketing direction;
+- future donation model;
+- staged local-LLM strategy;
+- evidence/hypothesis boundaries.
 
-Gate:
+Каноническая формула:
 
-- strategy docs согласованы между собой;
-- runtime code не меняется в этом release unit;
-- следующий AI/разработчик может вывести требования из repo без чата.
+> **Пауза → Реальность → Зачем → Выбор → Опыт → Обучение → Свобода**
 
-## R1 — Canonical Domain Alignment
+---
 
-Цель: привести существующую модель данных/модулей к новой стратегии без UX rewrite ради rewrite.
+# DATA FOUNDATION
 
-Scope:
+## R1 — Данные, доказательная база и контроль продукта
 
-- Goals/Зачем вместо старой смысловой модели;
-- Links with prepared responses;
-- product roles;
-- expectation/outcome fields;
-- evidence/hypothesis boundaries;
-- metric model versioning;
-- correction/recompute contract.
+Статус: **в разработке / draft PR**.
 
-Gate:
+Цель:
 
-- migration/design review;
-- raw history сохраняется;
-- rollback/forward-fix path;
-- RLS contract не ухудшается.
-
-## R2 — Product-specific Episodes
-
-Цель: разные behavioural flows для cigarette/vape/hookah.
-
-### Cigarette
-
-Discrete impulse/decision/outcome flow.
-
-### Vape
-
-Device interactions, puffs, grouping and nicotine-free intervals.
-
-### Hookah
-
-Pre-session decision points, session duration/cost and social context.
-
-Gate:
-
-- каждый product имеет raw facts;
-- frontend не подменяет product semantics;
-- cross-product state не создаёт ложную medical equivalence.
-
-## R3 — Freedom Metrics Engine
-
-Цель: сделать постоянными:
-
-- Time Saved;
-- Money Saved;
-- Health Minutes.
+> построить правильную структуру данных и наблюдаемости до пользовательской перестройки 4.x
 
 Scope:
 
-- personal baseline;
-- versioned calculation models;
-- product coverage;
-- methodology explanation;
-- fast projections;
-- delete/correction recompute.
-
-Gate:
-
-- raw/derived consistency;
-- zero silent historical reinterpretation;
-- Health Minutes clearly understood as heuristic.
-
-## R4 — Evidence + Micro-awareness
-
-Цель: превратить Facts/Myths/Goals из библиотек в active contextual layer.
-
-Scope:
-
+- глобальные + собственные Триггеры;
+- глобальные + собственные Замены;
+- пользовательские preferences;
+- context-aware intervention rules;
+- `Зачем` как отдельная domain entity;
 - Evidence Registry;
-- approved content versions;
-- contextual micro-awareness selector;
-- repetition/fatigue rules;
-- belief strength;
-- expectation/outcome relation;
-- contextual `Зачем`.
+- русский слой Фактов/Мифов;
+- content impressions;
+- structured product analytics;
+- admin dashboard;
+- personal learning projections;
+- correction/delete/recompute;
+- distinction `craving / quick log / conscious use`;
+- legacy Facts/Myths/Meanings compatibility.
 
-Gate:
+Gate до live alpha:
 
-- medical claims sourceable;
-- LLM cannot create production health claims;
-- qualitative UX does not feel lecturing/spammy.
+- migrations development DB PASS;
+- RLS isolation PASS;
+- security/performance advisors reviewed;
+- typecheck/build PASS;
+- admin permission path PASS;
+- early-exit telemetry определена;
+- owner review Evidence user copy.
 
-## R5 — Intervention Engine
+---
 
-Цель: единый decision engine вместо простого Replacement Engine.
+# SERIES 4.x
 
-Scope:
+## 4.0.0-alpha.1 — Первый сквозной контур новой модели
 
-- candidate mechanisms;
-- prepared Link responses;
+Это **первый пользовательский release серии 4.x**.
+
+Главная цель:
+
+> впервые показать новую стратегию ALIVE как связанный пользовательский опыт, а не как набор отдельных модулей
+
+### Сквозной core loop
+
+`Зачем → Хочу закурить → контекст → микроосознанность → действие → outcome → метрики → обучение`
+
+### Обязательный vertical slice
+
+Сначала полностью проходит один эталонный сценарий:
+
+> сигарета после еды → распознавание контекста → релевантный Факт/Миф/Зачем → персонально ранжированное действие → outcome → пересчёт Time/Money/Health Minutes → learning → admin analytics
+
+Только после его PASS расширять remaining alpha.1 scope.
+
+### Scope alpha.1
+
+#### Зачем
+
+- пользовательское название `Зачем` вместо `Смыслы`;
+- goals/values/directions;
+- создание/редактирование/скрытие;
+- personal copy;
+- использование в craving context;
+- legacy compatibility.
+
+#### Home
+
+Home отвечает:
+
+1. что сделать при тяге;
+2. где я сейчас;
+3. что сегодня важно;
+4. что ALIVE уже понял обо мне.
+
+Primary CTA:
+
+**«Хочу закурить»**
+
+Постоянно видны:
+
+- вернул время;
+- сохранил деньги;
+- ≈ сохранил здоровую жизнь.
+
+#### Момент тяги
+
+- быстрый вход;
+- внутренний decision loop не превращается в длинный wizard;
+- максимум минимально нужных вопросов до первого действия;
+- известная Связка используется автоматически/подсказкой;
+- Fact/Myth/Зачем — короткий контекстный слой;
+- понятный fallback при отсутствии данных.
+
+#### Product-specific flows
+
+**Сигарета** — полноценный discrete flow.
+
+**Вейп** — отдельная модель обращения к устройству/затяжек/интервала; нельзя просто заменить слово «сигарета».
+
+**Кальян** — отдельный pre-session/session flow; важный decision point может быть до сессии.
+
+В alpha.1 допускается различная глубина трёх flows, но семантика не должна быть ложной или общей.
+
+#### Intervention Engine v1
+
+- prepared Link response;
 - eligibility;
-- deterministic personal ranker;
-- explanation;
-- fallback behavior;
-- feature flags.
+- context rules;
+- personal outcomes where data exist;
+- deterministic ranker;
+- понятное `Почему это`;
+- без LLM dependency.
+
+#### Микроосознанность
+
+- approved Fact;
+- approved Myth;
+- personal Зачем;
+- fatigue/repetition rules;
+- impression/usefulness analytics;
+- никакой генерации medical text.
+
+#### Outcome
+
+Минимальный outcome:
+
+- помогло/частично/нет;
+- тяга после, где уместно;
+- использовал никотин или нет;
+- expectation/actual для conscious use, если сценарий включён.
+
+#### Analytics/admin
+
+Должно быть видно:
+
+- открытие craving flow;
+- первый полезный response;
+- шаг выхода;
+- structured reason;
+- intervention shown/chosen/completed;
+- outcome;
+- Fact/Myth impression/usefulness;
+- metric update;
+- repeat craving use;
+- product type.
+
+#### Quality foundation
+
+- scoped AGENTS;
+- implementation plan;
+- automated tests для новой logic;
+- browser QA;
+- mobile QA;
+- adversarial self-review;
+- independent reviewer по возможности.
+
+### Non-goals alpha.1
+
+Не реализовывать:
+
+- local LLM;
+- Tribute;
+- referral growth loop;
+- полноценный Telegram front;
+- wearables;
+- hardware/sensors;
+- complex ML/bandit;
+- large social feed;
+- public leaderboard;
+- paid coaching.
+
+### Gate alpha.1
+
+- один canonical vertical slice end-to-end PASS;
+- build/typecheck/tests PASS;
+- browser desktop PASS;
+- browser mobile PASS;
+- critical analytics интерпретируемы;
+- Russian UI review PASS;
+- RLS/data integrity PASS для новых сущностей;
+- user-facing medical copy связана с Evidence Registry;
+- no cigarette Health Minutes leakage to vape/hookah;
+- owner product review.
+
+---
+
+## 4.0.0-alpha.2 — Product-specific depth и Freedom Metrics
+
+Открывается после alpha.1.
+
+Фокус:
+
+- полноценная модель vape device interactions;
+- nicotine-free intervals;
+- более глубокий hookah pre-session flow;
+- personal cost/time models;
+- metric versioning UX;
+- cross-product substitution detection;
+- более точные prepared responses;
+- расширение analytics по продуктам.
 
 Gate:
 
-- fast craving flow;
-- explainable ranking;
-- personal outcomes affect future choices;
-- no LLM dependency.
+- никакой ложной medical equivalence;
+- user понимает разные цели smoke-free vs nicotine-free;
+- raw facts сохранены по каждому продукту;
+- metrics rebuildable.
 
-## R6 — Outcome Learning + Reframe
+---
 
-Цель: сделать персональную модель зависимости полезной и видимой.
+## 4.0.0-alpha.3 — Outcome Learning, Перепрошивка и Recovery
 
-Scope:
+Фокус:
 
 - intervention effectiveness;
-- Link weakening;
-- expectation vs actual outcome;
+- trigger/link weakening;
+- expectation vs actual;
 - belief dynamics;
-- personal insights;
-- Перепрошивка based on real data.
+- персональные insights;
+- Перепрошивка на собственных данных;
+- Recovery после lapse;
+- изменение ranker по outcome.
 
 Gate:
 
-- user can understand why recommendation changed;
-- derived learning rebuildable;
-- no invented causal claims.
+- рекомендации меняются объяснимо;
+- пользователь видит, почему изменился вывод;
+- никаких ложных causal claims;
+- recovery measured.
 
-## R7 — Journey + Recovery + Together
+---
 
-Цель: поддерживать длинный путь и возврат после lapse.
+## 4.0.0-beta.1 — Путь, Вместе и self-marketing
 
-Scope:
+Фокус:
 
-- journey states;
-- recovery flow;
-- new Путь;
-- privacy-safe Together aggregates;
-- optional friend relationship.
+- новая модель Пути;
+- progress beyond streak;
+- privacy-safe Вместе;
+- optional friend relationship;
+- value realization moments;
+- invite/share card;
+- referral attribution.
+
+Referral CTA только после подтверждённого позитивного value moment.
 
 Gate:
 
 - no shame/leaderboard;
 - no private leakage;
-- recovery produces measurable re-engagement or ITERATE decision.
-
-## R8 — Referral / Self-marketing
-
-Цель: проверить organic growth из моментов полученной пользы.
-
-Scope:
-
-- value moments;
-- privacy-safe share cards;
-- invite links;
-- attribution;
-- optional `Вместе с другом` consent.
-
-Gate:
-
-- no referral prompt in craving/lapse/crisis/treatment contexts;
 - invite→activation measurable;
-- no negative cessation UX impact.
+- referral не ухудшает cessation experience.
 
-## R9 — Multi-channel API + Telegram
+---
 
-Цель: доказать, что ALIVE является одним продуктом на разных фронтах.
+## 4.0.0-beta.2 — Omnichannel / Telegram
 
-Scope:
+Фокус:
 
-- canonical application API/ports;
-- channel-independent state;
+- canonical application API/contracts;
 - Telegram adapter;
 - identity linking;
-- messenger craving/recovery/check-in flows.
+- state parity web↔messenger;
+- craving/recovery/check-in messages;
+- channel orchestration.
 
 Gate:
 
-- state parity web↔messenger;
-- no duplicated decision logic;
-- messenger materially improves real-moment access or ITERATE decision.
+- business logic не дублируется в Telegram;
+- один user state;
+- messenger улучшает real-moment access.
 
-## R10 — Product Evidence Gate
+---
 
-Цель: проверить core product hypothesis на реальных пользователях до AI/infrastructure expansion.
+# PRODUCT EVIDENCE GATE
 
-### Feasibility
+## E1 — Проверка основной гипотезы
 
-- несколько добровольных пользователей;
-- минимум 14 дней стабильного использования;
-- real impulse moments;
-- no safety/privacy failures.
+До local LLM и сложной adaptive intelligence.
 
-### Mechanism
+Минимум:
+
+- реальные добровольные пользователи;
+- стабильный runtime;
+- реальное использование в craving moments;
+- no critical safety/privacy failure;
+- минимум достаточной продолжительности для leading outcomes.
 
 Проверить:
 
-- pause/use outcomes;
-- Link prepared responses;
+- использование относительно baseline;
+- episodes without target use;
+- repeat real-moment use;
+- prepared Link response;
 - micro-awareness;
-- intervention ranking;
+- intervention effectiveness;
 - recovery;
-- usage vs baseline.
+- retention, интерпретируемый в контексте outcome.
 
-Decision:
+Решение:
 
-`GO / ITERATE / PIVOT / STOP`.
+`GO / ITERATE / PIVOT / STOP`
 
-## R11 — Local LLM Semantic Layer
+---
 
-Только после `GO`/достаточного product evidence.
+# AFTER EVIDENCE GATE
 
-Цель: улучшить understanding/personalization, не заменяя deterministic core.
+## 4.1 — Local LLM Semantic Layer
+
+Только после `GO` либо отдельного сильного evidence decision.
 
 Scope:
 
 - model-agnostic AIProvider;
-- local/self-hosted inference;
-- Russian ALIVE benchmark;
+- self-hosted/open-weight model;
+- русский ALIVE benchmark;
 - structured outputs;
-- trigger/context classification;
+- semantic trigger/context extraction;
 - summary;
 - approved content matching;
 - shadow mode;
-- privacy boundary;
-- deterministic fallback.
+- deterministic fallback;
+- privacy-minimized context.
 
-Gate:
+LLM не становится:
 
-- benchmark quality;
-- medical hallucination threshold;
-- latency/cost acceptable;
-- ALIVE works when LLM is down.
+- Evidence Registry;
+- medical authority;
+- metric calculator;
+- authorization engine;
+- единственным ranking mechanism.
 
-## R12 — Adaptive Intelligence
+---
 
-После достаточного dataset.
+## 4.2+ — Adaptive Intelligence
+
+Только после накопления dataset.
 
 Возможные направления:
 
 - cohort priors;
 - contextual ranking;
-- bandit experiments;
+- contextual bandits;
 - embeddings/similar episodes;
-- optional offline fine-tuning after separate privacy/data decision.
+- offline fine-tuning after separate privacy decision.
 
-Не строить advanced ML без dataset/evaluation gate.
+Advanced ML не строится без benchmark/evaluation dataset.
 
-## R13 — Donation Support / Tribute
+---
 
-После отдельного owner decision и когда продукт уже показывает регулярную пользу.
+# LATER SUPPORT TRACK
 
-Цель: добровольная поддержка разработки без paywall.
+## Donation Support / Tribute
 
-Scope:
+После отдельного owner decision и регулярной доказанной пользы.
 
-- Tribute integration;
-- support CTA;
-- webhook/security if needed;
-- donation analytics;
-- explicit non-entitlement model.
+- voluntary support;
+- no paywall;
+- no core entitlement;
+- provider security review;
+- Tribute integration/webhooks only if necessary;
+- Charter/Privacy/ADR sync.
 
-Gate:
+---
 
-- Charter/Privacy/ADR updated;
-- donation does not alter core access;
-- provider security review complete.
+# Постоянный operational track
 
-## Parallel operational track
+На каждом user-facing release:
 
-На каждом runtime release независимо выполняются:
-
-- security/RLS isolation;
-- backup/restore;
-- export/delete;
+- documentation trace;
+- implementation plan;
+- unit/integration tests;
 - CI;
-- responsive parity;
-- release notes;
+- browser QA;
+- mobile QA;
+- Russian copy review;
+- RLS/security;
+- performance review when preview available;
+- evidence freshness;
+- analytics interpretation;
 - rollback/forward-fix;
-- AI prompt/response audit trail.
+- AI prompt/response audit;
+- adversarial self-review;
+- independent review where available.
+
+## Research track
+
+Еженедельный ALIVE Research Watch отслеживает:
+
+- исследования;
+- рекомендации;
+- конкурентов;
+- JITAI/personalization;
+- AI;
+- wearables;
+- design patterns.
+
+Значимый finding получает решение:
+
+`внедрить / эксперимент / наблюдать / не использовать`
+
+и только после этого попадает в roadmap.
 
 ## Roadmap rule
 
-Следующий этап открывается не потому, что предыдущий «написан», а потому что его acceptance/evidence gate выполнен либо владелец явно принимает решение изменить порядок.
+> **Мы не строим следующий слой потому, что он интересный. Мы строим его, когда предыдущий слой дал достаточно данных, чтобы следующий стал обоснованным способом увеличить ценность ALIVE.**
