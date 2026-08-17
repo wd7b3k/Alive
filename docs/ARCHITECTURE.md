@@ -1,130 +1,259 @@
-# Архитектура ALIVE v3 — принятое направление
+# Архитектура ALIVE — принятое направление
 
 ## 1. Статус
 
-Документ фиксирует архитектуру новой серии. **Platform bootstrap уже начат:** frontend и PostgreSQL/RLS schema существуют, Google OAuth и Cloudflare deployment ещё проходят V3-GATE-01.
+Этот документ фиксирует high-level runtime architecture. Подробная стратегия развития находится в `TECHNICAL_STRATEGY.md`; product semantics — в `PRODUCT_STRATEGY.md`.
 
-Основной принцип: **простая архитектура, достаточная для нескольких участников и дальнейшего роста, без преждевременного усложнения.**
+Принцип:
+
+> **эволюционировать существующий простой modular monolith, не делать rewrite ради стратегии и не строить инфраструктуру раньше измеренной необходимости.**
 
 ## 2. High-level
 
-`Browser / Mobile Web`
-→ `alive.hmnos.ru`
-→ `Cloudflare Pages`
-→ `Supabase Auth (Google)`
-→ `Supabase PostgreSQL + RLS`
-→ `Edge Functions / DB functions`
+```text
+Web / Messenger / Mobile
+        ↓
+Channel adapters / Application API
+        ↓
+ALIVE Domain Core
+        ↓
+Supabase Auth + PostgreSQL + RLS
+        ↓
+Raw facts + rebuildable projections + Evidence
+        ↓
+Optional Learning/AI layers
+```
 
-Operational jobs позднее:
+Текущий web delivery:
 
-`Supabase Cron → aggregation / health / maintenance`
+`Browser → Cloudflare Pages → Supabase Auth/Data/API`.
 
-Incident/digest email позднее:
+Privileged/server-side commands используют Edge Functions/DB functions только там, где это действительно требуется.
 
-`Edge Function → email provider`
+## 3. Frontends
 
-## 3. Frontend
+### Web
 
-Web-first responsive client находится в `app/`.
+React + TypeScript + Vite.
 
-Требования:
-
-- mobile-first craving flow;
-- desktop-friendly analytics/settings/methodology;
+- mobile-first real-time flow;
+- desktop-friendly analysis/configuration;
 - no service secrets;
-- direct authenticated Supabase client допустим только для RLS-защищённых user-scoped операций;
-- privileged/admin/server operations только через server-side functions.
+- business decision logic не дублируется в UI.
 
-Cloudflare Pages — static hosting/deployment layer, а не business backend.
+### Messenger
 
-## 4. Auth
+Channel adapter преобразует входящее сообщение в canonical ALIVE application command и ответ обратно в messenger representation.
 
-Google Sign-In через Supabase Auth.
+### Mobile
 
-Не создавать собственные passwords/invite sessions.
+Использует тот же canonical backend state/API. Device-specific возможности не меняют domain semantics.
 
-Внутренняя модель использует `auth.uid()`/internal UUID для tenant isolation.
+## 4. Channel independence
 
-## 5. Database
+ALIVE должен оставаться одним продуктом:
 
-PostgreSQL — durable runtime data store. **Schema source of truth — только `supabase/migrations/` в `wd7b3k/Alive`.**
+- одна identity;
+- одна Dependence Model;
+- одни Links/Goals/outcomes;
+- один Intervention Engine;
+- одни metric models.
+
+Нельзя поддерживать отдельную product logic для web/Telegram/mobile.
+
+## 5. Auth
+
+Google Sign-In через Supabase Auth сохраняется текущим identity path.
+
+Внутренний ownership использует internal UUID/`auth.uid()` boundary.
+
+Authorization никогда не строится на user-editable metadata.
+
+## 6. Database
+
+PostgreSQL — durable runtime store.
+
+Schema source of truth — `supabase/migrations/`.
 
 Основные принципы:
 
-- normalized enough for integrity;
-- raw events immutable/traceable where possible;
-- derived metrics rebuildable;
-- RLS on private entities;
-- soft delete where auditability matters;
-- schema migrations versioned in git.
+- raw facts traceable;
+- derived state rebuildable;
+- model semantics versioned;
+- RLS на user-owned exposed data;
+- correction/delete with recompute;
+- migration discipline.
 
-## 6. Privileged logic
-
-Edge Functions/DB functions используются только там, где действительно требуются privileged credentials/authorization, в частности для будущих:
-
-- admin operations;
-- UGC publish/review;
-- weekly digests;
-- health checks;
-- privileged aggregations.
-
-Не использовать Edge Functions для каждой простой CRUD-операции без причины.
-
-## 7. Analytics
-
-Отделять:
-
-- product events;
-- behavioural domain facts;
-- operational telemetry.
-
-Не дублировать sensitive text в analytics.
-
-Для будущей групповой статистики использовать заранее агрегированные daily metrics, а не тяжёлые пересчёты всей истории при каждом открытии.
-
-## 8. Module boundaries
-
-ALIVE v3 реализуется как modular monolith на уровне приложения/БД с явным ownership и public contracts между модулями.
-
-Никакой необходимости в microservices на ранней стадии нет.
-
-## 9. Data model evolution
-
-Raw tobacco facts не зависят от ALIVE equivalence model.
+## 7. Raw vs derived
 
 Пример:
 
-- raw: `hookah_session_count=1`;
-- derived: `alive_units=10` по `equivalence_model=v1`.
+```text
+raw: cigarette_event quantity=1
+raw: hookah_session duration=75m
+raw: vape puffs/interactions
 
-При изменении модели raw history остаётся прежней.
+↓ versioned models
 
-## 10. Security
+derived: baseline delta
+         Time Saved
+         Money Saved
+         Health Minutes
+         optional ALIVE units
+```
 
-До внешнего пилота:
+Новая модель не переписывает raw history.
 
-- RLS coverage/tenant isolation tests;
-- admin authorization tests, когда admin появится;
+## 8. Domain modules
+
+Канонический ownership определён в `MODULES.md`.
+
+Ключевые boundaries:
+
+- Episode;
+- Nicotine Products;
+- Links;
+- Goals/Зачем;
+- Evidence/Facts/Myths;
+- Micro-awareness;
+- Intervention;
+- Treatment Support;
+- Outcome Learning;
+- Metrics;
+- Journey/Recovery;
+- Together;
+- Referral;
+- Donation;
+- AI/Semantic Intelligence.
+
+## 9. Evidence architecture
+
+Medical claim не создаётся runtime-LLM или frontend.
+
+Pipeline:
+
+`source → evidence claim/version → reviewed user content → product exposure`
+
+Evidence Registry должен иметь отдельный ownership и auditability.
+
+## 10. Intervention architecture
+
+Первая версия преимущественно deterministic:
+
+`context → product-specific resolver → Link matcher → eligibility → micro-awareness → candidate generation → personal ranking → explanation`
+
+Personal ranking строится на structured outcomes.
+
+LLM не required dependency.
+
+## 11. Metrics architecture
+
+Постоянные пользовательские метрики:
+
+- Time Saved;
+- Money Saved;
+- Health Minutes.
+
+Все расчёты имеют model version. Health Minutes дополнительно хранят evidence/product coverage и не выводятся из ALIVE units автоматически.
+
+Для быстрого UI используются rebuildable daily/lifetime projections.
+
+## 12. AI architecture
+
+AI вводится только после product evidence gate.
+
+Архитектурно:
+
+`Domain/Application → AIProvider abstraction → self-hosted/local inference`
+
+LLM получает минимальный context и constrained tasks.
+
+ALIVE работает при полном отказе LLM.
+
+LLM не имеет:
+
+- service-role DB access;
+- authorization authority;
+- Evidence Registry write authority;
+- canonical metric authority.
+
+## 13. Referral architecture
+
+Referral — secondary service и не блокирует cessation flow.
+
+Invite token opaque и не содержит private identity/metrics.
+
+`проходить вместе` требует отдельного consent после регистрации.
+
+## 14. Donation architecture
+
+Donation provider не является foundation dependency.
+
+До отдельного gate core ALIVE не знает о платёжном статусе пользователя.
+
+После подключения provider donation остаётся non-entitlement support model.
+
+## 15. Analytics
+
+Разделяются:
+
+- domain facts;
+- product analytics;
+- operational telemetry.
+
+Sensitive free text не копируется в generic analytics.
+
+## 16. Security
+
+До внешнего расширения обязательны:
+
+- RLS coverage;
+- two-user isolation;
+- admin authorization tests;
 - secret scanning;
-- CSP/security headers;
-- audit critical privileged actions;
+- export/delete tests;
+- Together whitelist tests;
+- referral privacy tests;
 - backup/restore path;
-- export/delete test.
+- privileged action audit.
 
-## 11. Domain
+## 17. Reliability
 
-Основной адрес: `alive.hmnos.ru`.
+Core cessation path деградирует независимо от secondary systems:
 
-DNS/deployment metadata после настройки отражаются в repo docs, но реальные secrets — нет.
+- LLM down → deterministic core works;
+- analytics down → core works;
+- Together down → personal flow works;
+- referral down → core works;
+- Tribute down → core works.
 
-## 12. Что не требуется v3.0
+## 18. Scaling
 
-- Kubernetes;
-- microservices;
-- ClickHouse;
-- Redis cluster;
-- GPU/LLM infrastructure;
-- event bus;
-- сложный data warehouse.
+Порядок:
 
-Добавлять только при измеренном trigger.
+1. query/index/projection optimization;
+2. async jobs where measured;
+3. horizontal inference scaling after AI introduction;
+4. service extraction only after measured bottleneck.
+
+Не строить distributed infrastructure для гипотетической нагрузки.
+
+## 19. Deployment/source of truth
+
+- repo = source of truth;
+- production deployment связан с commit/release;
+- runtime config имеет safe repo representation;
+- secrets вне git/frontend/logs;
+- branch/release/validation/rollback discipline обязательна.
+
+## 20. Architecture gates
+
+Перед существенным infrastructure expansion необходимо показать:
+
+- измеренный bottleneck;
+- why current architecture insufficient;
+- expected gain;
+- migration/rollback cost;
+- privacy/security impact.
+
+По умолчанию выбирается самый простой вариант, сохраняющий product contract.
