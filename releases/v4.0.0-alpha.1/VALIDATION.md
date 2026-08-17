@@ -21,14 +21,14 @@
 | `npm test` | PASS | 11/11 Node domain tests, включая idempotent retry semantics |
 | `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
 | Adversarial self-review | PASS | Исправлены precedence learning, duplicate telemetry, staged/idempotent writes, evidence verification, correlated funnel, retry и fail-closed states |
-| GitHub Actions | PASS | `ALIVE frontend CI` run #246 завершён `success` на commit `ddd0ac69`; combined legacy statuses пуст |
+| GitHub Actions | PASS | Final head `694c34fbefadcec028052845aead31f949bb46ba`: `ALIVE frontend CI` run #251 завершён `success`; combined legacy statuses пуст |
 | SQL/RLS static review | PASS | Atomic/idempotent exposure RPC и least-privilege boundary проверены Supabase best-practices workflow и отдельным reviewer; новых P1/P2 нет |
 | R1 development DB / migrations / RLS | НЕ ПРОВЕРЕНО | Migration, RLS behavior, concurrent retry и advisors не запускались; live project содержит только v3.1 и не изменялся; Supabase branch требует owner cost confirmation |
 | Canonical authenticated E2E | НЕ ПРОВЕРЕНО | Нет development R1 DB и preview с test environment |
 | Browser desktop/mobile | НЕ ПРОВЕРЕНО | Browser доступен, но private PR не авторизован и release preview отсутствует |
 | Performance / accessibility preview | НЕ ПРОВЕРЕНО | Preview отсутствует |
 | Vape / hookah runtime expansion | НЕ ПРОВЕРЕНО | Намеренно не начато до фактического canonical E2E PASS |
-| Independent reviewer | PASS | Reviewer нашёл 7 исходных проблем и 2 retry/RLS follow-up; подтверждённые findings исправлены, финальная статическая проверка head `dba84ef` не нашла P1/P2 |
+| Independent reviewer | PASS | Runtime/SQL head `dba84ef` статически проверен без P1/P2; final head `694c34fbefadcec028052845aead31f949bb46ba` добавил только документацию и прошёл Actions run #251 |
 
 Этот checkpoint не является acceptance release. Checklist ниже остаётся полным acceptance contract; непроверенные строки нельзя выводить из программного PASS.
 
