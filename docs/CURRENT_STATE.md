@@ -10,94 +10,115 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
 Отдельно существует draft PR v3.1 с behavioral-depth/Together/Facts/Myths work. Он не считается принятым production state до merge/owner gate.
 
-## Текущий стратегический release unit
+## Strategy Foundation
 
-Ветка:
+Ветка `agent/product-strategy-foundation` фиксирует новую каноническую продуктовую и техническую стратегию без изменения runtime.
 
-`agent/product-strategy-foundation`
-
-Цель:
-
-- полностью пересобрать продуктовую стратегию;
-- добавить техническую стратегию;
-- синхронизировать Methodology/Principles/Modules/Data/Hypotheses/Roadmap;
-- зафиксировать Evidence Standard;
-- зафиксировать Product Architecture;
-- не изменять runtime code, schema или deployment.
-
-Этот release unit намеренно является **documentation-only foundation**.
-
-После его принятия будущие runtime releases должны выводиться из новой стратегии, а не из старой узкой модели `need → replacements`.
-
-## Канонический product thesis после strategy foundation
+Канонический product thesis:
 
 > **Пауза → Реальность → Зачем → Выбор → Опыт → Обучение → Свобода**
 
-Ключевые active product mechanisms:
+Strategy Foundation остаётся отдельным owner/merge gate.
 
-- product-specific impulse models;
-- Связки + prepared responses;
-- микроосознанность;
-- Факты;
-- Мифы/Перепрошивка;
-- Зачем;
-- Intervention Engine;
-- Treatment Support;
-- conscious-use expectation/outcome;
-- Recovery;
-- Outcome Learning;
-- Путь;
-- Вместе;
-- Time/Money/Health Minutes;
-- referral after value realization.
+## Текущий implementation release unit R1
 
-## Product-specific direction
+Ветка:
 
-### Cigarette
+`agent/r1-data-evidence-admin`
 
-Discrete impulse/decision flow.
+Основание:
 
-### Vape
+`agent/product-strategy-foundation`
 
-Device interaction + puffs + nicotine-free interval model.
+Цель R1:
 
-### Hookah
+> **создать правильную структуру данных, доказательной базы и наблюдаемости продукта до дальнейшей глубокой перестройки пользовательских сценариев**
 
-Pre-session decision + session-level raw event.
+### Реализовано в ветке
 
-Medical harm equivalence между продуктами не выводится из ALIVE units.
+#### Персонализируемый domain
 
-## Метрики свободы
+- категории Триггеров;
+- собственные Триггеры пользователя;
+- категории Замен;
+- собственные Замены;
+- пользовательские настройки общей Замены;
+- контекстные правила вмешательств;
+- новая сущность `Зачем` (`goals_catalog` / `user_goals`);
+- совместимость со старыми `Смыслами` и `goal_text`;
+- персональные learning projections по Триггерам и Заменам.
 
-Три постоянные user-facing metrics:
+Raw episodes/actions остаются источником истины; learning projections пересчитываемы.
 
-- Time Saved;
-- Money Saved;
-- Health Minutes.
+#### Evidence Registry
 
-Health Minutes — versioned population-level motivational heuristic, не персональный медицинский прогноз.
+Добавлены:
 
-## Финансирование
+- источники;
+- проверяемые утверждения;
+- связь утверждение → источник;
+- отдельный русский пользовательский слой Фактов/Мифов;
+- уровень доказательности;
+- ограничения;
+- дата проверки и следующей ревизии;
+- контекст показа;
+- история показов/полезности.
 
-Основная помощь не строится вокруг paywall.
+Стартовая база основана преимущественно на исследованиях и рекомендациях 2023–2025 годов. Более ранний источник используется только там, где он остаётся сильным актуальным основанием.
 
-Планируется будущая добровольная поддержка разработки через Tribute после отдельного owner/privacy/security gate.
+### Локализация
 
-До этого runtime payment integration отсутствует.
+Пользовательские и админские формулировки должны быть русскими.
 
-## AI direction
+Оригинальное англоязычное название научной публикации допускается только как внутреннее библиографическое поле. В интерфейсе используется качественная русская формулировка и русский label источника.
 
-Local/open-weight LLM **не входит в текущий implementation scope**.
+### Админский контур
 
-Он появляется только после product evidence gate.
+Создан отдельный маршрут `/admin`.
 
-До этого:
+Он показывает:
 
-- core decision logic deterministic/explainable;
-- learning строится на structured outcomes;
-- product работает без LLM.
+- активность;
+- использование работы с тягой;
+- долю эпизодов без целевого употребления;
+- повторное использование;
+- когортную воронку новых пользователей;
+- результаты по сигаретам / электронке / кальяну;
+- структурированные причины остановки;
+- использование Фактов и Мифов;
+- актуальность Evidence Registry;
+- технические ошибки;
+- latency после подключения экранной телеметрии.
 
-После evidence gate AI вводится model-agnostic semantic layer с deterministic fallback.
+Админка не загружает private notes, чужие личные тексты `Зачем` или содержимое чужих Связок.
+
+### Product analytics
+
+В БД введён отдельный поток `analytics_events` без sensitive free text.
+
+DB-level capture уже фиксирует надёжные domain milestones:
+
+- регистрация;
+- завершение onboarding;
+- создание `Зачем`;
+- создание Связки;
+- завершение эпизода тяги;
+- использование вмешательства;
+- фиксацию употребления;
+- вечернюю отметку.
+
+Следующий слой внутри R1 — client step telemetry для точного определения, на каком UI-шаге пользователь закрыл незавершённый сценарий и по какой структурированной причине.
+
+## Важный evidence пример
+
+Карточка `≈20 минут` основана на современной британской популяционной оценке.
+
+ALIVE обязан показывать одновременно:
+
+1. понятную величину;
+2. человеческий смысл времени;
+3. явное ограничение, что это не персональный прогноз и не буквальный линейный таймер жизни;
+4. ссылку на оригинальное исследование.
 
 ## Живая инфраструктура main
 
@@ -109,36 +130,25 @@ Local/open-weight LLM **не входит в текущий implementation scope
 - Database: Supabase PostgreSQL + RLS.
 - GitHub CI: dependency install, typecheck, production build.
 
-## Runtime work in strategy branch
+## Что пока не сделано в R1
 
-**Нет.**
+- R1 migrations не применены к живой alpha/production БД;
+- SQL migrations ещё должны пройти отдельную database validation;
+- admin dashboard ещё должен пройти CI/typecheck/build;
+- client step telemetry ещё не закрывает точные причины выхода по каждому шагу craving flow;
+- текущий пользовательский UI ещё использует название `Смыслы` и должен быть отдельно мигрирован на `Зачем`;
+- текущий runtime recommendation flow ещё не использует новые context rules/learning projections;
+- Evidence content seed ещё должен пройти owner review тона и медицинских caveats до публикации в живой БД.
 
-Запрещено в этом release unit:
+## После принятия R1
 
-- UI changes;
-- migrations;
-- production deployment;
-- LLM infrastructure;
-- Tribute integration;
-- referral runtime implementation.
+Следующий пользовательский release должен подключать новую domain model последовательно:
 
-## Следующий этап после owner acceptance
-
-Не начинать бессистемную сборку всех описанных функций сразу.
-
-Следовать новой `ROADMAP.md`:
-
-1. Canonical Domain Alignment;
-2. Product-specific Episodes;
-3. Metrics Engine;
-4. Evidence + Micro-awareness;
-5. Intervention Engine;
-6. Outcome Learning;
-7. Journey/Recovery/Together;
-8. Referral;
-9. Multi-channel;
-10. Product Evidence Gate;
-11. только затем Local LLM;
-12. Donation Support — отдельным поздним gate.
-
-Каждый этап — отдельный release unit с validation/rollback и AI audit trail.
+1. `Зачем` и персональные сущности в UI;
+2. product-specific impulse flows;
+3. постоянные Time / Money / Health Minutes;
+4. контекстную микроосознанность Факт/Миф/Зачем;
+5. новый Intervention Engine;
+6. outcome-aware ranking;
+7. Recovery / Путь / Вместе;
+8. только после product evidence gate — local LLM.
