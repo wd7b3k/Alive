@@ -2,6 +2,12 @@
 
 Дата: 2026-08-17
 
+## Корректировка после независимой проверки
+
+Первоначальная запись ниже ошибочно считала schema lint PASS по зелёному GitHub conclusion и строке запуска без проверки fail semantics Supabase CLI. Run #24 и последующий run #32 не являются доказательством lint PASS: команда `supabase db lint --level error` использовала default `--fail-on none`, а в run #32 был diagnostic уровня error для `private.alive_migrate_legacy_awareness_state`.
+
+Корректирующее evidence зафиксировано в session 008: workflow переведён на `--fail-on error`, скрытая ссылка на optional legacy relation устранена без потери compatibility, fresh replay и 61/61 pgTAP повторены.
+
 ## Результат
 
 В draft PR #8 добавлен воспроизводимый бесплатный database gate без Supabase development/preview branch и без изменения live project.
