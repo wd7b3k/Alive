@@ -1,42 +1,57 @@
 # Strategy Foundation v1 — Validation
 
-## Scope validation
+## Scope validation — PASS
 
-Expected diff is documentation-only.
+Compared:
 
-Must contain no changes under:
+`main` → `agent/product-strategy-foundation`
 
-- `app/`;
-- `supabase/migrations/`;
-- runtime deployment config;
-- production secrets/config values.
+Result:
 
-## Consistency checks
+- branch ahead by 20 documentation commits;
+- 20 changed files;
+- all changed paths are `AGENTS.md`, `docs/**` or `releases/strategy-foundation-v1/**`;
+- no changes under `app/`;
+- no changes under `supabase/` or migrations;
+- no runtime deployment config changes;
+- no production secrets/config values added.
 
-Before owner acceptance verify:
+## Consistency checks — PASS for documentation gate
+
+Verified by synchronized replacements/additions:
 
 - `PRODUCT_STRATEGY.md` is the product source of truth;
 - `TECHNICAL_STRATEGY.md` explicitly derives from product strategy;
 - `METHODOLOGY.md` separates evidence, heuristics and hypotheses;
-- `PRODUCT_PRINCIPLES.md` does not require long craving flows;
+- `PRODUCT_PRINCIPLES.md` explicitly states that internal decision stages are not mandatory UI steps;
 - `MODULES.md` makes Replacement a subset of Intervention;
 - `DATA_MODEL.md` supports product-specific events, evidence, goals, referral and versioned metrics;
 - `ROADMAP.md` places local LLM after product evidence gate;
-- `PROJECT_CHARTER.md` allows future voluntary donations but not paywall/data monetization;
-- `AGENTS.md` forces future AI/Codex to read the new strategy before code;
+- `PROJECT_CHARTER.md` allows future voluntary donations while prohibiting paywall/data monetization without a new owner decision;
+- `AGENTS.md` requires future AI/Codex to read new product/technical strategy before code;
 - `RELEASE_POLICY.md` supports documentation-only foundation units;
 - Health Minutes are consistently described as approximate/versioned heuristic;
-- ALIVE units are never described as medical harm equivalence;
-- referral is never allowed to interrupt strong craving/lapse/crisis/treatment decisions.
+- ALIVE units are explicitly not medical harm equivalence;
+- referral is prohibited from interrupting strong craving/lapse/crisis/treatment decisions.
 
-## Runtime validation
+## Runtime validation — NOT APPLICABLE
 
-No runtime validation/build is required to prove code correctness because this release changes no runtime files.
+No application code, database migration or deployment file changed.
 
-However, the final Git diff must be checked to ensure scope remained documentation-only.
+Running frontend build/typecheck would not validate the semantic documentation changes and is therefore not required for this release unit.
+
+## Open validation
+
+Owner review remains required for:
+
+- final product semantics;
+- terminology `Зачем`;
+- donation/support positioning;
+- roadmap ordering;
+- acceptance that strategy foundation supersedes prior narrow product assumptions.
 
 ## Acceptance
 
-Owner review required before merge.
-
 Merge does not deploy or change production behaviour.
+
+After merge the next implementation stage is `R1 — Canonical Domain Alignment`; it must be a separate release unit.
