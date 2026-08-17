@@ -2,9 +2,108 @@
 
 Этот документ появился после неудовлетворительного качества части ранних agent-generated изменений.
 
-Проблема оказалась не только в модели, но и в процессе: слишком широкий scope, недостаточно жёсткие локальные инструкции, отсутствие обязательного preflight, слабая проверка реального интерфейса и возможность объявлять работу законченной после статического review.
+Проблема оказалась не только в модели, но и в процессе: слишком широкий scope, недостаточно жёсткие локальные инструкции, слабая проверка реального интерфейса и возможность объявлять работу законченной после статического review.
+
+После отдельного сбоя 2026-08-17 добавлен ещё один обязательный принцип: **Codex не имеет права начинать release из пустого sandbox или пытаться заменить локальный checkout чтением репозитория через GitHub Connector.**
 
 Цель протокола — сделать Codex исполнителем проверяемого инженерного процесса, а не генератором большого diff.
+
+## 0. Environment preflight — до всего остального
+
+Это первый шаг любой задачи, которая меняет код, schema, release docs или должна запускать проверки.
+
+До чтения product context, создания плана и тем более до изменения файлов Codex обязан проверить, что текущая рабочая директория является локальным checkout `wd7b3k/Alive`.
+
+Минимальная проверка:
+
+```bash
+pwd
+git rev-parse --show-toplevel
+git remote -v
+git status --short --branch
+test -f README.md
+test -f AGENTS.md
+test -d app
+test -d docs
+test -d releases
+```
+
+Codex должен установить фактически:
+
+- существует локальный `.git`;
+- `git rev-parse --show-toplevel` успешно возвращает корень checkout;
+- repository соответствует `wd7b3k/Alive`;
+- доступны `README.md`, `AGENTS.md`, `app/`, `docs/`, `releases/`;
+- рабочая копия позволяет читать файлы и запускать локальные команды;
+- текущая branch/base понятна;
+- для release можно создать или переключить рабочую ветку обычным git workflow.
+
+### Fail-fast
+
+Если локального checkout нет, Codex **немедленно прекращает implementation** и возвращает:
+
+```text
+BLOCKED: LOCAL_REPOSITORY_UNAVAILABLE
+
+Ожидается локальный git checkout wd7b3k/Alive.
+GitHub Connector не используется как замена рабочей копии.
+Нужно запустить задачу в Codex Environment, привязанном к repository wd7b3k/Alive.
+```
+
+После этого запрещено:
+
+- реконструировать release только через GitHub Connector;
+- писать файлы в remote repository вместо нормального локального workflow;
+- заявлять, что build/tests/browser QA будут выполнены позднее из-за отсутствия checkout;
+- клонировать неизвестный repository или branch без уверенности в source/base;
+- продолжать «частичную реализацию», если задача требует изменения runtime.
+
+### Роль GitHub Connector
+
+Connector допустим **после успешного local preflight** для задач вроде:
+
+- чтения remote PR/issue metadata;
+- CI status/logs;
+- публикации draft PR;
+- remote review;
+- проверки remote branch state.
+
+Connector не является заменой:
+
+- локального checkout;
+- `git diff`;
+- `npm install` / build / tests;
+- migrations validation;
+- browser QA;
+- локального inspection source tree.
+
+### Branch preflight
+
+Перед кодом Codex также фиксирует:
+
+```text
+repository:
+local root:
+remote origin:
+current branch:
+expected base:
+target branch:
+working tree state:
+```
+
+Если текущая branch не соответствует ожидаемой base, Codex не начинает код молча: сначала безопасно приводит branch state к release contract или фиксирует blocker.
+
+### Environment capability preflight
+
+Codex должен проверить только реально необходимые для release capability:
+
+- Node/npm для frontend;
+- Supabase tooling/доступ к development environment — если затрагивается БД;
+- browser/Playwright/Computer Use — если требуется user-facing QA;
+- доступные skills;
+- возможность запускать project validation commands.
+
+Недоступный необязательный tool фиксируется как limitation. Недоступность **локального repository checkout** является blocker.
 
 ## 1. Главная причина прежних ошибок
 
@@ -28,12 +127,13 @@
 
 ## 2. Codex не начинает с кода
 
-Перед первым изменением кода Codex обязан выполнить preflight.
+После успешного Environment preflight Codex читает обязательный repo context и до первого изменения runtime-кода полностью заполняет `releases/<release>/IMPLEMENTATION_PLAN.md`.
 
-### Preflight output
+### Preflight output в плане
 
-В `releases/<release>/IMPLEMENTATION_PLAN.md` записать:
+Записать:
 
+- repository/environment checksum;
 - текущий baseline;
 - пользовательскую проблему;
 - гипотезу;
@@ -49,7 +149,7 @@
 - rollback/forward-fix;
 - неизвестные допущения.
 
-После записи плана Codex должен сверить его с Product Strategy и только затем продолжить.
+После записи плана Codex сверяет его с Product Strategy и только затем продолжает.
 
 Если найдено противоречие стратегии или текущего state — код не писать, сначала исправить/эскалировать противоречие.
 
@@ -81,30 +181,26 @@ Root `AGENTS.md` задаёт общие правила.
 
 При изменении файла Codex обязан соблюдать наиболее локальный применимый `AGENTS.md`.
 
-Это соответствует механике Codex: инструкции более глубокого `AGENTS.md` применяются к своему subtree и имеют приоритет над более общими repo-инструкциями.
-
 ## 5. Skill routing обязателен
 
-Перед задачей Codex определяет, какие специализированные skills/tools применимы.
-
-См. `docs/CODEX_SKILL_ROUTING.md`.
+Перед задачей Codex определяет, какие специализированные skills/tools применимы по `docs/CODEX_SKILL_ROUTING.md`.
 
 Правило:
 
 > если для задачи существует установленный специализированный skill, Codex не должен заменять его собственной памятью без причины
 
-Примеры:
+Приоритетные примеры:
 
-- PostgreSQL/Supabase schema → Supabase/Postgres best-practices skill;
-- Cloudflare Worker → Workers best-practices + Wrangler;
-- web performance → web-perf;
-- GitHub CI failure → gh-fix-ci;
-- PR publishing → yeet/GitHub workflow;
-- browser UX → browser/computer-use/Playwright workflow, если доступен.
+- PostgreSQL/Supabase schema → Supabase/Postgres best-practices;
+- Cloudflare runtime → Workers best-practices + Wrangler;
+- web performance → профильный performance workflow;
+- GitHub CI failure → профильный CI workflow;
+- PR publishing/review → GitHub workflow;
+- browser UX → browser/computer-use/Playwright workflow.
 
-Если skill недоступен, Codex пишет это в validation notes и использует официальную актуальную документацию.
+Если skill недоступен, Codex пишет это в validation notes и использует актуальную официальную документацию.
 
-## 6. Не один большой шаг, а последовательные checkpoints
+## 6. Последовательные checkpoints
 
 Даже внутри одного release Codex работает фазами.
 
@@ -126,39 +222,38 @@ Root `AGENTS.md` задаёт общие правила.
 
 ### Фаза D — Observability
 
-Проверить, что новое поведение видно в analytics/admin.
+Новое поведение видно в analytics/admin.
 
 ### Фаза E — QA
 
 Build, tests, browser, privacy/RLS, diff review.
 
-Нельзя одновременно открыть пять незавершённых архитектурных направлений.
+Нельзя одновременно открыть несколько незавершённых архитектурных направлений.
 
 ## 7. Vertical slice прежде taxonomy completeness
 
-Если задача включает большой каталог/модель, сначала проверить один сквозной пример.
+Если задача включает большой каталог/модель, сначала проверяется один сквозной пример.
 
-Например для 4.0:
+Для первого 4.0 canonical slice:
 
-`сигарета после еды → микроосознанность → прогулка → outcome → metric update → admin event`
+`сигарета после еды → микроосознанность → релевантное действие → outcome → metric update → personal learning → admin event`
 
-Только после прохождения этого пути расширять остальные сценарии.
-
-Это снижает риск создать красивую, но несвязанную schema/UI.
+Только после прохождения этого пути расширяются остальные сценарии.
 
 ## 8. Implementation invariants
 
-Для release создаётся список инвариантов, которые не должны нарушаться.
+Для release создаётся список инвариантов.
 
-Примеры:
+Примеры ALIVE:
 
 - НЗТ не называется курением;
 - vape/hookah не получают cigarette Health Minutes;
 - quick log не считается craving intervention;
-- private `Зачем` не попадает в admin analytics;
+- private `Зачем` не попадает в generic/admin analytics;
 - пользовательский интерфейс русский;
 - удаление события пересчитывает производные данные;
-- один пользователь не видит данные другого.
+- один пользователь не видит данные другого;
+- медицинский текст не генерируется без Evidence Registry.
 
 Перед завершением Codex проверяет каждый invariant отдельно.
 
@@ -182,7 +277,7 @@ UI snapshots сами по себе не заменяют поведенческ
 
 TypeScript build не доказывает удобство интерфейса.
 
-Для user-facing release Codex должен, если доступен browser/computer-use/Playwright:
+Для user-facing release Codex должен, если browser/computer-use/Playwright доступен:
 
 1. открыть приложение;
 2. пройти критический сценарий;
@@ -190,26 +285,24 @@ TypeScript build не доказывает удобство интерфейса
 4. проверить mobile viewport;
 5. проверить loading/empty/error;
 6. проверить тексты и CTA;
-7. проверить, что действия реально сохраняются;
-8. сделать повторный проход после исправлений.
+7. проверить фактическое сохранение;
+8. повторить проход после исправлений.
 
 Если browser tool недоступен — gate остаётся `НЕ ПРОВЕРЕНО`.
 
 Нельзя заменить это утверждением «по коду должно работать».
 
-## 11. Performance review для критических flows
+## 11. Performance review критических flows
 
-После появления preview user-facing релиза использовать специализированный web performance audit, если соответствующий skill/tool доступен.
+После появления preview измеряется прежде всего:
 
-Особый приоритет:
-
-- время до интерактивного home;
+- время до интерактивного Home;
 - открытие `Хочу закурить`;
 - latency первого полезного ответа;
 - отсутствие layout shift CTA;
 - bundle regressions.
 
-Оптимизация выполняется только после измерения.
+Оптимизация выполняется после измерения.
 
 ## 12. Database quality gate
 
@@ -222,9 +315,9 @@ TypeScript build не доказывает удобство интерфейса
 - performance advisor;
 - проверку существующих данных;
 - rollback/forward-fix;
-- проверку delete/correction/recompute.
+- delete/correction/recompute.
 
-Нельзя применять новую schema к live alpha только потому, что SQL синтаксически выглядит корректно.
+Нельзя применять новую schema к live alpha только потому, что SQL визуально корректен.
 
 ## 13. Evidence/content gate
 
@@ -235,16 +328,16 @@ TypeScript build не доказывает удобство интерфейса
 - source действительно подтверждает claim;
 - ограничения перенесены в user copy;
 - пользовательский текст русский;
-- текст не превращает correlation/population estimate в персональный факт;
+- correlation/population estimate не превращён в персональный факт;
 - review date задана.
 
 Если нужно новое медицинское утверждение — сначала research/evidence update, затем UI.
 
 ## 14. Adversarial self-review
 
-После реализации Codex обязан сделать отдельный review собственного diff как будто код написал другой разработчик.
+После реализации Codex делает отдельный review собственного diff как будто код написал другой разработчик.
 
-Review должен искать:
+Ищет:
 
 - противоречие strategy;
 - лишний scope;
@@ -260,74 +353,69 @@ Review должен искать:
 - непроверенные claims;
 - тесты, которые ничего не доказывают.
 
-Найденные проблемы исправляются до handoff.
+Подтверждённые проблемы исправляются до handoff.
 
 ## 15. Независимый reviewer предпочтителен
 
 Для крупных PR предпочтительна схема:
 
-### Агент 1
+- Агент 1 реализует release;
+- Агент 2 получает PR/diff и независимо проверяет product invariants, architecture, security, data correctness, UX и tests;
+- автор исправляет подтверждённые замечания.
 
-Реализует release.
-
-### Агент 2
-
-Получает PR/diff без авторского контекста и делает независимый review по:
-
-- product invariants;
-- architecture;
-- security;
-- data correctness;
-- UX;
-- tests.
-
-Автор исправляет замечания.
-
-Если multi-agent режим недоступен, это явно записывается как отсутствие независимого review.
+Если multi-agent режим недоступен, это явно записывается.
 
 ## 16. Diff budget
 
-Codex обязан избегать unrelated cleanup.
+Codex избегает unrelated cleanup.
 
 Перед завершением вывести:
 
-- список изменённых файлов;
+- изменённые файлы;
 - зачем изменён каждый;
-- какие изменения являются strictly necessary;
-- нет ли generated/noise files;
-- нет ли случайного formatting churn.
+- какие изменения strictly necessary;
+- generated/noise files;
+- formatting churn.
 
 Если diff невозможно осмысленно описать, scope слишком большой.
 
-## 17. Никаких скрытых fallback'ов
+## 17. Никаких скрытых fallback
 
 Ошибка не должна тихо превращаться в другое поведение.
 
 Например:
 
-- отсутствие Evidence content не должно генерировать медицинский текст LLM;
-- ошибка ranking не должна выбирать случайную Замены без маркировки fallback;
-- отсутствие user data не должно создавать выдуманную персонализацию.
+- отсутствие Evidence content не генерирует медицинский текст LLM;
+- ошибка ranking не выбирает случайную Замены без маркировки fallback;
+- отсутствие user data не создаёт выдуманную персонализацию.
 
-Fallback должен быть безопасным и наблюдаемым.
+Fallback безопасен и наблюдаем.
 
 ## 18. Условия остановки Codex
 
 Codex прекращает implementation и фиксирует blocker, если обнаружено:
 
+- `LOCAL_REPOSITORY_UNAVAILABLE`;
 - destructive migration без owner decision;
 - медицински значимое решение без evidence;
 - privacy model change;
 - конфликт accepted documents;
 - неизвестный production secret;
 - невозможность безопасно мигрировать существующие данные;
-- задача требует внешнего production action, которое не было разрешено.
+- задача требует неразрешённого внешнего production action.
 
-Не останавливать работу из-за обычной сложности: выполнять максимально возможную безопасную часть.
+Обычная сложность blocker не является.
 
 ## 19. Финальный отчёт строго фактический
 
 Формат handoff:
+
+### Environment
+
+- local checkout — PASS/FAIL;
+- repository/remote — PASS/FAIL;
+- expected base — PASS/FAIL;
+- target branch — PASS/FAIL.
 
 ### Реализовано
 
@@ -335,10 +423,8 @@ Codex прекращает implementation и фиксирует blocker, есл�
 
 ### Проверено
 
-Таблица/список:
-
 - typecheck — PASS/FAIL/НЕ ПРОВЕРЕНО;
-- build — ...;
+- build — PASS/FAIL/НЕ ПРОВЕРЕНО;
 - unit tests — ...;
 - browser desktop — ...;
 - browser mobile — ...;
@@ -363,8 +449,9 @@ Codex прекращает implementation и фиксирует blocker, есл�
 
 ## 20. Quality scorecard
 
-Перед передачей owner Codex оценивает release по 0/1 для каждого критерия:
+Перед передачей owner Codex оценивает release по 0/1:
 
+- environment корректен;
 - стратегия соблюдена;
 - scope сфокусирован;
 - данные корректны;
@@ -383,20 +470,19 @@ Codex прекращает implementation и фиксирует blocker, есл�
 
 Release не называется готовым, если критический пункт равен 0.
 
-## 21. Что должно улучшить качество больше всего
+## 21. Приоритет мер качества
 
-Приоритет мер:
-
-1. маленький vertical slice;
-2. scoped AGENTS;
-3. task-specific skills;
-4. programmatic tests;
-5. реальный browser QA;
-6. независимый reviewer;
-7. структурированный handoff.
+1. правильный локальный environment;
+2. маленький vertical slice;
+3. scoped AGENTS;
+4. task-specific skills;
+5. programmatic tests;
+6. реальный browser QA;
+7. независимый reviewer;
+8. структурированный handoff.
 
 Просто увеличить длину master prompt — недостаточно.
 
 ## 22. Итог
 
-> **Codex оценивается не по объёму созданного кода, а по количеству подтверждённых продуктовых инвариантов, прошедших tests и реально работающих пользовательских сценариев.**
+> **Codex оценивается не по объёму созданного кода, а по количеству подтверждённых продуктовых инвариантов, прошедших tests и реально работающих пользовательских сценариев. Если локального checkout нет — никакого release ещё не существует.**
