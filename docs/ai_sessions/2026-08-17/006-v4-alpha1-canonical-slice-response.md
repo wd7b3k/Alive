@@ -32,7 +32,8 @@
 - `npm ci --no-audit --no-fund` — PASS;
 - `npm run typecheck` — PASS;
 - `npm test` — PASS, 11/11;
-- `npm run build` — PASS.
+- `npm run build` — PASS;
+- GitHub Actions `ALIVE frontend CI` run #246 — PASS.
 
 Остаётся build warning: основной JS chunk больше 500 kB.
 
@@ -64,7 +65,6 @@ Canonical E2E не получил PASS.
 - R1/alpha migrations не применялись к live и production не изменялась;
 - development Supabase branch требует явного owner cost confirmation `0.01344 USD/час`;
 - release preview отсутствует;
-- migration execution, RLS/concurrent retry, authenticated desktop/mobile browser QA, DB learning/admin rows, performance и GitHub Actions status остаются `НЕ ПРОВЕРЕНО`;
-- linked GitHub integration возвращает 403 для Actions API.
+- migration execution, RLS/concurrent retry, authenticated desktop/mobile browser QA, DB learning/admin rows и performance остаются `НЕ ПРОВЕРЕНО`;
 
 По stop condition отдельные vape/hookah flows не реализовывались.
