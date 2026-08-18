@@ -10,8 +10,11 @@
 | `npm test` | PASS | 14/14 tests |
 | `npm run build` | PASS | Vite production build; known chunk-size warning remains |
 | Local browser public shell | PASS | Logo and heading rendered correctly |
-| Authenticated `/facts` desktop/mobile | НЕ ПРОВЕРЕНО | Требуется deployed preview и authenticated session |
-| GitHub Actions | НЕ ПРОВЕРЕНО | До публикации branch |
-| Cloudflare preview | НЕ ПРОВЕРЕНО | До публикации branch |
+| Public `/facts?tab=myths` deep-link | PASS | Branch preview отвечает приложением без 404 и сохраняет route/query |
+| Authenticated `/facts` desktop/mobile | НЕ ПРОВЕРЕНО | Требуется owner authenticated session на preview |
+| GitHub Actions | PASS | `ALIVE frontend CI`, run `32161206081`, success за 19 секунд |
+| Cloudflare preview | PASS | Branch preview deploy successful: `https://agent-v4-0-0-alpha-1-hotfix.alive-aw2.pages.dev/` |
+
+PR: `#11`, base `agent/v4.0.0-alpha.1`, code commit `8738c3d8f5df3e197e3db6faaa71e81bd348d10f`.
 
 Новых DB migrations нет; database CI не является изменённым gate этого hotfix.
