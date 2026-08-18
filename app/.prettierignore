@@ -1,0 +1,21 @@
+dist
+coverage
+node_modules
+package-lock.json
+
+# Legacy files stay unchanged until their owning module is touched structurally.
+README.md
+index.html
+src/actions.ts
+src/data.ts
+src/env.ts
+src/metrics.ts
+src/redesign.css
+src/styles.css
+src/supabase.ts
+src/ui-icons.tsx
+src/visual-hardening.css
+src/visual-polish.css
+src/vite-env.d.ts
+tsconfig.json
+vite.config.ts

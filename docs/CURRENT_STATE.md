@@ -6,6 +6,8 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
 Текущая стадия: **ALIVE v3.0 — PRODUCT ALPHA / IN DEVELOPMENT**.
 
+Текущий test candidate: **v3.0 stabilization**, branch `agent/stabilization-release`. Кандидат не содержит новых продуктовых функций или migrations и не считается принятым до ручного smoke-test владельцем и merge в `main`.
+
 `wd7b3k/Alive` — единственный source of truth. Код, migrations, product rules и release gates меняются сначала в repo; Dashboard/чат не переопределяют repo.
 
 ## Живая инфраструктура
@@ -17,7 +19,7 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 - Auth: Google → Supabase Auth.
 - Database: Supabase PostgreSQL + RLS.
 - Supabase project: `xkigijaqimzuveyzyzyk`, `eu-west-1`.
-- GitHub CI: Node `22.12.0`, `npm ci`, `typecheck`, production build.
+- GitHub CI: Node `22.12.0`, `npm ci`, format check, lint, typecheck, tests, production build.
 
 Google OAuth проверен реальным входом: Auth user и ALIVE profile автоматически создаются, display name/avatar приходят из Google metadata.
 

@@ -1,14 +1,20 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import RedesignApp from './RedesignApp';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { AppRouter } from './router/AppRouter';
+import { initGlobalErrorMonitoring } from './services/error-monitoring';
 import './styles.css';
 import './redesign.css';
 
 const root = document.getElementById('root');
-if (!root) throw new Error('ALIVE root element is missing');
+if (!root) throw new Error('Не найден корневой элемент ALIVE');
+
+initGlobalErrorMonitoring();
 
 createRoot(root).render(
   <StrictMode>
-    <RedesignApp />
+    <ErrorBoundary>
+      <AppRouter />
+    </ErrorBoundary>
   </StrictMode>,
 );
