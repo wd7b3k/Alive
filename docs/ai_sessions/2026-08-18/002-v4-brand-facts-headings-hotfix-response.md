@@ -20,6 +20,7 @@ Validation:
 - build: PASS;
 - local public-shell browser smoke: PASS;
 - Cloudflare branch preview: PASS, `https://agent-v4-0-0-alpha-1-hotfix.alive-aw2.pages.dev/`;
+- remote public shell desktop and 390×844 mobile: PASS, no horizontal overflow;
 - public `/facts?tab=myths` deep-link: PASS;
 - GitHub Actions: PASS, run `32161206081`;
 - authenticated `/facts` desktop/mobile: pending owner preview test.

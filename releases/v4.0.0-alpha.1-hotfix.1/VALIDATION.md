@@ -10,6 +10,7 @@
 | `npm test` | PASS | 14/14 tests |
 | `npm run build` | PASS | Vite production build; known chunk-size warning remains |
 | Local browser public shell | PASS | Logo and heading rendered correctly |
+| Remote public shell desktop/mobile | PASS | Desktop and 390×844 mobile; approved 2048×682 asset, no horizontal overflow |
 | Public `/facts?tab=myths` deep-link | PASS | Branch preview отвечает приложением без 404 и сохраняет route/query |
 | Authenticated `/facts` desktop/mobile | НЕ ПРОВЕРЕНО | Требуется owner authenticated session на preview |
 | GitHub Actions | PASS | `ALIVE frontend CI`, run `32161206081`, success за 19 секунд |
