@@ -6,7 +6,7 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
 Текущая стадия: **ALIVE v3.0 — PRODUCT ALPHA / IN DEVELOPMENT**.
 
-Текущий test candidate: **v3.0 stabilization**, branch `agent/stabilization-release`. Кандидат не содержит новых продуктовых функций или migrations и не считается принятым до ручного smoke-test владельцем и merge в `main`.
+Текущий test candidate: **v3.0 stabilization**, branch `agent/stabilization-release`, draft PR `#10`, preview `https://agent-stabilization-release.alive-aw2.pages.dev`. Кандидат не содержит новых продуктовых функций или migrations и не считается принятым до ручного authenticated smoke-test владельцем и merge в `main`.
 
 `wd7b3k/Alive` — единственный source of truth. Код, migrations, product rules и release gates меняются сначала в repo; Dashboard/чат не переопределяют repo.
 

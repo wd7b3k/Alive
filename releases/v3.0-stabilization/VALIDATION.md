@@ -9,6 +9,7 @@
 - `npm run typecheck`: PASS;
 - `npm test`: PASS, 3 files / 15 tests;
 - `npm run build`: PASS, с предупреждением о JS chunk > 500 kB.
+- GitHub Actions `ALIVE frontend CI` run `#325`: PASS.
 
 ## Local production smoke
 
@@ -16,6 +17,14 @@
 - direct routes `/links`, `/path`, `/meanings`, `/experiment`, `/profile`: PASS;
 - browser console errors: 0;
 - authenticated flows: не запускались локально, потому что production preview собирался без Supabase env.
+
+## Cloudflare preview smoke
+
+- deployment commit `b53a303`: PASS;
+- root login screen и Google login control: PASS;
+- public direct route `/experiment`: PASS;
+- direct routes `/links`, `/path`, `/meanings`, `/profile`: PASS, URL сохраняется и unauthenticated user получает login screen;
+- browser console errors: 0.
 
 ## Manual owner validation
 

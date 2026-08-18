@@ -19,7 +19,9 @@
 ## Release artifacts
 
 - GitHub branch: `agent/stabilization-release`;
-- draft PR и Cloudflare preview URL фиксируются после публикации;
+- draft PR: `https://github.com/wd7b3k/Alive/pull/10`;
+- Cloudflare branch preview: `https://agent-stabilization-release.alive-aw2.pages.dev`;
+- immutable preview первого candidate commit: `https://efb27316.alive-aw2.pages.dev`;
 - канонический changelog: `CHANGELOG.md`;
 - validation: `VALIDATION.md`;
 - rollback: `ROLLBACK.md`.
