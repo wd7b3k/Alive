@@ -9,8 +9,10 @@
 ## Branch / PR
 
 - base: `agent/v4.0.0-alpha.1`
-- branch: `agent/owner-vision-delivery-protocol`
-- draft PR: `#9` — `ALIVE: owner vision and delivery protocol`
+- work branch: `agent/owner-vision-delivery-protocol`
+- PR: `#9` — `ALIVE: owner vision and delivery protocol`
+- PR state: **MERGED** в активную development branch `agent/v4.0.0-alpha.1`
+- squash merge commit: `806f659669fc1906f0254cbc7c4ebe796c05beb3`
 
 ## Изменённые сущности
 
@@ -55,17 +57,19 @@
 
 ## Validation
 
-- `PASS` — новая branch создана от текущей active branch `agent/v4.0.0-alpha.1`;
-- `PASS` — compare с base до audit-response показывал только documentation changes;
+- `PASS` — отдельная branch создана от текущей active branch `agent/v4.0.0-alpha.1`;
+- `PASS` — итоговый compare с base содержал только documentation changes: `ACTIVE_RELEASE`, `AGENT_CONTINUITY`, `PRODUCT_BACKLOG` и AI audit trail;
 - `PASS` — runtime/schema/migrations/CI config не изменялись;
 - `PASS` — `AGENT_CONTINUITY.md` уже входит в обязательный context-loading path root `AGENTS.md`, поэтому новый протокол становится частью обязательного continuity для следующего агента;
-- `PASS` — создан draft PR #9;
+- `PASS` — PR #9 прошёл owner-authorized integration и merged в активную development branch;
 - `НЕ ПРОВЕРЕНО` — автоматический markdown/link lint отсутствует как отдельный gate для этой docs-only правки.
 
 ## Runtime impact
 
 Нет.
 
-## Open gate
+## Следующее применение протокола
 
-PR #9 остаётся draft. После owner acceptance его нужно интегрировать в активную линию разработки до следующего significant product task, чтобы новый protocol применялся не только в этой ветке.
+Текущий `4.0.0-alpha.1` остаётся `FROZEN FOR DELIVERY`. Следующая новая product idea, не являющаяся blocker/scope correction текущего gate, должна быть сразу записана в `docs/PRODUCT_BACKLOG.md` либо перенесена в `docs/ROADMAP.md` с явным gate.
+
+После закрытия authenticated canonical browser gate агент обязан сам открыть backlog, сопоставить его с roadmap и предложить владельцу следующий release contract для freeze.
