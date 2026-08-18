@@ -30,9 +30,11 @@
 
 Если migration уже применена и проблема обнаружена позже:
 
-- сначала оценить наличие данных в новых таблицах/колонках;
+- на development branch предпочтительно удалить ветку и создать чистую после исправления;
+- на live сначала оценить наличие данных в новых таблицах/колонках;
 - выполнить forward-fix;
-- drop допустим только если доказано отсутствие нужных данных и есть owner decision.
+- `public.alive_record_awareness_exposure(text,text,text,uuid)` и индекс `analytics_events_one_canonical_event_per_flow_idx` удалять только после остановки alpha frontend и owner decision;
+- drop допустим только если доказано отсутствие нужных данных.
 
 ## Legacy compatibility
 
@@ -87,7 +89,8 @@
 
 Если micro-awareness unavailable:
 
-- craving flow должен продолжить работать без медицинского сообщения;
+- alpha.1 fail-closed: не показывать медицинский текст и не объявлять canonical flow завершённым;
+- разрешён только активный private `Зачем`, который не выдаётся за medical claim и не уходит в generic analytics;
 - LLM не генерирует замену отсутствующему content.
 
 ## Preview rollback
@@ -95,6 +98,14 @@
 4.0 alpha должен сначала существовать как reviewable preview/draft PR.
 
 Не менять canonical production domain до owner acceptance.
+
+## Ephemeral CI
+
+Database validation не создаёт долговечного окружения: teardown выполняется `supabase stop --no-backup` с `if: always()`, затем GitHub runner уничтожается.
+
+Legacy migrations `20260817180000` и `20260817180500` условно работают с `user_myth_state`: при наличии historical table выполняются перенос/индекс, при fresh schema безопасно пропускаются. Не заменять это созданием фиктивной legacy table.
+
+Падение CI не требует очистки live или диска владельца. Исправление migration/test harness оформляется отдельным commit и подтверждается новым полным run.
 
 ## После rollback
 

@@ -22,15 +22,21 @@ export async function saveQuickUse(session: Session, draft: QuickUseDraft) {
   const completedAt = new Date().toISOString();
   const triggerCode = draft.triggerCode && draft.triggerCode !== 'other' ? draft.triggerCode : null;
 
-  const episode = await supabase.from('episodes').insert({
+  const episodePayload = {
     user_id: userId,
+    episode_kind: 'quick_use',
     target_product: draft.product,
     trigger_code: triggerCode,
     custom_trigger_text: draft.triggerCode === 'other' ? draft.customTriggerText || 'Другое' : null,
     outcome: 'nicotine_used',
     private_note: draft.note || null,
     completed_at: completedAt,
-  }).select('id').single();
+  };
+  let episode = await supabase.from('episodes').insert(episodePayload).select('id').single();
+  if (episode.error?.message.includes('episode_kind')) {
+    const { episode_kind: _episodeKind, ...legacyPayload } = episodePayload;
+    episode = await supabase.from('episodes').insert(legacyPayload).select('id').single();
+  }
   if (episode.error || !episode.data) throw new Error(episode.error?.message || 'Не удалось сохранить эпизод');
 
   const event = await supabase.from('tobacco_events').insert({

@@ -188,20 +188,26 @@ Performance Advisor показал существовавшие unindexed foreig
 
 ## R1 открытые gates
 
-R1 migrations **не применены к live alpha/production**.
+R1 migrations **не применены к live alpha/production**. Платная Supabase development/preview branch не создавалась.
+
+Бесплатный ephemeral database gate подтверждён в GitHub Actions `ALIVE database CI` run #44 на final DB-tested head `c86ce07cbb5aded2a1172a9d7a77f9786d1db062`:
+
+- pinned Supabase CLI `2.111.0`;
+- fresh stack и отдельный replay всей migration chain через `supabase db reset --local`;
+- 61/61 pgTAP assertions: RLS isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, soft-delete/recompute, blocked hard delete, non-escalating admin boundary, cross-user action denial и legacy-present migration;
+- фактически исполнен `supabase db lint --level error --fail-on error`; log: `No schema errors found`;
+- `supabase stop --no-backup` завершён, runner уничтожен;
+- remote link, Supabase secrets, artifacts и постоянные Docker volumes не использовались.
+
+Runs #24/#32 больше не считаются strict-lint evidence: независимая проверка обнаружила false-green из-за default `--fail-on none`. Legacy helper теперь принимает существующую source relation как `regclass`, поэтому compatibility сохранена без скрытой lint-ссылки на отсутствующую таблицу.
 
 До принятия R1 остаются:
 
-- последовательное применение migrations на development DB/branch;
-- RLS isolation tests;
-- security/performance advisors после R1 migrations;
-- фактический frontend typecheck/build PASS;
+- hosted security/performance advisors после будущего controlled deployment;
 - browser QA `/admin`;
 - client step telemetry для раннего выхода craving flow;
 - owner review Evidence user copy;
-- controlled owner admin bootstrap после DB gate.
-
-GitHub connector ранее не вернул Actions status, поэтому CI PASS не заявляется без фактического результата.
+- controlled owner admin bootstrap после deployment gate.
 
 ## Новый жёсткий documentation rule
 
@@ -385,6 +391,31 @@ Mandatory first vertical slice:
 - complex ML;
 - paywall/subscription;
 - public social layer.
+
+
+### Фактическое выполнение alpha.1 — 2026-08-17
+
+Созданы:
+
+- branch `agent/v4.0.0-alpha.1` от `agent/r1-data-evidence-admin`;
+- draft PR #8;
+- полный implementation plan до runtime-кода;
+- pure domain layer для freedom metrics, deterministic intervention ranking, awareness fatigue и analytics allowlist;
+- компактный canonical cigarette flow с CTA `Хочу закурить`;
+- R1 runtime adapter с безопасным legacy fallback;
+- явное разделение `craving` / `quick_use`;
+- структурированная client funnel telemetry и её русская admin-интерпретация;
+- atomic/idempotent awareness RPC и unique canonical event key по `flow_id`;
+- outcome retry без повторного сохранения episode и без показа неподтверждённых метрик;
+- 11 automated domain tests.
+
+Фактически выполнены `npm ci`, typecheck, 11/11 tests и production build. Final DB-tested head `c86ce07cbb5aded2a1172a9d7a77f9786d1db062` прошёл frontend run #304 и database run #44; DB log подтверждает fresh replay, 61/61 pgTAP и `No schema errors found` при `--fail-on error`. Последующие изменения checkpoint-документов не меняют runtime/schema. Build сохраняет предупреждение о bundle chunk больше 500 kB.
+
+Adversarial self-review и независимый review завершены. DB/CI reviewer сначала нашёл 2 P1, 3 P2 и 1 P3; после security hardening focused re-review подтвердил закрытие всех шести findings. Следующая независимая проверка нашла отдельный false-green lint gate; strict semantics и сам legacy lint defect исправлены. Executable gate считается evidence только после проверки команды, fail semantics и полного лога.
+
+Canonical data slice получил programmatic PASS в бесплатном ephemeral CI: migration replay, RLS, privilege non-escalation, action ownership, learning/delete-recompute, idempotent concurrent retry, legacy-present migration и admin/private boundary проверены. Live project намеренно не изменялся. Public preview smoke PASS на desktop/mobile; полный authenticated browser E2E, Core Web Vitals и hosted Advisors остаются `НЕ ПРОВЕРЕНО`.
+
+Поэтому scope на отдельные vape/hookah flows не расширен. Это stop condition release, а не незаметно перенесённая работа.
 
 ## Живая инфраструктура main
 

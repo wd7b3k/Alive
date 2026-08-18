@@ -2,7 +2,13 @@
 
 -- Два существующих замечания текущей alpha schema.
 create index if not exists trigger_replacement_map_replacement_idx on public.trigger_replacement_map(replacement_code);
-create index if not exists user_myth_state_myth_code_idx on public.user_myth_state(myth_code);
+do $legacy$
+begin
+  if pg_catalog.to_regclass('public.user_myth_state') is not null then
+    execute 'create index if not exists user_myth_state_myth_code_idx on public.user_myth_state(myth_code)';
+  end if;
+end
+$legacy$;
 
 -- R1 catalogs / personal entities.
 create index if not exists triggers_catalog_category_code_idx on public.triggers_catalog(category_code) where category_code is not null;

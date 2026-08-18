@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 160" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">ALIVE</title>
+  <desc id="logoDesc">Classical Om mark with ALIVE wordmark</desc>
+  <defs>
+    <linearGradient id="omGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f2cb6c" />
+      <stop offset="48%" stop-color="#d8ff74" />
+      <stop offset="100%" stop-color="#58dfd1" />
+    </linearGradient>
+  </defs>
+  <rect width="560" height="160" fill="none" />
+  <text
+    x="18"
+    y="114"
+    font-family="'Noto Serif Devanagari', 'Nirmala UI', 'Devanagari Sangam MN', serif"
+    font-size="108"
+    font-weight="700"
+    fill="url(#omGradient)"
+  >&#2384;</text>
+  <text
+    x="138"
+    y="92"
+    font-family="'Cormorant Garamond', 'Georgia', 'Times New Roman', serif"
+    font-size="58"
+    font-weight="700"
+    letter-spacing="0.28em"
+    fill="#f4f7f5"
+  >ALIVE</text>
+</svg>

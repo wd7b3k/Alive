@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import logoUrl from './assets/brand-logo-full.png';
+import logoUrl from './assets/brand-logo-classic-om.svg';
 import { publicEnv } from './env';
 import { getSupabase } from './supabase';
 import {
@@ -30,6 +30,8 @@ import {
 import { saveQuickUse } from './actions';
 import { dailyUnits, replacementStats, statsForDays, triggerStats } from './metrics';
 import { Icon, type IconName } from './ui-icons';
+import { calculateFreedomMetrics, rankInterventions, selectAwareness, type AnalyticsEventType } from './release4-domain';
+import { recordAwarenessShown, trackRelease4Event } from './release4-data';
 
 function go(path: string) {
   window.history.pushState({}, '', path);
@@ -58,6 +60,16 @@ function fmt(value: number, digits = 0) {
 
 function money(value: number) {
   return `${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(value)} ₽`;
+}
+
+function freedomForDays(data: Bootstrap, days: number) {
+  const since = Date.now() - days * 86_400_000;
+  return calculateFreedomMetrics({
+    products: data.products,
+    episodes: data.episodes.filter((episode) => new Date(episode.started_at).getTime() >= since),
+    tobaccoEvents: data.tobaccoEvents.filter((event) => new Date(event.occurred_at).getTime() >= since),
+    elapsedDays: days,
+  });
 }
 
 function when(value: string) {
@@ -96,7 +108,7 @@ function needIcon(code: string, title: string): IconName {
   return 'heart';
 }
 
-function replacementIcon(item: Replacement): IconName {
+function replacementIcon(item: Pick<Replacement, 'code' | 'title' | 'category'>): IconName {
   const s = `${item.code} ${item.title} ${item.category}`.toLowerCase();
   if (s.includes('дых') || s.includes('breath')) return 'breath';
   if (s.includes('чай') || s.includes('вода') || s.includes('напит')) return 'tea';
@@ -110,10 +122,10 @@ function replacementIcon(item: Replacement): IconName {
   return 'spark';
 }
 
-function replacementKind(item: Replacement) {
+function replacementKind(item: Pick<Replacement, 'category'>) {
   if (item.category === 'nrt') return 'Никотин-заместительная терапия';
   if (item.category === 'food') return 'Еда и напиток';
-  if (item.category === 'meaning') return 'Смысл';
+  if (item.category === 'meaning') return 'Зачем';
   if (item.category === 'physical') return 'Тело';
   if (item.category === 'sensory') return 'Внимание и ощущения';
   return 'Другой ответ';
@@ -148,7 +160,7 @@ const MAIN_NAV = [
   ['/', 'Сегодня', 'spark'],
   ['/links', 'Связки', 'chain'],
   ['/path', 'Путь', 'path'],
-  ['/meanings', 'Смыслы', 'meaning'],
+  ['/meanings', 'Зачем', 'meaning'],
 ] as const;
 
 function Header({ data, path }: { data: Bootstrap; path: string }) {
@@ -236,33 +248,370 @@ function QuickUse({ session, data, close, saved }: { session: Session; data: Boo
   return <Modal onClose={close}><div className="r-modal-head"><div><p className="r-kicker">Просто факт · без оценки</p><h2>Никотин уже был</h2><p>Здесь нет «замены». Мы отдельно записываем употребление, чтобы история оставалась честной.</p></div><button className="r-icon-button" onClick={close}><Icon name="close"/></button></div><div className="r-product-switch">{data.products.map((p) => <button key={p.product_type} className={product === p.product_type ? 'selected' : ''} onClick={() => setProduct(p.product_type)}><Icon name={productIcon(p.product_type)} size={20}/>{productLabel(p.product_type)}</button>)}</div><label className="r-field"><span>Что происходило перед этим? · необязательно</span><select value={trigger} onChange={(e) => setTrigger(e.target.value)}><option value="">Не указывать</option>{data.triggers.filter((t) => t.product_types.includes(product)).map((t) => <option key={t.code} value={t.code}>{t.title}</option>)}</select></label>{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(e) => setQty(Number(e.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0,puffs-5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs+5)}>+5</button><button onClick={() => setPuffs(puffs+10)}>+10</button></div>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Записать факт'}</ShellButton><ShellButton className="ghost" onClick={close}>Отмена</ShellButton></div></Modal>;
 }
 
-function Guided({ session, data, close, saved, initialTrigger }: { session: Session; data: Bootstrap; close: () => void; saved: () => Promise<void>; initialTrigger?: string }) {
-  const initialProduct = data.products.find((p) => p.role === 'target_dependency')?.product_type ?? data.products[0]?.product_type ?? 'cigarette';
+function Guided({ session, data, close, saved, initialTrigger }: { session: Session; data: Bootstrap; close: () => void; saved: () => Promise<Bootstrap>; initialTrigger?: string }) {
+  const initialProduct = data.products.find((item) => item.role === 'target_dependency')?.product_type ?? data.products[0]?.product_type ?? 'cigarette';
+  const initialStep = initialTrigger ? 'awareness' : data.products.length > 1 ? 'product' : 'context';
   const [product, setProduct] = useState<ProductType>(initialProduct);
-  const [step, setStep] = useState(data.products.length > 1 ? 0 : 1);
+  const [step, setStep] = useState<'product' | 'context' | 'awareness' | 'intervention' | 'doing' | 'outcome' | 'complete'>(initialStep);
   const [triggerCode, setTrigger] = useState(initialTrigger ?? '');
-  const [needCode, setNeed] = useState('');
   const [before, setBefore] = useState(7);
   const [replacementCode, setReplacement] = useState<string | null>(null);
   const [after, setAfter] = useState(4);
   const [help, setHelp] = useState(3);
-  const [outcome, setOutcome] = useState<'successful_response' | 'nicotine_used' | 'abandoned'>('successful_response');
+  const [outcome, setOutcome] = useState<'successful_response' | 'nicotine_used'>('successful_response');
   const [qty, setQty] = useState(1);
   const [puffs, setPuffs] = useState(10);
   const [busy, setBusy] = useState(false);
-  const candidates = useMemo(() => triggerCode && needCode ? pickReplacements(data, product, triggerCode, needCode) : [], [data, product, triggerCode, needCode]);
-  const selected = data.replacements.find((r) => r.code === replacementCode);
-  const triggers = data.triggers.filter((t) => t.product_types.includes(product));
-  async function save() {
-    if (!triggerCode || !needCode) return;
-    setBusy(true);
-    const tobacco: GuidedEpisodeDraft['tobacco'] = outcome === 'nicotine_used' ? { cigaretteQuantity: product === 'cigarette' ? qty : undefined, hookahSessionCount: product === 'hookah' ? 1 : undefined, vapePuffs: product === 'vape' ? puffs : undefined } : undefined;
-    try { await saveGuidedEpisode(session, { product, triggerCode, needCode, cravingBefore: before, cravingAfter: after, helpfulness: help, replacementCode, outcome, tobacco }); await saved(); close(); } finally { setBusy(false); }
-  }
-  const progress = Math.max(1, step);
-  return <Modal wide onClose={close}><div className="r-modal-head"><div><p className="r-kicker">Не экзамен. Один живой момент.</p><h2>{step < 3 ? 'Что происходит прямо сейчас?' : 'Выбери другой ответ'}</h2></div><button className="r-icon-button" onClick={close}><Icon name="close"/></button></div><div className="r-progress"><span className={progress>=1?'done':''}>1 · ситуация</span><span className={progress>=2?'done':''}>2 · потребность</span><span className={progress>=3?'done':''}>3 · ответ</span><span className={progress>=4?'done':''}>4 · результат</span></div>{step === 0 && <section className="r-flow"><h3>К чему сейчас тянет?</h3><div className="r-choice-grid products">{data.products.map((p) => <button key={p.product_type} onClick={() => { setProduct(p.product_type); setStep(1); }}><Icon name={productIcon(p.product_type)} size={28}/><strong>{productLabel(p.product_type)}</strong></button>)}</div></section>}{step === 1 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="eye"/></span><div><h3>В каком контексте включилась тяга?</h3><p>Не ищем виноватого. Ищем повторяющийся пусковой момент.</p></div></div><div className="r-choice-grid">{triggers.map((t) => <button key={t.code} onClick={() => { setTrigger(t.code); setStep(2); }}><span className="r-choice-icon"><Icon name={triggerIcon(t)} size={23}/></span><strong>{t.title}</strong><small>{t.description}</small></button>)}</div></section>}{step === 2 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="heart"/></span><div><h3>Что ты на самом деле сейчас ищешь?</h3><p>Сигарета может обещать паузу, разрядку, завершение, стимуляцию или контакт. Нам нужна функция, а не форма ритуала.</p></div></div><div className="r-choice-grid needs">{data.needs.map((n) => <button key={n.code} onClick={() => { setNeed(n.code); setStep(3); }}><span className="r-choice-icon"><Icon name={needIcon(n.code,n.title)} size={24}/></span><strong>{n.title}</strong><small>{n.description}</small></button>)}</div><div className="r-slider"><label><span>Сила тяги</span><b>{before}/10</b></label><input type="range" min="1" max="10" value={before} onChange={(e) => setBefore(Number(e.target.value))}/></div></section>}{step === 3 && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon accent"><Icon name="spark"/></span><div><h3>Три варианта под этот момент</h3><p>Не список «полезных привычек». Эти ответы подобраны под ситуацию и потребность; со временем порядок будет меняться по твоим результатам.</p></div></div><div className="r-replacement-grid">{candidates.map((r) => <button key={r.code} onClick={() => { setReplacement(r.code); setStep(4); }}><span className="r-big-icon"><Icon name={replacementIcon(r)} size={30}/></span><div><span className="r-kind">{replacementKind(r)}{r.duration ? ` · ${r.duration}` : ''}</span><h3>{r.title}</h3><p>{r.summary || r.instruction}</p></div><Icon name="arrow" className="r-card-arrow" size={20}/></button>)}</div><button className="r-skip" onClick={() => { setReplacement(null); setStep(4); }}>Сейчас не хочу пробовать замену</button></section>}{step === 4 && <section className="r-flow"><div className="r-result-choice">{selected ? <><span className="r-big-icon"><Icon name={replacementIcon(selected)} size={30}/></span><div><small>Ты выбрал</small><h3>{selected.title}</h3><p>{selected.instruction}</p></div></> : <><span className="r-big-icon"><Icon name="pause" size={30}/></span><div><small>Без замены</small><h3>Просто наблюдаем результат</h3></div></>}</div><div className="r-two-sliders"><div className="r-slider"><label><span>Тяга после</span><b>{after}/10</b></label><input type="range" min="0" max="10" value={after} onChange={(e) => setAfter(Number(e.target.value))}/></div><div className="r-slider"><label><span>Насколько помогло</span><b>{help}/5</b></label><input type="range" min="0" max="5" value={help} onChange={(e) => setHelp(Number(e.target.value))}/></div></div><div className="r-outcomes"><button className={outcome==='successful_response'?'selected success':''} onClick={() => setOutcome('successful_response')}><Icon name="check" size={22}/><div><strong>Автоматизм прерван</strong><small>Никотиновый ответ не последовал</small></div></button><button className={outcome==='nicotine_used'?'selected used':''} onClick={() => setOutcome('nicotine_used')}><Icon name={productIcon(product)} size={22}/><div><strong>Никотин всё же был</strong><small>Это итог, а не «провал» и не замена</small></div></button><button className={outcome==='abandoned'?'selected':''} onClick={() => setOutcome('abandoned')}><Icon name="pause" size={22}/><div><strong>Просто закрыть</strong><small>Без оценки результата</small></div></button></div>{outcome === 'nicotine_used' && <div className="r-nicotine-detail"><p><b>Отдельно фиксируем сам продукт.</b> Он не попадёт в поле «Замена».</p>{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(e) => setQty(Number(e.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0,puffs-5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs+5)}>+5</button></div>}</div>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Сохранить эпизод'} <Icon name="arrow" size={18}/></ShellButton><ShellButton className="ghost" onClick={() => setStep(3)}>Выбрать другой ответ</ShellButton></div></section>}</Modal>;
-}
+  const [error, setError] = useState('');
+  const [completion, setCompletion] = useState<ReturnType<typeof freedomForDays> | null>(null);
+  const [refreshWarning, setRefreshWarning] = useState('');
+  const [pendingOutcomeEpisodeId, setPendingOutcomeEpisodeId] = useState<string | null>(null);
+  const [telemetryReady, setTelemetryReady] = useState<boolean | null>(null);
+  const openedTracked = useRef(false);
+  const awarenessShownTracked = useRef('');
+  const exposureTracked = useRef('');
+  const exposurePending = useRef<Promise<boolean> | null>(null);
+  const interventionsTracked = useRef('');
+  const flowId = useRef(crypto.randomUUID()).current;
+  const episodeId = useRef(crypto.randomUUID()).current;
+  const trigger = data.triggers.find((item) => item.code === triggerCode);
+  const triggers = data.triggers.filter((item) => item.product_types.includes(product));
+  const inferredNeed = data.needs.find((item) => triggerCode === 'after_meal' && /заверш|точк|ритуал/i.test(item.title))?.code ?? null;
+  const awareness = useMemo(() => selectAwareness({
+    content: data.release4.awarenessContent,
+    contexts: data.release4.awarenessContexts,
+    impressions: data.release4.awarenessImpressions,
+    goals: [
+      ...data.release4.personalGoals,
+      ...data.userMeanings.filter((item) => item.active).map((item) => ({
+        id: item.id,
+        title_ru: item.title,
+        body_ru: item.body,
+        active: true,
+        priority: 3,
+      })),
+      ...(data.settings.goal_text ? [{
+        id: 'legacy-goal',
+        title_ru: 'Твоё Зачем',
+        body_ru: data.settings.goal_text,
+        active: true,
+        priority: 2,
+      }] : []),
+    ],
+    product,
+    triggerCode,
+  }), [data, product, triggerCode]);
+  const candidates = useMemo(() => triggerCode ? rankInterventions({
+    replacements: data.replacements,
+    contextRules: [
+      ...data.release4.contextRules,
+      ...data.triggerReplacementMap.map((item) => ({
+        trigger_code: item.trigger_code,
+        replacement_code: item.replacement_code,
+        product_type: null,
+        min_craving: null,
+        max_craving: null,
+        priority: item.priority + 100,
+        enabled: true,
+      })),
+      ...(product === 'cigarette' && triggerCode === 'after_meal' ? [
+        { trigger_code: 'after_meal', replacement_code: 'water', product_type: 'cigarette' as const, min_craving: null, max_craving: null, priority: 210, enabled: true },
+        { trigger_code: 'after_meal', replacement_code: 'short_walk', product_type: 'cigarette' as const, min_craving: null, max_craving: null, priority: 220, enabled: true },
+      ] : []),
+    ],
+    preferences: data.release4.replacementPreferences,
+    learning: data.release4.replacementLearning,
+    product,
+    triggerCode,
+    triggerTitle: trigger?.title ?? 'выбранный момент',
+    needCode: inferredNeed,
+    craving: before,
+    settings: {
+      foodEnabled: data.settings.food_replacements_enabled,
+      nrtEnabled: data.settings.nrt_enabled,
+    },
+  }) : [], [data, product, triggerCode, trigger?.title, inferredNeed, before]);
+  const selectedRanking = candidates.find((item) => item.replacement.code === replacementCode);
+  const selected = selectedRanking?.replacement;
 
+  function track(type: AnalyticsEventType, input: Record<string, unknown>) {
+    return trackRelease4Event(session, type, { ...input, flow_id: flowId });
+  }
+
+  useEffect(() => {
+    if (openedTracked.current) return;
+    openedTracked.current = true;
+    void (async () => {
+      const opened = await track('craving_flow_opened', {
+        funnel_stage: 'открытие помощи',
+        surface: 'веб',
+        product_type: initialProduct,
+        episode_kind: 'craving',
+      });
+      setTelemetryReady(opened);
+      if (opened && initialTrigger) {
+        await track('context_selected', {
+          funnel_stage: 'распознавание контекста',
+          surface: 'веб',
+          product_type: initialProduct,
+          trigger_code: initialTrigger,
+          episode_kind: 'craving',
+        });
+      }
+    })();
+  }, [session, initialProduct, initialTrigger]);
+
+  async function ensureAwarenessExposure() {
+    if (!triggerCode || !data.release4.r1Ready || telemetryReady !== true || !awareness) return false;
+    const awarenessKey = product + ':' + triggerCode + ':' + (awareness.kind === 'content' ? awareness.content.code : awareness.goal.id);
+    if (exposureTracked.current === awarenessKey) return true;
+    if (exposurePending.current) return exposurePending.current;
+
+    const pending = (async () => {
+      if (awarenessShownTracked.current !== awarenessKey) {
+        const shown = awareness.kind === 'content'
+          ? await recordAwarenessShown(session, {
+              contentCode: awareness.content.code,
+              productType: product,
+              triggerCode,
+              flowId,
+            })
+          : await track('awareness_shown', {
+              funnel_stage: 'микроосознанность',
+              surface: 'веб',
+              product_type: product,
+              trigger_code: triggerCode,
+              source: 'personal_goal',
+              episode_kind: 'craving',
+            });
+        if (!shown) return false;
+        awarenessShownTracked.current = awarenessKey;
+      }
+
+      const useful = await track('first_useful_response', {
+        funnel_stage: 'первая полезная реакция',
+        surface: 'веб',
+        product_type: product,
+        trigger_code: triggerCode,
+        content_code: awareness.kind === 'content' ? awareness.content.code : undefined,
+        source: awareness.kind === 'goal' ? 'personal_goal' : 'evidence_registry',
+        episode_kind: 'craving',
+      });
+      if (useful) exposureTracked.current = awarenessKey;
+      return useful;
+    })();
+
+    exposurePending.current = pending;
+    try {
+      return await pending;
+    } finally {
+      exposurePending.current = null;
+    }
+  }
+
+  useEffect(() => {
+    if (step === 'awareness') void ensureAwarenessExposure();
+  }, [step, triggerCode, product, awareness, data.release4.r1Ready, telemetryReady, session, flowId]);
+
+  useEffect(() => {
+    if (step !== 'intervention' || !candidates.length) return;
+    const shownKey = product + ':' + triggerCode + ':' + candidates.map((item) => item.replacement.code).join(',');
+    if (interventionsTracked.current === shownKey) return;
+    interventionsTracked.current = shownKey;
+    candidates.forEach((item) => {
+      void track('intervention_shown', {
+        funnel_stage: 'варианты действия показаны',
+        surface: 'веб',
+        product_type: product,
+        trigger_code: triggerCode,
+        replacement_code: item.replacement.code,
+        ranking_reason: item.explanationKind,
+        episode_kind: 'craving',
+      });
+    });
+  }, [step, candidates, product, triggerCode]);
+
+  function chooseProduct(next: ProductType) {
+    setProduct(next);
+    setStep('context');
+    void track('product_selected', {
+      funnel_stage: 'выбор продукта',
+      surface: 'веб',
+      product_type: next,
+      episode_kind: 'craving',
+    });
+  }
+
+  function chooseContext(code: string) {
+    setTrigger(code);
+    setStep('awareness');
+    void track('context_selected', {
+      funnel_stage: 'распознавание контекста',
+      surface: 'веб',
+      product_type: product,
+      trigger_code: code,
+      episode_kind: 'craving',
+    });
+  }
+
+  async function continueFromAwareness() {
+    setError('');
+    if (await ensureAwarenessExposure()) {
+      setStep('intervention');
+    } else {
+      setError('Не удалось подтвердить показ в аналитике. Действие не потеряно — попробуй ещё раз.');
+    }
+  }
+
+  function chooseIntervention(code: string) {
+    const ranked = candidates.find((item) => item.replacement.code === code);
+    setReplacement(code);
+    setStep('doing');
+    void track('intervention_selected', {
+      funnel_stage: 'выбор действия',
+      surface: 'веб',
+      product_type: product,
+      trigger_code: triggerCode,
+      replacement_code: code,
+      ranking_reason: ranked?.explanationKind ?? 'generic',
+      episode_kind: 'craving',
+    });
+  }
+
+  function completeIntervention() {
+    setStep('outcome');
+    void track('intervention_completed', {
+      funnel_stage: 'действие выполнено',
+      surface: 'веб',
+      product_type: product,
+      trigger_code: triggerCode,
+      replacement_code: replacementCode,
+      episode_kind: 'craving',
+    });
+  }
+
+  function closeFlow(reason: string) {
+    if (step !== 'complete') {
+      void track('flow_abandoned', {
+        funnel_stage: step,
+        surface: 'веб',
+        product_type: product,
+        trigger_code: triggerCode || undefined,
+        replacement_code: replacementCode || undefined,
+        reason_code: reason,
+        episode_kind: 'craving',
+      });
+    }
+    close();
+  }
+
+  async function confirmOutcome(persistedEpisodeId: string) {
+    let outcomeTracked = false;
+    for (const delayMs of [0, 300, 900]) {
+      if (delayMs) await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+      outcomeTracked = await track('outcome_saved', {
+        funnel_stage: 'результат сохранён',
+        surface: 'веб',
+        product_type: product,
+        trigger_code: triggerCode,
+        replacement_code: replacementCode,
+        outcome,
+        episode_id: persistedEpisodeId,
+        numeric_value: after - before,
+        episode_kind: 'craving',
+      });
+      if (outcomeTracked) break;
+    }
+    if (!outcomeTracked) {
+      setPendingOutcomeEpisodeId(persistedEpisodeId);
+      setCompletion(null);
+      setRefreshWarning('Результат сохранён, но финальное событие аналитики не подтверждено. Попробуй отправить событие ещё раз; повторно сохранять эпизод не нужно.');
+      setStep('complete');
+      return;
+    }
+
+    setPendingOutcomeEpisodeId(null);
+    let next: Bootstrap;
+    try {
+      next = await saved();
+    } catch {
+      setCompletion(null);
+      setRefreshWarning('Результат и финальное событие сохранены, но показатели не обновились. Перезагрузи страницу — повторно сохранять эпизод не нужно.');
+      setStep('complete');
+      return;
+    }
+    const metrics = freedomForDays(next, 7);
+    setCompletion(metrics);
+    setStep('complete');
+    void track('freedom_metrics_visible', {
+      funnel_stage: 'свобода показана',
+      surface: 'веб',
+      product_type: product,
+      trigger_code: triggerCode,
+      outcome,
+      episode_id: persistedEpisodeId,
+      model_version: metrics.models.health,
+      coverage: metrics.coverage,
+      episode_kind: 'craving',
+    });
+  }
+
+  async function retryOutcome() {
+    if (!pendingOutcomeEpisodeId) return;
+    setBusy(true);
+    setRefreshWarning('');
+    try {
+      await confirmOutcome(pendingOutcomeEpisodeId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function save() {
+    if (!data.release4.r1Ready || telemetryReady !== true || !triggerCode || !replacementCode) return;
+    setBusy(true);
+    setError('');
+    setRefreshWarning('');
+    const tobacco: GuidedEpisodeDraft['tobacco'] = outcome === 'nicotine_used'
+      ? {
+          cigaretteQuantity: product === 'cigarette' ? qty : undefined,
+          hookahSessionCount: product === 'hookah' ? 1 : undefined,
+          vapePuffs: product === 'vape' ? puffs : undefined,
+        }
+      : undefined;
+    try {
+      const persistedEpisodeId = await saveGuidedEpisode(session, {
+        episodeId,
+        product,
+        triggerCode,
+        needCode: inferredNeed ?? undefined,
+        cravingBefore: before,
+        cravingAfter: after,
+        helpfulness: help,
+        replacementCode,
+        outcome,
+        tobacco,
+      });
+      await confirmOutcome(persistedEpisodeId);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Не удалось сохранить результат');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <Modal wide onClose={() => closeFlow('modal_closed')}>
+    <div className="r-modal-head"><div><p className="r-kicker">Пауза уже началась</p><h2>{step === 'complete' ? 'Этот момент теперь часть твоего опыта' : 'Хочу закурить'}</h2></div><button className="r-icon-button" onClick={() => closeFlow('close_button')}><Icon name="close"/></button></div>
+    <div className="r-progress"><span className={step !== 'product' && step !== 'context' ? 'done' : ''}>1 · контекст</span><span className={['intervention','doing','outcome','complete'].includes(step) ? 'done' : ''}>2 · реальность</span><span className={['doing','outcome','complete'].includes(step) ? 'done' : ''}>3 · действие</span><span className={step === 'complete' ? 'done' : ''}>4 · результат</span></div>
+    {step === 'product' && <section className="r-flow"><h3>К чему сейчас тянет?</h3><div className="r-choice-grid products">{data.products.map((item) => <button key={item.product_type} onClick={() => chooseProduct(item.product_type)}><Icon name={productIcon(item.product_type)} size={28}/><strong>{productLabel(item.product_type)}</strong></button>)}</div></section>}
+    {step === 'context' && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon"><Icon name="eye"/></span><div><h3>Что только что произошло?</h3><p>Один тап. Не ищем виноватого, распознаём пусковой момент.</p></div></div><div className="r-choice-grid">{triggers.map((item) => <button key={item.code} onClick={() => chooseContext(item.code)}><span className="r-choice-icon"><Icon name={triggerIcon(item)} size={23}/></span><strong>{item.title}</strong><small>{item.description}</small></button>)}</div><div className="r-slider"><label><span>Сила тяги сейчас</span><b>{before}/10</b></label><input type="range" min="1" max="10" value={before} onChange={(event) => setBefore(Number(event.target.value))}/></div></section>}
+    {step === 'awareness' && <section className="r-flow">{!data.release4.r1Ready || telemetryReady === false ? <div className="r-awareness-card"><span>Сценарий временно недоступен</span><h3>Нужен проверенный контур данных</h3><p>ALIVE не покажет медицинский текст и не объявит результат без реестра доказательств, обучения и административной аналитики. Попробуй снова после подключения проверенной базы.</p></div> : telemetryReady === null ? <div className="r-awareness-card"><span>Проверяем данные</span><h3>Подтверждаем безопасный контур</h3><p>Это займёт несколько секунд.</p></div> : !awareness ? <div className="r-awareness-card"><span>Нужен проверенный материал</span><h3>Для этого момента пока нет проверенного Факта, Мифа или личного Зачем</h3><p>Мы не подменим их случайным советом. Добавь своё Зачем или дождись публикации проверенного материала.</p></div> : <><div className="r-awareness-card"><span>{awareness.kind === 'content' ? awareness.content.content_type : 'Зачем'}</span><h3>{awareness.kind === 'content' ? awareness.content.title_ru : awareness.goal.title_ru}</h3><p>{awareness.kind === 'content' ? awareness.content.hook_ru : awareness.goal.body_ru}</p>{awareness.kind === 'content' && <><p className="r-awareness-detail">{awareness.content.explanation_ru}</p>{awareness.content.caveat_ru && <small>{awareness.content.caveat_ru}</small>}</>}</div>{error && <p className="r-error">{error}</p>}<div className="r-actions"><ShellButton className="primary" onClick={() => void continueFromAwareness()}>Выбрать действие <Icon name="arrow" size={18}/></ShellButton></div></>}</section>}
+    {step === 'intervention' && <section className="r-flow"><div className="r-flow-title"><span className="r-step-icon accent"><Icon name="spark"/></span><div><h3>Что можно сделать прямо сейчас</h3><p>Порядок объясняется контекстом и твоими реальными результатами, если данных уже достаточно.</p></div></div><div className="r-replacement-grid">{candidates.map((item) => <button key={item.replacement.code} onClick={() => chooseIntervention(item.replacement.code)}><span className="r-big-icon"><Icon name={replacementIcon(item.replacement)} size={30}/></span><div><span className="r-kind">{replacementKind(item.replacement)}{item.replacement.duration ? ' · ' + item.replacement.duration : ''}</span><h3>{item.replacement.title}</h3><p>{item.replacement.summary || item.replacement.instruction}</p><small className="r-ranking-reason">{item.explanation}</small></div><Icon name="arrow" className="r-card-arrow" size={20}/></button>)}</div>{!candidates.length && <div className="r-empty compact"><p>Для этого контекста пока нет доступного действия. Закрой окно и попробуй снова после обновления каталога.</p></div>}</section>}
+    {step === 'doing' && selected && <section className="r-flow"><div className="r-result-choice"><span className="r-big-icon"><Icon name={replacementIcon(selected)} size={30}/></span><div><small>Сейчас только это</small><h3>{selected.title}</h3><p>{selected.instruction}</p>{selected.safety && <small>{selected.safety}</small>}</div></div><div className="r-actions"><ShellButton className="primary" onClick={completeIntervention}>Я попробовал(а) <Icon name="arrow" size={18}/></ShellButton><ShellButton className="ghost" onClick={() => setStep('intervention')}>Другое действие</ShellButton></div></section>}
+    {step === 'outcome' && selected && <section className="r-flow"><div className="r-two-sliders"><div className="r-slider"><label><span>Тяга после действия</span><b>{after}/10</b></label><input type="range" min="0" max="10" value={after} onChange={(event) => setAfter(Number(event.target.value))}/></div><div className="r-slider"><label><span>Насколько помогло</span><b>{help}/5</b></label><input type="range" min="0" max="5" value={help} onChange={(event) => setHelp(Number(event.target.value))}/></div></div><div className="r-outcomes"><button className={outcome === 'successful_response' ? 'selected success' : ''} onClick={() => setOutcome('successful_response')}><Icon name="check" size={22}/><div><strong>Сигареты не было</strong><small>Новый ответ получил один подтверждённый опыт</small></div></button><button className={outcome === 'nicotine_used' ? 'selected used' : ''} onClick={() => setOutcome('nicotine_used')}><Icon name={productIcon(product)} size={22}/><div><strong>Никотин всё же был</strong><small>Это данные для следующего выбора, не провал</small></div></button></div>{outcome === 'nicotine_used' && <div className="r-nicotine-detail">{product === 'cigarette' && <label className="r-field"><span>Количество сигарет</span><input type="number" min="0.1" step="0.1" value={qty} onChange={(event) => setQty(Number(event.target.value))}/></label>}{product === 'vape' && <div className="r-puff"><button onClick={() => setPuffs(Math.max(0, puffs - 5))}>−5</button><strong>{puffs}<small> затяжек</small></strong><button onClick={() => setPuffs(puffs + 5)}>+5</button></div>}</div>}{error && <p className="r-error">{error}</p>}<div className="r-actions"><ShellButton className="primary" onClick={save} disabled={busy}>{busy ? 'Сохраняю…' : 'Сохранить результат'} <Icon name="arrow" size={18}/></ShellButton></div></section>}
+    {step === 'complete' && <section className="r-flow">{completion ? <div className="r-completion-card"><span className="r-status-icon"><Icon name="check" size={24}/></span><h3>{outcome === 'successful_response' ? 'Выбор остался твоим' : 'Опыт сохранён без оценки'}</h3><p>{selectedRanking?.explanation}</p><div className="r-freedom-grid"><div><small>Вернул время</small><strong>{fmt(completion.timeMinutes)} мин</strong></div><div><small>Сохранил деньги</small><strong>{money(completion.moneyRub)}</strong></div><div><small>≈ Сохранил здоровую жизнь</small><strong>{fmt(completion.healthMinutes)} мин</strong></div></div><small>За 7 дней. ≈ здоровая жизнь считается только для подтверждённых невыкуренных сигарет по популяционной оценке, а не как личный прогноз.</small></div> : <div className="r-completion-card"><span className="r-status-icon"><Icon name="check" size={24}/></span><h3>Результат сохранён</h3><p className="r-error">{refreshWarning}</p><small>Метрики намеренно не показаны, пока свежие данные не загружены.</small></div>}<div className="r-actions">{pendingOutcomeEpisodeId && <ShellButton className="primary" onClick={() => void retryOutcome()} disabled={busy}>{busy ? 'Отправляю…' : 'Отправить событие ещё раз'}</ShellButton>}<ShellButton className={pendingOutcomeEpisodeId ? 'ghost' : 'primary'} onClick={close}>Вернуться в сегодня</ShellButton></div></section>}
+  </Modal>;
+}
 function Evening({ session, data, close, saved }: { session: Session; data: Bootstrap; close: () => void; saved: () => Promise<void> }) {
   const old = data.todayCheckin;
   const [irritability,setIrritability]=useState(old?.irritability ?? 5); const [energy,setEnergy]=useState(old?.energy ?? 5); const [recovery,setRecovery]=useState(old?.recovery ?? 5);
@@ -273,14 +622,14 @@ function Evening({ session, data, close, saved }: { session: Session; data: Boot
 }
 
 function Today({ session, data, reload, openFlow, openQuick, openEvening }: { session: Session; data: Bootstrap; reload: () => Promise<void>; openFlow: (trigger?: string) => void; openQuick: () => void; openEvening: () => void }) {
-  const today = statsForDays(data,1); const week=statsForDays(data,7); const tstats=triggerStats(data);
+  const today = statsForDays(data,1); const week=statsForDays(data,7); const freedom=freedomForDays(data,7); const tstats=triggerStats(data);
   const support=data.supports.filter((s)=>s.support_type==='daily'); const phrase=support.length?support[new Date().getDate()%support.length]?.body:null;
   const weak=tstats.filter((x)=>x.episodes>0).sort((a,b)=>(a.successRate??101)-(b.successRate??101)).slice(0,3);
   const fallback=data.triggers.filter((t)=>data.products.some((p)=>t.product_types.includes(p.product_type))).slice(0,3);
   const attention=weak.length?weak.map((x)=>x.trigger):fallback;
   async function remove(id:string){if(!window.confirm('Удалить ошибочную или тестовую запись? Все показатели пересчитаются автоматически.'))return;await deleteEpisode(session,id);await reload();}
   const delta=week.baselineDeltaPct;
-  return <main className="r-page"><section className="r-now"><div className="r-now-copy"><p className="r-kicker">Сегодня · {data.profile.display_name}</p><h1>{today.successfulResponses>0?`Сегодня выбор уже ${today.successfulResponses===1?'один раз':'несколько раз'} остался твоим.`:'Тебе не нужно победить день целиком.'}</h1><p>{data.settings.goal_text || 'Нужен только следующий момент, в котором ты заметишь автоматизм чуть раньше обычного.'}</p>{phrase&&<blockquote>{phrase}</blockquote>}</div><div className="r-now-actions"><button className="r-craving" onClick={()=>openFlow()}><span className="r-craving-icon"><Icon name="spark" size={30}/></span><span><small>Когда важно действовать прямо сейчас</small><strong>Меня тянет</strong><em>Разобрать момент и выбрать другой ответ</em></span><Icon name="arrow" size={24}/></button><div className="r-secondary-actions"><button onClick={openQuick}><Icon name="smoke"/><span><strong>Никотин уже был</strong><small>Просто записать факт</small></span></button><button onClick={openEvening}><Icon name="journal"/><span><strong>Итоги дня</strong><small>{data.todayCheckin?'Можно дополнить':'3 минуты вечером'}</small></span></button></div></div></section><section className="r-pulse"><div className="r-pulse-main"><span className="r-pulse-icon"><Icon name="check" size={26}/></span><div><small>Осознанных ответов сегодня</small><strong>{today.successfulResponses}</strong><p>{today.successfulResponses ? 'Это не серия запретов. Это моменты, где старый сценарий не решил за тебя.' : 'Первая запись появится после реального эпизода — ничего специально создавать не нужно.'}</p></div></div><div className="r-pulse-stat"><small>7 дней к исходному уровню</small><strong>{delta===null?'—':`${delta>0?'+':''}${fmt(delta)}%`}</strong><span>{delta!==null&&delta<0?'Никотиновая интенсивность ниже исходной':delta!==null&&delta>0?'Пока выше исходной — наблюдаем, без оценки':'Нужно больше данных'}</span></div><div className="r-pulse-stat"><small>Фонд свободы · 7 дней</small><strong>{week.baselineCost>0?money(week.freedomFund):'—'}</strong><span>Оценка по твоим расходам и исходному уровню</span></div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Карта внимания</p><h2>Где автоматизм сейчас сильнее всего</h2><p>Это не рейтинг «слабостей». Это места, где следующий эксперимент даст больше всего информации.</p></div><button onClick={()=>go('/links')}>Все Связки <Icon name="arrow" size={16}/></button></div><div className="r-attention-grid">{attention.map((t)=>{const st=tstats.find((x)=>x.trigger.code===t.code);return <button key={t.code} onClick={()=>openFlow(t.code)}><span className="r-choice-icon"><Icon name={triggerIcon(t)} size={24}/></span><div><strong>{t.title}</strong><p>{t.description}</p><small>{st?.episodes?`${st.episodes} эпиз. · ${st.successRate===null?'мало данных':`${fmt(st.successRate)}% прервано`}`:'Ещё не изучено'}</small></div><Icon name="arrow" size={18}/></button>})}</div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">История обучения</p><h2>Последние эпизоды</h2><p>Теперь карточка разделяет контекст, реальную замену и итог. Сигарета, кальян или электронка никогда не называются заменой.</p></div></div>{data.episodes.length?<div className="r-episode-list">{data.episodes.slice(0,8).map((e)=><EpisodeCard key={e.id} data={data} episode={e} remove={remove}/>)}</div>:<div className="r-empty"><Icon name="chain" size={30}/><h3>Пока нет живых эпизодов</h3><p>Ничего не нужно заполнять «для статистики». Используй ALIVE в следующий настоящий момент тяги.</p><ShellButton className="primary small" onClick={()=>openFlow()}>Разобрать первый момент</ShellButton></div>}</section></main>;
+  return <main className="r-page"><section className="r-now"><div className="r-now-copy"><p className="r-kicker">Сегодня · {data.profile.display_name}</p><h1>{today.successfulResponses>0?`Сегодня выбор уже ${today.successfulResponses===1?'один раз':'несколько раз'} остался твоим.`:'Тебе не нужно победить день целиком.'}</h1><p>{data.settings.goal_text || 'Нужен только следующий момент, в котором ты заметишь автоматизм чуть раньше обычного.'}</p>{phrase&&<blockquote>{phrase}</blockquote>}</div><div className="r-now-actions"><button className="r-craving" onClick={()=>openFlow()}><span className="r-craving-icon"><Icon name="spark" size={30}/></span><span><small>Когда важно действовать прямо сейчас</small><strong>Хочу закурить</strong><em>Распознать контекст и выбрать следующий ответ</em></span><Icon name="arrow" size={24}/></button><div className="r-secondary-actions"><button onClick={openQuick}><Icon name="smoke"/><span><strong>Никотин уже был</strong><small>Просто записать факт</small></span></button><button onClick={openEvening}><Icon name="journal"/><span><strong>Итоги дня</strong><small>{data.todayCheckin?'Можно дополнить':'3 минуты вечером'}</small></span></button></div></div></section><section className="r-freedom-strip"><div><small>Вернул время · 7 дней</small><strong>{fmt(freedom.timeMinutes)} мин</strong></div><div><small>Сохранил деньги · 7 дней</small><strong>{money(freedom.moneyRub)}</strong></div><div><small>≈ Сохранил здоровую жизнь · 7 дней</small><strong>{fmt(freedom.healthMinutes)} мин</strong><span>Только подтверждённые невыкуренные сигареты; популяционная оценка, не личный прогноз</span></div></section><section className="r-pulse"><div className="r-pulse-main"><span className="r-pulse-icon"><Icon name="check" size={26}/></span><div><small>Осознанных ответов сегодня</small><strong>{today.successfulResponses}</strong><p>{today.successfulResponses ? 'Это не серия запретов. Это моменты, где старый сценарий не решил за тебя.' : 'Первая запись появится после реального эпизода — ничего специально создавать не нужно.'}</p></div></div><div className="r-pulse-stat"><small>7 дней к исходному уровню</small><strong>{delta===null?'—':`${delta>0?'+':''}${fmt(delta)}%`}</strong><span>{delta!==null&&delta<0?'Никотиновая интенсивность ниже исходной':delta!==null&&delta>0?'Пока выше исходной — наблюдаем, без оценки':'Нужно больше данных'}</span></div><div className="r-pulse-stat"><small>Фонд свободы · 7 дней</small><strong>{week.baselineCost>0?money(week.freedomFund):'—'}</strong><span>Оценка по твоим расходам и исходному уровню</span></div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Карта внимания</p><h2>Где автоматизм сейчас сильнее всего</h2><p>Это не рейтинг «слабостей». Это места, где следующий эксперимент даст больше всего информации.</p></div><button onClick={()=>go('/links')}>Все Связки <Icon name="arrow" size={16}/></button></div><div className="r-attention-grid">{attention.map((t)=>{const st=tstats.find((x)=>x.trigger.code===t.code);return <button key={t.code} onClick={()=>openFlow(t.code)}><span className="r-choice-icon"><Icon name={triggerIcon(t)} size={24}/></span><div><strong>{t.title}</strong><p>{t.description}</p><small>{st?.episodes?`${st.episodes} эпиз. · ${st.successRate===null?'мало данных':`${fmt(st.successRate)}% прервано`}`:'Ещё не изучено'}</small></div><Icon name="arrow" size={18}/></button>})}</div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">История обучения</p><h2>Последние эпизоды</h2><p>Теперь карточка разделяет контекст, реальную замену и итог. Сигарета, кальян или электронка никогда не называются заменой.</p></div></div>{data.episodes.length?<div className="r-episode-list">{data.episodes.slice(0,8).map((e)=><EpisodeCard key={e.id} data={data} episode={e} remove={remove}/>)}</div>:<div className="r-empty"><Icon name="chain" size={30}/><h3>Пока нет живых эпизодов</h3><p>Ничего не нужно заполнять «для статистики». Используй ALIVE в следующий настоящий момент тяги.</p><ShellButton className="primary small" onClick={()=>openFlow()}>Разобрать первый момент</ShellButton></div>}</section></main>;
 }
 
 function Links({ session, data, reload, openFlow }: { session: Session; data: Bootstrap; reload: () => Promise<void>; openFlow: (trigger?: string) => void }) {
@@ -298,19 +647,19 @@ function PathPage({ data }: { data: Bootstrap }) {
 function Meanings({ session, data, reload }: { session: Session; data: Bootstrap; reload: () => Promise<void> }) {
   const [adding,setAdding]=useState(false);const [title,setTitle]=useState('');const [body,setBody]=useState('');
   async function add(){if(!title.trim()||!body.trim())return;await addMeaning(session,title.trim(),body.trim());setAdding(false);setTitle('');setBody('');await reload();}
-  async function remove(id:string){if(window.confirm('Удалить этот личный Смысл?')){await deleteMeaning(session,id);await reload();}}
+  async function remove(id:string){if(window.confirm('Удалить этот личный Зачем?')){await deleteMeaning(session,id);await reload();}}
   async function toggle(m:UserMeaning){await updateMeaning(session,m.id,{active:!m.active});await reload();}
-  return <main className="r-page"><section className="r-title meaning"><p className="r-kicker">Смыслы</p><h1>Не «почему нельзя». Ради чего становится интереснее жить иначе.</h1><p>Смысл — короткая личная опора, которую стоит увидеть в момент, когда мозг предлагает старый автоматический сценарий.</p><ShellButton className="ghost" onClick={()=>setAdding(!adding)}><Icon name="plus" size={18}/> Мой Смысл</ShellButton></section>{adding&&<section className="r-section r-form"><label className="r-field"><span>Заголовок</span><input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Я хочу увидеть себя без автоматизма"/></label><label className="r-field"><span>Что это значит для меня</span><textarea value={body} onChange={(e)=>setBody(e.target.value)}/></label><div className="r-actions"><ShellButton className="primary" onClick={add}>Сохранить</ShellButton><ShellButton className="ghost" onClick={()=>setAdding(false)}>Отмена</ShellButton></div></section>}{data.userMeanings.length>0&&<section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Мои</p><h2>Личные опоры</h2></div></div><div className="r-meaning-grid personal">{data.userMeanings.map((m)=><article key={m.id} className={!m.active?'inactive':''}><span className="r-meaning-symbol"><Icon name="meaning" size={25}/></span><h3>{m.title}</h3><p>{m.body}</p><div className="r-meaning-actions"><button onClick={()=>toggle(m)}>{m.active?'Скрыть':'Вернуть'}</button><button onClick={()=>submitMeaning(session,m)}>Предложить в общую базу</button><button onClick={()=>remove(m.id)}>Удалить</button></div></article>)}</div></section>}<section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Библиотека ALIVE</p><h2>Опоры, которые можно примерить на себя</h2></div></div><div className="r-meaning-grid">{data.meanings.map((m)=><article key={m.id}><span className="r-meaning-symbol"><Icon name="meaning" size={25}/></span><h3>{m.title}</h3><p>{m.body}</p></article>)}</div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Перепись сценария</p><h2>От старого паттерна к новому выбору</h2></div></div><div className="r-scripts">{data.identityScripts.map((s)=><details key={s.code}><summary>{s.title}</summary><div><span><small>Старый сценарий</small>{s.old_pattern}</span><Icon name="arrow"/><span><small>Новый выбор</small>{s.new_choice}</span></div></details>)}</div></section></main>;
+  return <main className="r-page"><section className="r-title meaning"><p className="r-kicker">Зачем</p><h1>Не «почему нельзя». Ради чего становится интереснее жить иначе.</h1><p>Зачем — короткая личная опора, которую стоит увидеть в момент, когда мозг предлагает старый автоматический сценарий.</p><ShellButton className="ghost" onClick={()=>setAdding(!adding)}><Icon name="plus" size={18}/> Мой Зачем</ShellButton></section>{adding&&<section className="r-section r-form"><label className="r-field"><span>Заголовок</span><input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Я хочу увидеть себя без автоматизма"/></label><label className="r-field"><span>Что это значит для меня</span><textarea value={body} onChange={(e)=>setBody(e.target.value)}/></label><div className="r-actions"><ShellButton className="primary" onClick={add}>Сохранить</ShellButton><ShellButton className="ghost" onClick={()=>setAdding(false)}>Отмена</ShellButton></div></section>}{data.userMeanings.length>0&&<section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Мои</p><h2>Личные опоры</h2></div></div><div className="r-meaning-grid personal">{data.userMeanings.map((m)=><article key={m.id} className={!m.active?'inactive':''}><span className="r-meaning-symbol"><Icon name="meaning" size={25}/></span><h3>{m.title}</h3><p>{m.body}</p><div className="r-meaning-actions"><button onClick={()=>toggle(m)}>{m.active?'Скрыть':'Вернуть'}</button><button onClick={()=>submitMeaning(session,m)}>Предложить в общую базу</button><button onClick={()=>remove(m.id)}>Удалить</button></div></article>)}</div></section>}<section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Библиотека ALIVE</p><h2>Опоры, которые можно примерить на себя</h2></div></div><div className="r-meaning-grid">{data.meanings.map((m)=><article key={m.id}><span className="r-meaning-symbol"><Icon name="meaning" size={25}/></span><h3>{m.title}</h3><p>{m.body}</p></article>)}</div></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Перепись сценария</p><h2>От старого паттерна к новому выбору</h2></div></div><div className="r-scripts">{data.identityScripts.map((s)=><details key={s.code}><summary>{s.title}</summary><div><span><small>Старый сценарий</small>{s.old_pattern}</span><Icon name="arrow"/><span><small>Новый выбор</small>{s.new_choice}</span></div></details>)}</div></section></main>;
 }
 
-function Experiment() { return <main className="r-reading"><Brand compact/><article><p className="r-kicker">Эксперимент над автоматизмом</p><h1>ALIVE ничего тебе не обещает.</h1><p className="r-lead">Мы проверяем простую гипотезу: если достаточно раз заметить повторяющуюся Связку, понять её функцию и удовлетворить ту же потребность другим ответом, автоматический сценарий может стать слабее.</p><h2>Что здесь считается успехом</h2><p>Не только «день без сигарет». Важны снижение интенсивности относительно своего исходного уровня, замеченные моменты тяги, прерванные Связки, рабочие Замены, увеличение промежутков без продукта и возвращение в систему после употребления.</p><h2>Что известно, а что является гипотезой ALIVE</h2><div className="r-evidence"><div><b>Хорошо подтверждено</b><p>Никотиновая зависимость формирует устойчивые контекстные и поведенческие ассоциации; отказ от курения снижает риски для здоровья.</p></div><div><b>Правдоподобно</b><p>Работа с триггерами, альтернативным поведением и осознаванием функции ритуала может помогать менять привычные ответы.</p></div><div><b>Эксперимент ALIVE</b><p>Наша конкретная система Связок, Смыслов, персонального ранжирования Замен и единиц ALIVE — собственная продуктовая гипотеза, которую нужно проверять на данных.</p></div></div><h2>Безопасность и медицина</h2><p>ALIVE не является лечением и не заменяет врача, психотерапию или доказательные методы отказа от табака. Никотин-заместительная терапия учитывается как поддержка, а не как срыв; дозировки сервис не назначает.</p><h2>Приватность</h2><blockquote>Эти данные слишком личные, чтобы превращать их в рекламный профиль.</blockquote><p>Личные заметки, Связки и Смыслы приватны по умолчанию. В общую базу что-либо попадает только после явного действия пользователя. Абсолютной безопасности не существует: технические поставщики инфраструктуры обрабатывают необходимые технические данные по своим правилам.</p><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Вернуться в ALIVE</ShellButton></div></article></main>; }
+function Experiment() { return <main className="r-reading"><Brand compact/><article><p className="r-kicker">Эксперимент над автоматизмом</p><h1>ALIVE ничего тебе не обещает.</h1><p className="r-lead">Мы проверяем простую гипотезу: если достаточно раз заметить повторяющуюся Связку, понять её функцию и удовлетворить ту же потребность другим ответом, автоматический сценарий может стать слабее.</p><h2>Что здесь считается успехом</h2><p>Не только «день без сигарет». Важны снижение интенсивности относительно своего исходного уровня, замеченные моменты тяги, прерванные Связки, рабочие Замены, увеличение промежутков без продукта и возвращение в систему после употребления.</p><h2>Что известно, а что является гипотезой ALIVE</h2><div className="r-evidence"><div><b>Хорошо подтверждено</b><p>Никотиновая зависимость формирует устойчивые контекстные и поведенческие ассоциации; отказ от курения снижает риски для здоровья.</p></div><div><b>Правдоподобно</b><p>Работа с триггерами, альтернативным поведением и осознаванием функции ритуала может помогать менять привычные ответы.</p></div><div><b>Эксперимент ALIVE</b><p>Наша конкретная система Связок, Зачемов, персонального ранжирования Замен и единиц ALIVE — собственная продуктовая гипотеза, которую нужно проверять на данных.</p></div></div><h2>Безопасность и медицина</h2><p>ALIVE не является лечением и не заменяет врача, психотерапию или доказательные методы отказа от табака. Никотин-заместительная терапия учитывается как поддержка, а не как срыв; дозировки сервис не назначает.</p><h2>Приватность</h2><blockquote>Эти данные слишком личные, чтобы превращать их в рекламный профиль.</blockquote><p>Личные заметки, Связки и Зачем приватны по умолчанию. В общую базу что-либо попадает только после явного действия пользователя. Абсолютной безопасности не существует: технические поставщики инфраструктуры обрабатывают необходимые технические данные по своим правилам.</p><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Вернуться в ALIVE</ShellButton></div></article></main>; }
 
 function Profile({ session, data, editSetup }: { session: Session; data: Bootstrap; editSetup: () => void }) {
   async function logout(){await getSupabase()?.auth.signOut();go('/');}
-  return <main className="r-page"><section className="r-title"><p className="r-kicker">Профиль</p><h1>{data.profile.display_name}</h1><p>Здесь только настройки твоего эксперимента. Приватные Смыслы, Связки и заметки не превращаются в публичный профиль.</p></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Исходный уровень</p><h2>С чем сравнивается динамика</h2></div><ShellButton className="ghost small" onClick={editSetup}>Изменить</ShellButton></div><div className="r-raw">{data.products.map((p: NicotineProduct)=><div key={p.product_type}><Icon name={productIcon(p.product_type)}/><small>{productLabel(p.product_type)}</small><strong>{p.product_type==='cigarette'?`${Number(p.baseline.cigarettes_per_day??0)} / день`:p.product_type==='hookah'?`${Number(p.baseline.sessions_per_week??0)} / нед.`:`${Number(p.baseline.puffs_per_day??0)} затяжек / день`}</strong></div>)}</div></section><section className="r-section"><div className="r-profile-links"><button onClick={()=>go('/experiment')}><Icon name="shield"/><span><strong>Как работает эксперимент</strong><small>Методология, ограничения и приватность</small></span><Icon name="arrow"/></button><button onClick={()=>go('/releases')}><Icon name="path"/><span><strong>История версий</strong><small>Что меняется в ALIVE</small></span><Icon name="arrow"/></button></div><ShellButton className="danger" onClick={logout}>Выйти из аккаунта</ShellButton></section></main>;
+  return <main className="r-page"><section className="r-title"><p className="r-kicker">Профиль</p><h1>{data.profile.display_name}</h1><p>Здесь только настройки твоего эксперимента. Приватные Зачем, Связки и заметки не превращаются в публичный профиль.</p></section><section className="r-section"><div className="r-section-head"><div><p className="r-kicker">Исходный уровень</p><h2>С чем сравнивается динамика</h2></div><ShellButton className="ghost small" onClick={editSetup}>Изменить</ShellButton></div><div className="r-raw">{data.products.map((p: NicotineProduct)=><div key={p.product_type}><Icon name={productIcon(p.product_type)}/><small>{productLabel(p.product_type)}</small><strong>{p.product_type==='cigarette'?`${Number(p.baseline.cigarettes_per_day??0)} / день`:p.product_type==='hookah'?`${Number(p.baseline.sessions_per_week??0)} / нед.`:`${Number(p.baseline.puffs_per_day??0)} затяжек / день`}</strong></div>)}</div></section><section className="r-section"><div className="r-profile-links"><button onClick={()=>go('/experiment')}><Icon name="shield"/><span><strong>Как работает эксперимент</strong><small>Методология, ограничения и приватность</small></span><Icon name="arrow"/></button><button onClick={()=>go('/releases')}><Icon name="path"/><span><strong>История версий</strong><small>Что меняется в ALIVE</small></span><Icon name="arrow"/></button></div><ShellButton className="danger" onClick={logout}>Выйти из аккаунта</ShellButton></section></main>;
 }
 
-function Releases(){return <main className="r-reading"><Brand compact/><article><p className="r-kicker">История версий</p><h1>ALIVE развивается как эксперимент.</h1><div className="r-release"><b>3.0</b><div><h2>Универсальная платформа</h2><p>Google-вход, отдельная база данных, сигареты / кальян / электронка, Связки, Смыслы, контекстные Замены и персональная аналитика.</p></div></div><div className="r-release"><b>2.7</b><div><h2>Последний эталон предыдущей архитектуры</h2><p>Версия, от которой 3.0 обязана не регрессировать по глубине, вовлечению и качеству интерфейса.</p></div></div><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Назад в ALIVE</ShellButton></div></article></main>}
+function Releases(){return <main className="r-reading"><Brand compact/><article><p className="r-kicker">История версий</p><h1>ALIVE развивается как эксперимент.</h1><div className="r-release"><b>3.0</b><div><h2>Универсальная платформа</h2><p>Google-вход, отдельная база данных, сигареты / кальян / электронка, Связки, Зачем, контекстные Замены и персональная аналитика.</p></div></div><div className="r-release"><b>2.7</b><div><h2>Последний эталон предыдущей архитектуры</h2><p>Версия, от которой 3.0 обязана не регрессировать по глубине, вовлечению и качеству интерфейса.</p></div></div><div className="r-actions"><ShellButton className="primary" onClick={()=>go('/')}>Назад в ALIVE</ShellButton></div></article></main>}
 
 export default function RedesignApp() {
   const path=usePath(); const [session,setSession]=useState<Session|null>(null); const [data,setData]=useState<Bootstrap|null>(null); const [loading,setLoading]=useState(true); const [setup,setSetup]=useState(false); const [flow,setFlow]=useState<{open:boolean;trigger?:string}>({open:false}); const [quick,setQuick]=useState(false); const [evening,setEvening]=useState(false);
@@ -333,5 +682,5 @@ export default function RedesignApp() {
   else if(path==='/releases')page=<Releases/>;
   else page=<Today session={session} data={data} reload={()=>reload(session).then(()=>{})} openFlow={(trigger)=>setFlow({open:true,trigger})} openQuick={()=>setQuick(true)} openEvening={()=>setEvening(true)}/>;
   const standalone=path==='/experiment'||path==='/releases';
-  return <>{!standalone&&<Header data={data} path={path}/>} {page}{flow.open&&<Guided session={session} data={data} close={()=>setFlow({open:false})} saved={()=>reload(session).then(()=>{})} initialTrigger={flow.trigger}/>} {quick&&<QuickUse session={session} data={data} close={()=>setQuick(false)} saved={()=>reload(session).then(()=>{})}/>} {evening&&<Evening session={session} data={data} close={()=>setEvening(false)} saved={()=>reload(session).then(()=>{})}/>}</>;
+  return <>{!standalone&&<Header data={data} path={path}/>} {page}{flow.open&&<Guided session={session} data={data} close={()=>setFlow({open:false})} saved={()=>reload(session)} initialTrigger={flow.trigger}/>} {quick&&<QuickUse session={session} data={data} close={()=>setQuick(false)} saved={()=>reload(session).then(()=>{})}/>} {evening&&<Evening session={session} data={data} close={()=>setEvening(false)} saved={()=>reload(session).then(()=>{})}/>}</>;
 }

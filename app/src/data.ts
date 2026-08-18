@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
+import { loadRelease4Data, type Release4Data } from './release4-data';
 
 export type ProductType = 'cigarette' | 'hookah' | 'vape';
 export type EpisodeOutcome = 'open' | 'successful_response' | 'nicotine_used' | 'abandoned';
@@ -193,6 +194,7 @@ export type Bootstrap = {
   actions: EpisodeAction[];
   tobaccoEvents: TobaccoEvent[];
   todayCheckin: DailyCheckin | null;
+  release4: Release4Data;
 };
 
 function requireClient() {
@@ -212,6 +214,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
   const userId = session.user.id;
   const since = new Date(Date.now() - 45 * 86_400_000).toISOString();
   const today = new Date().toISOString().slice(0, 10);
+  const release4Promise = loadRelease4Data(session);
 
   const [
     profileRes,
@@ -251,6 +254,8 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     supabase.from('daily_checkins').select('id,user_id,checkin_date,irritability,energy,recovery,owned_moment,strongest_link,tomorrow_plan').eq('user_id', userId).eq('checkin_date', today).maybeSingle(),
   ]);
 
+  const release4 = await release4Promise;
+
   return {
     profile: unwrap(profileRes as never, 'profile') as Profile,
     settings: unwrap(settingsRes as never, 'settings') as UserSettings,
@@ -269,6 +274,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     actions: (actionsRes.data ?? []) as EpisodeAction[],
     tobaccoEvents: (tobaccoRes.data ?? []) as TobaccoEvent[],
     todayCheckin: (checkinRes.data ?? null) as DailyCheckin | null,
+    release4,
   };
 }
 
@@ -317,13 +323,14 @@ export type GuidedEpisodeDraft = {
   product: ProductType;
   triggerCode: string;
   customTriggerText?: string;
-  needCode: string;
+  needCode?: string;
   cravingBefore: number;
   cravingAfter: number | null;
   helpfulness: number | null;
   replacementCode: string | null;
   outcome: 'successful_response' | 'nicotine_used' | 'abandoned';
   note?: string;
+  episodeId?: string;
   tobacco?: {
     cigaretteQuantity?: number;
     hookahSessionCount?: number;
@@ -338,38 +345,66 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
   const supabase = requireClient();
   const userId = session.user.id;
   const completedAt = new Date().toISOString();
-  const episodeRes = await supabase.from('episodes').insert({
+  const episodeId = draft.episodeId ?? crypto.randomUUID();
+  const episodePayload = {
+    id: episodeId,
     user_id: userId,
+    episode_kind: 'craving',
     target_product: draft.product,
     trigger_code: draft.triggerCode === 'other' ? null : draft.triggerCode,
     custom_trigger_text: draft.triggerCode === 'other' ? draft.customTriggerText || 'Другое' : null,
     need_code: draft.needCode || null,
     craving_before: draft.cravingBefore,
-    craving_after: draft.cravingAfter,
-    helpfulness: draft.helpfulness,
-    outcome: draft.outcome,
+    craving_after: null,
+    helpfulness: null,
+    outcome: 'open',
     private_note: draft.note || null,
-    completed_at: completedAt,
-  }).select('id').single();
-  if (episodeRes.error || !episodeRes.data) throw new Error(episodeRes.error?.message || 'Не удалось сохранить эпизод');
-  const episodeId = episodeRes.data.id as string;
+    completed_at: null,
+  };
+  const episodeRes = await supabase.from('episodes').insert(episodePayload);
+  if (episodeRes.error && episodeRes.error.code !== '23505') {
+    throw new Error(episodeRes.error.message);
+  }
+  if (episodeRes.error?.code === '23505') {
+    const existing = await supabase.from('episodes').select('id,outcome').eq('id', episodeId).eq('user_id', userId).maybeSingle();
+    if (existing.error || !existing.data) throw new Error(existing.error?.message || 'Не удалось продолжить сохранение эпизода');
+    if (existing.data.outcome && existing.data.outcome !== 'open') return episodeId;
+  }
 
   if (draft.replacementCode) {
-    const replacement = await supabase.from('episode_actions').insert({
-      user_id: userId,
-      episode_id: episodeId,
+    const existingAction = await supabase.from('episode_actions')
+      .select('id')
+      .eq('episode_id', episodeId)
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+    if (existingAction.error) throw new Error(existingAction.error.message);
+    const actionPayload = {
       action_type: draft.replacementCode.startsWith('nrt_') ? 'nrt' : 'replacement',
       replacement_code: draft.replacementCode,
       payload: {},
-    });
-    if (replacement.error) throw new Error(replacement.error.message);
+    };
+    const action = existingAction.data
+      ? await supabase.from('episode_actions').update(actionPayload).eq('id', existingAction.data.id).eq('user_id', userId)
+      : await supabase.from('episode_actions').insert({
+          ...actionPayload,
+          user_id: userId,
+          episode_id: episodeId,
+        });
+    if (action.error) throw new Error(action.error.message);
   }
+
+  const existingTobacco = await supabase.from('tobacco_events')
+    .select('id')
+    .eq('episode_id', episodeId)
+    .eq('user_id', userId)
+    .limit(1)
+    .maybeSingle();
+  if (existingTobacco.error) throw new Error(existingTobacco.error.message);
 
   if (draft.outcome === 'nicotine_used') {
     const tobacco = draft.tobacco ?? {};
-    const event = await supabase.from('tobacco_events').insert({
-      user_id: userId,
-      episode_id: episodeId,
+    const tobaccoPayload = {
       product_type: draft.product,
       cigarette_quantity: draft.product === 'cigarette' ? tobacco.cigaretteQuantity ?? 1 : null,
       hookah_session_count: draft.product === 'hookah' ? tobacco.hookahSessionCount ?? 1 : null,
@@ -377,9 +412,31 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
       vape_puffs: draft.product === 'vape' ? tobacco.vapePuffs ?? 10 : null,
       vape_device_type: draft.product === 'vape' ? tobacco.vapeDeviceType ?? null : null,
       cost_actual_rub: tobacco.costActualRub ?? null,
-    });
+      deleted_at: null,
+    };
+    const event = existingTobacco.data
+      ? await supabase.from('tobacco_events').update(tobaccoPayload).eq('id', existingTobacco.data.id).eq('user_id', userId)
+      : await supabase.from('tobacco_events').insert({
+          ...tobaccoPayload,
+          user_id: userId,
+          episode_id: episodeId,
+        });
     if (event.error) throw new Error(event.error.message);
+  } else if (existingTobacco.data) {
+    const removed = await supabase.from('tobacco_events')
+      .update({ deleted_at: completedAt })
+      .eq('id', existingTobacco.data.id)
+      .eq('user_id', userId);
+    if (removed.error) throw new Error(removed.error.message);
   }
+
+  const completed = await supabase.from('episodes').update({
+    craving_after: draft.cravingAfter,
+    helpfulness: draft.helpfulness,
+    outcome: draft.outcome,
+    completed_at: completedAt,
+  }).eq('id', episodeId).eq('user_id', userId);
+  if (completed.error) throw new Error(completed.error.message);
 
   return episodeId;
 }

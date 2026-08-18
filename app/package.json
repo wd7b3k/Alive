@@ -10,7 +10,8 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --experimental-strip-types --test src/release4-domain.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.111.0",

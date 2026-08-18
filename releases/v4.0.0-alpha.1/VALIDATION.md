@@ -8,13 +8,47 @@
 
 Нельзя считать checklist выполненным по косвенным признакам.
 
+## Фактический checkpoint — 2026-08-17
+
+| Gate | Статус | Факт |
+|---|---|---|
+| Direct GitHub branch / draft PR | PASS | `agent/v4.0.0-alpha.1`, draft PR #8, base `agent/r1-data-evidence-admin` |
+| Implementation plan до runtime-кода | PASS | План был единственным release-diff перед domain/runtime implementation |
+| Scope / non-goals | PASS | Local LLM, Tribute, referral, Telegram, Together redesign, wearables, ML, paywall и unrelated refactor не добавлены |
+| Canonical cigarette implementation | PASS | Реализован компактный flow: CTA → контекст → approved content/Зачем → deterministic action → outcome → metrics → learning-compatible raw writes → admin events |
+| `npm ci --no-audit --no-fund` | PASS | Выполнено во временном validation-зеркале точного head branch |
+| `npm run typecheck` | PASS | Exit code 0 |
+| `npm test` | PASS | 11/11 Node domain tests, включая idempotent retry semantics |
+| `npm run build` | PASS | Production build завершён; остаётся warning о chunk >500 kB |
+| Adversarial self-review | PASS | Помимо runtime fixes проверены и исправлены admin privilege escalation, cross-user action link, hard-delete projection risk, legacy path и CI supply-chain/teardown semantics |
+| GitHub Actions | НЕ ПРОВЕРЕНО | Logo hotfix commit `e5632aad7a6dcf39fee48146c169a6c9aa1f081b`: frontend run #315 завершён `success`, но `ALIVE database CI` run #55 на 2026-08-17 ещё `in_progress`; предыдущие strict DB-tested runs остаются полезным историческим evidence, но эта строка отражает только status для logo hotfix commit |
+| Brand/logo asset | PASS | Причина дефекта локализована в растровом `brand-logo-full.png`; render-path в `RedesignApp.tsx` переведён на deterministic `brand-logo-classic-om.svg` с утверждённым классическим Ом, без изменения остального UI |
+| SQL/RLS static review | PASS | Atomic/idempotent exposure RPC и least-privilege boundary проверены Supabase best-practices workflow и отдельным reviewer; новых P1/P2 нет |
+| Ephemeral DB: migration replay | PASS | `ALIVE database CI` run #44: pinned Supabase CLI `2.111.0`, fresh stack и отдельный `supabase db reset --local` применили всю migration chain с нуля, включая security hardening |
+| Ephemeral DB: pgTAP / RLS | PASS | Run #44: 5 файлов, 61/61 assertions — isolation, authenticated/anonymous boundaries, RPC grants, sequential/concurrent `flow_id`, soft-delete/recompute, blocked hard delete, non-escalating admin boundary, cross-user action denial и legacy-present migration |
+| Ephemeral DB: lint / teardown | PASS | Run #44 фактически исполнил `supabase db lint --level error --fail-on error`; log: `No schema errors found`; `supabase stop --no-backup` завершён до уничтожения runner |
+| Live / paid Supabase branch | PASS | Не создавались и не изменялись; validation не использует remote link, secrets, artifacts или постоянные volumes |
+| Hosted Security / Performance Advisors | НЕ ПРОВЕРЕНО | Ephemeral schema lint не подменяет hosted Supabase Advisors после будущего controlled deployment |
+| Canonical authenticated E2E | НЕ ПРОВЕРЕНО | Preview доступен, но browser session не имеет authenticated test user; вход через Google не выполнялся |
+| Public preview smoke | PASS | [agent-v4-0-0-alpha-1.alive-aw2.pages.dev](https://agent-v4-0-0-alpha-1.alive-aw2.pages.dev/) открыт реальным browser tooling 2026-08-17; экран входа загрузился, исправленный классический Ом виден корректно, композиция остального hero не изменилась |
+| Browser desktop/mobile | НЕ ПРОВЕРЕНО | Public shell проверен после logo hotfix, но canonical authenticated flow и admin route не пройдены |
+| Performance / accessibility preview | НЕ ПРОВЕРЕНО | Preview доступен, но требуемый Chrome DevTools MCP для trace/Core Web Vitals в окружении отсутствует |
+| Vape / hookah runtime expansion | НЕ ПРОВЕРЕНО | Намеренно не начато до фактического canonical E2E PASS |
+| Independent reviewer | PASS | Ранний DB/CI review закрыл 2 P1, 3 P2 и 1 P3. Последующая независимая проверка выявила false-green lint semantics в run #32; дефект и gate исправлены, strict run #35 проверен по полному логу |
+
+Residual risks DB gate: composite FK требует preflight исторических remote rows перед deployment; legacy test не воспроизводит полный pre-R1 snapshot; `ubuntu-latest` mutable; PostgREST/Auth transport не покрыт pgTAP.
+
+False-green correction: runs #24/#32 не считаются strict-lint evidence. Причина — default `--fail-on none`; постоянное правило fail semantics зафиксировано в `docs/CODEX_QUALITY_PROTOCOL.md` и AI session 008.
+
+Этот checkpoint не является acceptance release. Checklist ниже остаётся полным acceptance contract; непроверенные строки нельзя выводить из программного PASS.
+
 ## 1. Base / R1 readiness
 
 - [ ] Strategy Foundation понятна и не конфликтует с release.
-- [ ] R1 schema доступна в development environment либо ограничение явно принято.
-- [ ] R1 migrations последовательны.
-- [ ] RLS baseline не хуже текущего.
-- [ ] Legacy data compatibility понятна.
+- [x] R1 schema воспроизводится в ephemeral CI без платной branch.
+- [x] R1 migrations последовательны при fresh replay.
+- [x] RLS boundary, privilege non-escalation и action/episode ownership подтверждены pgTAP.
+- [x] Legacy data compatibility и clean-schema fallback подтверждены replay.
 
 ## 2. Scope
 
@@ -148,15 +182,15 @@
 
 Если schema меняется:
 
-- [ ] development migrations PASS;
-- [ ] owner CRUD PASS;
-- [ ] cross-user read denied;
-- [ ] cross-user write denied;
-- [ ] unauthenticated denied;
-- [ ] security advisor reviewed;
-- [ ] performance advisor reviewed;
-- [ ] indexes justified;
-- [ ] rollback/forward-fix documented.
+- [x] ephemeral fresh migrations PASS;
+- [x] owner read/write/soft-delete/recompute paths PASS в покрытом vertical slice; physical episode delete для client role запрещён;
+- [x] cross-user read denied;
+- [x] cross-user write denied;
+- [x] unauthenticated denied;
+- [ ] hosted security advisor reviewed;
+- [ ] hosted performance advisor reviewed;
+- [x] schema lint и индексы проверены;
+- [x] rollback/forward-fix documented.
 
 ## 13. Automated tests
 

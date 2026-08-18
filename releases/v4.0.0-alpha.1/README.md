@@ -92,6 +92,25 @@ Release проверяет:
 - subscriptions/paywall;
 - hardware.
 
+## Текущий статус реализации
+
+Canonical cigarette slice остаётся реализованным в draft PR #8.
+
+В logo hotfix commit `e5632aad7a6dcf39fee48146c169a6c9aa1f081b` исправлен бренд-asset: повреждённый растровый логотип заменён на deterministic SVG с утверждённым классическим Ом. Тот же asset используется и в login hero, и в верхнем brand mark; остальной UI намеренно не менялся.
+
+Свежий frontend gate PASS: GitHub Actions `ALIVE frontend CI` run #315 (`Typecheck and build`) завершён `success` на том же logo hotfix commit.
+
+Database/security evidence для alpha остаётся валидным из предыдущих strict прогонов; для logo hotfix commit автоматически запущен повторный `ALIVE database CI` run #55, который на 2026-08-17 ещё находится `in_progress`.
+
+Public preview уже reviewable по визуальной части: [agent-v4-0-0-alpha-1.alive-aw2.pages.dev](https://agent-v4-0-0-alpha-1.alive-aw2.pages.dev/) на 2026-08-17 отображает исправленный классический Ом без изменения остальной композиции экрана входа.
+
+Release всё ещё не является acceptance-ready alpha:
+
+- authenticated browser E2E и `/admin` не выполнены;
+- hosted Supabase Advisors и preview performance не подтверждены;
+- independent static runtime/SQL review PASS; отдельный DB/CI review зафиксирован в validation;
+- vape/hookah expansion не начат до PASS canonical browser E2E.
+
 ## Definition of Done
 
 Release не называется полностью проверенным, пока:
