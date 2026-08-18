@@ -10,6 +10,17 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
 Отдельный draft PR v3.1 с behavioral-depth/Together/Facts/Myths не является принятым production state до merge/owner gate.
 
+Текущая исправительная ветка: `agent/v4.0.0-alpha.1-hotfix.1`, base `agent/v4.0.0-alpha.1`.
+
+Scope correction hotfix:
+
+- восстановить утверждённый владельцем PNG-логотип без перерисовки;
+- вернуть `/facts`, вкладки «Факты»/«Мифы» и входы в раздел поверх R1 Evidence Registry;
+- убрать точки из статических пользовательских заголовков;
+- закрепить эти решения contract test, чтобы следующая сборка не повторила регрессию.
+
+Локальные frontend gates: typecheck `PASS`, 14/14 tests `PASS`, build `PASS`. Remote preview и GitHub Actions фиксируются в release validation после публикации ветки.
+
 ## Strategy Foundation
 
 Ветка:
