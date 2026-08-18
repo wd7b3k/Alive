@@ -1,0 +1,169 @@
+import { useEffect, useState, type ReactNode } from 'react';
+import type { Bootstrap } from '../data';
+import { getSupabase } from '../supabase';
+import { navigateTo } from '../services/navigation';
+import { Icon, type IconName } from '../ui-icons';
+import logoUrl from '../assets/brand-logo-full.png';
+
+export function ShellButton({
+  children,
+  onClick,
+  className = '',
+  disabled = false,
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+  className?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button type="button" className={`r-button ${className}`} onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  );
+}
+
+export function Modal({
+  children,
+  onClose,
+  wide = false,
+}: {
+  children: ReactNode;
+  onClose: () => void;
+  wide?: boolean;
+}) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="r-modal-backdrop"
+      onMouseDown={(event) => event.currentTarget === event.target && onClose()}
+    >
+      <section className={`r-modal ${wide ? 'r-modal-wide' : ''}`}>{children}</section>
+    </div>
+  );
+}
+
+export function Brand({ compact = false }: { compact?: boolean }) {
+  return (
+    <button
+      type="button"
+      className={`r-brand ${compact ? 'compact' : ''}`}
+      onClick={() => navigateTo('/')}
+      aria-label="ALIVE — на главную"
+    >
+      <img src={logoUrl} alt="ALIVE" />
+    </button>
+  );
+}
+
+const MAIN_NAV: ReadonlyArray<[string, string, IconName]> = [
+  ['/', 'Сегодня', 'spark'],
+  ['/links', 'Связки', 'chain'],
+  ['/path', 'Путь', 'path'],
+  ['/meanings', 'Смыслы', 'meaning'],
+];
+
+export function Header({ data, path }: { data: Bootstrap; path: string }) {
+  return (
+    <>
+      <header className="r-header">
+        <Brand />
+        <nav className="r-desktop-nav">
+          {MAIN_NAV.map(([href, label, icon]) => (
+            <button
+              key={href}
+              type="button"
+              className={path === href ? 'active' : ''}
+              onClick={() => navigateTo(href)}
+            >
+              <Icon name={icon} size={18} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="r-header-tools">
+          <button type="button" className="r-method-link" onClick={() => navigateTo('/experiment')}>
+            О методе
+          </button>
+          <button
+            type="button"
+            className="r-avatar"
+            onClick={() => navigateTo('/profile')}
+            title="Профиль"
+          >
+            {data.profile.avatar_url ? (
+              <img src={data.profile.avatar_url} alt="" referrerPolicy="no-referrer" />
+            ) : (
+              <Icon name="user" size={20} />
+            )}
+          </button>
+        </div>
+      </header>
+      <nav className="r-mobile-nav">
+        {MAIN_NAV.map(([href, label, icon]) => (
+          <button
+            key={href}
+            type="button"
+            className={path === href ? 'active' : ''}
+            onClick={() => navigateTo(href)}
+          >
+            <Icon name={icon} size={21} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+    </>
+  );
+}
+
+export function LoginPage() {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function start() {
+    const supabase = getSupabase();
+    if (!supabase) return;
+    setBusy(true);
+    setError('');
+    const result = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/` },
+    });
+    if (result.error) {
+      setError(result.error.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <main className="r-login">
+      <section className="r-login-card">
+        <img src={logoUrl} className="r-login-logo" alt="ALIVE" />
+        <p className="r-kicker">Некоммерческий эксперимент · метод ALIVE v1</p>
+        <h1>Не запрещать себе. Вернуть себе выбор.</h1>
+        <p className="r-lead">
+          ALIVE помогает заметить, что именно запускает автоматический ритуал, понять, какое
+          состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.
+        </p>
+        <div className="r-login-actions">
+          <ShellButton className="primary" onClick={start} disabled={busy}>
+            {busy ? 'Открываю Google…' : 'Войти через Google'} <Icon name="arrow" size={18} />
+          </ShellButton>
+          <ShellButton className="ghost" onClick={() => navigateTo('/experiment')}>
+            Как устроен эксперимент
+          </ShellButton>
+        </div>
+        {error && <p className="r-error">{error}</p>}
+        <p className="r-privacy">
+          Google нужен только для входа. Поведенческие данные хранятся отдельно и защищаются
+          правилами доступа PostgreSQL.
+        </p>
+      </section>
+    </main>
+  );
+}

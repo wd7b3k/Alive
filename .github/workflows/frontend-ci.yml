@@ -2,12 +2,11 @@ name: ALIVE frontend CI
 
 on:
   push:
-    branches:
-      - main
-      - v3.0-hardening
+    branches: [main]
   pull_request:
     paths:
       - 'app/**'
+      - 'supabase/migrations/**'
       - '.github/workflows/frontend-ci.yml'
 
 permissions:
@@ -15,7 +14,7 @@ permissions:
 
 jobs:
   frontend:
-    name: Typecheck and build
+    name: Lint, typecheck, test and build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -35,8 +34,17 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build

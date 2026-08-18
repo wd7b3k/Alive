@@ -99,3 +99,11 @@
 ## 10. AI-generated releases
 
 AI не должен самостоятельно повышать версию или объявлять production deployment состоявшимся без фактического подтверждения.
+
+## 11. Scope freeze и structural debt
+
+- после фиксации release scope новые продуктовые идеи уходят в backlog;
+- release scope не расширяется без явного решения владельца и обновления requirements;
+- stabilization и structural debt предыдущего release unit закрываются до начала новых функций;
+- временные рабочие копии не являются release artifacts: handoff выполняется через GitHub branch/PR/release;
+- test candidate и preview deployment не равны принятому production release.
