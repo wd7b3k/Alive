@@ -100,7 +100,11 @@ Latest rich product frontend commit passes:
 
 ## Still required before v3.0 can be called RELEASED
 
-- real runtime smoke-test of new deep UI;
+- real runtime smoke-test of new deep UI (partial progress 2026-08-20: pre-login
+  screens only — `/`, `/experiment`, `/releases` — smoke-tested locally at all 5
+  required viewport widths against a real build of the current commit; a mobile
+  safe-zone bug found and fixed — see `releases/v3.0-platform/VALIDATION.md`; the
+  screens behind Google login remain untested);
 - full user Link edit/disable controls (create/delete/UGC already implemented);
 - background NRT patch UI (DB/RLS support exists);
 - user data export UI (data-layer function `exportMyData()` implemented 2026-08-20 in
