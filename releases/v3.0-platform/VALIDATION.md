@@ -45,16 +45,57 @@
 
 ## Требует следующего gate
 
-- [ ] Supabase CLI local stack запускается;
-- [ ] `supabase db reset` PASS;
-- [ ] user A → private rows user B = denied;
-- [ ] browser bundle secret scan PASS;
+- [ ] Supabase CLI local stack запускается (`npx supabase start`/`db reset` буквально
+      не прогонялись — в этой сессии нет доступного Docker daemon для CLI-стека Supabase.
+      Вместо этого 2026-08-20 миграции прогнаны на чистом локальном PostgreSQL 16
+      напрямую через `supabase/tests/local/run.sh` — функционально эквивалентный, но
+      не идентичный путь; см. `supabase/tests/local/README.md`. Оставлено непройденным
+      буквально, чтобы не выдавать один инструмент за другой);
+- [ ] `supabase db reset` PASS (см. предыдущий пункт — то же самое ограничение);
+- [ ] user A → private rows user B = denied.
+      **Сильное, но не окончательное свидетельство получено 2026-08-20**:
+      `supabase/tests/local/run.sh` реально прогнан против настоящих versioned
+      migrations на одноразовой локальной Postgres-БД (auth-шим, максимально близкий к
+      Supabase-контракту) — SELECT/UPDATE/DELETE чужих private rows по всем 10
+      RLS-защищённым таблицам = 0 совпадений, попытка INSERT с чужим `user_id`
+      отклонена `with check`, собственные данные пользователю по-прежнему видны
+      (контроль от false positive). Это подтверждает корректность RLS-политик в самих
+      migrations, но **не заменяет** требуемый живой smoke-test с двумя реальными
+      Google-аккаунтами на реальном Cloudflare Pages деплое — чек-бокс сознательно
+      оставлен непройденным до этого теста;
+- [x] browser bundle secret scan PASS — реально прогнано 2026-08-20 против настоящего
+      production-бандла (`npm run build` в `app/`, затем
+      `node scripts/scan-bundle-for-secrets.mjs app/dist`): 0 совпадений паттернов
+      service-role/OAuth-secret/PEM-ключей. Скрипт также проверен на срабатывание
+      (внедрённый тестовый секрет в копии бандла — пойман, exit code 1). Теперь это
+      постоянный шаг CI (`frontend-ci.yml`, job `frontend`), а не разовая ручная
+      проверка — закрывает расхождение "заявлено в CURRENT_STATE.md как факт, но не
+      подтверждено тестом" из аудита 001. Ограничение: это паттерн-based статическая
+      проверка, не гарантия против любой формы утечки — см. комментарии в самом скрипте;
 - [ ] UGC explicit-consent test PASS — private Смысл/Связка не появляется в общем
       каталоге без явного действия «Предложить в общую базу» (`FR-V3-062/063`,
       `RISK-V3-008`, помечен как **Blocker** в `REQUIREMENTS.md`). До 2026-08-20 этот
       пункт вообще отсутствовал в VALIDATION.md, несмотря на Blocker-статус в
-      REQUIREMENTS.md — добавлен как явный пробел, не как пройденная проверка;
-- [ ] export/delete basic tests PASS;
+      REQUIREMENTS.md — добавлен как явный пробел, не как пройденная проверка.
+      **Структурная проверка 2026-08-20**: в migrations нет ни одного trigger/function,
+      автоматически публикующего `user_meanings`/`user_links` в `meanings_catalog`/
+      `replacements_catalog`; единственный путь в общий каталог — явный insert в
+      `ugc_submissions` через `submitMeaning`/`submitLink` (`app/src/data.ts`), которые
+      вызываются только по клику на явно подписанную кнопку «Предложить в общую базу»
+      в `RedesignApp.tsx`. **Отдельная находка**: старый (уже удалённый) `App.tsx`
+      оборачивал этот вызов в `window.confirm(...)`, у `RedesignApp.tsx` такого
+      подтверждающего диалога нет — сама кнопка формально уже является явным действием
+      по тексту `FR-V3-062/063`, но нужно продуктовое решение владельца, требуется ли
+      дополнительное подтверждение;
+- [ ] export/delete basic tests PASS.
+      **Реализовано, но не протестировано live 2026-08-20**: `exportMyData()` и
+      `deleteMyAccount()` добавлены в `app/src/actions.ts` (typecheck/build PASS);
+      `supabase/functions/delete-account/index.ts` — новая Edge Function, заменяющая
+      ранее удалённый небезопасный публичный RPC (см. её собственный header-комментарий).
+      Не задеплоена и не вызвана против живого проекта — нет credentials в этой сессии.
+      UI-кнопки для export/delete сознательно не добавлены в этом проходе — это
+      security-чувствительное, необратимое действие, заслуживающее отдельного,
+      осмотрительного изменения, а не попутной вставки в 60К-строчный компонент;
 - [ ] final mobile/desktop product parity smoke-test PASS.
 
 ## Release gate

@@ -103,9 +103,15 @@ Latest rich product frontend commit passes:
 - real runtime smoke-test of new deep UI;
 - full user Link edit/disable controls (create/delete/UGC already implemented);
 - background NRT patch UI (DB/RLS support exists);
-- user data export UI;
-- authenticated Edge Function for full account deletion;
-- two-user RLS isolation test;
+- user data export UI (data-layer function `exportMyData()` implemented 2026-08-20 in
+  `app/src/actions.ts`, typecheck/build PASS; no UI button wired up yet — deliberately
+  left for a separate, reviewable change);
+- authenticated Edge Function for full account deletion (code written 2026-08-20 —
+  `supabase/functions/delete-account/index.ts` — not deployed, not tested against a
+  live project, no UI wired up; see `releases/v3.0-platform/VALIDATION.md` for detail);
+- two-user RLS isolation test (strong local evidence added 2026-08-20 via
+  `supabase/tests/local/run.sh` against real migrations on disposable Postgres — not a
+  substitute for the live two-Google-account smoke test; see VALIDATION.md);
 - local full DB reset from migrations;
 - mobile/desktop parity review;
 - `alive.hmnos.ru` DNS/custom-domain cutover;

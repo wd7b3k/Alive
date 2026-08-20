@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   frontend:
-    name: Typecheck and build
+    name: Typecheck, build and scan bundle for secrets
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -40,3 +40,41 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # RISK-V3-002 / VALIDATION.md "browser bundle secret scan PASS" — static check
+      # that no service-role/OAuth-secret-shaped string ends up in the shipped bundle.
+      # See scripts/scan-bundle-for-secrets.mjs for what it does and doesn't catch.
+      - name: Scan production bundle for leaked secrets
+        run: node ../scripts/scan-bundle-for-secrets.mjs dist
+
+  rls-isolation:
+    name: RLS cross-tenant isolation (local Postgres, no live Supabase credentials)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # RISK-V3-001 / VALIDATION.md "user A -> private rows user B = denied". Runs the
+      # real versioned migrations from supabase/migrations/ against a disposable local
+      # Postgres — see supabase/tests/local/README.md for exactly what this does and
+      # does not prove (it is not a substitute for the live two-Google-account smoke
+      # test also required before v3.0 RELEASED).
+      - name: Run RLS isolation test
+        run: supabase/tests/local/run.sh
