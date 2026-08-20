@@ -28,7 +28,15 @@
 
 ## Текущие blockers
 
-- [ ] **Approved Om asset present in v3 runtime** — Unicode/infinity substitute запрещён, exact owner-supplied canonical asset обязателен;
+- [ ] **Approved Om asset present in v3 runtime** — Unicode/infinity substitute запрещён, exact owner-supplied canonical asset обязателен.
+      Проверено инструментально 2026-08-20: SHA-256 фактического
+      `app/src/assets/brand-logo-full.png` (идентичен `app/public/brand-logo-full.png`) —
+      `110738ee37aef8b4486b777b3e2d3f5004a5f254582b464f0f265495997f8ce3`. Он не совпадает
+      ни с одним из двух канонических хэшей в `docs/V3_VISUAL_UX_BASELINE.md`
+      (`95eca2d5...b769da` для Om-марки, `11c8624d...191d2` для полного лого). Блокер
+      остаётся открытым не по формальности, а по факту несовпадения — **AI не подменяет
+      ассет и не переписывает канонический хэш самостоятельно**; нужно решение владельца
+      (какой файл на самом деле утверждён) и обновление либо хэша в baseline, либо ассета.
 - [ ] **Visual parity / safe-zone review PASS** по `docs/V3_VISUAL_UX_BASELINE.md`;
 - [ ] **360/390–430/768–820/1280/1440+ viewport smoke-test PASS**;
 - [ ] primary/destructive actions не конфликтуют, fixed navigation не перекрывает content.
@@ -41,6 +49,11 @@
 - [ ] `supabase db reset` PASS;
 - [ ] user A → private rows user B = denied;
 - [ ] browser bundle secret scan PASS;
+- [ ] UGC explicit-consent test PASS — private Смысл/Связка не появляется в общем
+      каталоге без явного действия «Предложить в общую базу» (`FR-V3-062/063`,
+      `RISK-V3-008`, помечен как **Blocker** в `REQUIREMENTS.md`). До 2026-08-20 этот
+      пункт вообще отсутствовал в VALIDATION.md, несмотря на Blocker-статус в
+      REQUIREMENTS.md — добавлен как явный пробел, не как пройденная проверка;
 - [ ] export/delete basic tests PASS;
 - [ ] final mobile/desktop product parity smoke-test PASS.
 
