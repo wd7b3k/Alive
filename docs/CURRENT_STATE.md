@@ -31,7 +31,12 @@ Google OAuth проверен реальным входом: Auth user и ALIVE 
 
 Новая архитектура должна сохранить минимум глубины v2.7 и добавить утверждённые возможности v3.
 
-## Реализовано в текущей ветке `v3.0-platform`
+## Реализовано на `main`
+
+Код прошёл путь `v3.0-platform` → `v3.0-hardening` → `v3.0-redesign` и на 2026-08-15
+слит в `main` (tip `86b4608`) линейными коммитами. Разработка сейчас ведётся не в
+ветке `v3.0-platform` (она отстаёт от `main`) — см. подробный снимок веток и открытый
+вопрос по фактическому PR-статусу в `docs/INFRASTRUCTURE_STATE.md`.
 
 ### Product UI
 
@@ -55,13 +60,23 @@ Google OAuth проверен реальным входом: Auth user и ALIVE 
 
 Remote catalog after product-depth migrations:
 
-- 29 published triggers;
-- 46 published replacements;
+- 28 published triggers;
+- 45 published replacements;
 - 96 trigger→replacement relations;
 - 13 universal Meanings;
 - 5 universal identity scripts;
 - 13 support messages;
 - 7 rewards.
+
+Counts corrected 2026-08-21 after QA against the live deployment found two
+byte-identical duplicate catalog entries — the same trigger under `morning`/`wake_up`
+and the same replacement under `water`/`water_pause`, each a legacy row from the
+initial migration that the later product-depth catalog superseded but never retired.
+The previously documented 29/46 counted those duplicates. Migration
+`20260821120000_v3_dedupe_legacy_morning_trigger.sql` re-points existing history onto
+the canonical codes and drops the orphans; the 96 relations are unaffected (all of
+them already pointed at the canonical codes). Applying it to the remote Supabase
+project is the owner's action — see `releases/v3.0-platform/VALIDATION.md`.
 
 Legacy personal biography is intentionally not promoted into global content. Private personal content belongs to the individual user profile.
 
@@ -95,12 +110,22 @@ Latest rich product frontend commit passes:
 
 ## Still required before v3.0 can be called RELEASED
 
-- real runtime smoke-test of new deep UI;
+- real runtime smoke-test of new deep UI (partial progress 2026-08-20: pre-login
+  screens only — `/`, `/experiment`, `/releases` — smoke-tested locally at all 5
+  required viewport widths against a real build of the current commit; a mobile
+  safe-zone bug found and fixed — see `releases/v3.0-platform/VALIDATION.md`; the
+  screens behind Google login remain untested);
 - full user Link edit/disable controls (create/delete/UGC already implemented);
 - background NRT patch UI (DB/RLS support exists);
-- user data export UI;
-- authenticated Edge Function for full account deletion;
-- two-user RLS isolation test;
+- user data export UI (data-layer function `exportMyData()` implemented 2026-08-20 in
+  `app/src/actions.ts`, typecheck/build PASS; no UI button wired up yet — deliberately
+  left for a separate, reviewable change);
+- authenticated Edge Function for full account deletion (code written 2026-08-20 —
+  `supabase/functions/delete-account/index.ts` — not deployed, not tested against a
+  live project, no UI wired up; see `releases/v3.0-platform/VALIDATION.md` for detail);
+- two-user RLS isolation test (strong local evidence added 2026-08-20 via
+  `supabase/tests/local/run.sh` against real migrations on disposable Postgres — not a
+  substitute for the live two-Google-account smoke test; see VALIDATION.md);
 - local full DB reset from migrations;
 - mobile/desktop parity review;
 - `alive.hmnos.ru` DNS/custom-domain cutover;

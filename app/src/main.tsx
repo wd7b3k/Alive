@@ -1,7 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import RedesignApp from './RedesignApp';
-import './styles.css';
 import './redesign.css';
 
 const root = document.getElementById('root');

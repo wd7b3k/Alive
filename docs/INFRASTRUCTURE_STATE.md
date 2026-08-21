@@ -7,13 +7,52 @@
 - Canonical repository: `wd7b3k/Alive`
 - Visibility: `private`
 - Default branch: `main`
-- Active development branch: `v3.0-redesign`
-- Active PR: `#4 ALIVE v3.0 — глубокий редизайн интерфейса` (draft до визуального smoke-test)
+- Активная разработка v3.0 (platform → hardening → redesign) фактически уже находится
+  на `main` (tip `86b4608`, "ALIVE v3.0: deep interface redesign", 2026-08-15).
+  `v3.0-platform` / `v3.0-hardening` / `v3.0-redesign` — исторические ветки, каждая
+  отстаёт от `main`, никакого активного development сейчас на них не ведётся.
+- **Открытый вопрос по PR #4** (не проверяемо только из содержимого git — нет доступа
+  к GitHub API/PR-статусу из этой сессии): ранее здесь числился "Active PR: `#4` ...
+  draft до визуального smoke-test". Коммиты на `main` линейны, без merge-commit —
+  значит либо PR #4 был смержен fast-forward и его нужно закрыть/отметить смерженным,
+  либо push в `main` произошёл в обход PR-процесса, описанного в `AGENTS.md`
+  ("Git workflow"). Владельцу нужно явно зафиксировать, какой из двух вариантов верен,
+  и обновить этот пункт по факту.
 - Canonical standalone merge: `d1bcec0ae7f8feb2fee0cfe64c28bde44ef585cb`
 - Historical source before extraction: `wd7b3k/humanos/projectsv2.0/products/alive/`
 - HumanOS cleanup merge: `78f2f74ef223d1da20c6c65203e5806263ec85e3`
 - Current HumanOS `main` no longer contains the ALIVE product subtree; only pointer/audit history remains.
 - Rule: дальнейшая ALIVE-разработка ведётся только в `wd7b3k/Alive`; HumanOS не используется как источник текущего кода, дизайна или ассетов.
+
+### Ветки repository — снимок аудита (2026-08-20)
+
+Помимо `main`, в remote есть ещё 11 веток. Ниже — их состояние относительно `main`
+на момент снимка (`git rev-list --count`, дата последнего коммита). Таблицу нужно
+обновлять при следующем аудите, а не считать статичной.
+
+| Ветка | Впереди `main` | Позади `main` | Последний коммит | Статус |
+|---|---|---|---|---|
+| `agent/owner-vision-delivery-protocol` | 225 | 0 | 2026-08-18 | несмержена, не в roadmap |
+| `agent/v4.0.0-alpha.1-hotfix.1` | 225 | 0 | 2026-08-18 | несмержена; содержит release unit `v4.0.0-alpha.1-hotfix.1` — версия впереди факта, см. ниже |
+| `agent/v4.0.0-alpha.1` | 222 | 0 | 2026-08-18 | несмержена; содержит release unit `v4.0.0-alpha.1` |
+| `agent/r1-data-evidence-admin` | 100 | 0 | 2026-08-17 | несмержена; содержит release unit `r1-data-evidence-admin` (v3.2-scope) |
+| `agent/v3.1-behavioral-depth-together` | 67 | 0 | 2026-08-17 | несмержена (v3.1-scope) |
+| `agent/product-strategy-foundation` | 22 | 0 | 2026-08-17 | несмержена |
+| `agent/stabilization-release` | 2 | 0 | 2026-08-18 | несмержена |
+| `migration/standalone-repo` | 1 | 4 | 2026-08-15 | устаревшая, позади `main` |
+| `v3.0-hardening` | 14 | 2 | 2026-08-15 | историческая, слита в `main` через redesign |
+| `v3.0-platform` | 30 | 3 | 2026-08-15 | историческая, слита в `main` |
+| `v3.0-redesign` | 8 | 1 | 2026-08-15 | историческая, слита в `main` |
+| `docs/ai-session-2026-08-20-strategy-audit` | 1 | 0 | 2026-08-20 | audit-trail ветка этого аудита |
+
+**Значимая находка (не решение — вопрос владельцу):** на `agent/v4.0.0-alpha.1` и
+`agent/v4.0.0-alpha.1-hotfix.1` уже присвоена версия `v4.0.0-alpha`, хотя `v3.0` ещё
+не объявлен `RELEASED` — это расходится с `docs/RELEASE_POLICY.md` §3/§10 и
+`docs/ROADMAP.md` ("переходы идут по evidence gates"). На `agent/r1-data-evidence-admin`
+уже начат v3.2-scope (admin/intelligence) до прохождения v3.0/v3.1 гейта. Этот документ
+не abandon'ит, не мержит и не переименовывает эти ветки — решение о их судьбе
+(archive / частично забрать в v3.1–v3.2 планирование / формализовать ADR) остаётся за
+владельцем.
 
 ## Supabase
 

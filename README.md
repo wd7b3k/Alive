@@ -57,6 +57,9 @@ ALIVE должен постепенно увеличивать простран�
 14. [`docs/RELEASE_POLICY.md`](docs/RELEASE_POLICY.md) — релизная дисциплина.
 15. [`docs/GLOSSARY.md`](docs/GLOSSARY.md) — канонические термины.
 16. [`docs/INFRASTRUCTURE_STATE.md`](docs/INFRASTRUCTURE_STATE.md) — безопасное отражение внешней инфраструктуры.
+17. [`docs/V3_PARITY_BASELINE.md`](docs/V3_PARITY_BASELINE.md) — blocking acceptance criterion: минимум продуктовой глубины v2.7, обязателен к прохождению перед `v3.0 RELEASED`.
+18. [`docs/V3_VISUAL_UX_BASELINE.md`](docs/V3_VISUAL_UX_BASELINE.md) — blocking acceptance criterion: визуальный/UX-baseline, mobile safe zones, бренд-continuity.
+19. [`docs/V3_REDESIGN.md`](docs/V3_REDESIGN.md) — активная спецификация текущего UI (глубокий редизайн интерфейса), blocking перед финальным `v3.0`.
 
 ## Домены и инфраструктура
 
