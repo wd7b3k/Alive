@@ -77,4 +77,4 @@ jobs:
       # does not prove (it is not a substitute for the live two-Google-account smoke
       # test also required before v3.0 RELEASED).
       - name: Run RLS isolation test
-        run: supabase/tests/local/run.sh
+        run: bash supabase/tests/local/run.sh
