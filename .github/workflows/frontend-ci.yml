@@ -6,8 +6,17 @@ on:
       - main
       - v3.0-hardening
   pull_request:
+    # The rls-isolation job below exists to validate supabase/migrations, and the
+    # bundle scan reads scripts/. Before 2026-08-21 this filter listed only app/**,
+    # so a pull request that changed nothing but migrations skipped the entire
+    # workflow - including the very job meant to test those migrations. That was not
+    # theoretical: PR #13, which rewrote the catalog migrations, ran zero of these
+    # checks. Keep this list in step with what the jobs actually read.
     paths:
       - 'app/**'
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+      - 'scripts/**'
       - '.github/workflows/frontend-ci.yml'
 
 permissions:
