@@ -61,7 +61,7 @@ Google OAuth проверен реальным входом: Auth user и ALIVE 
 Remote catalog after product-depth migrations:
 
 - 28 published triggers;
-- 45 published replacements;
+- 74 published replacements;
 - 96 trigger→replacement relations;
 - 13 universal Meanings;
 - 5 universal identity scripts;
@@ -75,8 +75,25 @@ initial migration that the later product-depth catalog superseded but never reti
 The previously documented 29/46 counted those duplicates. Migration
 `20260821120000_v3_dedupe_legacy_morning_trigger.sql` re-points existing history onto
 the canonical codes and drops the orphans; the 96 relations are unaffected (all of
-them already pointed at the canonical codes). Applying it to the remote Supabase
-project is the owner's action — see `releases/v3.0-platform/VALIDATION.md`.
+them already pointed at the canonical codes). It was applied to the production project
+on 2026-08-21 by the owner.
+
+The replacement count then rose from 45 to 74 for a different reason: applying that
+migration surfaced that the production database had diverged from this repository
+altogether. 29 replacements existed only in production, three rows had been retitled
+there, evidence/curation metadata was present on every production row but absent from
+the repo, and 20 columns across `replacements_catalog`, `triggers_catalog` and
+`episodes` had been added straight to production. None of it had ever been captured as
+a migration, so the "repo is the single source of truth" rule above had quietly stopped
+holding.
+
+Per the owner's decision (2026-08-21) production is authoritative, and migrations
+`20260821130000_v3_sync_production_schema_drift.sql` (columns) and
+`20260821140000_v3_sync_production_catalog_content.sql` (values) bring this repository
+back in line with it. Verified by rebuilding a database from these migrations and
+comparing it against production field-by-field: aggregate SHA-256 over all 74
+replacements' base fields, over their metadata, and over the trigger catalog all match
+production exactly. Both migrations are idempotent and are a no-op against production.
 
 Legacy personal biography is intentionally not promoted into global content. Private personal content belongs to the individual user profile.
 
