@@ -60,13 +60,23 @@ Google OAuth проверен реальным входом: Auth user и ALIVE 
 
 Remote catalog after product-depth migrations:
 
-- 29 published triggers;
-- 46 published replacements;
+- 28 published triggers;
+- 45 published replacements;
 - 96 trigger→replacement relations;
 - 13 universal Meanings;
 - 5 universal identity scripts;
 - 13 support messages;
 - 7 rewards.
+
+Counts corrected 2026-08-21 after QA against the live deployment found two
+byte-identical duplicate catalog entries — the same trigger under `morning`/`wake_up`
+and the same replacement under `water`/`water_pause`, each a legacy row from the
+initial migration that the later product-depth catalog superseded but never retired.
+The previously documented 29/46 counted those duplicates. Migration
+`20260821120000_v3_dedupe_legacy_morning_trigger.sql` re-points existing history onto
+the canonical codes and drops the orphans; the 96 relations are unaffected (all of
+them already pointed at the canonical codes). Applying it to the remote Supabase
+project is the owner's action — see `releases/v3.0-platform/VALIDATION.md`.
 
 Legacy personal biography is intentionally not promoted into global content. Private personal content belongs to the individual user profile.
 
