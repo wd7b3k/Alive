@@ -28,7 +28,7 @@
 
 ## Текущие blockers
 
-- [ ] **Approved Om asset present in v3 runtime** — Unicode/infinity substitute запрещён, exact owner-supplied canonical asset обязателен.
+- [x] **Approved Om asset present in v3 runtime** — Unicode/infinity substitute запрещён, exact owner-supplied canonical asset обязателен.
       Проверено инструментально 2026-08-20: SHA-256 фактического
       `app/src/assets/brand-logo-full.png` (идентичен `app/public/brand-logo-full.png`) —
       `110738ee37aef8b4486b777b3e2d3f5004a5f254582b464f0f265495997f8ce3`. Он не совпадает
@@ -41,6 +41,28 @@
       `/releases`, локальная сборка текущего коммита) лого рендерится как
       нечитаемый шум из мелких цветных пикселей, а не узнаваемый Om/ALIVE-бренд —
       это не только формальное несовпадение хэша, но и видимый на экране баг.
+      **Решено 2026-08-21 прямой командой владельца**: владелец отклонил
+      AI-сгенерированный вариант Om-символа и явно распорядился использовать
+      собственное предоставленное им референсное изображение (Om + "ALIVE",
+      традиционные восточные формы на стыке с современным искусством), с адаптацией
+      под экраны и разрешения. `app/src/assets/brand-logo-full.png` и
+      `app/public/brand-logo-full.png` заменены на этот ассет (2031×699, RGBA,
+      реальная альфа-прозрачность подтверждена попиксельно, а не предположена по
+      белому фону чат-превью) — новый SHA-256
+      `37b33ba0664db913ee054f0b2f46a1171583225276ff968fe03a2a75ab6966c9`. Добавлен
+      отдельный квадратный Om-only ассет `app/src/assets/om-mark.png` (1024×1024,
+      обрезан из того же референса по естественному нулевому alpha-зазору между
+      символом и wordmark'ом) — SHA-256
+      `b479fafb36ad49adf6d6895746885d95f41d33128c3c846d00011905546547e1`; он пока не
+      подключён отдельно от `Brand`/`compact`-режима (см. `docs/V3_VISUAL_UX_BASELINE.md`,
+      "Desktop may use the full logo or Om + wordmark; compact/mobile uses the Om
+      mark") — подключение отдельного compact-логотипа оставлено как отдельная,
+      не запрошенная владельцем в этом проходе задача. Канонические хэши в
+      `docs/V3_VISUAL_UX_BASELINE.md` обновлены на эти значения. Визуально
+      подтверждено реальными Playwright-скриншотами (`/`, `/experiment`,
+      `/releases`, headless Chromium) на всех 5 baseline-ширин, включая retina
+      (`device_scale_factor=2`) — лого рендерится как узнаваемый Om/ALIVE-бренд,
+      не как шум.
 - [ ] **Visual parity / safe-zone review PASS** по `docs/V3_VISUAL_UX_BASELINE.md`.
       **Частичный прогон 2026-08-20** (см.
       `docs/ai_sessions/2026-08-20/004-block-d-visual-safe-zone-smoke-test-response.md`):

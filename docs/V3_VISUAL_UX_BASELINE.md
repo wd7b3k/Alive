@@ -12,8 +12,9 @@ The v3.0 product alpha exposed a regression: generic oversized SaaS-like cards, 
 
 - Approved Om logo is immutable unless the owner explicitly requests a brand change.
 - Do not regenerate, redraw, approximate or replace the Om with a Unicode symbol, infinity sign or unrelated icon.
-- Canonical Om asset SHA-256: `95eca2d503e1124f686e39893b793328dcc204a1b393a21dd064350bc8b769da`.
-- Canonical full ALIVE logo SHA-256: `11c8624d6ecf84c6a6bb554ca72a7455a0e5c1923ed324fb58c8eeabc42191d2`.
+- **2026-08-21 owner decision**: none of the previously documented canonical hashes below matched any asset ever present in the runtime (the shipped `brand-logo-full.png` was a corrupted file, SHA-256 `110738ee37aef8b4486b777b3e2d3f5004a5f254582b464f0f265495997f8ce3`, undecodable). Per direct owner command, the brand lockup was replaced with the owner's own supplied reference artwork (Om symbol + "ALIVE" wordmark, traditional-forms/modern-art fusion), not an AI-generated redraw. Canonical hashes below updated accordingly; this is an explicit brand-identity decision by the owner, not an AI-initiated substitution.
+- Canonical Om-only mark SHA-256: `b479fafb36ad49adf6d6895746885d95f41d33128c3c846d00011905546547e1` (`app/src/assets/om-mark.png`, 1024×1024, cropped from the owner-supplied artwork).
+- Canonical full ALIVE logo SHA-256: `37b33ba0664db913ee054f0b2f46a1171583225276ff968fe03a2a75ab6966c9` (`app/src/assets/brand-logo-full.png` / `app/public/brand-logo-full.png`, 2031×699, owner-supplied artwork).
 - Desktop may use the full logo or Om + wordmark; compact/mobile uses the Om mark.
 - Hero/watermark usage must be subtle and subordinate to content.
 
