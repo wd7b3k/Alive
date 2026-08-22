@@ -10,6 +10,7 @@ import {
   deleteLink,
   deleteMeaning,
   loadBootstrap,
+  loadPublicCatalog,
   pickReplacements,
   productLabel,
   saveCheckin,
@@ -23,6 +24,7 @@ import {
   type NicotineProduct,
   type OnboardingDraft,
   type ProductType,
+  type PublicCatalog,
   type Replacement,
   type Trigger,
   type UserMeaning,
@@ -162,15 +164,91 @@ function Header({ data, path }: { data: Bootstrap; path: string }) {
   </>;
 }
 
+/**
+ * Starts Google sign-in. Shared by the pre-login screens so that any control which
+ * genuinely needs an account raises the same flow, instead of the app hiding behind
+ * a wall before the person has seen anything (owner decision 2026-08-22).
+ */
+async function startGoogleSignIn(): Promise<string | null> {
+  const supabase = getSupabase();
+  if (!supabase) return 'Supabase не настроен';
+  const result = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/` } });
+  return result.error ? result.error.message : null;
+}
+
+/**
+ * What a visitor sees before signing in: the real catalog, not a locked door.
+ *
+ * Everything here is public editorial content read with the anon key. There is no
+ * personal data on this screen and none can be — the private tables are unreadable
+ * without a session (see supabase/tests/local, "Anon privacy" assertion). Any control
+ * that would write something raises Google sign-in at the moment it is pressed.
+ */
+function PublicHome({ catalog }: { catalog: PublicCatalog | null }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  async function signIn() {
+    setBusy(true); setError('');
+    const message = await startGoogleSignIn();
+    if (message) { setError(message); setBusy(false); }
+  }
+  return <>
+    <header className="r-header r-header-public">
+      <Brand />
+      <nav className="r-desktop-nav"><button className="r-method-link" onClick={() => go('/experiment')}>О методе</button></nav>
+      <div className="r-header-tools"><ShellButton className="primary small" onClick={signIn} disabled={busy}>{busy ? 'Открываю Google…' : 'Войти'}</ShellButton></div>
+    </header>
+    <main className="r-page">
+      <section className="r-now">
+        <div className="r-now-copy">
+          <p className="r-kicker">Некоммерческий эксперимент · метод ALIVE v1</p>
+          <h1>Не запрещать себе. Вернуть себе выбор.</h1>
+          <p className="r-lead">ALIVE помогает заметить, что именно запускает автоматический ритуал, понять, какое состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.</p>
+          <blockquote>Ниже — настоящая система, а не витрина: те же Связки и Смыслы, которые работают внутри. Аккаунт нужен только для того, чтобы сохранять твои личные записи.</blockquote>
+        </div>
+        <div className="r-now-actions">
+          <button className="r-craving" onClick={signIn} disabled={busy}>
+            <span className="r-craving-icon"><Icon name="spark" size={26}/></span>
+            <span><small>Когда важно действовать прямо сейчас</small><strong>Меня тянет</strong><em>Разобрать момент и выбрать другой ответ</em></span>
+            <Icon name="arrow" size={22}/>
+          </button>
+          <div className="r-secondary-actions">
+            <button onClick={signIn} disabled={busy}><Icon name="smoke" size={22}/><span><strong>Никотин уже был</strong><small>Просто записать факт</small></span></button>
+            <button onClick={() => go('/experiment')}><Icon name="shield" size={22}/><span><strong>Как это работает</strong><small>Методология и приватность</small></span></button>
+          </div>
+          {error && <p className="r-error">{error}</p>}
+          <p className="r-privacy">Google нужен только для входа. Личные записи хранятся отдельно и защищаются правилами доступа PostgreSQL: их не видит никто, кроме тебя.</p>
+        </div>
+      </section>
+
+      {!catalog && <section className="r-section"><p className="r-kicker">Загружаю каталог…</p></section>}
+
+      {catalog && catalog.triggers.length > 0 && <section className="r-section">
+        <div className="r-section-head"><div><p className="r-kicker">Карта контекстов</p><h2>Что система уже умеет замечать</h2><p>Это реальные пусковые моменты из базы ALIVE. Выбери любой — и увидишь, какие ответы система подбирает под него.</p></div></div>
+        <div className="r-trigger-grid">{catalog.triggers.map((t) => <button key={t.code} onClick={signIn} disabled={busy}><span className="r-choice-icon"><Icon name={triggerIcon(t)} size={23}/></span><div><strong>{t.title}</strong><p>{t.description}</p></div><span className="r-rate">открыть</span></button>)}</div>
+      </section>}
+
+      {catalog && catalog.meanings.length > 0 && <section className="r-section">
+        <div className="r-section-head"><div><p className="r-kicker">Библиотека ALIVE</p><h2>Опоры, которые можно примерить на себя</h2><p>Не «почему нельзя», а ради чего становится интереснее жить иначе.</p></div></div>
+        <div className="r-meaning-grid">{catalog.meanings.map((m) => <article key={m.id}><span className="r-meaning-symbol"><Icon name="meaning" size={25}/></span><h3>{m.title}</h3><p>{m.body}</p></article>)}</div>
+      </section>}
+
+      {catalog && catalog.replacements.length > 0 && <section className="r-section">
+        <div className="r-section-head"><div><p className="r-kicker">Ответы вместо запрета</p><h2>{catalog.replacements.length} замен, подобранных под ситуацию</h2><p>В момент тяги ALIVE предлагает три варианта под конкретный контекст и потребность, а не общий список полезных привычек.</p></div></div>
+        <div className="r-meaning-grid">{catalog.replacements.slice(0, 6).map((r) => <article key={r.code}><span className="r-meaning-symbol"><Icon name={replacementIcon(r)} size={25}/></span><h3>{r.title}</h3><p>{r.summary || r.instruction}</p></article>)}</div>
+        <div className="r-actions"><ShellButton className="primary" onClick={signIn} disabled={busy}>{busy ? 'Открываю Google…' : 'Войти и начать'} <Icon name="arrow" size={18}/></ShellButton></div>
+      </section>}
+    </main>
+  </>;
+}
+
 function Login() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   async function start() {
-    const supabase = getSupabase();
-    if (!supabase) return;
     setBusy(true); setError('');
-    const result = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/` } });
-    if (result.error) { setError(result.error.message); setBusy(false); }
+    const message = await startGoogleSignIn();
+    if (message) { setError(message); setBusy(false); }
   }
   return <main className="r-login"><section className="r-login-card"><img src={logoUrl} className="r-login-logo" alt="ALIVE"/><p className="r-kicker">Некоммерческий эксперимент · метод ALIVE v1</p><h1>Не запрещать себе. Вернуть себе выбор.</h1><p className="r-lead">ALIVE помогает заметить, что именно запускает автоматический ритуал, понять, какое состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.</p><div className="r-login-actions"><ShellButton className="primary" onClick={start} disabled={busy}>{busy ? 'Открываю Google…' : 'Войти через Google'} <Icon name="arrow" size={18}/></ShellButton><ShellButton className="ghost" onClick={() => go('/experiment')}>Как устроен эксперимент</ShellButton></div>{error && <p className="r-error">{error}</p>}<p className="r-privacy">Google нужен только для входа. Поведенческие данные хранятся отдельно и защищаются правилами доступа PostgreSQL.</p></section></main>;
 }
@@ -314,13 +392,19 @@ function Releases(){return <main className="r-reading"><Brand compact/><article>
 
 export default function RedesignApp() {
   const path=usePath(); const [session,setSession]=useState<Session|null>(null); const [data,setData]=useState<Bootstrap|null>(null); const [loading,setLoading]=useState(true); const [setup,setSetup]=useState(false); const [flow,setFlow]=useState<{open:boolean;trigger?:string}>({open:false}); const [quick,setQuick]=useState(false); const [evening,setEvening]=useState(false);
+  const [publicCatalog,setPublicCatalog]=useState<PublicCatalog|null>(null);
   const configured=Boolean(publicEnv.supabaseUrl&&publicEnv.supabasePublishableKey);
   async function reload(s:Session=session as Session){const next=await loadBootstrap(s);setData(next);return next;}
+  // Pre-login browsing: fetch the public catalog once there is no session, so the
+  // first screen shows the real product instead of a sign-in wall. Failing here must
+  // never block the page — the visitor still gets the hero and a working sign-in.
+  useEffect(()=>{if(!configured||session||publicCatalog)return;let cancelled=false;loadPublicCatalog().then((c)=>{if(!cancelled)setPublicCatalog(c);}).catch(()=>{});return()=>{cancelled=true;};},[configured,session,publicCatalog]);
   useEffect(()=>{if(!configured){setLoading(false);return;}const supabase=getSupabase();if(!supabase)return;supabase.auth.getSession().then(async({data:{session:s}})=>{setSession(s);if(s)await reload(s);setLoading(false);});const {data:listener}=supabase.auth.onAuthStateChange((_event,s)=>{setSession(s);if(!s)setData(null);});return()=>listener.subscription.unsubscribe();},[configured]);
   if(!configured)return <main className="r-login"><section className="r-login-card"><Brand/><h1>Не хватает настроек подключения.</h1><p>Интерфейс не получил адрес Supabase или публичный ключ. Секретные ключи сюда передавать нельзя.</p></section></main>;
   if(loading)return <main className="r-loading"><span/><p>Загружаю ALIVE…</p></main>;
   if(path==='/experiment'&&!session)return <Experiment/>;
-  if(!session)return <Login/>;
+  if(path==='/releases'&&!session)return <Releases/>;
+  if(!session)return <PublicHome catalog={publicCatalog}/>;
   if(!data)return <main className="r-loading"><span/><p>Собираю личную карту…</p></main>;
   if(!data.profile.onboarding_completed_at||!data.products.length)return <Setup session={session} data={data} done={async()=>{await reload(session);}}/>;
   if(setup)return <Setup session={session} data={data} done={async()=>{await reload(session);setSetup(false);}} cancel={()=>setSetup(false)}/>;
