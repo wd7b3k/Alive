@@ -557,3 +557,42 @@ export function pickReplacements(data: Bootstrap, product: ProductType, triggerC
 
   return candidates.slice(0, 3);
 }
+
+export type PublicCatalog = {
+  triggers: Trigger[];
+  needs: Need[];
+  replacements: Replacement[];
+  triggerReplacementMap: TriggerReplacement[];
+  meanings: Meaning[];
+  identityScripts: IdentityScript[];
+};
+
+/**
+ * Loads only the published editorial catalog — no personal data, no session needed.
+ *
+ * Used by the pre-login screens so a visitor can see what ALIVE actually is before
+ * deciding to sign in. Anonymous read access is granted by migration
+ * 20260822120000_v3_public_catalog_read_for_anon.sql and is limited to `published`
+ * rows of these catalogs; every table holding personal data stays authenticated-only
+ * and is asserted unreadable for `anon` by supabase/tests/local.
+ */
+export async function loadPublicCatalog(): Promise<PublicCatalog> {
+  const supabase = requireClient();
+  const [triggersRes, needsRes, replacementsRes, mapRes, meaningsRes, identityRes] = await Promise.all([
+    supabase.from('triggers_catalog').select('code,title,description,product_types,sort_order').eq('published', true).order('sort_order'),
+    supabase.from('needs_catalog').select('code,title,description,sort_order').eq('published', true).order('sort_order'),
+    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety').eq('published', true).order('sort_order'),
+    supabase.from('trigger_replacement_map').select('trigger_code,replacement_code,tier,priority').order('priority'),
+    supabase.from('meanings_catalog').select('id,title,body,sort_order').eq('published', true).order('sort_order'),
+    supabase.from('identity_scripts_catalog').select('code,title,old_pattern,new_choice,sort_order').eq('published', true).order('sort_order'),
+  ]);
+
+  return {
+    triggers: (unwrap(triggersRes as never, 'triggers') as Trigger[]) ?? [],
+    needs: (unwrap(needsRes as never, 'needs') as Need[]) ?? [],
+    replacements: (unwrap(replacementsRes as never, 'replacements') as Replacement[]) ?? [],
+    triggerReplacementMap: (unwrap(mapRes as never, 'triggerReplacementMap') as TriggerReplacement[]) ?? [],
+    meanings: (unwrap(meaningsRes as never, 'meanings') as Meaning[]) ?? [],
+    identityScripts: (unwrap(identityRes as never, 'identityScripts') as IdentityScript[]) ?? [],
+  };
+}

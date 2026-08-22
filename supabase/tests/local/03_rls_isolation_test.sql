@@ -72,3 +72,54 @@ end
 $$;
 
 reset role;
+
+-- ---------------------------------------------------------------------------
+-- Anonymous visitor (added 2026-08-22 with the pre-login browsing change).
+--
+-- Sign-in is no longer a wall on the first screen, so the `anon` role can now read
+-- the published catalogs. That widened the public surface, and this block is the
+-- guard on it: anon must be able to read editorial content and must read exactly
+-- zero rows from every table holding personal data. If a future migration ever
+-- grants anon more than intended, this fails loudly instead of leaking quietly.
+-- ---------------------------------------------------------------------------
+set role anon;
+select set_config('request.jwt.claim.sub', '', false);
+
+do $$
+declare
+  visible int;
+  leaked int;
+  tbl text;
+begin
+  -- the catalogs must be readable, otherwise the pre-login screens are empty shells
+  select count(*) into visible from public.triggers_catalog;
+  if visible = 0 then
+    raise exception 'anon cannot read triggers_catalog — pre-login browsing would show nothing';
+  end if;
+  select count(*) into visible from public.replacements_catalog;
+  if visible = 0 then
+    raise exception 'anon cannot read replacements_catalog — pre-login browsing would show nothing';
+  end if;
+  raise notice 'Anon catalog read: PASS (published catalogs visible without a session)';
+
+  -- and nothing else may be
+  foreach tbl in array array[
+    'episodes','episode_actions','tobacco_events','user_meanings','user_links',
+    'daily_checkins','daily_support_state','user_nicotine_products','profiles',
+    'user_settings','ugc_submissions'
+  ] loop
+    begin
+      execute format('select count(*) from public.%I', tbl) into leaked;
+    exception
+      when insufficient_privilege then
+        leaked := 0; -- no grant at all is an even stronger guarantee than an empty read
+    end;
+    if leaked <> 0 then
+      raise exception 'LEAK: anonymous visitor can read % row(s) from private table %', leaked, tbl;
+    end if;
+  end loop;
+  raise notice 'Anon privacy: PASS (0 rows readable across 11 private tables)';
+end
+$$;
+
+reset role;
