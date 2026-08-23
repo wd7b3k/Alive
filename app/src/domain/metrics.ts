@@ -1,5 +1,5 @@
-import type { Bootstrap, Episode, EpisodeAction, TobaccoEvent, Trigger } from './data';
-import { baselineDailyCost, baselineDailyUnits, eventAliveUnits } from './data';
+import type { Bootstrap, Episode, EpisodeAction, TobaccoEvent, Trigger } from '../data';
+import { baselineDailyCost, baselineDailyUnits, eventAliveUnits } from '../data';
 
 export type PeriodStats = {
   aliveUnits: number;
@@ -33,7 +33,8 @@ export function statsForDays(data: Bootstrap, days: number): PeriodStats {
   const episodes = data.episodes.filter((episode) => inPeriod(episode.started_at, days));
   const aliveUnits = events.reduce((sum, event) => sum + eventAliveUnits(event), 0);
   const baselineUnits = baselineDailyUnits(data.products) * days;
-  const baselineDeltaPct = baselineUnits > 0 ? ((aliveUnits - baselineUnits) / baselineUnits) * 100 : null;
+  const baselineDeltaPct =
+    baselineUnits > 0 ? ((aliveUnits - baselineUnits) / baselineUnits) * 100 : null;
   const actualCost = events.reduce((sum, event) => sum + Number(event.cost_actual_rub ?? 0), 0);
   const baselineCost = baselineDailyCost(data.products) * days;
   const daysSet = new Set<string>();
@@ -43,7 +44,8 @@ export function statsForDays(data: Bootstrap, days: number): PeriodStats {
     aliveUnits,
     baselineUnits,
     baselineDeltaPct,
-    successfulResponses: episodes.filter((episode) => episode.outcome === 'successful_response').length,
+    successfulResponses: episodes.filter((episode) => episode.outcome === 'successful_response')
+      .length,
     nicotineEpisodes: episodes.filter((episode) => episode.outcome === 'nicotine_used').length,
     cigarettes: events.reduce((sum, event) => sum + Number(event.cigarette_quantity ?? 0), 0),
     hookahs: events.reduce((sum, event) => sum + Number(event.hookah_session_count ?? 0), 0),
@@ -66,7 +68,9 @@ export type TriggerStat = {
 export function triggerStats(data: Bootstrap): TriggerStat[] {
   return data.triggers.map((trigger) => {
     const episodes = data.episodes.filter((episode) => episode.trigger_code === trigger.code);
-    const successes = episodes.filter((episode) => episode.outcome === 'successful_response').length;
+    const successes = episodes.filter(
+      (episode) => episode.outcome === 'successful_response',
+    ).length;
     const deltas = episodes
       .filter((episode) => episode.craving_before !== null && episode.craving_after !== null)
       .map((episode) => Number(episode.craving_before) - Number(episode.craving_after));
@@ -75,7 +79,9 @@ export function triggerStats(data: Bootstrap): TriggerStat[] {
       episodes: episodes.length,
       successes,
       successRate: episodes.length ? (successes / episodes.length) * 100 : null,
-      avgCravingDelta: deltas.length ? deltas.reduce((sum, value) => sum + value, 0) / deltas.length : null,
+      avgCravingDelta: deltas.length
+        ? deltas.reduce((sum, value) => sum + value, 0) / deltas.length
+        : null,
     };
   });
 }
@@ -90,7 +96,9 @@ export type ReplacementStat = {
 };
 
 export function replacementStats(data: Bootstrap): ReplacementStat[] {
-  const episodeById = new Map<string, Episode>(data.episodes.map((episode) => [episode.id, episode]));
+  const episodeById = new Map<string, Episode>(
+    data.episodes.map((episode) => [episode.id, episode]),
+  );
   const actionsByCode = new Map<string, EpisodeAction[]>();
   data.actions.forEach((action) => {
     if (!action.replacement_code) return;
@@ -105,17 +113,25 @@ export function replacementStats(data: Bootstrap): ReplacementStat[] {
       const episodes = actions
         .map((action) => episodeById.get(action.episode_id))
         .filter((episode): episode is Episode => Boolean(episode));
-      const helpful = episodes.filter((episode) => episode.helpfulness !== null).map((episode) => Number(episode.helpfulness));
+      const helpful = episodes
+        .filter((episode) => episode.helpfulness !== null)
+        .map((episode) => Number(episode.helpfulness));
       const deltas = episodes
         .filter((episode) => episode.craving_before !== null && episode.craving_after !== null)
         .map((episode) => Number(episode.craving_before) - Number(episode.craving_after));
-      const successes = episodes.filter((episode) => episode.outcome === 'successful_response').length;
+      const successes = episodes.filter(
+        (episode) => episode.outcome === 'successful_response',
+      ).length;
       return {
         code: replacement.code,
         title: replacement.title,
         uses: episodes.length,
-        avgHelpfulness: helpful.length ? helpful.reduce((sum, value) => sum + value, 0) / helpful.length : null,
-        avgCravingDelta: deltas.length ? deltas.reduce((sum, value) => sum + value, 0) / deltas.length : null,
+        avgHelpfulness: helpful.length
+          ? helpful.reduce((sum, value) => sum + value, 0) / helpful.length
+          : null,
+        avgCravingDelta: deltas.length
+          ? deltas.reduce((sum, value) => sum + value, 0) / deltas.length
+          : null,
         successRate: episodes.length ? (successes / episodes.length) * 100 : null,
       };
     })
@@ -137,7 +153,10 @@ export function dailyUnits(data: Bootstrap, days = 7) {
     const units = data.tobaccoEvents
       .filter((event: TobaccoEvent) => event.occurred_at.slice(0, 10) === key)
       .reduce((sum, event) => sum + eventAliveUnits(event), 0);
-    const successes = data.episodes.filter((episode) => episode.started_at.slice(0, 10) === key && episode.outcome === 'successful_response').length;
+    const successes = data.episodes.filter(
+      (episode) =>
+        episode.started_at.slice(0, 10) === key && episode.outcome === 'successful_response',
+    ).length;
     result.push({ date: key, units, successes });
   }
   return result;
