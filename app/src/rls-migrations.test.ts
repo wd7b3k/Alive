@@ -73,18 +73,37 @@ describe('RLS migration invariants', () => {
     expect(sql).not.toMatch(new RegExp(`grant [^;]+ on public\\.${table} to [^;]*anon`));
   });
 
-  // The anon policies that do exist must stay filtered to published rows, so that
-  // editorial drafts are not visible to a visitor without an account.
+  // The anon policies that do exist must stay filtered to published rows, so an
+  // editorial draft is never visible to a visitor without an account.
+  //
+  // The exemption is derived, not listed by name: a relation or reference table that
+  // has no `published` column cannot filter on one, and hardcoding which tables those
+  // are would quietly exempt the next table someone adds under a similar name. So the
+  // migrations are read for which tables actually declare `published`, and only those
+  // are held to the rule.
   it('filters every anon select policy to published rows', () => {
-    const anonPolicies = [
-      ...sql.matchAll(/create policy [\s\S]*?for select to anon[\s\S]*?;/g),
-    ].map((match) => match[0]);
+    const tablesWithPublished = new Set(
+      [...sql.matchAll(/create table(?: if not exists)? public\.(\w+) \(([\s\S]*?)\n\);/g)]
+        .filter(([, , body]) => /\bpublished boolean/.test(body))
+        .map(([, table]) => table),
+    );
+    expect(tablesWithPublished.size).toBeGreaterThan(0);
+
+    // Bounded on [^;] rather than a lazy [\s\S]*?: a policy statement contains no
+    // semicolon, so this matches exactly one statement. A lazy match would happily run
+    // from one `create policy` across several others to reach the first
+    // `for select to anon`, pairing that policy with the wrong table name — which is
+    // how the first version of this test passed while catching nothing.
+    const anonPolicies = [...sql.matchAll(/create policy \w+ on public\.(\w+)[^;]*;/g)].filter(
+      ([policy]) => /for select\s+to anon/.test(policy),
+    );
     expect(anonPolicies.length).toBeGreaterThan(0);
-    for (const policy of anonPolicies) {
-      const isRelationTable = policy.includes('trigger_replacement_map');
+
+    for (const [policy, table] of anonPolicies) {
+      if (!tablesWithPublished.has(table)) continue;
       expect(
-        isRelationTable || policy.includes('published = true'),
-        `anon policy is not limited to published rows: ${policy}`,
+        policy.includes('published = true'),
+        `public.${table} has a published column but its anon policy does not filter on it: ${policy}`,
       ).toBe(true);
     }
   });
