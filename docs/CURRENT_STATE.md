@@ -14,7 +14,10 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 - Hosting: Cloudflare Pages.
 - Текущий production host: `https://alive-aw2.pages.dev`.
 - Planned canonical host: `https://alive.hmnos.ru`.
-- Auth: Google → Supabase Auth.
+- Auth: Google → Supabase Auth. Since 2026-08-22 sign-in is no longer a wall on the
+  first screen: the interface opens immediately with the published catalog readable
+  anonymously, and Google sign-in is raised only when the person does something that
+  genuinely needs an account.
 - Database: Supabase PostgreSQL + RLS.
 - Supabase project: `xkigijaqimzuveyzyzyk`, `eu-west-1`.
 - GitHub CI: Node `22.12.0`, `npm ci`, `typecheck`, production build.
@@ -54,7 +57,8 @@ Google OAuth проверен реальным входом: Auth user и ALIVE 
 - Эксперимент — methodology, assumptions, limitations, privacy;
 - Релизы;
 - deletion of erroneous/test episode with recalculation from remaining facts;
-- inline explanations / `nothing unexplained` pattern.
+- inline explanations / `nothing unexplained` pattern;
+- public pre-login browsing of the published catalog (`PublicHome` in `RedesignApp.tsx`).
 
 ### Content depth
 
@@ -62,7 +66,9 @@ Remote catalog after product-depth migrations:
 
 - 28 published triggers;
 - 74 published replacements;
-- 96 trigger→replacement relations;
+- 106 trigger→replacement relations (96 until 2026-08-22, when migration
+  `20260822130000` added the 10 curated mappings the `tension` and `after_task` triggers
+  had been missing);
 - 13 universal Meanings;
 - 5 universal identity scripts;
 - 13 support messages;
@@ -110,10 +116,36 @@ Applied remote migrations:
 7. `v3_product_depth_meaning`
 8. `v3_support_state_and_account_control`
 9. `v3_remove_public_account_delete_rpc`
+10. `20260821120000_v3_dedupe_legacy_morning_trigger` — retires the two legacy duplicate
+    catalog codes after re-pointing existing history onto the canonical ones;
+11. `20260821130000_v3_sync_production_schema_drift` — the 20 columns that had been added
+    straight to production;
+12. `20260821140000_v3_sync_production_catalog_content` — the catalog values that existed
+    only in production. 11 and 12 exist to make a database rebuilt from migrations equal
+    production; against production itself they are a verified no-op;
+13. `20260822120000_v3_public_catalog_read_for_anon` — anonymous `select` on the eight
+    editorial catalogs, `published = true` only, so the product can be explored before
+    an account exists;
+14. `20260822130000_v3_tension_mappings_and_meaning_titles` — curated replacements for the
+    `tension` and `after_task` triggers, and distinct titles for the two `meaning_*`
+    replacements that had collided.
 
 RLS protects private user-owned entities. Service-role/OAuth secrets are not stored in frontend/repo.
 
-A proposed public `SECURITY DEFINER` self-delete RPC was rejected after Security Advisor flagged the exposed surface. It was removed by migration before alpha merge. Account deletion will use an authenticated Edge Function instead.
+A proposed public `SECURITY DEFINER` self-delete RPC was rejected after Security Advisor
+flagged the exposed surface. It was removed by migration before alpha merge. Account
+deletion uses an authenticated Edge Function instead —
+`supabase/functions/delete-account/index.ts`, deployed to the live project on 2026-08-22
+and tested in both directions: without a session it returns `401
+{"error":"authentication_required"}` (fails closed), and with a real session on a
+throwaway account it actually deletes. No UI button is wired to it yet.
+
+Anonymous read access, added 2026-08-22 so the product opens before sign-in, is
+deliberately narrow: `select` only, `published = true` only, on the eight editorial
+catalogs only. Every table holding personal data stays `authenticated`-only and
+owner-scoped, and `supabase/tests/local/03_rls_isolation_test.sql` now asserts exactly
+that for the `anon` role — a future migration that widens the anonymous surface fails
+the test instead of leaking quietly.
 
 Current Supabase Security Advisor has one remaining Auth warning: leaked-password protection is disabled. ALIVE currently exposes Google OAuth only, not password sign-in, so the warning does not represent an active password-login surface. Revisit before ever enabling password auth.
 
@@ -127,26 +159,45 @@ Latest rich product frontend commit passes:
 
 ## Still required before v3.0 can be called RELEASED
 
-- real runtime smoke-test of new deep UI (partial progress 2026-08-20: pre-login
-  screens only — `/`, `/experiment`, `/releases` — smoke-tested locally at all 5
-  required viewport widths against a real build of the current commit; a mobile
-  safe-zone bug found and fixed — see `releases/v3.0-platform/VALIDATION.md`; the
-  screens behind Google login remain untested);
-- full user Link edit/disable controls (create/delete/UGC already implemented);
-- background NRT patch UI (DB/RLS support exists);
-- user data export UI (data-layer function `exportMyData()` implemented 2026-08-20 in
-  `app/src/actions.ts`, typecheck/build PASS; no UI button wired up yet — deliberately
-  left for a separate, reviewable change);
-- authenticated Edge Function for full account deletion (code written 2026-08-20 —
-  `supabase/functions/delete-account/index.ts` — not deployed, not tested against a
-  live project, no UI wired up; see `releases/v3.0-platform/VALIDATION.md` for detail);
-- two-user RLS isolation test (strong local evidence added 2026-08-20 via
-  `supabase/tests/local/run.sh` against real migrations on disposable Postgres — not a
-  substitute for the live two-Google-account smoke test; see VALIDATION.md);
-- local full DB reset from migrations;
-- mobile/desktop parity review;
-- `alive.hmnos.ru` DNS/custom-domain cutover;
-- validation/docs sync.
+Updated 2026-08-22. `releases/v3.0-platform/VALIDATION.md` now stands at **36 of 38
+checks passed**. What follows is what is genuinely still open, not the historical list.
+
+Release gate items still open (2 of 38):
+
+- Supabase CLI local stack (`npx supabase start`) — never literally run: no environment
+  available to this work has a reachable Docker image registry. Docker itself starts;
+  the images do not pull;
+- `supabase db reset` — the same blocker. The substance behind both items ("a database
+  rebuilt from migrations equals production") is proven separately: aggregate SHA-256
+  over all 74 replacements' base fields, over their metadata, and over the trigger
+  catalog all match production exactly, and the migrations run against a clean Postgres
+  in CI on every PR. What is unproven is the CLI tool itself, not the equivalence.
+
+Product work deliberately left outside the v3.0 gate (implemented data layer, no UI):
+
+- user data export UI — `exportMyData()` exists in `app/src/actions.ts` and typechecks,
+  but nothing in the interface calls it, so export has never been exercised as a user
+  scenario;
+- account deletion UI — the Edge Function is deployed and tested in both directions, but
+  no button is wired to it; deletion currently requires a direct call;
+- full user Link edit/disable controls — create and soft-delete exist (`data.ts`
+  `createLink`/`deleteLink`); editing an existing Link and toggling `active` do not;
+- background NRT patch UI — DB/RLS support exists, the interface does not.
+
+Infrastructure:
+
+- `alive.hmnos.ru` DNS / custom-domain cutover — production still serves from
+  `alive-aw2.pages.dev`;
+- optional: add the Cloudflare preview-domain wildcard to Supabase Allowed Redirect URLs
+  so signed-in flows can be tested on branch previews, not only on production.
+
+Closed since the previous revision of this list, each with evidence in VALIDATION.md:
+runtime smoke-test of the deep UI (owner, live, 2026-08-22), the two-Google-account RLS
+isolation test, the UGC explicit-consent behavioural test, account deletion positive and
+negative tests, mobile/desktop parity, the mobile safe-zone and brand-inset layout bugs,
+the two duplicate catalog entries, the uncurated `tension`/`after_task` triggers, the
+colliding replacement titles, the production↔repository divergence, and the browser
+bundle secret scan (now a permanent CI step).
 
 `Together` remains v3.1. Admin/Product Intelligence remains v3.2.
 
