@@ -116,7 +116,22 @@ begin
   if visible = 0 then
     raise exception 'anon cannot read replacement_evidence — no replacement could be tied to its source';
   end if;
-  raise notice 'Anon catalog read: PASS (published catalogs and the evidence layer visible without a session)';
+  -- «Факты и Мифы» is one of the things a visitor is meant to be able to read before
+  -- deciding to sign up, so its absence for anon is a product bug, not a permissions
+  -- detail.
+  select count(*) into visible from public.knowledge_catalog;
+  if visible = 0 then
+    raise exception 'anon cannot read knowledge_catalog — the Facts and Myths section would be empty before sign-in';
+  end if;
+  select count(*) into visible from public.knowledge_evidence;
+  if visible = 0 then
+    raise exception 'anon cannot read knowledge_evidence — cards would render without their citations';
+  end if;
+  select count(*) into visible from public.knowledge_trigger_map;
+  if visible = 0 then
+    raise exception 'anon cannot read knowledge_trigger_map — per-trigger cards would never surface';
+  end if;
+  raise notice 'Anon catalog read: PASS (published catalogs, evidence layer and knowledge cards visible without a session)';
 
   -- and nothing else may be
   foreach tbl in array array[

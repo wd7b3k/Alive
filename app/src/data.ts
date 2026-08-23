@@ -57,6 +57,14 @@ export type Replacement = {
   duration: string | null;
   summary: string | null;
   safety: string | null;
+  // Production has carried these since before the repo knew about them, and nothing
+  // displayed them until «Факты и Мифы». `mechanism` is why the action works,
+  // `evidence_level` how well established that is, `evidence_scope` where the evidence
+  // stops. Nullable because the majority of the catalog is honestly level C with no
+  // citation, and an empty badge is the correct rendering of that.
+  mechanism: string | null;
+  evidence_level: string | null;
+  evidence_scope: string | null;
 };
 
 export type TriggerReplacement = {
@@ -193,7 +201,154 @@ export type Bootstrap = {
   actions: EpisodeAction[];
   tobaccoEvents: TobaccoEvent[];
   todayCheckin: DailyCheckin | null;
+  knowledge: Knowledge;
 };
+
+// ---------------------------------------------------------------------------
+// Evidence layer and «Факты и Мифы»
+// ---------------------------------------------------------------------------
+
+export type EvidenceLevelCode = 'A' | 'B' | 'C';
+
+/**
+ * What a letter means, and — separately — what it does not claim.
+ *
+ * Two fields rather than one because a badge that shows only the strength of the
+ * evidence invites the reader to hear more than was measured. `limit_ru` is the half
+ * that keeps the badge honest, and the interface must never render one without a way
+ * to reach the other.
+ */
+export type EvidenceLevel = {
+  code: EvidenceLevelCode;
+  rank: number;
+  label_ru: string;
+  claim_ru: string;
+  limit_ru: string;
+  sort_order: number;
+};
+
+export type EvidenceSource = {
+  id: string;
+  code: string;
+  title: string;
+  url: string | null;
+  publisher: string | null;
+  kind: 'guideline' | 'review' | 'study';
+  year: number | null;
+  sort_order: number;
+};
+
+export type ReplacementEvidenceLink = {
+  replacement_code: string;
+  source_id: string;
+  sort_order: number;
+};
+
+/**
+ * One card of «Факты и Мифы».
+ *
+ * `kind` is the polarity: for a myth, `claim_ru` is a statement ALIVE is contradicting
+ * and must never be rendered as if ALIVE asserted it. For a fact it is what ALIVE says.
+ */
+export type KnowledgeCard = {
+  code: string;
+  kind: 'fact' | 'myth';
+  claim_ru: string;
+  known_ru: string;
+  changes_ru: string;
+  evidence_level: EvidenceLevelCode;
+  scope_note_ru: string;
+  product_types: ProductType[];
+  surfaces: KnowledgeSurface[];
+  sort_order: number;
+};
+
+export type KnowledgeSurface = 'flow' | 'links' | 'today' | 'public';
+
+export type KnowledgeTriggerLink = {
+  knowledge_code: string;
+  trigger_code: string;
+  sort_order: number;
+};
+
+export type KnowledgeEvidenceLink = {
+  knowledge_code: string;
+  source_id: string;
+  sort_order: number;
+};
+
+export type Knowledge = {
+  levels: EvidenceLevel[];
+  sources: EvidenceSource[];
+  replacementEvidence: ReplacementEvidenceLink[];
+  cards: KnowledgeCard[];
+  cardTriggers: KnowledgeTriggerLink[];
+  cardEvidence: KnowledgeEvidenceLink[];
+};
+
+/**
+ * The shape to fall back to when the knowledge layer cannot be loaded.
+ *
+ * Deliberately empty rather than partial: every selector treats "no data" as "show
+ * nothing", so a failed fetch costs the reader an evidence badge and never blocks the
+ * screen they actually came for.
+ */
+export const EMPTY_KNOWLEDGE: Knowledge = {
+  levels: [],
+  sources: [],
+  replacementEvidence: [],
+  cards: [],
+  cardTriggers: [],
+  cardEvidence: [],
+};
+
+/**
+ * Reads the whole knowledge layer. Six small editorial tables, all anon-readable, no
+ * personal data — so this is the same call before and after sign-in.
+ */
+export async function loadKnowledge(): Promise<Knowledge> {
+  const supabase = requireClient();
+  const [levelsRes, sourcesRes, replacementEvidenceRes, cardsRes, cardTriggersRes, cardEvidenceRes] =
+    await Promise.all([
+      supabase
+        .from('evidence_levels')
+        .select('code,rank,label_ru,claim_ru,limit_ru,sort_order')
+        .order('sort_order'),
+      supabase
+        .from('evidence_sources')
+        .select('id,code,title,url,publisher,kind,year,sort_order')
+        .eq('published', true)
+        .order('sort_order'),
+      supabase
+        .from('replacement_evidence')
+        .select('replacement_code,source_id,sort_order')
+        .order('sort_order'),
+      supabase
+        .from('knowledge_catalog')
+        .select(
+          'code,kind,claim_ru,known_ru,changes_ru,evidence_level,scope_note_ru,product_types,surfaces,sort_order',
+        )
+        .eq('published', true)
+        .order('sort_order'),
+      supabase
+        .from('knowledge_trigger_map')
+        .select('knowledge_code,trigger_code,sort_order')
+        .order('sort_order'),
+      supabase
+        .from('knowledge_evidence')
+        .select('knowledge_code,source_id,sort_order')
+        .order('sort_order'),
+    ]);
+
+  return {
+    levels: (levelsRes.data ?? []) as EvidenceLevel[],
+    sources: (sourcesRes.data ?? []) as EvidenceSource[],
+    replacementEvidence: (replacementEvidenceRes.data ?? []) as ReplacementEvidenceLink[],
+    cards: (cardsRes.data ?? []) as KnowledgeCard[],
+    cardTriggers: (cardTriggersRes.data ?? []) as KnowledgeTriggerLink[],
+    cardEvidence: (cardEvidenceRes.data ?? []) as KnowledgeEvidenceLink[],
+  };
+}
 
 function requireClient() {
   const supabase = getSupabase();
@@ -231,13 +386,14 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     actionsRes,
     tobaccoRes,
     checkinRes,
+    knowledge,
   ] = await Promise.all([
     supabase.from('profiles').select('id,display_name,avatar_url,onboarding_completed_at').eq('id', userId).single(),
     supabase.from('user_settings').select('*').eq('user_id', userId).single(),
     supabase.from('user_nicotine_products').select('*').eq('user_id', userId).eq('enabled', true),
     supabase.from('triggers_catalog').select('code,title,description,product_types,sort_order').eq('published', true).order('sort_order'),
     supabase.from('needs_catalog').select('code,title,description,sort_order').eq('published', true).order('sort_order'),
-    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety').eq('published', true).order('sort_order'),
+    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope').eq('published', true).order('sort_order'),
     supabase.from('trigger_replacement_map').select('trigger_code,replacement_code,tier,priority').order('priority'),
     supabase.from('meanings_catalog').select('id,title,body,sort_order').eq('published', true).order('sort_order'),
     supabase.from('user_meanings').select('id,user_id,title,body,active,sort_order,created_at').eq('user_id', userId).is('deleted_at', null).order('sort_order'),
@@ -249,6 +405,11 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     supabase.from('episode_actions').select('id,user_id,episode_id,action_type,replacement_code,payload,occurred_at').eq('user_id', userId).gte('occurred_at', since).order('occurred_at', { ascending: false }).limit(500),
     supabase.from('tobacco_events').select('id,user_id,episode_id,product_type,cigarette_quantity,hookah_session_count,hookah_duration_minutes,vape_puffs,vape_device_type,cost_actual_rub,occurred_at,deleted_at').eq('user_id', userId).is('deleted_at', null).gte('occurred_at', since).order('occurred_at', { ascending: false }).limit(500),
     supabase.from('daily_checkins').select('id,user_id,checkin_date,irritability,energy,recovery,owned_moment,strongest_link,tomorrow_plan').eq('user_id', userId).eq('checkin_date', today).maybeSingle(),
+    // The knowledge layer is editorial and never personal, so it rides along with the
+    // rest of the bootstrap. It resolves to EMPTY_KNOWLEDGE on failure: losing an
+    // evidence badge is acceptable, losing the whole personal map because a catalog
+    // query failed is not.
+    loadKnowledge().catch(() => EMPTY_KNOWLEDGE),
   ]);
 
   return {
@@ -269,6 +430,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     actions: (actionsRes.data ?? []) as EpisodeAction[],
     tobaccoEvents: (tobaccoRes.data ?? []) as TobaccoEvent[],
     todayCheckin: (checkinRes.data ?? null) as DailyCheckin | null,
+    knowledge,
   };
 }
 
@@ -565,6 +727,7 @@ export type PublicCatalog = {
   triggerReplacementMap: TriggerReplacement[];
   meanings: Meaning[];
   identityScripts: IdentityScript[];
+  knowledge: Knowledge;
 };
 
 /**
@@ -578,13 +741,14 @@ export type PublicCatalog = {
  */
 export async function loadPublicCatalog(): Promise<PublicCatalog> {
   const supabase = requireClient();
-  const [triggersRes, needsRes, replacementsRes, mapRes, meaningsRes, identityRes] = await Promise.all([
+  const [triggersRes, needsRes, replacementsRes, mapRes, meaningsRes, identityRes, knowledge] = await Promise.all([
     supabase.from('triggers_catalog').select('code,title,description,product_types,sort_order').eq('published', true).order('sort_order'),
     supabase.from('needs_catalog').select('code,title,description,sort_order').eq('published', true).order('sort_order'),
-    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety').eq('published', true).order('sort_order'),
+    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope').eq('published', true).order('sort_order'),
     supabase.from('trigger_replacement_map').select('trigger_code,replacement_code,tier,priority').order('priority'),
     supabase.from('meanings_catalog').select('id,title,body,sort_order').eq('published', true).order('sort_order'),
     supabase.from('identity_scripts_catalog').select('code,title,old_pattern,new_choice,sort_order').eq('published', true).order('sort_order'),
+    loadKnowledge().catch(() => EMPTY_KNOWLEDGE),
   ]);
 
   return {
@@ -594,5 +758,6 @@ export async function loadPublicCatalog(): Promise<PublicCatalog> {
     triggerReplacementMap: (unwrap(mapRes as never, 'triggerReplacementMap') as TriggerReplacement[]) ?? [],
     meanings: (unwrap(meaningsRes as never, 'meanings') as Meaning[]) ?? [],
     identityScripts: (unwrap(identityRes as never, 'identityScripts') as IdentityScript[]) ?? [],
+    knowledge,
   };
 }

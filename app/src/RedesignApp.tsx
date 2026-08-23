@@ -22,12 +22,20 @@ import {
   type ProductType,
   type PublicCatalog,
   type UserMeaning,
+  EMPTY_KNOWLEDGE,
 } from './data';
 import { saveQuickUse } from './actions';
 import { dailyUnits, replacementStats, statsForDays, triggerStats } from './domain/metrics';
 import { Icon } from './ui-icons';
 import { useLocation } from 'react-router-dom';
 import { useBootstrapSession } from './hooks/useBootstrapSession';
+import { cardOfTheDay, cardsForSurface, cardsForTrigger, splitByKind } from './domain/knowledge';
+import {
+  EvidenceBadge,
+  EvidenceDetail,
+  KnowledgeCardView,
+  KnowledgeCollapsed,
+} from './redesign/knowledge';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
 import { Brand, Header, LoginPage, Modal, ShellButton, startGoogleSignIn } from './redesign/shared';
 import {
@@ -59,6 +67,9 @@ import { navigateTo as go } from './services/navigation';
 function PublicHome({ catalog }: { catalog: PublicCatalog | null }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // No product filter before sign-in: nobody has said what they use yet, so every
+  // published card is relevant until they do.
+  const publicCards = cardsForSurface(catalog?.knowledge ?? EMPTY_KNOWLEDGE, 'public');
 
   async function signIn() {
     setBusy(true);
@@ -188,6 +199,30 @@ function PublicHome({ catalog }: { catalog: PublicCatalog | null }) {
                   <h3>{meaning.title}</h3>
                   <p>{meaning.body}</p>
                 </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {publicCards.length > 0 && (
+          <section className="r-section">
+            <div className="r-section-head">
+              <div>
+                <p className="r-kicker">Факты и Мифы</p>
+                <h2>Что известно — и где это заканчивается</h2>
+                <p>
+                  Ни одного утверждения без источника и без границ. Если исследования нет — так и
+                  написано.
+                </p>
+              </div>
+            </div>
+            <div className="r-knowledge-grid">
+              {publicCards.map((card) => (
+                <KnowledgeCardView
+                  key={card.code}
+                  knowledge={catalog?.knowledge ?? EMPTY_KNOWLEDGE}
+                  card={card}
+                />
               ))}
             </div>
           </section>
@@ -695,6 +730,13 @@ function Guided({
   );
   const selected = data.replacements.find((r) => r.code === replacementCode);
   const triggers = data.triggers.filter((t) => t.product_types.includes(product));
+  // One collapsed line above the three suggestions, and only for triggers that have a
+  // card opted into the flow surface. Mid-craving is the worst possible moment for a
+  // paragraph, so this stays closed until the person chooses to open it.
+  const flowCards = useMemo(
+    () => cardsForTrigger(data.knowledge, triggerCode, [product], 'flow'),
+    [data.knowledge, triggerCode, product],
+  );
   async function save() {
     if (!triggerCode || !needCode) return;
     setBusy(true);
@@ -851,6 +893,9 @@ function Guided({
               </p>
             </div>
           </div>
+          {flowCards.map((card) => (
+            <KnowledgeCollapsed key={card.code} knowledge={data.knowledge} card={card} />
+          ))}
           <div className="r-replacement-grid">
             {candidates.map((r) => (
               <button
@@ -870,6 +915,7 @@ function Guided({
                   </span>
                   <h3>{r.title}</h3>
                   <p>{r.summary || r.instruction}</p>
+                  <EvidenceBadge knowledge={data.knowledge} replacement={r} />
                 </div>
                 <Icon name="arrow" className="r-card-arrow" size={20} />
               </button>
@@ -898,6 +944,10 @@ function Guided({
                   <small>Ты выбрал</small>
                   <h3>{selected.title}</h3>
                   <p>{selected.instruction}</p>
+                  {/* The full evidence lives here rather than on the choice cards:
+                      the decision is already made, so this informs without pressuring
+                      it, and a details element cannot legally sit inside a button. */}
+                  <EvidenceDetail knowledge={data.knowledge} replacement={selected} />
                 </div>
               </>
             ) : (
@@ -1125,6 +1175,14 @@ function Today({
   const today = statsForDays(data, 1);
   const week = statsForDays(data, 7);
   const tstats = triggerStats(data);
+  // Rotated by calendar day, not at random: opening Сегодня three times must not
+  // produce three different claims about your health.
+  const todayCard = cardOfTheDay(
+    data.knowledge,
+    'today',
+    localDay(),
+    data.products.map((p) => p.product_type),
+  );
   const support = data.supports.filter((s) => s.support_type === 'daily');
   const phrase = support.length ? support[new Date().getDate() % support.length]?.body : null;
   const weak = tstats
@@ -1224,6 +1282,24 @@ function Today({
           <span>Оценка по твоим расходам и исходному уровню</span>
         </div>
       </section>
+      {todayCard && (
+        <section className="r-section">
+          <div className="r-section-head">
+            <div>
+              <p className="r-kicker">Факты и Мифы</p>
+              <h2>Одна опора на сегодня</h2>
+              <p>
+                Не мотивация, а то, что известно. Карточка меняется раз в сутки и не подстраивается
+                под твои результаты.
+              </p>
+            </div>
+            <button onClick={() => go('/knowledge')}>
+              Весь раздел <Icon name="arrow" size={16} />
+            </button>
+          </div>
+          <KnowledgeCardView knowledge={data.knowledge} card={todayCard} />
+        </section>
+      )}
       <section className="r-section">
         <div className="r-section-head">
           <div>
@@ -1308,6 +1384,7 @@ function Links({
   openFlow: (trigger?: string) => void;
 }) {
   const stats = triggerStats(data);
+  const products = data.products.map((p) => p.product_type);
   const [show, setShow] = useState(false);
   const [title, setTitle] = useState('');
   const [situation, setSituation] = useState('');
@@ -1451,19 +1528,29 @@ function Links({
         <div className="r-trigger-grid">
           {data.triggers.map((t) => {
             const st = stats.find((x) => x.trigger.code === t.code);
+            // Per-trigger cards sit beside the trigger they are about, not in a
+            // separate block: «что известно про этот момент» is only useful while the
+            // person is looking at that moment. Triggers with no card render exactly
+            // as before.
+            const cards = cardsForTrigger(data.knowledge, t.code, products, 'links');
             return (
-              <button key={t.code} onClick={() => openFlow(t.code)}>
-                <span className="r-choice-icon">
-                  <Icon name={triggerIcon(t)} size={23} />
-                </span>
-                <div>
-                  <strong>{t.title}</strong>
-                  <p>{t.description}</p>
-                </div>
-                <span className="r-rate">
-                  {st?.episodes ? `${fmt(st.successRate ?? 0)}%` : 'новое'}
-                </span>
-              </button>
+              <div className="r-trigger-cell" key={t.code}>
+                <button onClick={() => openFlow(t.code)}>
+                  <span className="r-choice-icon">
+                    <Icon name={triggerIcon(t)} size={23} />
+                  </span>
+                  <div>
+                    <strong>{t.title}</strong>
+                    <p>{t.description}</p>
+                  </div>
+                  <span className="r-rate">
+                    {st?.episodes ? `${fmt(st.successRate ?? 0)}%` : 'новое'}
+                  </span>
+                </button>
+                {cards.map((card) => (
+                  <KnowledgeCollapsed key={card.code} knowledge={data.knowledge} card={card} />
+                ))}
+              </div>
             );
           })}
         </div>
@@ -1748,6 +1835,98 @@ function Meanings({
   );
 }
 
+/**
+ * «Факты и Мифы» — the section itself.
+ *
+ * Facts first, myths second, and a short preamble that says what the letters mean
+ * before any of them appear. A grade shown without its scale is just a shape.
+ */
+function KnowledgePage({ data }: { data: Bootstrap }) {
+  const products = data.products.map((p) => p.product_type);
+  const { facts, myths } = splitByKind(
+    data.knowledge.cards.filter(
+      (card) => !products.length || card.product_types.some((type) => products.includes(type)),
+    ),
+  );
+  return (
+    <main className="r-page">
+      <div className="r-title">
+        <p className="r-kicker">Факты и Мифы</p>
+        <h1>Что известно — и где это заканчивается.</h1>
+        <p className="r-lead">
+          Здесь нет мотивационных цитат. Каждая карточка говорит, что показывают исследования, чего
+          они не показывают, и что из этого следует именно для тебя. Если источника нет — так и
+          написано.
+        </p>
+      </div>
+
+      <section className="r-section">
+        <div className="r-section-head">
+          <div>
+            <p className="r-kicker">Как читать значки</p>
+            <h2>Уровень доказательности</h2>
+          </div>
+        </div>
+        <div className="r-level-legend">
+          {data.knowledge.levels.map((level) => (
+            <article key={level.code}>
+              <span className={`r-evidence-badge level-${level.code.toLowerCase()}`}>
+                <b>{level.code}</b>
+                {level.label_ru}
+              </span>
+              <p>{level.claim_ru}</p>
+              <p className="r-evidence-limit">{level.limit_ru}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {facts.length > 0 && (
+        <section className="r-section">
+          <div className="r-section-head">
+            <div>
+              <p className="r-kicker">Факты</p>
+              <h2>{facts.length} вещи, которые стоит знать</h2>
+            </div>
+          </div>
+          <div className="r-knowledge-grid">
+            {facts.map((card) => (
+              <KnowledgeCardView key={card.code} knowledge={data.knowledge} card={card} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {myths.length > 0 && (
+        <section className="r-section">
+          <div className="r-section-head">
+            <div>
+              <p className="r-kicker">Мифы</p>
+              <h2>{myths.length} убеждений, которые не подтверждаются</h2>
+              <p>
+                Заголовок каждой карточки — это то, что часто говорят, а не то, что утверждает
+                ALIVE. Разбор — ниже.
+              </p>
+            </div>
+          </div>
+          <div className="r-knowledge-grid">
+            {myths.map((card) => (
+              <KnowledgeCardView key={card.code} knowledge={data.knowledge} card={card} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!facts.length && !myths.length && (
+        <section className="r-section">
+          <p className="r-kicker">Раздел не загрузился</p>
+          <p>Карточки не пришли из базы. Это не значит, что их нет — попробуй обновить страницу.</p>
+        </section>
+      )}
+    </main>
+  );
+}
+
 function Experiment() {
   return (
     <main className="r-reading">
@@ -2010,6 +2189,7 @@ export default function RedesignApp() {
   else if (path === '/path') page = <PathPage data={data} />;
   else if (path === '/meanings')
     page = <Meanings session={session} data={data} reload={() => reload(session).then(() => {})} />;
+  else if (path === '/knowledge') page = <KnowledgePage data={data} />;
   else if (path === '/experiment') page = <Experiment />;
   else if (path === '/profile') page = <Profile data={data} editSetup={() => setSetup(true)} />;
   else if (path === '/releases') page = <Releases />;
