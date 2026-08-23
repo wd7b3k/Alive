@@ -100,7 +100,38 @@ begin
   if visible = 0 then
     raise exception 'anon cannot read replacements_catalog — pre-login browsing would show nothing';
   end if;
-  raise notice 'Anon catalog read: PASS (published catalogs visible without a session)';
+  -- The evidence layer is shown next to every replacement, including before sign-in.
+  -- If a future migration adds an evidence table and forgets the anon grant, the cards
+  -- would silently render without their source and level — which reads as "no evidence
+  -- exists" rather than "the query failed". Assert it instead.
+  select count(*) into visible from public.evidence_levels;
+  if visible = 0 then
+    raise exception 'anon cannot read evidence_levels — evidence badges would render with no meaning behind them';
+  end if;
+  select count(*) into visible from public.evidence_sources;
+  if visible = 0 then
+    raise exception 'anon cannot read evidence_sources — citations would disappear before sign-in';
+  end if;
+  select count(*) into visible from public.replacement_evidence;
+  if visible = 0 then
+    raise exception 'anon cannot read replacement_evidence — no replacement could be tied to its source';
+  end if;
+  -- «Факты и Мифы» is one of the things a visitor is meant to be able to read before
+  -- deciding to sign up, so its absence for anon is a product bug, not a permissions
+  -- detail.
+  select count(*) into visible from public.knowledge_catalog;
+  if visible = 0 then
+    raise exception 'anon cannot read knowledge_catalog — the Facts and Myths section would be empty before sign-in';
+  end if;
+  select count(*) into visible from public.knowledge_evidence;
+  if visible = 0 then
+    raise exception 'anon cannot read knowledge_evidence — cards would render without their citations';
+  end if;
+  select count(*) into visible from public.knowledge_trigger_map;
+  if visible = 0 then
+    raise exception 'anon cannot read knowledge_trigger_map — per-trigger cards would never surface';
+  end if;
+  raise notice 'Anon catalog read: PASS (published catalogs, evidence layer and knowledge cards visible without a session)';
 
   -- and nothing else may be
   foreach tbl in array array[

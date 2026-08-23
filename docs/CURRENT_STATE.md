@@ -6,6 +6,14 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
 Текущая стадия: **ALIVE v3.0 — PRODUCT ALPHA / IN DEVELOPMENT**.
 
+Раздел «Факты и Мифы» добавлен 2026-08-23 поверх слоя доказательности, который уже был в
+проде, но никогда не показывался. Правило раздела вынесено в схему, а не в договорённость:
+`scope_note_ru` — `not null`, поэтому ни одна карточка не выходит без указания границ
+доказательства, а опубликованная карточка уровня A или B без источника отклоняется
+триггером. Три популярных утверждения сознательно не публикуются, потому что источника у
+них нет: «тяга длится 3–5 минут», «вейп на 95% безопаснее» и любое соотношение
+«один кальян = N сигарет».
+
 Stabilization-рефакторинг (бывший PR `#10`, ветка `agent/stabilization-release`) слит в
 `main` 2026-08-23. Он не добавляет продуктовых функций и migrations: ErrorBoundary,
 разбиение `RedesignApp` на `redesign/`, `hooks/`, `services/`, `domain/`, react-router
@@ -65,7 +73,10 @@ Google OAuth проверен реальным входом: Auth user и ALIVE 
 - Релизы;
 - deletion of erroneous/test episode with recalculation from remaining facts;
 - inline explanations / `nothing unexplained` pattern;
-- public pre-login browsing of the published catalog (`PublicHome` in `RedesignApp.tsx`).
+- public pre-login browsing of the published catalog (`PublicHome` in `RedesignApp.tsx`);
+- «Факты и Мифы» — 6 фактов и 9 мифов с уровнем доказательности, границами применимости
+  и проверенными источниками; отдельный раздел плюс контекстный показ в потоке тяги, в
+  Связках, на Сегодня и на первом экране до входа.
 
 ### Content depth
 
@@ -77,6 +88,7 @@ Remote catalog after product-depth migrations:
   `20260822130000` added the 10 curated mappings the `tension` and `after_task` triggers
   had been missing);
 - 13 universal Meanings;
+- 6 фактов и 9 мифов с 18 проверенными источниками (2026-08-23);
 - 5 universal identity scripts;
 - 13 support messages;
 - 7 rewards.
@@ -135,7 +147,14 @@ Applied remote migrations:
     an account exists;
 14. `20260822130000_v3_tension_mappings_and_meaning_titles` — curated replacements for the
     `tension` and `after_task` triggers, and distinct titles for the two `meaning_*`
-    replacements that had collided.
+    replacements that had collided;
+15. `20260823120000_v3_normalize_evidence_layer` — `evidence_levels`, `evidence_sources`
+    and `replacement_evidence`, backfilled from production's own values. The evidence
+    layer existed in production and no screen displayed it;
+16. `20260823130000_v3_knowledge_catalog_schema` — `knowledge_catalog`,
+    `knowledge_trigger_map`, `knowledge_evidence`; a published card claiming evidence
+    level A or B without a citation is rejected by a constraint trigger;
+17. `20260823140000_v3_knowledge_catalog_content` — 18 sources, 6 facts, 9 myths.
 
 RLS protects private user-owned entities. Service-role/OAuth secrets are not stored in frontend/repo.
 

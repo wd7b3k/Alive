@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pickReplacements, type Bootstrap, type Replacement } from './data';
+import { EMPTY_KNOWLEDGE, pickReplacements, type Bootstrap, type Replacement } from './data';
 
 function replacement(
   code: string,
@@ -20,6 +20,9 @@ function replacement(
     duration: null,
     summary: null,
     safety: null,
+    mechanism: null,
+    evidence_level: null,
+    evidence_scope: null,
   };
 }
 
@@ -88,6 +91,7 @@ const bootstrap: Bootstrap = {
   ],
   tobaccoEvents: [],
   todayCheckin: null,
+  knowledge: EMPTY_KNOWLEDGE,
 };
 
 describe('pickReplacements', () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  EMPTY_KNOWLEDGE,
   baselineDailyCost,
   baselineDailyUnits,
   eventAliveUnits,
@@ -80,6 +81,9 @@ const bootstrap: Bootstrap = {
       duration: null,
       summary: null,
       safety: null,
+      mechanism: null,
+      evidence_level: null,
+      evidence_scope: null,
     },
   ],
   triggerReplacementMap: [],
@@ -160,6 +164,7 @@ const bootstrap: Bootstrap = {
     },
   ],
   todayCheckin: null,
+  knowledge: EMPTY_KNOWLEDGE,
 };
 
 describe('business metrics', () => {

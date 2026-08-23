@@ -61,11 +61,16 @@ export function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
+// Five entries, not four: «Факты и Мифы» is a destination people return to, and
+// burying it behind Сегодня would make it a banner rather than a section. The mobile
+// bar's grid is widened to match in redesign.css — a five-item nav that still renders
+// four columns silently clips the last one.
 const MAIN_NAV: ReadonlyArray<[string, string, IconName]> = [
   ['/', 'Сегодня', 'spark'],
   ['/links', 'Связки', 'chain'],
   ['/path', 'Путь', 'path'],
   ['/meanings', 'Смыслы', 'meaning'],
+  ['/knowledge', 'Факты', 'shield'],
 ];
 
 export function Header({ data, path }: { data: Bootstrap; path: string }) {
