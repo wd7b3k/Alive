@@ -6,7 +6,12 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
 Текущая стадия: **ALIVE v3.0 — PRODUCT ALPHA / IN DEVELOPMENT**.
 
-Текущий test candidate: **v3.0 stabilization**, branch `agent/stabilization-release`, draft PR `#10`, preview `https://agent-stabilization-release.alive-aw2.pages.dev`. Кандидат не содержит новых продуктовых функций или migrations и не считается принятым до ручного authenticated smoke-test владельцем и merge в `main`.
+Stabilization-рефакторинг (бывший PR `#10`, ветка `agent/stabilization-release`) слит в
+`main` 2026-08-23. Он не добавляет продуктовых функций и migrations: ErrorBoundary,
+разбиение `RedesignApp` на `redesign/`, `hooks/`, `services/`, `domain/`, react-router
+вместо ручного `pushState`, prettier/eslint/vitest и SPA-fallback `_redirects` для
+Cloudflare Pages. Проверено на самом merge-коммите, а не на исходной ветке — см.
+`releases/v3.0-stabilization/VALIDATION.md`.
 
 `wd7b3k/Alive` — единственный source of truth. Код, migrations, product rules и release gates меняются сначала в repo; Dashboard/чат не переопределяют repo.
 
@@ -22,7 +27,7 @@ ALIVE — самостоятельный private repository `wd7b3k/Alive`.
   genuinely needs an account.
 - Database: Supabase PostgreSQL + RLS.
 - Supabase project: `xkigijaqimzuveyzyzyk`, `eu-west-1`.
-- GitHub CI: Node `22.12.0`, `npm ci`, format check, lint, typecheck, tests, production build.
+- GitHub CI: Node `22.12.0`, `npm ci`, format check, lint, typecheck, 26 тестов, production build, скан бандла на секреты и прогон RLS-изоляции на чистом PostgreSQL.
 
 Google OAuth проверен реальным входом: Auth user и ALIVE profile автоматически создаются, display name/avatar приходят из Google metadata.
 
