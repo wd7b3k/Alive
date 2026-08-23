@@ -2,9 +2,7 @@ name: ALIVE frontend CI
 
 on:
   push:
-    branches:
-      - main
-      - v3.0-hardening
+    branches: [main]
   pull_request:
     # The rls-isolation job below exists to validate supabase/migrations, and the
     # bundle scan reads scripts/. Before 2026-08-21 this filter listed only app/**,
@@ -24,7 +22,7 @@ permissions:
 
 jobs:
   frontend:
-    name: Typecheck, build and scan bundle for secrets
+    name: Lint, typecheck, test, build and scan bundle for secrets
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -44,8 +42,17 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build
