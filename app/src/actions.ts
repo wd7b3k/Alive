@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import type { ProductType } from './data';
+import { trackEvent } from './services/analytics';
 import { getSupabase } from './supabase';
 
 export type QuickUseDraft = {
@@ -45,6 +46,19 @@ export async function saveQuickUse(session: Session, draft: QuickUseDraft) {
     cost_actual_rub: draft.costActualRub ?? null,
   });
   if (event.error) throw new Error(event.error.message);
+
+  // Событие пишется после того, как обе записи легли: аналитика фиксирует то, что
+  // произошло, а не то, что было начато. `trackEvent` ничего не ждёт и не бросает —
+  // сценарий отказа от курения не может упасть из-за счётчика.
+  trackEvent(userId, {
+    event_type: 'nicotine_recorded',
+    funnel_stage: 'repeat_episode',
+    surface: 'quick_use',
+    product_type: draft.product,
+    trigger_code: triggerCode ?? undefined,
+    outcome: 'nicotine_used',
+    episode_id: episode.data.id as string,
+  });
 
   return episode.data.id as string;
 }

@@ -1,4 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
+import { trackEvent } from './services/analytics';
 import { getSupabase } from './supabase';
 
 export type ProductType = 'cigarette' | 'hookah' | 'vape';
@@ -449,6 +450,75 @@ export async function loadKnowledge(): Promise<Knowledge> {
   };
 }
 
+// ---------------------------------------------------------------------------
+// «Вместе» и здоровье продукта
+// ---------------------------------------------------------------------------
+// Обе величины считаются в базе функциями security definer и приезжают сюда одной
+// строкой чисел. Прав читать сами таблицы у клиента нет — ни на события, ни на чужие
+// эпизоды, — поэтому здесь физически нечего показать, кроме агрегата.
+
+export type TogetherPulse = {
+  period_days: number;
+  /** false — людей за период меньше порога когорты; числа тогда нули и показывать их нельзя. */
+  enough_people: boolean;
+  people_active: number;
+  episodes_resolved: number;
+  people_returned_after_lapse: number;
+  pause_minutes: number;
+};
+
+export type ProductHealth = {
+  period_days: number;
+  people_total: number;
+  people_new: number;
+  people_active: number;
+  people_returning: number;
+  people_first_episode: number;
+  episodes_total: number;
+  episodes_resolved: number;
+  resolved_share: number | null;
+  people_improving: number;
+  errors_total: number;
+  error_surfaces: string;
+};
+
+/**
+ * Сводка по группе. Null, если функция недоступна — раздел тогда молчит, а не выдумывает.
+ */
+export async function loadTogetherPulse(days = 7): Promise<TogetherPulse | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('together_pulse', { days });
+  if (error || !data) return null;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row as TogetherPulse) ?? null;
+}
+
+/** Здоровье продукта. База откажет вызывающему без прав — тогда возвращается null. */
+export async function loadProductHealth(days = 30): Promise<ProductHealth | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('admin_product_health', { days });
+  if (error || !data) return null;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row as ProductHealth) ?? null;
+}
+
+/**
+ * Администратор ли текущий пользователь.
+ *
+ * Ответ определяет только то, показывать ли ссылку на раздел. Настоящая проверка живёт
+ * в самой функции admin_product_health: интерфейс, спрятавший кнопку, ничего не
+ * защищает — защищает база, которая отказывает.
+ */
+export async function loadIsAppAdmin(): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { data, error } = await supabase.rpc('is_app_admin');
+  if (error) return false;
+  return data === true;
+}
+
 function requireClient() {
   const supabase = getSupabase();
   if (!supabase) throw new Error('Supabase не настроен');
@@ -572,6 +642,21 @@ export async function saveOnboarding(session: Session, draft: OnboardingDraft) {
 
   const profile = await supabase.from('profiles').update({ onboarding_completed_at: now }).eq('id', userId);
   if (profile.error) throw new Error(profile.error.message);
+
+  // Второй шаг воронки. Без него нельзя отличить «люди не приходят» от «люди приходят
+  // и не доходят до настройки» — а это два разных продукта и два разных решения.
+  // В metadata только количество и коды продуктов: цель человека, написанная своими
+  // словами, в аналитику не уходит.
+  trackEvent(userId, {
+    event_type: 'onboarding_completed',
+    funnel_stage: 'onboarded',
+    surface: 'setup',
+    numeric_value: draft.products.length,
+    metadata: {
+      products: draft.products.map((item) => item.productType).join('+') || 'none',
+      has_goal: Boolean(draft.goalText),
+    },
+  });
 }
 
 export type GuidedEpisodeDraft = {
@@ -641,6 +726,26 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
     });
     if (event.error) throw new Error(event.error.message);
   }
+
+  // Событие пишется последним, когда всё уже сохранено: аналитика должна отражать
+  // случившееся, а не начатое. Разница между тягой до и после — единственная числовая
+  // величина, по которой видно, помог ли разбор; она уходит в numeric_value, чтобы это
+  // считалось запросом, а не выгрузкой всех эпизодов наружу.
+  trackEvent(userId, {
+    event_type: 'episode_completed',
+    funnel_stage: 'first_episode',
+    surface: 'guided_flow',
+    product_type: draft.product,
+    trigger_code: draft.triggerCode === 'other' ? undefined : draft.triggerCode,
+    replacement_code: draft.replacementCode || undefined,
+    outcome: draft.outcome,
+    numeric_value:
+      draft.cravingBefore !== null && draft.cravingAfter !== null
+        ? draft.cravingBefore - draft.cravingAfter
+        : undefined,
+    episode_id: episodeId,
+    metadata: { need: draft.needCode || 'none', helpfulness: draft.helpfulness ?? -1 },
+  });
 
   return episodeId;
 }

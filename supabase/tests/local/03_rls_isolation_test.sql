@@ -184,7 +184,11 @@ begin
     -- Персональное состояние поверх контентного слоя прода. До 20260824120000 у anon
     -- на этих таблицах висели гранты insert/update/delete/truncate, и от чужих данных
     -- его отделяло только отсутствие разрешающей политики.
-    'user_goals','user_awareness_state','user_myth_state'
+    'user_goals','user_awareness_state','user_myth_state',
+    -- Аналитика и список администраторов. Журнал событий — это карта поведения
+    -- человека в зависимости; читать его нельзя никому из клиентских ролей, наружу
+    -- выходят только агрегаты из admin_product_health и together_pulse.
+    'analytics_events','content_impressions','system_errors','app_admins'
   ] loop
     begin
       execute format('select count(*) from public.%I', tbl) into leaked;
@@ -196,7 +200,76 @@ begin
       raise exception 'LEAK: anonymous visitor can read % row(s) from private table %', leaked, tbl;
     end if;
   end loop;
-  raise notice 'Anon privacy: PASS (0 rows readable across 14 private tables)';
+  raise notice 'Anon privacy: PASS (0 rows readable across 18 private tables)';
+end
+$$;
+
+reset role;
+
+-- ---------------------------------------------------------------------------
+-- Аналитика и агрегаты (добавлено 2026-08-25).
+--
+-- Три отдельные вещи, каждая из которых может сломаться молча:
+--   * вошедший человек не должен читать журнал событий — даже свой. Экрана с сырым
+--     журналом в продукте нет, а право, выданное «на будущее», однажды окажется
+--     выданным зря;
+--   * admin_product_health обязана отказывать не-администратору. Она security definer,
+--     то есть внутри читает всё; единственное, что стоит между обычным пользователем и
+--     всей базой, — проверка в первой строке функции;
+--   * together_pulse на маленькой группе обязана молчать. «Один человек вернулся после
+--     срыва» в группе из двух — это указание пальцем.
+-- ---------------------------------------------------------------------------
+set role authenticated;
+select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', false);
+
+do $$
+declare
+  denied boolean;
+  pulse record;
+begin
+  -- Проверяется само право, а не результат запроса. Счёт строк здесь ничего не
+  -- доказывает: таблица в тестовой базе пустая, и `select count(*)` вернёт ноль и при
+  -- выданном гранте, и при разрешающей политике. Ошибка была бы обнаружена только на
+  -- проде, с чужими данными внутри.
+  if has_table_privilege('authenticated', 'public.analytics_events', 'select') then
+    raise exception 'У роли authenticated есть право select на журнал событий';
+  end if;
+  if has_table_privilege('authenticated', 'public.content_impressions', 'select') then
+    raise exception 'У роли authenticated есть право select на показы контента';
+  end if;
+  if has_table_privilege('authenticated', 'public.app_admins', 'select')
+     or has_table_privilege('anon', 'public.app_admins', 'select') then
+    raise exception 'Список администраторов доступен клиентской роли';
+  end if;
+  -- Писать своё событие — можно, иначе аналитики просто не будет.
+  if not has_table_privilege('authenticated', 'public.analytics_events', 'insert') then
+    raise exception 'Вошедший не может записать собственное событие — аналитика мертва';
+  end if;
+
+  if public.is_app_admin() then
+    raise exception 'is_app_admin() вернула true для обычного пользователя';
+  end if;
+
+  denied := false;
+  begin
+    perform * from public.admin_product_health(30);
+  exception
+    when others then denied := true;
+  end;
+  if not denied then
+    raise exception 'admin_product_health отдала данные не-администратору';
+  end if;
+
+  -- В базе теста два пользователя — это меньше порога когорты.
+  select * into pulse from public.together_pulse(7);
+  if pulse.enough_people then
+    raise exception 'together_pulse показала группу из двух человек';
+  end if;
+  if pulse.people_active <> 0 or pulse.episodes_resolved <> 0 then
+    raise exception 'together_pulse ниже порога вернула ненулевые числа';
+  end if;
+
+  raise notice 'Аналитика: PASS (журнал закрыт, admin_product_health отказала, together_pulse молчит ниже порога)';
 end
 $$;
 

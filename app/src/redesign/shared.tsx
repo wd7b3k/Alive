@@ -61,16 +61,20 @@ export function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
-// Five entries, not four: «Факты и Мифы» is a destination people return to, and
-// burying it behind Сегодня would make it a banner rather than a section. The mobile
-// bar's grid is widened to match in redesign.css — a five-item nav that still renders
-// four columns silently clips the last one.
+// Шесть пунктов. «Факты» и «Вместе» — места, куда возвращаются, и спрятанный за
+// «Сегодня» раздел превращается в баннер, а не в раздел.
+//
+// Шесть — это на один больше, чем обычно советуют для нижней панели, и цена честная:
+// на 360px каждая ячейка становится 60px. Проверено на реальной ширине, а не на глаз;
+// сетка в redesign.css расширена до шести колонок — панель, оставшаяся пятиколоночной,
+// молча срезала бы последний пункт.
 const MAIN_NAV: ReadonlyArray<[string, string, IconName]> = [
   ['/', 'Сегодня', 'spark'],
   ['/links', 'Связки', 'chain'],
   ['/path', 'Путь', 'path'],
   ['/meanings', 'Смыслы', 'meaning'],
   ['/knowledge', 'Факты', 'shield'],
+  ['/together', 'Вместе', 'people'],
 ];
 
 export function Header({ data, path }: { data: Bootstrap; path: string }) {

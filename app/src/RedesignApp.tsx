@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 import {
@@ -7,6 +7,7 @@ import {
   deleteEpisode,
   deleteLink,
   deleteMeaning,
+  loadIsAppAdmin,
   pickReplacements,
   productLabel,
   saveCheckin,
@@ -51,6 +52,8 @@ import {
   when,
 } from './redesign/utils';
 import { navigateTo as go } from './services/navigation';
+import { TogetherPage } from './redesign/together';
+import { HealthPage } from './redesign/health';
 
 /**
  * What a visitor sees before signing in: the real catalog, not a locked door.
@@ -2010,6 +2013,24 @@ function Experiment() {
 }
 
 function Profile({ data, editSetup }: { data: Bootstrap; editSetup: () => void }) {
+  // Ссылка на закрытый раздел появляется только у администратора — но прячет она лишь
+  // ссылку. Доступ решает база: admin_product_health отказывает не-администратору, и
+  // это проверено в supabase/tests/local, а не оставлено на совесть интерфейса.
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    loadIsAppAdmin()
+      .then((value) => {
+        if (!cancelled) setIsAdmin(value);
+      })
+      .catch(() => {
+        // Нет ответа — нет ссылки. Это не ошибка, которую стоит показывать.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   async function logout() {
     await getSupabase()?.auth.signOut();
     go('/');
@@ -2024,6 +2045,23 @@ function Profile({ data, editSetup }: { data: Bootstrap; editSetup: () => void }
           превращаются в публичный профиль.
         </p>
       </section>
+      {isAdmin && (
+        <section className="r-section">
+          <div className="r-section-head">
+            <div>
+              <p className="r-kicker">Служебное</p>
+              <h2>Здоровье продукта</h2>
+              <p>
+                Агрегаты по всем участникам: сколько приходит, сколько остаётся, доходят ли до
+                разбора эпизода. Ни одной записи о конкретном человеке.
+              </p>
+            </div>
+            <ShellButton className="ghost small" onClick={() => go('/health')}>
+              Открыть
+            </ShellButton>
+          </div>
+        </section>
+      )}
       <section className="r-section">
         <div className="r-section-head">
           <div>
@@ -2206,6 +2244,8 @@ export default function RedesignApp() {
   else if (path === '/meanings')
     page = <Meanings session={session} data={data} reload={() => reload(session).then(() => {})} />;
   else if (path === '/knowledge') page = <KnowledgePage data={data} />;
+  else if (path === '/together') page = <TogetherPage data={data} />;
+  else if (path === '/health') page = <HealthPage />;
   else if (path === '/experiment') page = <Experiment />;
   else if (path === '/profile') page = <Profile data={data} editSetup={() => setSetup(true)} />;
   else if (path === '/releases') page = <Releases />;
