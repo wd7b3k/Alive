@@ -23,6 +23,8 @@ function replacement(
     mechanism: null,
     evidence_level: null,
     evidence_scope: null,
+    source_title: null,
+    source_url: null,
   };
 }
 

@@ -69,6 +69,9 @@ describe('RLS migration invariants', () => {
     'profiles',
     'user_settings',
     'ugc_submissions',
+    'user_goals',
+    'user_awareness_state',
+    'user_myth_state',
   ])('never grants anonymous access to %s', (table) => {
     expect(sql).not.toMatch(new RegExp(`grant [^;]+ on public\\.${table} to [^;]*anon`));
   });
@@ -107,4 +110,30 @@ describe('RLS migration invariants', () => {
       ).toBe(true);
     }
   });
+
+  // Раздел «Факты» стоит на таблицах, которых нет ни в одной миграции: они появились
+  // прямо в проде, и репозиторий узнал о них 2026-08-24. Правило «anon читает только
+  // published» выводится выше из тел `create table`, поэтому эти четыре таблицы под
+  // него не попадают — их тела здесь никто не создаёт. Пока это так, они проверяются
+  // по именам: иначе редакционный черновик уехал бы на экран до входа, и статический
+  // guard этого бы не заметил.
+  it.each(['facts_catalog', 'myths_catalog', 'goals_catalog', 'awareness_content'])(
+    'filters the anon policy on the production-owned catalog %s to published rows',
+    (table) => {
+      const policies = [
+        // [^\\w;] после имени таблицы обязательно: без него awareness_content
+        // сматчил бы и политику awareness_content_contexts, и тест проверял бы не ту
+        // таблицу — ровно тот класс ошибки, который здесь и ловится.
+        ...sql.matchAll(new RegExp(`create policy \\w+ on public\\.${table}[^\\w;][^;]*;`, 'g')),
+      ]
+        .map(([policy]) => policy)
+        .filter((policy) => /to anon/.test(policy));
+      expect(policies.length, `public.${table} has no anon select policy`).toBeGreaterThan(0);
+      for (const policy of policies) {
+        expect(policy, `public.${table} anon policy does not filter on published`).toContain(
+          'published = true',
+        );
+      }
+    },
+  );
 });

@@ -10,15 +10,15 @@ import type {
 } from '../data';
 
 /**
- * Selectors over the evidence layer and «Факты и Мифы».
+ * Селекторы над доказательным слоем и «Фактами и Мифами».
  *
- * Pure functions on data already in memory — nothing here fetches. They live in
- * `domain/` beside metrics because the rules they encode are product rules, not
- * rendering details, and because rules that decide what health claim a person is shown
- * deserve to be unit-testable without a browser.
+ * Чистые функции над уже загруженными данными — ничего не ходит в сеть. Они живут в
+ * `domain/` рядом с метриками, потому что кодируют продуктовые правила, а не детали
+ * отрисовки, и потому что правила, решающие, какое утверждение о здоровье увидит
+ * человек, должны проверяться тестами без браузера.
  */
 
-/** The definition behind a letter. Null when the level is unknown or not loaded. */
+/** Определение буквы. Null, если уровень неизвестен. */
 export function levelOf(
   knowledge: Knowledge,
   code: string | null | undefined,
@@ -27,24 +27,20 @@ export function levelOf(
   return knowledge.levels.find((level) => level.code === code) ?? null;
 }
 
-function sourcesByIds(knowledge: Knowledge, ids: string[]): EvidenceSource[] {
-  const byId = new Map(knowledge.sources.map((source) => [source.id, source]));
-  return ids
-    .map((id) => byId.get(id))
-    .filter((source): source is EvidenceSource => Boolean(source));
-}
-
 /**
- * What backs one replacement: its level, where that evidence stops, and the documents.
+ * На чём стоит одна замена: уровень, где доказательство заканчивается, и источник.
  *
- * Returns null when the replacement carries no level at all, so a caller can render
- * nothing rather than an empty badge. A level with no sources is NOT null — that is the
- * honest state of a level C heuristic, and saying "ALIVE's own heuristic, no study" is
- * information the reader wants.
+ * Возвращает null, когда у замены нет уровня вообще, — тогда вызывающий рисует ничего,
+ * а не пустой бейдж. Уровень без источника — это НЕ null: так честно выглядит
+ * эвристика уровня C, и сказать «это приём ALIVE, исследования нет» лучше, чем
+ * промолчать.
  */
 export function evidenceForReplacement(
   knowledge: Knowledge,
-  replacement: Pick<Replacement, 'code' | 'evidence_level' | 'evidence_scope' | 'mechanism'>,
+  replacement: Pick<
+    Replacement,
+    'code' | 'evidence_level' | 'evidence_scope' | 'mechanism' | 'source_title' | 'source_url'
+  >,
 ): {
   level: EvidenceLevel;
   scope: string | null;
@@ -53,25 +49,25 @@ export function evidenceForReplacement(
 } | null {
   const level = levelOf(knowledge, replacement.evidence_level);
   if (!level) return null;
-  const ids = knowledge.replacementEvidence
-    .filter((link) => link.replacement_code === replacement.code)
-    .sort((a, b) => a.sort_order - b.sort_order)
-    .map((link) => link.source_id);
   return {
     level,
     scope: replacement.evidence_scope,
     mechanism: replacement.mechanism,
-    sources: sourcesByIds(knowledge, ids),
+    sources: replacement.source_title
+      ? [{ title: replacement.source_title, url: replacement.source_url }]
+      : [],
   };
 }
 
-/** The documents behind one knowledge card, in editorial order. */
-export function sourcesForCard(knowledge: Knowledge, card: KnowledgeCard): EvidenceSource[] {
-  const ids = knowledge.cardEvidence
-    .filter((link) => link.knowledge_code === card.code)
-    .sort((a, b) => a.sort_order - b.sort_order)
-    .map((link) => link.source_id);
-  return sourcesByIds(knowledge, ids);
+/**
+ * Источники карточки.
+ *
+ * Ссылка лежит на самой строке каталога, как и у замен, поэтому функция тривиальна.
+ * Она всё равно существует: место, где раздел берёт источники, должно быть одно, и
+ * когда у карточки появится второй источник, менять придётся только здесь.
+ */
+export function sourcesForCard(_knowledge: Knowledge, card: KnowledgeCard): EvidenceSource[] {
+  return card.sources;
 }
 
 function appliesToProducts(card: KnowledgeCard, products: ProductType[]): boolean {
@@ -80,11 +76,12 @@ function appliesToProducts(card: KnowledgeCard, products: ProductType[]): boolea
 }
 
 /**
- * Cards for one surface, filtered to the products this person actually uses.
+ * Карточки для одной поверхности, отфильтрованные по продуктам, которыми человек
+ * действительно пользуется.
  *
- * The product filter is not cosmetic: a waterpipe card shown to someone who only vapes
- * is not merely irrelevant, it quietly teaches them that the section is generic and can
- * be skipped.
+ * Фильтр по продукту не косметика: карточка про кальян, показанная тому, кто только
+ * парит, не просто нерелевантна — она тихо учит, что раздел общий и его можно
+ * пролистывать.
  */
 export function cardsForSurface(
   knowledge: Knowledge,
@@ -97,7 +94,8 @@ export function cardsForSurface(
 }
 
 /**
- * Cards attached to one trigger — the per-trigger fact in Связки and in the flow.
+ * Карточки, привязанные к одному триггеру, — тот самый факт про конкретный момент в
+ * Связках и в потоке.
  */
 export function cardsForTrigger(
   knowledge: Knowledge,
@@ -119,12 +117,11 @@ export function cardsForTrigger(
 }
 
 /**
- * One card for a surface that only has room for one, rotated by day.
+ * Одна карточка для поверхности, где место есть только для одной, с ротацией по дню.
  *
- * Rotation is by date rather than at random so the card is stable for the whole day: a
- * person who opens Сегодня three times should not be shown three different claims about
- * their health and conclude the product is reaching for whatever is at hand. `localDay`
- * is passed in rather than read here to keep the function pure and testable.
+ * Ротация по дате, а не случайная: человек, открывший «Сегодня» трижды, не должен
+ * увидеть три разных утверждения о своём здоровье и решить, что продукт говорит первое
+ * попавшееся. `localDay` передаётся снаружи, чтобы функция осталась чистой.
  */
 export function cardOfTheDay(
   knowledge: Knowledge,
@@ -139,7 +136,7 @@ export function cardOfTheDay(
   return cards[seed % cards.length] ?? null;
 }
 
-/** Group the section's cards the way the section renders them. */
+/** Разложить карточки раздела так, как раздел их показывает. */
 export function splitByKind(cards: KnowledgeCard[]): {
   facts: KnowledgeCard[];
   myths: KnowledgeCard[];
@@ -150,7 +147,7 @@ export function splitByKind(cards: KnowledgeCard[]): {
   };
 }
 
-/** Short human label for a level, for a badge. Falls back to the bare letter. */
+/** Короткая подпись уровня для бейджа. Откатывается к голой букве. */
 export function levelBadge(level: EvidenceLevel | null, code?: EvidenceLevelCode | null): string {
   if (level) return `${level.code} · ${level.label_ru}`;
   return code ?? '';
