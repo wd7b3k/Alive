@@ -45,6 +45,7 @@ import {
   KnowledgeCollapsed,
 } from './redesign/knowledge';
 import { GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
+import { ShareWin } from './redesign/share';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
 import { Brand, Header, LoginPage, Modal, ShellButton, startGoogleSignIn } from './redesign/shared';
 import {
@@ -1064,6 +1065,9 @@ function Guided({
               </div>
             </button>
           </div>
+          {outcome === 'successful_response' && (
+            <ShareWin replacementTitle={selected?.title ?? null} />
+          )}
           {outcome === 'nicotine_used' && (
             <div className="r-nicotine-detail">
               <p>
@@ -1426,7 +1430,6 @@ function Links({
   openFlow: (trigger?: string) => void;
 }) {
   const stats = triggerStats(data);
-  const products = data.products.map((p) => p.product_type);
   const [show, setShow] = useState(false);
   const [title, setTitle] = useState('');
   const [situation, setSituation] = useState('');
@@ -1567,32 +1570,25 @@ function Links({
             <h2>Что система уже видит</h2>
           </div>
         </div>
+        {/* Связка — это триггер и замены под него. Карточки знания стояли здесь до
+            24.08 и уехали в «Факты»: миф — утверждение о мире, а не свойство момента,
+            и на карте контекстов он отвлекал от того, ради чего человек сюда пришёл. */}
         <div className="r-trigger-grid">
           {data.triggers.map((t) => {
             const st = stats.find((x) => x.trigger.code === t.code);
-            // Per-trigger cards sit beside the trigger they are about, not in a
-            // separate block: «что известно про этот момент» is only useful while the
-            // person is looking at that moment. Triggers with no card render exactly
-            // as before.
-            const cards = cardsForTrigger(data.knowledge, t.code, products, 'links');
             return (
-              <div className="r-trigger-cell" key={t.code}>
-                <button className="r-trigger-card" onClick={() => openFlow(t.code)}>
-                  <span className="r-choice-icon">
-                    <Icon name={triggerIcon(t)} size={23} />
-                  </span>
-                  <div>
-                    <strong>{t.title}</strong>
-                    <p>{t.description}</p>
-                  </div>
-                  <span className="r-rate">
-                    {st?.episodes ? `${fmt(st.successRate ?? 0)}%` : 'новое'}
-                  </span>
-                </button>
-                {cards.map((card) => (
-                  <KnowledgeCollapsed key={card.code} knowledge={data.knowledge} card={card} />
-                ))}
-              </div>
+              <button className="r-trigger-card" key={t.code} onClick={() => openFlow(t.code)}>
+                <span className="r-choice-icon">
+                  <Icon name={triggerIcon(t)} size={23} />
+                </span>
+                <div>
+                  <strong>{t.title}</strong>
+                  <p>{t.description}</p>
+                </div>
+                <span className="r-rate">
+                  {st?.episodes ? `${fmt(st.successRate ?? 0)}%` : 'новое'}
+                </span>
+              </button>
             );
           })}
         </div>

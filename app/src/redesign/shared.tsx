@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Bootstrap } from '../data';
 import { getSupabase } from '../supabase';
+import { configuredProviders, type AuthProvider } from '../auth-providers';
 import { navigateTo } from '../services/navigation';
 import { Icon, type IconName } from '../ui-icons';
 import logoUrl from '../assets/brand-logo-full.png';
@@ -45,6 +46,35 @@ export function Modal({
     >
       <section className={`r-modal ${wide ? 'r-modal-wide' : ''}`}>{children}</section>
     </div>
+  );
+}
+
+/**
+ * Инициалы вместо фотографии из Google.
+ *
+ * Раньше сюда подставлялся `avatar_url` из профиля Google. Это стоило двух вещей:
+ * каждая страница ALIVE запрашивала картинку у `lh3.googleusercontent.com`, то есть
+ * сообщала Google о посещении, — а в продукте, который обещает приватность, это плохой
+ * размен ради украшения; и картинка приходила квадратной 96×96, а вставала в сетку
+ * искажённой.
+ *
+ * Инициалы ничего не запрашивают, всегда одного размера и остаются узнаваемыми на
+ * мелком размере в шапке.
+ */
+export function AvatarMark({ name }: { name: string | null }) {
+  const initials = (name ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+  if (!initials) {
+    return <Icon name="user" size={20} />;
+  }
+  return (
+    <span className="r-avatar-initials" aria-hidden="true">
+      {initials}
+    </span>
   );
 }
 
@@ -105,11 +135,7 @@ export function Header({ data, path }: { data: Bootstrap; path: string }) {
             onClick={() => navigateTo('/profile')}
             title="Профиль"
           >
-            {data.profile.avatar_url ? (
-              <img src={data.profile.avatar_url} alt="" referrerPolicy="no-referrer" />
-            ) : (
-              <Icon name="user" size={20} />
-            )}
+            <AvatarMark name={data.profile.display_name} />
           </button>
         </div>
       </header>
@@ -138,27 +164,39 @@ export function Header({ data, path }: { data: Bootstrap; path: string }) {
  * each be the moment an account first becomes necessary. They must all raise the same
  * flow — one implementation means one redirect target and one failure path.
  */
-export async function startGoogleSignIn(): Promise<string | null> {
+/**
+ * Открывает вход у выбранного провайдера.
+ *
+ * `provider` уходит в Supabase строкой, потому что кастомные провайдеры называются
+ * `custom:<имя>` и в union типов клиента их нет. Проверять эту строку здесь нечем:
+ * настроен провайдер или нет, знает только проект Supabase, и он же скажет об этом
+ * ошибкой, которую увидит человек.
+ */
+export async function startSignIn(provider = 'google'): Promise<string | null> {
   const supabase = getSupabase();
   if (!supabase) return 'Supabase не настроен';
   const result = await supabase.auth.signInWithOAuth({
-    provider: 'google',
+    provider: provider as Parameters<typeof supabase.auth.signInWithOAuth>[0]['provider'],
     options: { redirectTo: `${window.location.origin}/` },
   });
   return result.error ? result.error.message : null;
 }
 
-export function LoginPage() {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+/** Прежнее имя: вызовов много, и переименовывать их все ради одного смысла незачем. */
+export const startGoogleSignIn = () => startSignIn('google');
 
-  async function start() {
-    setBusy(true);
+export function LoginPage() {
+  const [busy, setBusy] = useState('');
+  const [error, setError] = useState('');
+  const providers = configuredProviders();
+
+  async function start(provider: AuthProvider) {
+    setBusy(provider.id);
     setError('');
-    const message = await startGoogleSignIn();
+    const message = await startSignIn(provider.id);
     if (message) {
       setError(message);
-      setBusy(false);
+      setBusy('');
     }
   }
 
@@ -173,17 +211,29 @@ export function LoginPage() {
           состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.
         </p>
         <div className="r-login-actions">
-          <ShellButton className="primary" onClick={start} disabled={busy}>
-            {busy ? 'Открываю Google…' : 'Войти через Google'} <Icon name="arrow" size={18} />
-          </ShellButton>
+          {providers.map((provider, index) => (
+            <ShellButton
+              key={provider.id}
+              className={index === 0 ? 'primary' : 'ghost'}
+              onClick={() => start(provider)}
+              disabled={busy !== ''}
+            >
+              {busy === provider.id
+                ? `Открываю ${provider.opening}…`
+                : `Войти через ${provider.label}`}{' '}
+              <Icon name="arrow" size={18} />
+            </ShellButton>
+          ))}
           <ShellButton className="ghost" onClick={() => navigateTo('/experiment')}>
             Как устроен эксперимент
           </ShellButton>
         </div>
         {error && <p className="r-error">{error}</p>}
         <p className="r-privacy">
-          Google нужен только для входа. Поведенческие данные хранятся отдельно и защищаются
-          правилами доступа PostgreSQL.
+          {providers.length > 1
+            ? 'Любой из этих аккаунтов нужен только для входа.'
+            : 'Google нужен только для входа.'}{' '}
+          Поведенческие данные хранятся отдельно и защищаются правилами доступа PostgreSQL.
         </p>
       </section>
     </main>
