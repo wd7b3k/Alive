@@ -1,4 +1,6 @@
 import type {
+  AwarenessCard,
+  AwarenessMoment,
   EvidenceLevel,
   EvidenceLevelCode,
   EvidenceSource,
@@ -150,4 +152,37 @@ export function splitByKind(cards: KnowledgeCard[]): {
 export function levelBadge(level: EvidenceLevel | null, code?: EvidenceLevelCode | null): string {
   if (level) return `${level.code} · ${level.label_ru}`;
   return code ?? '';
+}
+
+/**
+ * Отбирает карточки слоя микроосознанности для одного момента.
+ *
+ * Правило повторяет то, по которому `alive_record_awareness_exposure` соглашается
+ * зафиксировать показ: тип продукта человека должен быть среди продуктов карточки, а
+ * строка контекста должна либо не называть триггер и продукт вовсе, либо называть те,
+ * что сейчас на экране. Расхождение между отбором и записью означало бы карточку,
+ * которую видно, но нельзя посчитать.
+ *
+ * Порядок — по `priority` строки контекста: это редакторское решение, и оно лежит в
+ * базе, а не в коде.
+ */
+export function awarenessForMoment(
+  cards: AwarenessCard[],
+  moment: AwarenessMoment,
+  products: ProductType[],
+  triggerCode: string | null = null,
+): AwarenessCard[] {
+  const scored: { card: AwarenessCard; priority: number }[] = [];
+  for (const card of cards) {
+    if (products.length && !card.productTypes.some((type) => products.includes(type))) continue;
+    const matches = card.contexts.filter(
+      (ctx) =>
+        ctx.moment === moment &&
+        (ctx.triggerCode === null || ctx.triggerCode === triggerCode) &&
+        (ctx.productType === null || products.includes(ctx.productType)),
+    );
+    if (!matches.length) continue;
+    scored.push({ card, priority: Math.min(...matches.map((ctx) => ctx.priority)) });
+  }
+  return scored.sort((a, b) => a.priority - b.priority).map((entry) => entry.card);
 }

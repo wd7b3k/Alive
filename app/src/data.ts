@@ -228,6 +228,7 @@ export type Bootstrap = {
   tobaccoEvents: TobaccoEvent[];
   todayCheckin: DailyCheckin | null;
   knowledge: Knowledge;
+  awareness: AwarenessCard[];
 };
 
 // ---------------------------------------------------------------------------
@@ -333,6 +334,35 @@ function toSource(row: SourceRow | SourceRow[] | null | undefined): EvidenceSour
     },
   ];
 }
+
+/**
+ * Карточка слоя микроосознанности.
+ *
+ * Это не третий вариант «Фактов». Слой r1 отличается от `facts_catalog` тремя вещами,
+ * и каждая из них — причина, по которой он существует отдельно: у карточки есть
+ * `motivation_ru` — обращение к человеку, а не к читателю; она привязана к
+ * подтверждённому утверждению (`evidence_claims.status = 'проверено'`), а не к
+ * отдельной ссылке; и у неё есть момент доставки, а не раздел.
+ *
+ * Момент — единственное, что решает, где карточка появится. Раскладывать её по
+ * экранам «на глаз» нельзя: `awareness_content_contexts` для того и заведена.
+ */
+export type AwarenessMoment = 'микроосознанность' | 'после эпизода' | 'путь' | 'библиотека';
+
+export type AwarenessCard = {
+  code: string;
+  kind: 'факт' | 'миф';
+  title: string;
+  hook: string;
+  explanation: string;
+  motivation: string | null;
+  caveat: string;
+  productTypes: ProductType[];
+  contexts: { moment: AwarenessMoment; triggerCode: string | null; productType: ProductType | null; priority: number }[];
+  confidence: string | null;
+  limitations: string | null;
+  sources: EvidenceSource[];
+};
 
 /**
  * Одна карточка «Фактов и Мифов».
@@ -498,6 +528,104 @@ export async function loadKnowledge(): Promise<Knowledge> {
   };
 }
 
+type AwarenessRow = {
+  code: string;
+  content_type: 'факт' | 'миф';
+  title_ru: string;
+  hook_ru: string;
+  explanation_ru: string;
+  motivation_ru: string | null;
+  caveat_ru: string;
+  product_types: string[] | null;
+  awareness_content_contexts:
+    | { moment: string; trigger_code: string | null; product_type: string | null; priority: number }[]
+    | null;
+  evidence_claims:
+    | {
+        evidence_level: string | null;
+        limitations_ru: string | null;
+        evidence_claim_sources: { evidence_sources: SourceRow | SourceRow[] | null }[] | null;
+      }
+    | null;
+};
+
+const AWARENESS_MOMENTS: AwarenessMoment[] = [
+  'микроосознанность',
+  'после эпизода',
+  'путь',
+  'библиотека',
+];
+
+/**
+ * Загружает слой микроосознанности вместе с моментами доставки и доказательной базой.
+ *
+ * Читается только подтверждённое: `evidence_claims.status = 'проверено'` — то же
+ * условие, по которому `alive_record_awareness_exposure` соглашается зафиксировать
+ * показ. Если фильтровать здесь мягче, чем в базе, интерфейс покажет карточку, а
+ * запись показа упадёт с ошибкой — и расхождение обнаружится не здесь, а в журнале.
+ */
+export async function loadAwareness(): Promise<AwarenessCard[]> {
+  const supabase = requireClient();
+  const { data } = await supabase
+    .from('awareness_content')
+    .select(
+      'code,content_type,title_ru,hook_ru,explanation_ru,motivation_ru,caveat_ru,product_types,sort_order,' +
+        'awareness_content_contexts(moment,trigger_code,product_type,priority),' +
+        `evidence_claims!inner(evidence_level,limitations_ru,status,evidence_claim_sources(${SOURCE_COLUMNS}))`,
+    )
+    .eq('published', true)
+    .eq('evidence_claims.status', 'проверено')
+    .order('sort_order');
+
+  return ((data ?? []) as unknown as AwarenessRow[]).map<AwarenessCard>((row) => ({
+    code: row.code,
+    kind: row.content_type,
+    title: row.title_ru,
+    hook: row.hook_ru,
+    explanation: row.explanation_ru,
+    motivation: row.motivation_ru,
+    caveat: row.caveat_ru,
+    productTypes: (row.product_types ?? []) as ProductType[],
+    contexts: (row.awareness_content_contexts ?? [])
+      .filter((ctx) => (AWARENESS_MOMENTS as string[]).includes(ctx.moment))
+      .map((ctx) => ({
+        moment: ctx.moment as AwarenessMoment,
+        triggerCode: ctx.trigger_code,
+        productType: ctx.product_type as ProductType | null,
+        priority: ctx.priority,
+      })),
+    confidence: row.evidence_claims?.evidence_level ?? null,
+    limitations: row.evidence_claims?.limitations_ru || null,
+    sources: (row.evidence_claims?.evidence_claim_sources ?? []).flatMap((link) =>
+      toSource(link.evidence_sources),
+    ),
+  }));
+}
+
+/**
+ * Фиксирует показ карточки один раз за запуск сценария.
+ *
+ * Идемпотентность обеспечивает база: `alive_record_awareness_exposure` держит
+ * advisory-lock на паре «человек + запуск» и возвращает уже созданный показ вместо
+ * второго. Поэтому повторный вызов при перерисовке безопасен, а на ошибку здесь
+ * сознательно не реагируем: несделанная запись показа не повод не показать карточку.
+ */
+export async function recordAwarenessExposure(
+  contentCode: string,
+  productType: ProductType,
+  triggerCode: string | null,
+  flowId: string,
+): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) return;
+  await supabase.rpc('alive_record_awareness_exposure', {
+    p_content_code: contentCode,
+    p_product_type: productType,
+    p_trigger_code: triggerCode,
+    p_flow_id: flowId,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // «Вместе» и здоровье продукта
 // ---------------------------------------------------------------------------
@@ -625,6 +753,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     tobaccoRes,
     checkinRes,
     knowledge,
+    awareness,
   ] = await Promise.all([
     supabase.from('profiles').select('id,display_name,avatar_url,onboarding_completed_at,role').eq('id', userId).single(),
     supabase.from('user_settings').select('*').eq('user_id', userId).single(),
@@ -649,6 +778,9 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     // evidence badge is acceptable, losing the whole personal map because a catalog
     // query failed is not.
     loadKnowledge().catch(() => EMPTY_KNOWLEDGE),
+    // Слой микроосознанности так же редакционен и так же необязателен: если запрос не
+    // прошёл, человек теряет одну карточку на «Пути», а не персональную карту.
+    loadAwareness().catch(() => []),
   ]);
 
   return {
@@ -671,6 +803,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     tobaccoEvents: (tobaccoRes.data ?? []) as TobaccoEvent[],
     todayCheckin: (checkinRes.data ?? null) as DailyCheckin | null,
     knowledge,
+    awareness,
   };
 }
 

@@ -30,8 +30,15 @@ import { dailyUnits, replacementStats, statsForDays, triggerStats } from './doma
 import { Icon } from './ui-icons';
 import { useLocation } from 'react-router-dom';
 import { useBootstrapSession } from './hooks/useBootstrapSession';
-import { cardOfTheDay, cardsForSurface, cardsForTrigger, splitByKind } from './domain/knowledge';
 import {
+  awarenessForMoment,
+  cardOfTheDay,
+  cardsForSurface,
+  cardsForTrigger,
+  splitByKind,
+} from './domain/knowledge';
+import {
+  AwarenessCardView,
   EvidenceBadge,
   EvidenceDetail,
   KnowledgeCardView,
@@ -1600,6 +1607,11 @@ function PathPage({ data }: { data: Bootstrap }) {
   const days = dailyUnits(data, 7);
   const rstats = replacementStats(data).slice(0, 6);
   const max = Math.max(1, ...days.map((d) => d.units));
+  // «Путь» — единственный момент, где уместно говорить о траектории, а не о ближайших
+  // минутах. Редакция это уже решила: карточки приходят с moment = 'путь', и код лишь
+  // выполняет решение, а не повторяет его.
+  const products = data.products.map((p) => p.product_type);
+  const trajectory = awarenessForMoment(data.awareness, 'путь', products);
   return (
     <main className="r-page">
       <section className="r-title">
@@ -1665,6 +1677,25 @@ function PathPage({ data }: { data: Bootstrap }) {
           </span>
         </div>
       </section>
+      {trajectory.length > 0 && (
+        <section className="r-section">
+          <div className="r-section-head">
+            <div>
+              <p className="r-kicker">Куда это ведёт</p>
+              <h2>Что известно про траекторию, а не про сегодняшний день</h2>
+              <p>
+                Графики выше показывают твои недели. Здесь — то, что известно про сам путь: как
+                меняется риск и почему первые месяцы уже относятся к другой траектории.
+              </p>
+            </div>
+          </div>
+          <div className="r-awareness-grid">
+            {trajectory.map((card) => (
+              <AwarenessCardView key={card.code} card={card} />
+            ))}
+          </div>
+        </section>
+      )}
       <section className="r-section">
         <div className="r-section-head">
           <div>

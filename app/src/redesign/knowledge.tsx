@@ -1,4 +1,4 @@
-import type { EvidenceSource, Knowledge, KnowledgeCard, Replacement } from '../data';
+import type { AwarenessCard, EvidenceSource, Knowledge, KnowledgeCard, Replacement } from '../data';
 import { evidenceForReplacement, levelOf, sourcesForCard } from '../domain/knowledge';
 import { Icon } from '../ui-icons';
 
@@ -194,5 +194,46 @@ export function KnowledgeCollapsed({
         <KnowledgeCardView knowledge={knowledge} card={card} compact />
       </div>
     </details>
+  );
+}
+
+/**
+ * Карточка слоя микроосознанности.
+ *
+ * От карточки «Фактов» отличается тем, ради чего этот слой вообще существует: у неё
+ * есть обращение к человеку, а не только изложение. Оно и стоит на самом видном месте —
+ * ниже разбора, но крупнее его, потому что в момент, когда карточка появляется, важнее
+ * не то, что показало исследование, а то, что это значит для читающего.
+ *
+ * Границы утверждения никуда не деваются и не прячутся глубже одного клика: правило
+ * «ни одного утверждения без границ» не знает исключений по слоям.
+ */
+export function AwarenessCardView({ card }: { card: AwarenessCard }) {
+  const isMyth = card.kind === 'миф';
+  return (
+    <article className={`r-awareness-card ${isMyth ? 'myth' : 'fact'}`}>
+      <header>
+        <span className="r-knowledge-kind">
+          <Icon name={isMyth ? 'shield' : 'spark'} size={16} />
+          {card.kind}
+        </span>
+        {card.confidence && <span className="r-awareness-confidence">{card.confidence}</span>}
+      </header>
+      <h3>{card.title}</h3>
+      <p className="r-awareness-hook">{card.hook}</p>
+      {card.motivation && <p className="r-awareness-motivation">{card.motivation}</p>}
+      <details className="r-evidence-detail">
+        <summary>
+          <span className="r-evidence-more">Разбор, границы и источники</span>
+          <Icon name="arrow" size={16} />
+        </summary>
+        <div>
+          <p className="r-evidence-limit">{card.explanation}</p>
+          {card.caveat && <p className="r-evidence-limit">{card.caveat}</p>}
+          {card.limitations && <p className="r-evidence-limit">{card.limitations}</p>}
+          <SourceList sources={card.sources} />
+        </div>
+      </details>
+    </article>
   );
 }

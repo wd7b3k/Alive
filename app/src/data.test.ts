@@ -95,6 +95,7 @@ const bootstrap: Bootstrap = {
   tobaccoEvents: [],
   todayCheckin: null,
   knowledge: EMPTY_KNOWLEDGE,
+  awareness: [],
 };
 
 describe('pickReplacements', () => {
