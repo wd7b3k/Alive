@@ -57,6 +57,7 @@ const bootstrap: Bootstrap = {
     { trigger_code: 'coffee', replacement_code: 'breath', tier: 'deeper', priority: 2 },
   ],
   meanings: [],
+  goals: [],
   userMeanings: [],
   userLinks: [],
   identityScripts: [],

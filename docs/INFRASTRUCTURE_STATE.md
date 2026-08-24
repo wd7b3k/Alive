@@ -122,9 +122,26 @@ Production source: `main`.
 
 2026-08-15 единичный `DNS_PROBE_FINISHED_NXDOMAIN` на мобильном устройстве не подтвердился как outage: production host и preview deployments фактически доступны. Не считать это инфраструктурным blocker без повторяемого подтверждения.
 
-Planned canonical host:
+Canonical host: `https://alive.hmnos.ru`.
 
-`https://alive.hmnos.ru`
+Состояние на 2026-08-25 — подготовлено, ждёт делегирования:
+
+| Что | Состояние |
+|---|---|
+| Зона `hmnos.ru` в Cloudflare | создана, статус `initializing` |
+| Назначенные NS | `ben.ns.cloudflare.com`, `cloe.ns.cloudflare.com` |
+| NS у регистратора | **не переключены** — это единственный оставшийся шаг, и он у владельца |
+| Custom domain на Pages-проекте `alive` | `alive.hmnos.ru` добавлен, статус `initializing`, сертификат Google |
+| DNS-запись | `CNAME alive.hmnos.ru → alive-aw2.pages.dev`, proxied |
+| Supabase Auth Site URL | всё ещё `https://alive-aw2.pages.dev` |
+
+Порядок оставшихся действий обязателен: сначала NS у регистратора, потом дождаться
+статуса `active` и выдачи сертификата, и только потом менять Site URL и Redirect URLs в
+Supabase. Смена Site URL раньше рабочего домена ломает вход всем.
+
+Отступление от Drift rule ниже зафиксировано осознанно: зона, custom domain и DNS-запись
+были созданы в Cloudflare раньше, чем описаны здесь, потому что имена NS-серверов
+назначаются при создании зоны и узнать их заранее нельзя. Документ обновлён сразу после.
 
 ## Drift rule
 

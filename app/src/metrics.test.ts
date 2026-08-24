@@ -95,6 +95,7 @@ const bootstrap: Bootstrap = {
   ],
   triggerReplacementMap: [],
   meanings: [],
+  goals: [],
   userMeanings: [],
   userLinks: [],
   identityScripts: [],

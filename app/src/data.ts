@@ -89,6 +89,23 @@ export type Meaning = {
   sort_order: number;
 };
 
+/**
+ * Карточка из общей библиотеки «Смыслов».
+ *
+ * Отличается от старого `meanings_catalog` тем, что несёт тип (цель / ценность /
+ * направление), вопрос для размышления и контекстные теги — то есть то, что
+ * позволяет разделу не быть списком одинаковых плиток.
+ */
+export type Goal = {
+  code: string;
+  goal_type: 'цель' | 'ценность' | 'направление';
+  title_ru: string;
+  body_ru: string;
+  reflection_prompt_ru: string | null;
+  context_tags: string[];
+  sort_order: number;
+};
+
 export type UserMeaning = {
   id: string;
   user_id: string;
@@ -200,6 +217,7 @@ export type Bootstrap = {
   replacements: Replacement[];
   triggerReplacementMap: TriggerReplacement[];
   meanings: Meaning[];
+  goals: Goal[];
   userMeanings: UserMeaning[];
   userLinks: UserLink[];
   identityScripts: IdentityScript[];
@@ -596,6 +614,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     replacementsRes,
     mapRes,
     meaningsRes,
+    goalsRes,
     userMeaningsRes,
     userLinksRes,
     identityRes,
@@ -615,6 +634,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope,' + SOURCE_COLUMNS).eq('published', true).order('sort_order'),
     supabase.from('trigger_replacement_map').select('trigger_code,replacement_code,tier,priority').order('priority'),
     supabase.from('meanings_catalog').select('id,title,body,sort_order').eq('published', true).order('sort_order'),
+    supabase.from('goals_catalog').select('code,goal_type,title_ru,body_ru,reflection_prompt_ru,context_tags,sort_order').eq('published', true).order('sort_order'),
     supabase.from('user_meanings').select('id,user_id,title,body,active,sort_order,created_at').eq('user_id', userId).is('deleted_at', null).order('sort_order'),
     supabase.from('user_links').select('id,user_id,title,situation,need_code,impulse,habitual_response,preferred_replacement_code,active,sort_order,created_at').eq('user_id', userId).is('deleted_at', null).order('sort_order'),
     supabase.from('identity_scripts_catalog').select('code,title,old_pattern,new_choice,sort_order').eq('published', true).order('sort_order'),
@@ -640,6 +660,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     replacements: toReplacements(replacementsRes.data),
     triggerReplacementMap: (mapRes.data ?? []) as TriggerReplacement[],
     meanings: (meaningsRes.data ?? []) as Meaning[],
+    goals: (goalsRes.data ?? []) as Goal[],
     userMeanings: (userMeaningsRes.data ?? []) as UserMeaning[],
     userLinks: (userLinksRes.data ?? []) as UserLink[],
     identityScripts: (identityRes.data ?? []) as IdentityScript[],
@@ -952,6 +973,7 @@ export type PublicCatalog = {
   replacements: Replacement[];
   triggerReplacementMap: TriggerReplacement[];
   meanings: Meaning[];
+  goals: Goal[];
   identityScripts: IdentityScript[];
   knowledge: Knowledge;
 };
@@ -967,12 +989,13 @@ export type PublicCatalog = {
  */
 export async function loadPublicCatalog(): Promise<PublicCatalog> {
   const supabase = requireClient();
-  const [triggersRes, needsRes, replacementsRes, mapRes, meaningsRes, identityRes, knowledge] = await Promise.all([
+  const [triggersRes, needsRes, replacementsRes, mapRes, meaningsRes, goalsRes, identityRes, knowledge] = await Promise.all([
     supabase.from('triggers_catalog').select('code,title,description,product_types,sort_order').eq('published', true).order('sort_order'),
     supabase.from('needs_catalog').select('code,title,description,sort_order').eq('published', true).order('sort_order'),
     supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope,' + SOURCE_COLUMNS).eq('published', true).order('sort_order'),
     supabase.from('trigger_replacement_map').select('trigger_code,replacement_code,tier,priority').order('priority'),
     supabase.from('meanings_catalog').select('id,title,body,sort_order').eq('published', true).order('sort_order'),
+    supabase.from('goals_catalog').select('code,goal_type,title_ru,body_ru,reflection_prompt_ru,context_tags,sort_order').eq('published', true).order('sort_order'),
     supabase.from('identity_scripts_catalog').select('code,title,old_pattern,new_choice,sort_order').eq('published', true).order('sort_order'),
     loadKnowledge().catch(() => EMPTY_KNOWLEDGE),
   ]);
@@ -983,6 +1006,7 @@ export async function loadPublicCatalog(): Promise<PublicCatalog> {
     replacements: toReplacements(unwrap(replacementsRes as never, 'replacements')),
     triggerReplacementMap: (unwrap(mapRes as never, 'triggerReplacementMap') as TriggerReplacement[]) ?? [],
     meanings: (unwrap(meaningsRes as never, 'meanings') as Meaning[]) ?? [],
+    goals: (unwrap(goalsRes as never, 'goals') as Goal[]) ?? [],
     identityScripts: (unwrap(identityRes as never, 'identityScripts') as IdentityScript[]) ?? [],
     knowledge,
   };
