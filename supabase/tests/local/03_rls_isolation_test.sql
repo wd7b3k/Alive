@@ -87,26 +87,33 @@ reset role;
 -- зато можно проверить то, что действительно важно и чего подсчёт строк в проде не
 -- проверяет: что anon видит опубликованную карточку и не видит черновик. Поэтому пара
 -- строк сеется прямо здесь, от имени владельца схемы, до переключения роли.
+-- Один источник на всех: после 20260825140000 карточка ссылается на библиографию,
+-- а не носит ссылку внутри себя.
+insert into public.evidence_sources (id, source_type, title_original, source_label_ru, url)
+values ('00000000-0000-4000-8000-00000000cafe', 'публикация', 'Test source', 'Тестовый источник',
+        'https://example.test/source')
+on conflict (url) do nothing;
+
 insert into public.facts_catalog
   (code, title, short_text, full_text, changes_ru, category, evidence_kind,
-   source_title, source_url, last_verified_at, published, surfaces)
+   source_id, last_verified_at, published, surfaces)
 values
   ('t_fact_published', 'Опубликованный факт', 'что известно', 'границы', 'что это меняет',
-   'behavior', 'guideline', 'Источник', 'https://example.test/fact', current_date, true,
+   'behavior', 'guideline', '00000000-0000-4000-8000-00000000cafe', current_date, true,
    array['today']::text[]),
   ('t_fact_draft', 'Черновик факта', 'что известно', 'границы', 'что это меняет',
-   'behavior', 'guideline', 'Источник', 'https://example.test/fact-draft', current_date, false,
+   'behavior', 'guideline', '00000000-0000-4000-8000-00000000cafe', current_date, false,
    '{}'::text[])
 on conflict (code) do nothing;
 
 insert into public.myths_catalog
   (code, title, short_reframe, explanation, changes_ru, mechanism,
-   source_title, source_url, last_verified_at, published, surfaces)
+   source_id, last_verified_at, published, surfaces)
 values
   ('t_myth_published', 'Опубликованный миф', 'что известно', 'механизм', 'что это меняет',
-   'cue_association', 'Источник', 'https://example.test/myth', current_date, true, '{}'::text[]),
+   'cue_association', '00000000-0000-4000-8000-00000000cafe', current_date, true, '{}'::text[]),
   ('t_myth_draft', 'Черновик мифа', 'что известно', 'механизм', 'что это меняет',
-   'cue_association', 'Источник', 'https://example.test/myth-draft', current_date, false, '{}'::text[])
+   'cue_association', '00000000-0000-4000-8000-00000000cafe', current_date, false, '{}'::text[])
 on conflict (code) do nothing;
 
 insert into public.goals_catalog (code, goal_type, title_ru, body_ru, published)
@@ -267,6 +274,23 @@ begin
   end if;
   if pulse.people_active <> 0 or pulse.episodes_resolved <> 0 then
     raise exception 'together_pulse ниже порога вернула ненулевые числа';
+  end if;
+
+  -- Библиография одна. Если колонки-дубликаты вернутся на каталог, ссылку снова
+  -- придётся чинить в трёх местах, и разойдётся уже не схема, а факты.
+  if exists (
+    select 1 from information_schema.columns
+     where table_schema = 'public'
+       and table_name in ('facts_catalog', 'myths_catalog', 'replacements_catalog')
+       and column_name in ('source_title', 'source_url')
+  ) then
+    raise exception 'На каталоге снова появилась встроенная ссылка вместо source_id';
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+     where table_schema = 'public' and table_name = 'facts_catalog' and column_name = 'source_id'
+  ) then
+    raise exception 'facts_catalog потерял ссылку на библиографию';
   end if;
 
   raise notice 'Аналитика: PASS (журнал закрыт, admin_product_health отказала, together_pulse молчит ниже порога)';

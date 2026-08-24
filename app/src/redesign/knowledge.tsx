@@ -29,6 +29,11 @@ function SourceList({ sources }: { sources: EvidenceSource[] }) {
           ) : (
             <span>{source.title}</span>
           )}
+          {/* Издание и год под ссылкой. Ссылка когда-нибудь умрёт — по названию и году
+              документ всё ещё можно найти, и ровно за этим библиография и нужна. */}
+          {(source.publication || source.year) && (
+            <small>{[source.publication, source.year].filter(Boolean).join(' · ')}</small>
+          )}
         </li>
       ))}
     </ul>
