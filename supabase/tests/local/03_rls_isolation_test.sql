@@ -116,6 +116,11 @@ values
    'cue_association', '00000000-0000-4000-8000-00000000cafe', current_date, false, '{}'::text[])
 on conflict (code) do nothing;
 
+-- Одно чужое событие в журнале: без него проверка «обычный пользователь читает ноль
+-- строк» прошла бы и на распахнутой политике, потому что читать было бы нечего.
+insert into public.analytics_events (user_id, event_type)
+values ('22222222-2222-2222-2222-222222222222', 'test_probe');
+
 insert into public.goals_catalog (code, goal_type, title_ru, body_ru, published)
 values
   ('t_goal_published', 'цель', 'Опубликованная цель', 'тело', true),
@@ -149,27 +154,30 @@ begin
   -- Проверяется и обратное — что черновик до входа не виден. Политика фильтрует по
   -- published, и без этой половины первая половина проходила бы и с политикой
   -- `using (true)`.
-  select count(*) into visible from public.facts_catalog;
-  if visible <> 1 then
-    raise exception 'anon видит % строк facts_catalog вместо одной опубликованной', visible;
-  end if;
-  select count(*) into visible from public.facts_catalog where code = 't_fact_draft';
+  -- Проверка не «сколько строк всего» — с 20260816211120 каталог засеян настоящим
+  -- контентом, и любое число здесь через месяц станет неверным. Проверяется свойство:
+  -- ни одной неопубликованной строки наружу, и опубликованная видна.
+  select count(*) into visible from public.facts_catalog where published = false;
   if visible <> 0 then
-    raise exception 'LEAK: неопубликованный факт виден до входа';
+    raise exception 'LEAK: до входа видно % неопубликованных фактов', visible;
+  end if;
+  select count(*) into visible from public.facts_catalog where code = 't_fact_published';
+  if visible <> 1 then
+    raise exception 'Опубликованный факт не читается до входа';
   end if;
 
-  select count(*) into visible from public.myths_catalog;
-  if visible <> 1 then
-    raise exception 'anon видит % строк myths_catalog вместо одной опубликованной', visible;
-  end if;
-  select count(*) into visible from public.myths_catalog where code = 't_myth_draft';
+  select count(*) into visible from public.myths_catalog where published = false;
   if visible <> 0 then
-    raise exception 'LEAK: неопубликованный миф виден до входа';
+    raise exception 'LEAK: до входа видно % неопубликованных мифов', visible;
+  end if;
+  select count(*) into visible from public.myths_catalog where code = 't_myth_published';
+  if visible <> 1 then
+    raise exception 'Опубликованный миф не читается до входа';
   end if;
 
-  select count(*) into visible from public.goals_catalog;
-  if visible <> 1 then
-    raise exception 'anon видит % строк goals_catalog вместо одной опубликованной', visible;
+  select count(*) into visible from public.goals_catalog where published = false;
+  if visible <> 0 then
+    raise exception 'LEAK: до входа видно % неопубликованных целей', visible;
   end if;
 
   -- Библиография и слой микроосознанности: строк локально нет, поэтому проверяется
@@ -194,8 +202,8 @@ begin
     'user_goals','user_awareness_state','user_myth_state',
     -- Аналитика и список администраторов. Журнал событий — это карта поведения
     -- человека в зависимости; читать его нельзя никому из клиентских ролей, наружу
-    -- выходят только агрегаты из admin_product_health и together_pulse.
-    'analytics_events','content_impressions','system_errors','app_admins'
+    -- выходят только агрегаты из get_together_summary.
+    'analytics_events','content_impressions','system_errors'
   ] loop
     begin
       execute format('select count(*) from public.%I', tbl) into leaked;
@@ -220,43 +228,50 @@ reset role;
 --   * вошедший человек не должен читать журнал событий — даже свой. Экрана с сырым
 --     журналом в продукте нет, а право, выданное «на будущее», однажды окажется
 --     выданным зря;
---   * admin_product_health обязана отказывать не-администратору. Она security definer,
---     то есть внутри читает всё; единственное, что стоит между обычным пользователем и
---     всей базой, — проверка в первой строке функции;
---   * together_pulse на маленькой группе обязана молчать. «Один человек вернулся после
---     срыва» в группе из двух — это указание пальцем.
+--   * схема private, где лежит allowlist администраторов, должна быть недоступна
+--     клиентским ролям целиком;
+--   * get_together_summary на маленькой группе обязана подавлять разбивку. «Один
+--     человек ниже своего baseline» в группе из двух — это указание пальцем.
 -- ---------------------------------------------------------------------------
 set role authenticated;
 select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', false);
 
 do $$
 declare
+  visible int;
   denied boolean;
-  pulse record;
+  pulse jsonb;
 begin
-  -- Проверяется само право, а не результат запроса. Счёт строк здесь ничего не
-  -- доказывает: таблица в тестовой базе пустая, и `select count(*)` вернёт ноль и при
-  -- выданном гранте, и при разрешающей политике. Ошибка была бы обнаружена только на
-  -- проде, с чужими данными внутри.
-  if has_table_privilege('authenticated', 'public.analytics_events', 'select') then
-    raise exception 'У роли authenticated есть право select на журнал событий';
+  -- Журнал событий закрыт политикой, а не отсутствием гранта: PostgREST требует
+  -- grant, чтобы вообще увидеть таблицу, и настоящим замком служит
+  -- analytics_events_admin_read (20260817170000). Поэтому проверяется результат, а не
+  -- право — и проверяется на непустой таблице: на пустой этот тест прошёл бы и с
+  -- политикой `using (true)`.
+  select count(*) into visible from public.analytics_events;
+  if visible <> 0 then
+    raise exception 'LEAK: обычный пользователь читает % строк журнала событий', visible;
   end if;
-  if has_table_privilege('authenticated', 'public.content_impressions', 'select') then
-    raise exception 'У роли authenticated есть право select на показы контента';
+  select count(*) into visible from public.system_errors;
+  if visible <> 0 then
+    raise exception 'LEAK: обычный пользователь читает системные ошибки';
   end if;
-  if has_table_privilege('authenticated', 'public.app_admins', 'select')
-     or has_table_privilege('anon', 'public.app_admins', 'select') then
-    raise exception 'Список администраторов доступен клиентской роли';
-  end if;
-  -- Писать своё событие — можно, иначе аналитики просто не будет.
+
+  -- Своё событие записать можно, иначе аналитики просто не будет.
   if not has_table_privilege('authenticated', 'public.analytics_events', 'insert') then
     raise exception 'Вошедший не может записать собственное событие — аналитика мертва';
   end if;
 
-  if public.is_app_admin() then
-    raise exception 'is_app_admin() вернула true для обычного пользователя';
+  -- usage на схему private у authenticated есть намеренно: без него нельзя вызвать
+  -- private.is_alive_admin(), а её вызывают сами политики. Закрыта должна быть таблица
+  -- со списком администраторов, и проверять надо именно её — а не схему, отобрав usage
+  -- у которой мы сломали бы все политики разом.
+  if has_table_privilege('authenticated', 'private.alive_admin_allowlist', 'select')
+     or has_table_privilege('anon', 'private.alive_admin_allowlist', 'select') then
+    raise exception 'Список администраторов доступен клиентской роли';
   end if;
 
+  -- Сводка здоровья продукта обязана отказать обычному пользователю: она security
+  -- definer и внутри читает всё.
   denied := false;
   begin
     perform * from public.admin_product_health(30);
@@ -267,13 +282,19 @@ begin
     raise exception 'admin_product_health отдала данные не-администратору';
   end if;
 
-  -- В базе теста два пользователя — это меньше порога когорты.
-  select * into pulse from public.together_pulse(7);
-  if pulse.enough_people then
-    raise exception 'together_pulse показала группу из двух человек';
+  -- «Вместе» отдаёт get_together_summary (20260816211200). Проверяется то, ради чего
+  -- у неё вообще есть порог: на группе из двух человек разбивка по baseline должна быть
+  -- подавлена, а не показана. Иначе «один человек ниже своего baseline» указывает
+  -- пальцем на конкретного человека.
+  pulse := public.get_together_summary(7);
+  if pulse is null then
+    raise exception 'get_together_summary не ответила вошедшему';
   end if;
-  if pulse.people_active <> 0 or pulse.episodes_resolved <> 0 then
-    raise exception 'together_pulse ниже порога вернула ненулевые числа';
+  if (pulse -> 'baseline' ->> 'suppressed') <> 'true' then
+    raise exception 'get_together_summary не подавила разбивку на группе из двух человек';
+  end if;
+  if pulse ? 'user_id' or pulse::text like '%private_note%' then
+    raise exception 'В сводку «Вместе» попало что-то персональное';
   end if;
 
   -- Библиография одна. Если колонки-дубликаты вернутся на каталог, ссылку снова
@@ -293,7 +314,7 @@ begin
     raise exception 'facts_catalog потерял ссылку на библиографию';
   end if;
 
-  raise notice 'Аналитика: PASS (журнал закрыт, admin_product_health отказала, together_pulse молчит ниже порога)';
+  raise notice 'Аналитика и «Вместе»: PASS (журнал закрыт, private недоступна, сводка подавлена ниже порога)';
 end
 $$;
 

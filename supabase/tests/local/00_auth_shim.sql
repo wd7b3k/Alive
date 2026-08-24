@@ -5,10 +5,17 @@
 
 create schema if not exists auth;
 
+-- Колонки повторяют реальную auth.users в той части, которую читают миграции.
+-- email_confirmed_at и raw_app_meta_data добавлены 2026-08-25: без них
+-- 20260817182500_v4_alpha1_admin_allowlist не применяется, а это ровно тот файл, где
+-- решается, кто становится администратором. Проверять его на шиме, где нет полей,
+-- по которым он принимает решение, было бы проверкой ни о чём.
 create table auth.users (
   id uuid primary key default gen_random_uuid(),
   email text,
+  email_confirmed_at timestamptz,
   raw_user_meta_data jsonb not null default '{}'::jsonb,
+  raw_app_meta_data jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 

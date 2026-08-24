@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { Bootstrap, TogetherPulse } from '../data';
-import { loadTogetherPulse } from '../data';
+import type { Bootstrap, TogetherSummary } from '../data';
+import { loadTogetherSummary } from '../data';
 import { statsForDays } from '../domain/metrics';
 import { reportError } from '../services/error-monitoring';
 import { Icon } from '../ui-icons';
@@ -9,17 +9,20 @@ import { Icon } from '../ui-icons';
  * «Вместе» — слой социальной нормализации.
  *
  * Человек в зависимости почти всегда держит два убеждения: что он один такой и что срыв
- * означает, что у него не выйдет. Оба ложные, и оба ломаются одним фактом — сегодня
- * столько-то людей прошли такой же момент, и столько-то вернулись после срыва.
+ * означает, что у него не выйдет. Оба ложные, и оба ломаются одним фактом — столько-то
+ * людей на этой неделе прошли такой же момент.
  *
- * Чего этот раздел не делает, и это решение, а не недоделка:
+ * Данные приходят из get_together_summary (20260816211200): одна функция, только
+ * агрегаты, ни одного идентификатора. Чего этот экран не делает, и это решение, а не
+ * недоделка:
  *
  * — никаких рейтингов и «лучших результатов». Продукт, который человеку в срыве
  *   показывает чужой рекорд, делает ровно то, чего обещал не делать;
- * — никаких чужих записей. Наружу выходят только числа по группе, и это ограничение
- *   стоит в базе, а не здесь: прав читать чужие эпизоды у клиента нет вовсе;
  * — никакого сравнения человека с группой. Сравнение, которое что-то значит, — с
- *   собственной прошлой неделей, и блок «у тебя» ниже говорит об этом прямо.
+ *   собственной прошлой неделей, и блок «у тебя» ниже говорит об этом прямо;
+ * — разбивка по исходному уровню не показывается, пока людей меньше порога, который
+ *   функция сообщает сама в `privacy_threshold`. Порог живёт в базе, а не здесь:
+ *   обещание приватности не должно зависеть от того, что нарисует интерфейс.
  */
 
 function plural(n: number, one: string, few: string, many: string) {
@@ -28,13 +31,6 @@ function plural(n: number, one: string, few: string, many: string) {
   if (mod10 === 1 && mod100 !== 11) return one;
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
   return many;
-}
-
-function hoursLabel(minutes: number) {
-  if (minutes < 90)
-    return `${Math.round(minutes)} ${plural(Math.round(minutes), 'минута', 'минуты', 'минут')}`;
-  const hours = Math.round(minutes / 60);
-  return `${hours} ${plural(hours, 'час', 'часа', 'часов')}`;
 }
 
 function Tile({
@@ -61,29 +57,31 @@ function Tile({
 }
 
 export function TogetherPage({ data }: { data: Bootstrap }) {
-  const [pulse, setPulse] = useState<TogetherPulse | null>(null);
+  const [summary, setSummary] = useState<TogetherSummary | null>(null);
   const [loaded, setLoaded] = useState(false);
   const mine = statsForDays(data, 7);
 
   useEffect(() => {
     let cancelled = false;
-    loadTogetherPulse(7)
+    loadTogetherSummary(7)
       .then((next) => {
         if (!cancelled) {
-          setPulse(next);
+          setSummary(next);
           setLoaded(true);
         }
       })
-      .catch((reason) => {
-        reportError(reason, { surface: 'together' });
+      .catch((reason: unknown) => {
+        reportError(reason, { surface: 'together', userId: data.profile.id });
         if (!cancelled) setLoaded(true);
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [data.profile.id]);
 
-  const enough = Boolean(pulse?.enough_people);
+  // Пока участников меньше порога, показывать общие числа нечестно: в маленькой группе
+  // они складываются в портрет конкретного человека.
+  const enough = Boolean(summary && summary.active_period >= summary.privacy_threshold);
 
   return (
     <main className="r-page">
@@ -111,39 +109,75 @@ export function TogetherPage({ data }: { data: Bootstrap }) {
           </div>
         )}
 
-        {loaded && enough && pulse && (
+        {loaded && enough && summary && (
           <>
             <div className="r-together-grid">
               <Tile
                 icon="people"
-                value={String(pulse.people_active)}
-                label={plural(pulse.people_active, 'человек', 'человека', 'человек') + ' за неделю'}
-                note="Кто-то отметил момент тяги или записал употребление"
+                value={String(summary.active_period)}
+                label={
+                  plural(summary.active_period, 'человек', 'человека', 'человек') + ' за неделю'
+                }
+                note={`Сегодня активны ${summary.active_today}`}
               />
               <Tile
                 icon="check"
-                value={String(pulse.episodes_resolved)}
+                value={String(summary.successful_responses)}
                 label={
-                  plural(pulse.episodes_resolved, 'момент', 'момента', 'моментов') + ' без никотина'
+                  plural(summary.successful_responses, 'момент', 'момента', 'моментов') +
+                  ' без никотина'
                 }
-                note="Тяга была разобрана и закончилась другим ответом"
+                note={`Всего разобрано моментов: ${summary.episodes_period}`}
               />
               <Tile
                 icon="heart"
-                value={String(pulse.people_returned_after_lapse)}
-                label="вернулись после срыва"
-                note="Закурили — и после этого снова прошли момент иначе"
+                value={String(summary.replacement_attempts)}
+                label="раз попробовали другой ответ"
+                note="Замена вместо привычного действия"
               />
               <Tile
                 icon="clock"
-                value={hoursLabel(pulse.pause_minutes)}
-                label="в паузе вместо ритуала"
-                note="Суммарное время разобранных моментов"
+                value={String(summary.participants_total)}
+                label="человек в эксперименте"
+                note="Всего прошли настройку"
               />
             </div>
-            <p className="r-muted">
-              Числа за последние 7 дней. Максимумов и рекордов здесь нет и не будет.
-            </p>
+
+            {summary.baseline.suppressed ? (
+              <p className="r-muted">
+                Разбивку по исходному уровню пока не показываем: людей с посчитанным baseline меньше{' '}
+                {summary.privacy_threshold}, и любая доля в такой группе указывает на конкретного
+                человека.
+              </p>
+            ) : (
+              <p className="r-muted">
+                Из {summary.baseline.evaluable} человек с посчитанным исходным уровнем ниже своего
+                baseline держатся {summary.baseline.below}, около него — {summary.baseline.near},
+                выше — {summary.baseline.above}. Медианное отклонение{' '}
+                {summary.baseline.median_delta_pct}%.
+              </p>
+            )}
+
+            {summary.mechanisms.length > 0 && (
+              <>
+                <h2>Что у людей срабатывает</h2>
+                <p>
+                  Не рейтинг замен, а наблюдение: какие механизмы чаще выбирают и насколько
+                  полезными их отмечают. Группы меньше трёх человек сюда не попадают.
+                </p>
+                <ul className="r-together-mine">
+                  {summary.mechanisms.slice(0, 3).map((item) => (
+                    <li key={item.mechanism}>
+                      <strong>{item.uses}</strong>
+                      <span>
+                        {item.mechanism}
+                        {item.avg_helpfulness !== null && ` · польза ${item.avg_helpfulness}/5`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </>
         )}
 

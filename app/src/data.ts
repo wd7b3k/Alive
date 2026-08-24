@@ -1,5 +1,4 @@
 import type { Session } from '@supabase/supabase-js';
-import { trackEvent } from './services/analytics';
 import { getSupabase } from './supabase';
 
 export type ProductType = 'cigarette' | 'hookah' | 'vape';
@@ -10,6 +9,12 @@ export type Profile = {
   display_name: string;
   avatar_url: string | null;
   onboarding_completed_at: string | null;
+  /**
+   * 'participant' | 'admin'. Ставится не приложением, а миграцией 20260817182500 по
+   * закрытому allowlist в схеме private. Здесь роль решает только, показывать ли
+   * ссылку на служебный раздел: доступ решает база.
+   */
+  role: string;
 };
 
 export type UserSettings = {
@@ -478,18 +483,41 @@ export async function loadKnowledge(): Promise<Knowledge> {
 // ---------------------------------------------------------------------------
 // «Вместе» и здоровье продукта
 // ---------------------------------------------------------------------------
-// Обе величины считаются в базе функциями security definer и приезжают сюда одной
-// строкой чисел. Прав читать сами таблицы у клиента нет — ни на события, ни на чужие
-// эпизоды, — поэтому здесь физически нечего показать, кроме агрегата.
+// Обе величины считаются в базе функциями security definer и приезжают сюда готовыми.
+// Прав читать чужие эпизоды у клиента нет, поэтому здесь физически нечего показать,
+// кроме агрегата.
 
-export type TogetherPulse = {
-  period_days: number;
-  /** false — людей за период меньше порога когорты; числа тогда нули и показывать их нельзя. */
-  enough_people: boolean;
-  people_active: number;
-  episodes_resolved: number;
-  people_returned_after_lapse: number;
-  pause_minutes: number;
+/**
+ * Сводка «Вместе» — то, что возвращает get_together_summary (20260816211200).
+ *
+ * `baseline.suppressed` — не техническая деталь, а обещание: пока людей с посчитанным
+ * исходным уровнем меньше `privacy_threshold`, разбивка не показывается вовсе. «Один
+ * человек ниже своего baseline» в маленькой группе указывает на конкретного человека.
+ */
+export type TogetherSummary = {
+  days: number;
+  participants_total: number;
+  active_period: number;
+  active_today: number;
+  episodes_period: number;
+  replacement_attempts: number;
+  successful_responses: number;
+  baseline: {
+    evaluable: number;
+    below: number | null;
+    near: number | null;
+    above: number | null;
+    median_delta_pct: number | null;
+    suppressed: boolean;
+  };
+  mechanisms: Array<{
+    mechanism: string;
+    uses: number;
+    users: number;
+    avg_helpfulness: number | null;
+  }>;
+  privacy_threshold: number;
+  generated_at: string;
 };
 
 export type ProductHealth = {
@@ -507,16 +535,13 @@ export type ProductHealth = {
   error_surfaces: string;
 };
 
-/**
- * Сводка по группе. Null, если функция недоступна — раздел тогда молчит, а не выдумывает.
- */
-export async function loadTogetherPulse(days = 7): Promise<TogetherPulse | null> {
+/** Сводка по группе. Null, если функция недоступна — раздел тогда молчит, а не выдумывает. */
+export async function loadTogetherSummary(days = 7): Promise<TogetherSummary | null> {
   const supabase = getSupabase();
   if (!supabase) return null;
-  const { data, error } = await supabase.rpc('together_pulse', { days });
+  const { data, error } = await supabase.rpc('get_together_summary', { p_days: days });
   if (error || !data) return null;
-  const row = Array.isArray(data) ? data[0] : data;
-  return (row as TogetherPulse) ?? null;
+  return data as TogetherSummary;
 }
 
 /** Здоровье продукта. База откажет вызывающему без прав — тогда возвращается null. */
@@ -527,21 +552,6 @@ export async function loadProductHealth(days = 30): Promise<ProductHealth | null
   if (error || !data) return null;
   const row = Array.isArray(data) ? data[0] : data;
   return (row as ProductHealth) ?? null;
-}
-
-/**
- * Администратор ли текущий пользователь.
- *
- * Ответ определяет только то, показывать ли ссылку на раздел. Настоящая проверка живёт
- * в самой функции admin_product_health: интерфейс, спрятавший кнопку, ничего не
- * защищает — защищает база, которая отказывает.
- */
-export async function loadIsAppAdmin(): Promise<boolean> {
-  const supabase = getSupabase();
-  if (!supabase) return false;
-  const { data, error } = await supabase.rpc('is_app_admin');
-  if (error) return false;
-  return data === true;
 }
 
 type ReplacementRow = Omit<Replacement, 'sources'> & {
@@ -597,7 +607,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     checkinRes,
     knowledge,
   ] = await Promise.all([
-    supabase.from('profiles').select('id,display_name,avatar_url,onboarding_completed_at').eq('id', userId).single(),
+    supabase.from('profiles').select('id,display_name,avatar_url,onboarding_completed_at,role').eq('id', userId).single(),
     supabase.from('user_settings').select('*').eq('user_id', userId).single(),
     supabase.from('user_nicotine_products').select('*').eq('user_id', userId).eq('enabled', true),
     supabase.from('triggers_catalog').select('code,title,description,product_types,sort_order').eq('published', true).order('sort_order'),
@@ -683,20 +693,8 @@ export async function saveOnboarding(session: Session, draft: OnboardingDraft) {
   const profile = await supabase.from('profiles').update({ onboarding_completed_at: now }).eq('id', userId);
   if (profile.error) throw new Error(profile.error.message);
 
-  // Второй шаг воронки. Без него нельзя отличить «люди не приходят» от «люди приходят
-  // и не доходят до настройки» — а это два разных продукта и два разных решения.
-  // В metadata только количество и коды продуктов: цель человека, написанная своими
-  // словами, в аналитику не уходит.
-  trackEvent(userId, {
-    event_type: 'onboarding_completed',
-    funnel_stage: 'onboarded',
-    surface: 'setup',
-    numeric_value: draft.products.length,
-    metadata: {
-      products: draft.products.map((item) => item.productType).join('+') || 'none',
-      has_goal: Boolean(draft.goalText),
-    },
-  });
+  // Событие «настройка завершена» пишет сама база: триггер alive_record_onboarding_completed
+  // (20260817172000). Дублировать его отсюда значило бы удваивать каждый шаг воронки.
 }
 
 export type GuidedEpisodeDraft = {
@@ -767,25 +765,9 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
     if (event.error) throw new Error(event.error.message);
   }
 
-  // Событие пишется последним, когда всё уже сохранено: аналитика должна отражать
-  // случившееся, а не начатое. Разница между тягой до и после — единственная числовая
-  // величина, по которой видно, помог ли разбор; она уходит в numeric_value, чтобы это
-  // считалось запросом, а не выгрузкой всех эпизодов наружу.
-  trackEvent(userId, {
-    event_type: 'episode_completed',
-    funnel_stage: 'first_episode',
-    surface: 'guided_flow',
-    product_type: draft.product,
-    trigger_code: draft.triggerCode === 'other' ? undefined : draft.triggerCode,
-    replacement_code: draft.replacementCode || undefined,
-    outcome: draft.outcome,
-    numeric_value:
-      draft.cravingBefore !== null && draft.cravingAfter !== null
-        ? draft.cravingBefore - draft.cravingAfter
-        : undefined,
-    episode_id: episodeId,
-    metadata: { need: draft.needCode || 'none', helpfulness: draft.helpfulness ?? -1 },
-  });
+  // Событие о завершённом эпизоде и о действии внутри него пишут триггеры
+  // alive_record_episode_completed и alive_record_episode_action. Отсюда не пишем
+  // ничего: два источника одного события дают двойную воронку.
 
   return episodeId;
 }
