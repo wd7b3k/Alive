@@ -82,6 +82,39 @@ reset role;
 -- zero rows from every table holding personal data. If a future migration ever
 -- grants anon more than intended, this fails loudly instead of leaking quietly.
 -- ---------------------------------------------------------------------------
+-- Контент «Фактов» живёт в проде и в репозиторий не переносится (см.
+-- 20260824110000), поэтому локально эти каталоги пустые. Считать строки здесь нечего —
+-- зато можно проверить то, что действительно важно и чего подсчёт строк в проде не
+-- проверяет: что anon видит опубликованную карточку и не видит черновик. Поэтому пара
+-- строк сеется прямо здесь, от имени владельца схемы, до переключения роли.
+insert into public.facts_catalog
+  (code, title, short_text, full_text, changes_ru, category, evidence_kind,
+   source_title, source_url, last_verified_at, published, surfaces)
+values
+  ('t_fact_published', 'Опубликованный факт', 'что известно', 'границы', 'что это меняет',
+   'behavior', 'guideline', 'Источник', 'https://example.test/fact', current_date, true,
+   array['today']::text[]),
+  ('t_fact_draft', 'Черновик факта', 'что известно', 'границы', 'что это меняет',
+   'behavior', 'guideline', 'Источник', 'https://example.test/fact-draft', current_date, false,
+   '{}'::text[])
+on conflict (code) do nothing;
+
+insert into public.myths_catalog
+  (code, title, short_reframe, explanation, changes_ru, mechanism,
+   source_title, source_url, last_verified_at, published, surfaces)
+values
+  ('t_myth_published', 'Опубликованный миф', 'что известно', 'механизм', 'что это меняет',
+   'cue_association', 'Источник', 'https://example.test/myth', current_date, true, '{}'::text[]),
+  ('t_myth_draft', 'Черновик мифа', 'что известно', 'механизм', 'что это меняет',
+   'cue_association', 'Источник', 'https://example.test/myth-draft', current_date, false, '{}'::text[])
+on conflict (code) do nothing;
+
+insert into public.goals_catalog (code, goal_type, title_ru, body_ru, published)
+values
+  ('t_goal_published', 'цель', 'Опубликованная цель', 'тело', true),
+  ('t_goal_draft', 'цель', 'Черновик цели', 'тело', false)
+on conflict (code) do nothing;
+
 set role anon;
 select set_config('request.jwt.claim.sub', '', false);
 
@@ -100,44 +133,58 @@ begin
   if visible = 0 then
     raise exception 'anon cannot read replacements_catalog — pre-login browsing would show nothing';
   end if;
-  -- The evidence layer is shown next to every replacement, including before sign-in.
-  -- If a future migration adds an evidence table and forgets the anon grant, the cards
-  -- would silently render without their source and level — which reads as "no evidence
-  -- exists" rather than "the query failed". Assert it instead.
-  select count(*) into visible from public.evidence_levels;
-  if visible = 0 then
-    raise exception 'anon cannot read evidence_levels — evidence badges would render with no meaning behind them';
+  -- «Факты и Мифы» стоит на таблицах, которые давно лежали в проде и были закрыты
+  -- наглухо: RLS включён, политик нет — то есть контент существовал и не доходил ни до
+  -- кого. Права открывает 20260824120000, и здесь они проверяются по факту, а не по
+  -- намерению: если следующая миграция снова закроет их, раздел молча опустеет, и
+  -- отличить это от «контента ещё нет» по экрану будет нельзя.
+  --
+  -- Проверяется и обратное — что черновик до входа не виден. Политика фильтрует по
+  -- published, и без этой половины первая половина проходила бы и с политикой
+  -- `using (true)`.
+  select count(*) into visible from public.facts_catalog;
+  if visible <> 1 then
+    raise exception 'anon видит % строк facts_catalog вместо одной опубликованной', visible;
   end if;
-  select count(*) into visible from public.evidence_sources;
-  if visible = 0 then
-    raise exception 'anon cannot read evidence_sources — citations would disappear before sign-in';
+  select count(*) into visible from public.facts_catalog where code = 't_fact_draft';
+  if visible <> 0 then
+    raise exception 'LEAK: неопубликованный факт виден до входа';
   end if;
-  select count(*) into visible from public.replacement_evidence;
-  if visible = 0 then
-    raise exception 'anon cannot read replacement_evidence — no replacement could be tied to its source';
+
+  select count(*) into visible from public.myths_catalog;
+  if visible <> 1 then
+    raise exception 'anon видит % строк myths_catalog вместо одной опубликованной', visible;
   end if;
-  -- «Факты и Мифы» is one of the things a visitor is meant to be able to read before
-  -- deciding to sign up, so its absence for anon is a product bug, not a permissions
-  -- detail.
-  select count(*) into visible from public.knowledge_catalog;
-  if visible = 0 then
-    raise exception 'anon cannot read knowledge_catalog — the Facts and Myths section would be empty before sign-in';
+  select count(*) into visible from public.myths_catalog where code = 't_myth_draft';
+  if visible <> 0 then
+    raise exception 'LEAK: неопубликованный миф виден до входа';
   end if;
-  select count(*) into visible from public.knowledge_evidence;
-  if visible = 0 then
-    raise exception 'anon cannot read knowledge_evidence — cards would render without their citations';
+
+  select count(*) into visible from public.goals_catalog;
+  if visible <> 1 then
+    raise exception 'anon видит % строк goals_catalog вместо одной опубликованной', visible;
   end if;
-  select count(*) into visible from public.knowledge_trigger_map;
-  if visible = 0 then
-    raise exception 'anon cannot read knowledge_trigger_map — per-trigger cards would never surface';
-  end if;
-  raise notice 'Anon catalog read: PASS (published catalogs, evidence layer and knowledge cards visible without a session)';
+
+  -- Библиография и слой микроосознанности: строк локально нет, поэтому проверяется
+  -- ровно то, что здесь и может сломаться — что select вообще разрешён. Без гранта или
+  -- политики это упало бы на insufficient_privilege, а не вернуло ноль.
+  perform 1 from public.evidence_sources limit 1;
+  perform 1 from public.evidence_claims limit 1;
+  perform 1 from public.evidence_claim_sources limit 1;
+  perform 1 from public.awareness_content limit 1;
+  perform 1 from public.awareness_content_contexts limit 1;
+
+  raise notice 'Anon catalog read: PASS (опубликованные каталоги видны, черновики — нет)';
 
   -- and nothing else may be
   foreach tbl in array array[
     'episodes','episode_actions','tobacco_events','user_meanings','user_links',
     'daily_checkins','daily_support_state','user_nicotine_products','profiles',
-    'user_settings','ugc_submissions'
+    'user_settings','ugc_submissions',
+    -- Персональное состояние поверх контентного слоя прода. До 20260824120000 у anon
+    -- на этих таблицах висели гранты insert/update/delete/truncate, и от чужих данных
+    -- его отделяло только отсутствие разрешающей политики.
+    'user_goals','user_awareness_state','user_myth_state'
   ] loop
     begin
       execute format('select count(*) from public.%I', tbl) into leaked;
@@ -149,7 +196,7 @@ begin
       raise exception 'LEAK: anonymous visitor can read % row(s) from private table %', leaked, tbl;
     end if;
   end loop;
-  raise notice 'Anon privacy: PASS (0 rows readable across 11 private tables)';
+  raise notice 'Anon privacy: PASS (0 rows readable across 14 private tables)';
 end
 $$;
 

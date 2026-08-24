@@ -21,7 +21,7 @@ function SourceList({ sources }: { sources: EvidenceSource[] }) {
   return (
     <ul className="r-source-list">
       {sources.map((source) => (
-        <li key={source.id}>
+        <li key={source.title}>
           {source.url ? (
             <a href={source.url} target="_blank" rel="noreferrer noopener">
               {source.title}
@@ -29,7 +29,6 @@ function SourceList({ sources }: { sources: EvidenceSource[] }) {
           ) : (
             <span>{source.title}</span>
           )}
-          <small>{[source.publisher, source.year].filter(Boolean).join(' · ')}</small>
         </li>
       ))}
     </ul>
@@ -153,7 +152,7 @@ export function KnowledgeCardView({
           <Icon name="arrow" size={16} />
         </summary>
         <div>
-          <p className="r-evidence-limit">{card.scope_note_ru}</p>
+          <p className="r-evidence-limit">{card.detail_ru}</p>
           {level && <p className="r-evidence-limit">{level.limit_ru}</p>}
           <SourceList sources={sources} />
         </div>

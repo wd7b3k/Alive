@@ -69,6 +69,9 @@ describe('RLS migration invariants', () => {
     'profiles',
     'user_settings',
     'ugc_submissions',
+    'user_goals',
+    'user_awareness_state',
+    'user_myth_state',
   ])('never grants anonymous access to %s', (table) => {
     expect(sql).not.toMatch(new RegExp(`grant [^;]+ on public\\.${table} to [^;]*anon`));
   });
@@ -107,4 +110,30 @@ describe('RLS migration invariants', () => {
       ).toBe(true);
     }
   });
+
+  // Названный дубль выведенного правила выше — и он тут не лишний. Эти четыре таблицы
+  // появились прямо в проде и попали в репозиторий только 2026-08-24
+  // (20260824110000). Пока их не было, выведенное правило их не видело: оно читает
+  // тела `create table`, а тел не существовало. Если этот файл когда-нибудь снова
+  // разъедется с продом и таблицы из миграций уйдут, проверка по именам упадёт вместо
+  // того, чтобы молча перестать что-либо проверять.
+  it.each(['facts_catalog', 'myths_catalog', 'goals_catalog', 'awareness_content'])(
+    'filters the anon policy on the production-owned catalog %s to published rows',
+    (table) => {
+      const policies = [
+        // [^\\w;] после имени таблицы обязательно: без него awareness_content
+        // сматчил бы и политику awareness_content_contexts, и тест проверял бы не ту
+        // таблицу — ровно тот класс ошибки, который здесь и ловится.
+        ...sql.matchAll(new RegExp(`create policy \\w+ on public\\.${table}[^\\w;][^;]*;`, 'g')),
+      ]
+        .map(([policy]) => policy)
+        .filter((policy) => /to anon/.test(policy));
+      expect(policies.length, `public.${table} has no anon select policy`).toBeGreaterThan(0);
+      for (const policy of policies) {
+        expect(policy, `public.${table} anon policy does not filter on published`).toContain(
+          'published = true',
+        );
+      }
+    },
+  );
 });

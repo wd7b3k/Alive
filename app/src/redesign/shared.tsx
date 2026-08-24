@@ -163,7 +163,7 @@ export function LoginPage() {
       <section className="r-login-card">
         <img src={logoUrl} className="r-login-logo" alt="ALIVE" />
         <p className="r-kicker">Некоммерческий эксперимент · метод ALIVE v1</p>
-        <h1>Не запрещать себе. Вернуть себе выбор.</h1>
+        <h1>Не запрещать себе — вернуть себе выбор</h1>
         <p className="r-lead">
           ALIVE помогает заметить, что именно запускает автоматический ритуал, понять, какое
           состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.

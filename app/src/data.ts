@@ -65,6 +65,8 @@ export type Replacement = {
   mechanism: string | null;
   evidence_level: string | null;
   evidence_scope: string | null;
+  source_title: string | null;
+  source_url: string | null;
 };
 
 export type TriggerReplacement = {
@@ -205,18 +207,27 @@ export type Bootstrap = {
 };
 
 // ---------------------------------------------------------------------------
-// Evidence layer and «Факты и Мифы»
+// Доказательный слой и «Факты и Мифы»
 // ---------------------------------------------------------------------------
+// Всё это читается из таблиц, которые уже были в проде до того, как о них узнал
+// репозиторий: facts_catalog, myths_catalog и колонки mechanism / evidence_level /
+// evidence_scope / source_title / source_url на replacements_catalog. Права на чтение
+// открывает 20260824120000, редакторский проход по тексту — 20260824130000,
+// раскладку по экранам — 20260824140000.
 
 export type EvidenceLevelCode = 'A' | 'B' | 'C';
 
 /**
- * What a letter means, and — separately — what it does not claim.
+ * Что означает буква — и, отдельно, чего она не утверждает.
  *
- * Two fields rather than one because a badge that shows only the strength of the
- * evidence invites the reader to hear more than was measured. `limit_ru` is the half
- * that keeps the badge honest, and the interface must never render one without a way
- * to reach the other.
+ * Два поля, а не одно: бейдж, показывающий только силу доказательства, приглашает
+ * прочитать больше, чем было измерено. `limit_ru` — та половина, которая удерживает
+ * бейдж честным, и интерфейс не должен показывать одно без доступа к другому.
+ *
+ * Определения живут в коде, а не в таблице. В базе на карточках стоит голая буква, и
+ * заводить ради трёх строк ещё один справочник — значит добавить в прод четвёртую
+ * сущность там, где уже есть три словаря уровней. Текст меняется вместе с
+ * интерфейсом, который его показывает, и приезжает тем же релизом.
  */
 export type EvidenceLevel = {
   code: EvidenceLevelCode;
@@ -224,43 +235,72 @@ export type EvidenceLevel = {
   label_ru: string;
   claim_ru: string;
   limit_ru: string;
-  sort_order: number;
 };
 
+export const EVIDENCE_LEVELS: readonly EvidenceLevel[] = [
+  {
+    code: 'A',
+    rank: 1,
+    label_ru: 'Обзор или руководство',
+    claim_ru:
+      'Вывод систематического обзора или клинического руководства — самый надёжный уровень, доступный по этой теме.',
+    limit_ru:
+      'Надёжно установленное среднее по многим людям. Это не обещание конкретного результата лично тебе.',
+  },
+  {
+    code: 'B',
+    rank: 2,
+    label_ru: 'Отдельные исследования',
+    claim_ru:
+      'Исследования есть, но они об отдельном эффекте или о состоянии в моменте, а не о самом отказе от курения.',
+    limit_ru: 'Не доказывает, что это поможет бросить. Долгосрочный эффект не установлен.',
+  },
+  {
+    code: 'C',
+    rank: 3,
+    label_ru: 'Эвристика ALIVE',
+    claim_ru: 'Приём или наблюдение, собранное из практики и здравого смысла продукта.',
+    limit_ru:
+      'Исследованием не проверено. Работает или нет — покажет твоя собственная статистика в разделе «Путь».',
+  },
+];
+
+/**
+ * Источник карточки.
+ *
+ * Ссылка лежит прямо на строке каталога — так устроен весь контент в проде, включая
+ * замены. Отдельная нормализованная библиография была бы аккуратнее, но она развела
+ * бы репозиторий и базу ещё на одну сущность ради выигрыша, которого при одном
+ * источнике на карточку просто нет.
+ */
 export type EvidenceSource = {
-  id: string;
-  code: string;
   title: string;
   url: string | null;
-  publisher: string | null;
-  kind: 'guideline' | 'review' | 'study';
-  year: number | null;
-  sort_order: number;
-};
-
-export type ReplacementEvidenceLink = {
-  replacement_code: string;
-  source_id: string;
-  sort_order: number;
 };
 
 /**
- * One card of «Факты и Мифы».
+ * Одна карточка «Фактов и Мифов».
  *
- * `kind` is the polarity: for a myth, `claim_ru` is a statement ALIVE is contradicting
- * and must never be rendered as if ALIVE asserted it. For a fact it is what ALIVE says.
+ * `kind` — полярность. У мифа `claim_ru` — это утверждение, которому продукт
+ * возражает, и оно не должно попасть на экран так, чтобы его можно было прочитать как
+ * позицию ALIVE. У факта `claim_ru` — то, что продукт утверждает сам.
  */
 export type KnowledgeCard = {
   code: string;
   kind: 'fact' | 'myth';
+  /** Заголовок: у факта — утверждение, у мифа — само убеждение. */
   claim_ru: string;
+  /** Что известно. */
   known_ru: string;
+  /** Что это меняет для тебя, сегодня. */
   changes_ru: string;
+  /** Механизм, детали и границы — то, что скрыто до раскрытия карточки. */
+  detail_ru: string;
   evidence_level: EvidenceLevelCode;
-  scope_note_ru: string;
   product_types: ProductType[];
   surfaces: KnowledgeSurface[];
   sort_order: number;
+  sources: EvidenceSource[];
 };
 
 export type KnowledgeSurface = 'flow' | 'links' | 'today' | 'public';
@@ -271,82 +311,141 @@ export type KnowledgeTriggerLink = {
   sort_order: number;
 };
 
-export type KnowledgeEvidenceLink = {
-  knowledge_code: string;
-  source_id: string;
-  sort_order: number;
-};
-
 export type Knowledge = {
-  levels: EvidenceLevel[];
-  sources: EvidenceSource[];
-  replacementEvidence: ReplacementEvidenceLink[];
+  levels: readonly EvidenceLevel[];
   cards: KnowledgeCard[];
   cardTriggers: KnowledgeTriggerLink[];
-  cardEvidence: KnowledgeEvidenceLink[];
 };
 
 /**
- * The shape to fall back to when the knowledge layer cannot be loaded.
+ * Состояние, к которому откатываемся, если слой не загрузился.
  *
- * Deliberately empty rather than partial: every selector treats "no data" as "show
- * nothing", so a failed fetch costs the reader an evidence badge and never blocks the
- * screen they actually came for.
+ * Пустое, а не частичное: каждый селектор трактует «нет данных» как «ничего не
+ * показывать», поэтому неудачный запрос стоит читателю бейджа и никогда не блокирует
+ * экран, за которым он пришёл. Уровни остаются — они не из сети.
  */
 export const EMPTY_KNOWLEDGE: Knowledge = {
-  levels: [],
-  sources: [],
-  replacementEvidence: [],
+  levels: EVIDENCE_LEVELS,
   cards: [],
   cardTriggers: [],
-  cardEvidence: [],
 };
 
+type FactRow = {
+  code: string;
+  title: string;
+  short_text: string;
+  full_text: string;
+  changes_ru: string;
+  evidence_level: string;
+  product_types: string[] | null;
+  surfaces: string[] | null;
+  sort_order: number;
+  source_title: string | null;
+  source_url: string | null;
+};
+
+type MythRow = {
+  code: string;
+  title: string;
+  short_reframe: string;
+  explanation: string;
+  changes_ru: string;
+  evidence_level: string;
+  product_types: string[] | null;
+  surfaces: string[] | null;
+  trigger_codes: string[] | null;
+  sort_order: number;
+  source_title: string | null;
+  source_url: string | null;
+};
+
+function levelCode(value: string | null | undefined): EvidenceLevelCode {
+  return value === 'A' || value === 'B' ? value : 'C';
+}
+
+function sourceOf(title: string | null, url: string | null): EvidenceSource[] {
+  if (!title) return [];
+  return [{ title, url }];
+}
+
+function surfacesOf(value: string[] | null): KnowledgeSurface[] {
+  const known: KnowledgeSurface[] = ['flow', 'links', 'today', 'public'];
+  return (value ?? []).filter((item): item is KnowledgeSurface =>
+    known.includes(item as KnowledgeSurface),
+  );
+}
+
 /**
- * Reads the whole knowledge layer. Six small editorial tables, all anon-readable, no
- * personal data — so this is the same call before and after sign-in.
+ * Читает «Факты и Мифы» из двух редакционных таблиц.
+ *
+ * Персональных данных здесь нет, обе таблицы открыты и для anon, поэтому вызов один и
+ * тот же до и после входа. Обе таблицы приводятся к общей форме карточки прямо здесь:
+ * дальше по коду разница между фактом и мифом — это одно поле `kind`, а не две ветки.
  */
 export async function loadKnowledge(): Promise<Knowledge> {
   const supabase = requireClient();
-  const [levelsRes, sourcesRes, replacementEvidenceRes, cardsRes, cardTriggersRes, cardEvidenceRes] =
-    await Promise.all([
-      supabase
-        .from('evidence_levels')
-        .select('code,rank,label_ru,claim_ru,limit_ru,sort_order')
-        .order('sort_order'),
-      supabase
-        .from('evidence_sources')
-        .select('id,code,title,url,publisher,kind,year,sort_order')
-        .eq('published', true)
-        .order('sort_order'),
-      supabase
-        .from('replacement_evidence')
-        .select('replacement_code,source_id,sort_order')
-        .order('sort_order'),
-      supabase
-        .from('knowledge_catalog')
-        .select(
-          'code,kind,claim_ru,known_ru,changes_ru,evidence_level,scope_note_ru,product_types,surfaces,sort_order',
-        )
-        .eq('published', true)
-        .order('sort_order'),
-      supabase
-        .from('knowledge_trigger_map')
-        .select('knowledge_code,trigger_code,sort_order')
-        .order('sort_order'),
-      supabase
-        .from('knowledge_evidence')
-        .select('knowledge_code,source_id,sort_order')
-        .order('sort_order'),
-    ]);
+  const [factsRes, mythsRes] = await Promise.all([
+    supabase
+      .from('facts_catalog')
+      .select(
+        'code,title,short_text,full_text,changes_ru,evidence_level,product_types,surfaces,sort_order,source_title,source_url',
+      )
+      .eq('published', true)
+      .order('sort_order'),
+    supabase
+      .from('myths_catalog')
+      .select(
+        'code,title,short_reframe,explanation,changes_ru,evidence_level,product_types,surfaces,trigger_codes,sort_order,source_title,source_url',
+      )
+      .eq('published', true)
+      .order('sort_order'),
+  ]);
+
+  const facts = ((factsRes.data ?? []) as FactRow[]).map<KnowledgeCard>((row) => ({
+    code: row.code,
+    kind: 'fact',
+    claim_ru: row.title,
+    known_ru: row.short_text,
+    changes_ru: row.changes_ru,
+    detail_ru: row.full_text,
+    evidence_level: levelCode(row.evidence_level),
+    product_types: (row.product_types ?? []) as ProductType[],
+    surfaces: surfacesOf(row.surfaces),
+    sort_order: row.sort_order,
+    sources: sourceOf(row.source_title, row.source_url),
+  }));
+
+  const mythRows = (mythsRes.data ?? []) as MythRow[];
+  const myths = mythRows.map<KnowledgeCard>((row) => ({
+    code: row.code,
+    kind: 'myth',
+    claim_ru: row.title,
+    known_ru: row.short_reframe,
+    changes_ru: row.changes_ru,
+    detail_ru: row.explanation,
+    evidence_level: levelCode(row.evidence_level),
+    product_types: (row.product_types ?? []) as ProductType[],
+    surfaces: surfacesOf(row.surfaces),
+    sort_order: row.sort_order,
+    sources: sourceOf(row.source_title, row.source_url),
+  }));
+
+  // Привязка карточки к триггеру живёт в массиве на строке мифа. Массив не умеет
+  // иметь внешний ключ, поэтому 20260824130000 отдельно проверяет, что ни один код
+  // в нём не висит в пустоту — иначе карточка просто перестала бы находиться, и
+  // заметить это было бы нечем.
+  const cardTriggers: KnowledgeTriggerLink[] = mythRows.flatMap((row) =>
+    (row.trigger_codes ?? []).map((trigger_code, index) => ({
+      knowledge_code: row.code,
+      trigger_code,
+      sort_order: index,
+    })),
+  );
 
   return {
-    levels: (levelsRes.data ?? []) as EvidenceLevel[],
-    sources: (sourcesRes.data ?? []) as EvidenceSource[],
-    replacementEvidence: (replacementEvidenceRes.data ?? []) as ReplacementEvidenceLink[],
-    cards: (cardsRes.data ?? []) as KnowledgeCard[],
-    cardTriggers: (cardTriggersRes.data ?? []) as KnowledgeTriggerLink[],
-    cardEvidence: (cardEvidenceRes.data ?? []) as KnowledgeEvidenceLink[],
+    levels: EVIDENCE_LEVELS,
+    cards: [...facts, ...myths].sort((a, b) => a.sort_order - b.sort_order),
+    cardTriggers,
   };
 }
 
@@ -393,7 +492,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     supabase.from('user_nicotine_products').select('*').eq('user_id', userId).eq('enabled', true),
     supabase.from('triggers_catalog').select('code,title,description,product_types,sort_order').eq('published', true).order('sort_order'),
     supabase.from('needs_catalog').select('code,title,description,sort_order').eq('published', true).order('sort_order'),
-    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope').eq('published', true).order('sort_order'),
+    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope,source_title,source_url').eq('published', true).order('sort_order'),
     supabase.from('trigger_replacement_map').select('trigger_code,replacement_code,tier,priority').order('priority'),
     supabase.from('meanings_catalog').select('id,title,body,sort_order').eq('published', true).order('sort_order'),
     supabase.from('user_meanings').select('id,user_id,title,body,active,sort_order,created_at').eq('user_id', userId).is('deleted_at', null).order('sort_order'),
@@ -744,7 +843,7 @@ export async function loadPublicCatalog(): Promise<PublicCatalog> {
   const [triggersRes, needsRes, replacementsRes, mapRes, meaningsRes, identityRes, knowledge] = await Promise.all([
     supabase.from('triggers_catalog').select('code,title,description,product_types,sort_order').eq('published', true).order('sort_order'),
     supabase.from('needs_catalog').select('code,title,description,sort_order').eq('published', true).order('sort_order'),
-    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope').eq('published', true).order('sort_order'),
+    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope,source_title,source_url').eq('published', true).order('sort_order'),
     supabase.from('trigger_replacement_map').select('trigger_code,replacement_code,tier,priority').order('priority'),
     supabase.from('meanings_catalog').select('id,title,body,sort_order').eq('published', true).order('sort_order'),
     supabase.from('identity_scripts_catalog').select('code,title,old_pattern,new_choice,sort_order').eq('published', true).order('sort_order'),

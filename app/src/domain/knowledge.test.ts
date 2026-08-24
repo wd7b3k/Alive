@@ -8,7 +8,7 @@ import {
   sourcesForCard,
   splitByKind,
 } from './knowledge';
-import type { Knowledge, KnowledgeCard, Replacement } from '../data';
+import { EVIDENCE_LEVELS, type Knowledge, type KnowledgeCard, type Replacement } from '../data';
 
 function card(over: Partial<KnowledgeCard> & Pick<KnowledgeCard, 'code'>): KnowledgeCard {
   return {
@@ -17,10 +17,11 @@ function card(over: Partial<KnowledgeCard> & Pick<KnowledgeCard, 'code'>): Knowl
     known_ru: 'known',
     changes_ru: 'changes',
     evidence_level: 'C',
-    scope_note_ru: 'scope',
+    detail_ru: 'detail',
     product_types: ['cigarette', 'hookah', 'vape'],
     surfaces: [],
     sort_order: 100,
+    sources: [],
     ...over,
   };
 }
@@ -41,71 +42,28 @@ function replacement(over: Partial<Replacement> & Pick<Replacement, 'code'>): Re
     mechanism: null,
     evidence_level: null,
     evidence_scope: null,
+    source_title: null,
+    source_url: null,
     ...over,
   };
 }
 
 const knowledge: Knowledge = {
-  levels: [
-    {
-      code: 'A',
-      rank: 1,
-      label_ru: 'Руководство',
-      claim_ru: 'claim A',
-      limit_ru: 'limit A',
-      sort_order: 10,
-    },
-    {
-      code: 'B',
-      rank: 2,
-      label_ru: 'Исследования',
-      claim_ru: 'claim B',
-      limit_ru: 'limit B',
-      sort_order: 20,
-    },
-    {
-      code: 'C',
-      rank: 3,
-      label_ru: 'Эвристика',
-      claim_ru: 'claim C',
-      limit_ru: 'limit C',
-      sort_order: 30,
-    },
-  ],
-  sources: [
-    {
-      id: 's1',
-      code: 'who',
-      title: 'WHO',
-      url: 'https://who',
-      publisher: 'WHO',
-      kind: 'guideline',
-      year: 2024,
-      sort_order: 10,
-    },
-    {
-      id: 's2',
-      code: 'pa',
-      title: 'Activity',
-      url: 'https://pa',
-      publisher: 'PubMed',
-      kind: 'review',
-      year: 2012,
-      sort_order: 20,
-    },
-  ],
-  replacementEvidence: [
-    { replacement_code: 'walk', source_id: 's2', sort_order: 20 },
-    { replacement_code: 'walk', source_id: 's1', sort_order: 10 },
-  ],
+  levels: EVIDENCE_LEVELS,
   cards: [
-    card({ code: 'wave', surfaces: ['flow', 'links', 'today'], sort_order: 10 }),
+    card({
+      code: 'wave',
+      surfaces: ['flow', 'links', 'today'],
+      sort_order: 10,
+      sources: [{ title: 'Activity', url: 'https://example.test/activity' }],
+    }),
     card({
       code: 'hookah',
       kind: 'myth',
       product_types: ['hookah'],
       surfaces: ['links', 'public'],
       sort_order: 20,
+      sources: [{ title: 'WHO', url: null }],
     }),
     card({ code: 'willpower', kind: 'myth', surfaces: ['today', 'public'], sort_order: 30 }),
     card({ code: 'unsurfaced', sort_order: 40 }),
@@ -115,15 +73,11 @@ const knowledge: Knowledge = {
     { knowledge_code: 'wave', trigger_code: 'tension', sort_order: 10 },
     { knowledge_code: 'hookah', trigger_code: 'social', sort_order: 10 },
   ],
-  cardEvidence: [
-    { knowledge_code: 'wave', source_id: 's2', sort_order: 10 },
-    { knowledge_code: 'hookah', source_id: 's1', sort_order: 10 },
-  ],
 };
 
 describe('levelOf', () => {
   it('returns the definition behind a letter', () => {
-    expect(levelOf(knowledge, 'B')?.label_ru).toBe('Исследования');
+    expect(levelOf(knowledge, 'B')?.label_ru).toBe('Отдельные исследования');
   });
 
   it('returns null rather than a bare letter when the level is unknown or absent', () => {
@@ -148,12 +102,20 @@ describe('evidenceForReplacement', () => {
     expect(evidence?.sources).toEqual([]);
   });
 
-  it('returns sources in editorial order, not insertion order', () => {
+  it('carries the citation that sits on the replacement itself', () => {
     const evidence = evidenceForReplacement(
       knowledge,
-      replacement({ code: 'walk', evidence_level: 'B', evidence_scope: 'только тяга в моменте' }),
+      replacement({
+        code: 'walk',
+        evidence_level: 'B',
+        evidence_scope: 'только тяга в моменте',
+        source_title: 'Physical activity and craving',
+        source_url: 'https://example.test/walk',
+      }),
     );
-    expect(evidence?.sources.map((s) => s.id)).toEqual(['s1', 's2']);
+    expect(evidence?.sources).toEqual([
+      { title: 'Physical activity and craving', url: 'https://example.test/walk' },
+    ]);
     expect(evidence?.scope).toBe('только тяга в моменте');
   });
 });
