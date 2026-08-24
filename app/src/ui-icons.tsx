@@ -5,7 +5,12 @@ export type IconName =
   | 'coffee' | 'meal' | 'phone' | 'work' | 'stress' | 'sleep' | 'car' | 'people'
   | 'pause' | 'calm' | 'energy' | 'focus' | 'finish' | 'connection' | 'hands'
   | 'breath' | 'tea' | 'walk' | 'music' | 'journal' | 'eye' | 'shield' | 'check'
-  | 'arrow' | 'plus' | 'trash' | 'close' | 'clock' | 'heart' | 'chart' | 'leaf';
+  | 'arrow' | 'plus' | 'trash' | 'close' | 'clock' | 'heart' | 'chart' | 'leaf'
+  // Added 2026-08-24 so every trigger in Связки can have its own icon. The old
+  // keyword matcher collapsed whole groups of triggers onto one glyph, which made
+  // the map of contexts look like a repeating pattern instead of a set of distinct
+  // moments — the exact opposite of what that screen is for.
+  | 'sunrise' | 'target' | 'flag' | 'flame' | 'question' | 'knot';
 
 const paths: Record<IconName, ReactNode> = {
   spark: <><path d="M12 2l1.7 5.1L19 9l-5.3 1.9L12 16l-1.7-5.1L5 9l5.3-1.9L12 2Z"/><path d="M5 15l.9 2.6L8.5 19l-2.6.9L5 22l-.9-2.1L1.5 19l2.6-1.4L5 15Z"/></>,
@@ -38,6 +43,12 @@ const paths: Record<IconName, ReactNode> = {
   journal: <><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V3Z"/><path d="M8 3v18M11 8h5M11 12h5"/></>,
   eye: <><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></>,
   shield: <><path d="M12 2 20 5v6c0 5-3 9-8 11-5-2-8-6-8-11V5l8-3Z"/><path d="m8 12 2.5 2.5L16 9"/></>,
+  sunrise: <><path d="M12 4v3M5.6 9.6 7.7 11.7M18.4 9.6 16.3 11.7M3 18h18M6 18a6 6 0 0 1 12 0"/><path d="M2 21h20"/></>,
+  target: <><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/><path d="M12 4V2M12 22v-2M4 12H2M22 12h-2"/></>,
+  flag: <><path d="M6 21V4"/><path d="M6 4.5h11l-2.2 3.7L17 12H6"/></>,
+  flame: <><path d="M12 21c3.6 0 6-2.4 6-5.6 0-4.2-4-6.2-4-10.4-3 1.6-4.6 4-4.6 6.4 0 1.2.5 2 1 2.6-1.6 0-2.6-1.2-2.6-2.8C6.6 13 6 14.2 6 15.4 6 18.6 8.4 21 12 21Z"/></>,
+  question: <><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4A2.6 2.6 0 0 1 14.6 10c0 1.8-2.6 2-2.6 3.8"/><path d="M12 17.4h.01"/></>,
+  knot: <><path d="M7 5c4 2 6 5 6 7s-2 5-6 7"/><path d="M17 5c-4 2-6 5-6 7s2 5 6 7"/></>,
   check: <path d="m4 12 5 5L20 6"/>,
   arrow: <><path d="M5 12h14M14 7l5 5-5 5"/></>,
   plus: <><path d="M12 5v14M5 12h14"/></>,

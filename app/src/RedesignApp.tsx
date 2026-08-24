@@ -100,7 +100,7 @@ function PublicHome({ catalog }: { catalog: PublicCatalog | null }) {
         <section className="r-now">
           <div className="r-now-copy">
             <p className="r-kicker">Некоммерческий эксперимент · метод ALIVE v1</p>
-            <h1>Не запрещать себе. Вернуть себе выбор.</h1>
+            <h1>Не запрещать себе — вернуть себе выбор</h1>
             <p className="r-lead">
               ALIVE помогает заметить, что именно запускает автоматический ритуал, понять, какое
               состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.
@@ -186,8 +186,11 @@ function PublicHome({ catalog }: { catalog: PublicCatalog | null }) {
             <div className="r-section-head">
               <div>
                 <p className="r-kicker">Библиотека ALIVE</p>
-                <h2>Опоры, которые можно примерить на себя</h2>
-                <p>Не «почему нельзя», а ради чего становится интереснее жить иначе.</p>
+                <h2>Ради чего становится интереснее жить иначе</h2>
+                <p>
+                  ALIVE не работает запретами. Он начинается с цели, ради которой стоит менять
+                  привычку, — и возвращает тебя к ней в тот момент, когда это труднее всего.
+                </p>
               </div>
             </div>
             <div className="r-meaning-grid">
@@ -208,7 +211,7 @@ function PublicHome({ catalog }: { catalog: PublicCatalog | null }) {
           <section className="r-section">
             <div className="r-section-head">
               <div>
-                <p className="r-kicker">Факты и Мифы</p>
+                <p className="r-kicker">Факты</p>
                 <h2>Что известно — и где это заканчивается</h2>
                 <p>
                   Ни одного утверждения без источника и без границ. Если исследования нет — так и
@@ -1107,7 +1110,7 @@ function Evening({
       <div className="r-modal-head">
         <div>
           <p className="r-kicker">Итоги дня · 3 минуты</p>
-          <h2>Не оценка дня. Карта обучения.</h2>
+          <h2>Не оценка дня, а карта обучения</h2>
         </div>
         <button className="r-icon-button" onClick={close}>
           <Icon name="close" />
@@ -1286,7 +1289,7 @@ function Today({
         <section className="r-section">
           <div className="r-section-head">
             <div>
-              <p className="r-kicker">Факты и Мифы</p>
+              <p className="r-kicker">Факты</p>
               <h2>Одна опора на сегодня</h2>
               <p>
                 Не мотивация, а то, что известно. Карточка меняется раз в сутки и не подстраивается
@@ -1415,7 +1418,7 @@ function Links({
     <main className="r-page">
       <section className="r-title">
         <p className="r-kicker">Связки</p>
-        <h1>Ситуация → потребность → привычный ответ.</h1>
+        <h1>Ситуация → потребность → привычный ответ</h1>
         <p>
           Ценность не в том, чтобы помнить все триггеры. Ценность — увидеть несколько повторяющихся
           сценариев и научиться возвращать нужное состояние напрямую.
@@ -1569,7 +1572,7 @@ function PathPage({ data }: { data: Bootstrap }) {
     <main className="r-page">
       <section className="r-title">
         <p className="r-kicker">Путь</p>
-        <h1>Не «сколько дней я идеален», а как меняется система.</h1>
+        <h1>Не «сколько дней я идеален», а как меняется система</h1>
         <p>
           Главные сигналы: интенсивность относительно твоего исходного уровня, прерванные Связки и
           ответы, которые реально помогают.
@@ -1714,7 +1717,7 @@ function Meanings({
     await reload();
   }
   async function remove(id: string) {
-    if (window.confirm('Удалить этот личный Смысл?')) {
+    if (window.confirm('Удалить эту цель?')) {
       await deleteMeaning(session, id);
       await reload();
     }
@@ -1727,27 +1730,28 @@ function Meanings({
     <main className="r-page">
       <section className="r-title meaning">
         <p className="r-kicker">Смыслы</p>
-        <h1>Не «почему нельзя». Ради чего становится интереснее жить иначе.</h1>
-        <p>
-          Смысл — короткая личная опора, которую стоит увидеть в момент, когда мозг предлагает
-          старый автоматический сценарий.
+        <h1>Ради чего становится интереснее жить иначе</h1>
+        <p className="r-lead">
+          Это раздел про твои цели, а не про запреты. Здесь ты формулируешь, какая жизнь тебе нужна
+          — и в момент, когда мозг предлагает старый автоматический сценарий, тебе есть что
+          противопоставить ему по существу, а не силой воли.
         </p>
         <ShellButton className="ghost" onClick={() => setAdding(!adding)}>
-          <Icon name="plus" size={18} /> Мой Смысл
+          <Icon name="plus" size={18} /> Добавить свою цель
         </ShellButton>
       </section>
       {adding && (
         <section className="r-section r-form">
           <label className="r-field">
-            <span>Заголовок</span>
+            <span>Цель одной строкой</span>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Я хочу увидеть себя без автоматизма"
+              placeholder="Хочу дышать полной грудью на подъёме, а не считать этажи"
             />
           </label>
           <label className="r-field">
-            <span>Что это значит для меня</span>
+            <span>Что изменится, когда это станет правдой</span>
             <textarea value={body} onChange={(e) => setBody(e.target.value)} />
           </label>
           <div className="r-actions">
@@ -1764,8 +1768,12 @@ function Meanings({
         <section className="r-section">
           <div className="r-section-head">
             <div>
-              <p className="r-kicker">Мои</p>
-              <h2>Личные опоры</h2>
+              <p className="r-kicker">Твои</p>
+              <h2>То, ради чего ты это делаешь</h2>
+              <p>
+                Это твои формулировки, и они появляются в потоке тяги в тот момент, когда важнее
+                всего вспомнить, куда ты идёшь.
+              </p>
             </div>
           </div>
           <div className="r-meaning-grid personal">
@@ -1790,7 +1798,11 @@ function Meanings({
         <div className="r-section-head">
           <div>
             <p className="r-kicker">Библиотека ALIVE</p>
-            <h2>Опоры, которые можно примерить на себя</h2>
+            <h2>Чужие цели, которые можно примерить на себя</h2>
+            <p>
+              Если своя формулировка пока не находится — возьми ту, что откликается, и перепиши её
+              под себя. Чужая цель здесь не образец, а способ нащупать свою.
+            </p>
           </div>
         </div>
         <div className="r-meaning-grid">
@@ -1836,7 +1848,11 @@ function Meanings({
 }
 
 /**
- * «Факты и Мифы» — the section itself.
+ * «Факты» — the section itself.
+ *
+ * Named «Факты» rather than «Факты и Мифы» (owner, 2026-08-24): the nav chip already
+ * said «Факты», and a section whose name is half a disclaimer reads as defensive. Myths
+ * are a kind of card inside it, not half the title.
  *
  * Facts first, myths second, and a short preamble that says what the letters mean
  * before any of them appear. A grade shown without its scale is just a shape.
@@ -1851,8 +1867,8 @@ function KnowledgePage({ data }: { data: Bootstrap }) {
   return (
     <main className="r-page">
       <div className="r-title">
-        <p className="r-kicker">Факты и Мифы</p>
-        <h1>Что известно — и где это заканчивается.</h1>
+        <p className="r-kicker">Факты</p>
+        <h1>Что известно — и где это заканчивается</h1>
         <p className="r-lead">
           Здесь нет мотивационных цитат. Каждая карточка говорит, что показывают исследования, чего
           они не показывают, и что из этого следует именно для тебя. Если источника нет — так и
@@ -1885,7 +1901,7 @@ function KnowledgePage({ data }: { data: Bootstrap }) {
         <section className="r-section">
           <div className="r-section-head">
             <div>
-              <p className="r-kicker">Факты</p>
+              <p className="r-kicker">Проверенное</p>
               <h2>{facts.length} вещи, которые стоит знать</h2>
             </div>
           </div>
@@ -1901,7 +1917,7 @@ function KnowledgePage({ data }: { data: Bootstrap }) {
         <section className="r-section">
           <div className="r-section-head">
             <div>
-              <p className="r-kicker">Мифы</p>
+              <p className="r-kicker">Опровергнутое</p>
               <h2>{myths.length} убеждений, которые не подтверждаются</h2>
               <p>
                 Заголовок каждой карточки — это то, что часто говорят, а не то, что утверждает
@@ -1933,7 +1949,7 @@ function Experiment() {
       <Brand compact />
       <article>
         <p className="r-kicker">Эксперимент над автоматизмом</p>
-        <h1>ALIVE ничего тебе не обещает.</h1>
+        <h1>ALIVE ничего тебе не обещает</h1>
         <p className="r-lead">
           Мы проверяем простую гипотезу: если достаточно раз заметить повторяющуюся Связку, понять
           её функцию и удовлетворить ту же потребность другим ответом, автоматический сценарий может
@@ -2067,7 +2083,7 @@ function Releases() {
       <Brand compact />
       <article>
         <p className="r-kicker">История версий</p>
-        <h1>ALIVE развивается как эксперимент.</h1>
+        <h1>ALIVE развивается как эксперимент</h1>
         <div className="r-release">
           <b>3.0</b>
           <div>
@@ -2111,7 +2127,7 @@ export default function RedesignApp() {
       <main className="r-login">
         <section className="r-login-card">
           <Brand />
-          <h1>Не хватает настроек подключения.</h1>
+          <h1>Не хватает настроек подключения</h1>
           <p>
             Интерфейс не получил адрес Supabase или публичный ключ. Секретные ключи сюда передавать
             нельзя.

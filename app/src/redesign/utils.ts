@@ -35,35 +35,60 @@ export function productIcon(product: ProductType): IconName {
   return 'vape';
 }
 
+/**
+ * Every published trigger gets its OWN icon, by code.
+ *
+ * This used to be keyword matching over the title, and it collapsed whole groups onto
+ * one glyph — five emotional triggers all rendered `stress`, four transition triggers
+ * all rendered `work`. On the Связки screen, where 28 contexts sit in one grid, that
+ * read as a repeating pattern rather than as distinct moments, which defeats the point
+ * of the screen: these are supposed to be recognisably different places in a life.
+ *
+ * An explicit map is also checkable — `redesign/utils.test.ts` asserts no two codes
+ * share an icon, so adding a trigger without giving it its own glyph fails the build
+ * rather than quietly doubling one up.
+ */
+const TRIGGER_ICONS: Readonly<Record<string, IconName>> = {
+  // Утро и ритуалы дня
+  wake_up: 'sunrise',
+  coffee: 'coffee',
+  after_meal: 'meal',
+  evening: 'tea',
+  before_sleep: 'sleep',
+  insomnia: 'clock',
+  // Среда
+  driving: 'car',
+  phone: 'phone',
+  work_computer: 'work',
+  hookah_venue: 'hookah',
+  social: 'people',
+  // Работа мысли и переходы
+  thinking: 'focus',
+  thought_complete: 'finish',
+  task_start: 'target',
+  task_transition: 'pause',
+  task_reward: 'check',
+  after_task: 'chart',
+  important_decision: 'path',
+  significant_action: 'flag',
+  after_sex: 'heart',
+  // Состояния
+  anger: 'flame',
+  irritability: 'energy',
+  anxiety: 'breath',
+  tension: 'knot',
+  uncertainty: 'question',
+  boredom: 'eye',
+  spontaneous: 'spark',
+  // Катч-олл
+  other: 'journal',
+};
+
 export function triggerIcon(item: Pick<Trigger, 'code' | 'title'>): IconName {
-  const text = `${item.code} ${item.title}`.toLowerCase();
-  if (text.includes('коф') || text.includes('coffee')) return 'coffee';
-  if (
-    text.includes('ед') ||
-    text.includes('обед') ||
-    text.includes('ужин') ||
-    text.includes('food')
-  )
-    return 'meal';
-  if (text.includes('телефон') || text.includes('скрол') || text.includes('scroll')) return 'phone';
-  if (text.includes('работ') || text.includes('комп') || text.includes('дел')) return 'work';
-  if (
-    text.includes('стресс') ||
-    text.includes('трев') ||
-    text.includes('напряж') ||
-    text.includes('мысл')
-  )
-    return 'stress';
-  if (text.includes('сон') || text.includes('утр') || text.includes('вечер')) return 'sleep';
-  if (text.includes('маш') || text.includes('дорог') || text.includes('drive')) return 'car';
-  if (
-    text.includes('люд') ||
-    text.includes('друз') ||
-    text.includes('разговор') ||
-    text.includes('компан')
-  )
-    return 'people';
-  if (text.includes('скук') || text.includes('пау')) return 'pause';
+  const mapped = TRIGGER_ICONS[item.code];
+  if (mapped) return mapped;
+  // A trigger added to the catalog without an entry here still renders something
+  // rather than nothing — but the test will have failed by then.
   return 'spark';
 }
 
@@ -109,7 +134,7 @@ export function replacementIcon(item: Replacement): IconName {
 export function replacementKind(item: Replacement) {
   if (item.category === 'nrt') return 'Никотин-заместительная терапия';
   if (item.category === 'food') return 'Еда и напиток';
-  if (item.category === 'meaning') return 'Смысл';
+  if (item.category === 'meaning') return 'Твоя цель';
   if (item.category === 'physical') return 'Тело';
   if (item.category === 'sensory') return 'Внимание и ощущения';
   return 'Другой ответ';
