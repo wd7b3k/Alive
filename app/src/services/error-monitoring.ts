@@ -1,5 +1,9 @@
+import { trackError } from './analytics';
+
 type ErrorContext = {
   surface?: string;
+  /** Кто это поймал, если сессия есть. Без неё запись всё равно уходит — анонимно. */
+  userId?: string | null;
 };
 
 type ErrorRecord = {
@@ -44,6 +48,19 @@ export function reportError(reason: unknown, context: ErrorContext = {}) {
   };
 
   console.error('[ALIVE]', record, reason);
+
+  // Отпечаток уезжает в базу, текст — нет. Сообщение об ошибке умеет утаскивать за
+  // собой пользовательские данные: значение поля, кусок ввода, идентификатор. По
+  // отпечатку группируется так же хорошо, а рассказать о человеке нечего.
+  //
+  // Локальный журнал в sessionStorage остаётся: он нужен, когда сети нет вовсе, а
+  // именно в этот момент ошибок больше всего.
+  trackError({
+    userId: context.userId ?? null,
+    surface: record.surface,
+    errorType: normalized.name,
+    fingerprint: record.fingerprint,
+  });
 
   try {
     const existing = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? '[]') as ErrorRecord[];

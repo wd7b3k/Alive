@@ -40,7 +40,13 @@ const products: NicotineProduct[] = [
 const today = new Date().toISOString();
 const yesterday = new Date(Date.now() - 86_400_000).toISOString();
 const bootstrap: Bootstrap = {
-  profile: { id: 'u1', display_name: 'Test', avatar_url: null, onboarding_completed_at: today },
+  profile: {
+    id: 'u1',
+    display_name: 'Test',
+    avatar_url: null,
+    onboarding_completed_at: today,
+    role: 'participant',
+  },
   settings: {
     user_id: 'u1',
     food_replacements_enabled: true,
@@ -84,8 +90,7 @@ const bootstrap: Bootstrap = {
       mechanism: null,
       evidence_level: null,
       evidence_scope: null,
-      source_title: null,
-      source_url: null,
+      sources: [],
     },
   ],
   triggerReplacementMap: [],

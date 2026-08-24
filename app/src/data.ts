@@ -9,6 +9,12 @@ export type Profile = {
   display_name: string;
   avatar_url: string | null;
   onboarding_completed_at: string | null;
+  /**
+   * 'participant' | 'admin'. Ставится не приложением, а миграцией 20260817182500 по
+   * закрытому allowlist в схеме private. Здесь роль решает только, показывать ли
+   * ссылку на служебный раздел: доступ решает база.
+   */
+  role: string;
 };
 
 export type UserSettings = {
@@ -65,8 +71,8 @@ export type Replacement = {
   mechanism: string | null;
   evidence_level: string | null;
   evidence_scope: string | null;
-  source_title: string | null;
-  source_url: string | null;
+  /** Источник из общей библиографии. Пустой массив — честное состояние эвристики уровня C. */
+  sources: EvidenceSource[];
 };
 
 export type TriggerReplacement = {
@@ -266,17 +272,49 @@ export const EVIDENCE_LEVELS: readonly EvidenceLevel[] = [
 ];
 
 /**
- * Источник карточки.
+ * Источник карточки — строка общей библиографии.
  *
- * Ссылка лежит прямо на строке каталога — так устроен весь контент в проде, включая
- * замены. Отдельная нормализованная библиография была бы аккуратнее, но она развела
- * бы репозиторий и базу ещё на одну сущность ради выигрыша, которого при одном
- * источнике на карточку просто нет.
+ * До 20260825140000 ссылка лежала прямо на карточке, и один и тот же документ был
+ * записан в трёх местах: на факте, на мифе и на замене. Теперь источник один, а
+ * каталоги ссылаются на него внешним ключом: умершую ссылку чинят в одном месте, и
+ * исправление доходит до всех карточек сразу.
+ *
+ * `title` — русская подпись, её и читает человек. `original` — как документ называется
+ * на самом деле; нужен, чтобы источник можно было найти, если ссылка всё-таки умрёт.
  */
 export type EvidenceSource = {
   title: string;
+  original: string | null;
   url: string | null;
+  publication: string | null;
+  year: number | null;
 };
+
+type SourceRow = {
+  title_original: string | null;
+  source_label_ru: string | null;
+  url: string | null;
+  publication: string | null;
+  publication_date: string | null;
+};
+
+const SOURCE_COLUMNS = 'evidence_sources(title_original,source_label_ru,url,publication,publication_date)';
+
+function toSource(row: SourceRow | SourceRow[] | null | undefined): EvidenceSource[] {
+  const one = Array.isArray(row) ? row[0] : row;
+  if (!one) return [];
+  const title = one.source_label_ru || one.title_original;
+  if (!title) return [];
+  return [
+    {
+      title,
+      original: one.title_original,
+      url: one.url,
+      publication: one.publication,
+      year: one.publication_date ? Number(one.publication_date.slice(0, 4)) || null : null,
+    },
+  ];
+}
 
 /**
  * Одна карточка «Фактов и Мифов».
@@ -340,8 +378,7 @@ type FactRow = {
   product_types: string[] | null;
   surfaces: string[] | null;
   sort_order: number;
-  source_title: string | null;
-  source_url: string | null;
+  evidence_sources: SourceRow | SourceRow[] | null;
 };
 
 type MythRow = {
@@ -355,17 +392,11 @@ type MythRow = {
   surfaces: string[] | null;
   trigger_codes: string[] | null;
   sort_order: number;
-  source_title: string | null;
-  source_url: string | null;
+  evidence_sources: SourceRow | SourceRow[] | null;
 };
 
 function levelCode(value: string | null | undefined): EvidenceLevelCode {
   return value === 'A' || value === 'B' ? value : 'C';
-}
-
-function sourceOf(title: string | null, url: string | null): EvidenceSource[] {
-  if (!title) return [];
-  return [{ title, url }];
 }
 
 function surfacesOf(value: string[] | null): KnowledgeSurface[] {
@@ -388,14 +419,14 @@ export async function loadKnowledge(): Promise<Knowledge> {
     supabase
       .from('facts_catalog')
       .select(
-        'code,title,short_text,full_text,changes_ru,evidence_level,product_types,surfaces,sort_order,source_title,source_url',
+        `code,title,short_text,full_text,changes_ru,evidence_level,product_types,surfaces,sort_order,${SOURCE_COLUMNS}`,
       )
       .eq('published', true)
       .order('sort_order'),
     supabase
       .from('myths_catalog')
       .select(
-        'code,title,short_reframe,explanation,changes_ru,evidence_level,product_types,surfaces,trigger_codes,sort_order,source_title,source_url',
+        `code,title,short_reframe,explanation,changes_ru,evidence_level,product_types,surfaces,trigger_codes,sort_order,${SOURCE_COLUMNS}`,
       )
       .eq('published', true)
       .order('sort_order'),
@@ -412,7 +443,7 @@ export async function loadKnowledge(): Promise<Knowledge> {
     product_types: (row.product_types ?? []) as ProductType[],
     surfaces: surfacesOf(row.surfaces),
     sort_order: row.sort_order,
-    sources: sourceOf(row.source_title, row.source_url),
+    sources: toSource(row.evidence_sources),
   }));
 
   const mythRows = (mythsRes.data ?? []) as MythRow[];
@@ -427,7 +458,7 @@ export async function loadKnowledge(): Promise<Knowledge> {
     product_types: (row.product_types ?? []) as ProductType[],
     surfaces: surfacesOf(row.surfaces),
     sort_order: row.sort_order,
-    sources: sourceOf(row.source_title, row.source_url),
+    sources: toSource(row.evidence_sources),
   }));
 
   // Привязка карточки к триггеру живёт в массиве на строке мифа. Массив не умеет
@@ -447,6 +478,95 @@ export async function loadKnowledge(): Promise<Knowledge> {
     cards: [...facts, ...myths].sort((a, b) => a.sort_order - b.sort_order),
     cardTriggers,
   };
+}
+
+// ---------------------------------------------------------------------------
+// «Вместе» и здоровье продукта
+// ---------------------------------------------------------------------------
+// Обе величины считаются в базе функциями security definer и приезжают сюда готовыми.
+// Прав читать чужие эпизоды у клиента нет, поэтому здесь физически нечего показать,
+// кроме агрегата.
+
+/**
+ * Сводка «Вместе» — то, что возвращает get_together_summary (20260816211200).
+ *
+ * `baseline.suppressed` — не техническая деталь, а обещание: пока людей с посчитанным
+ * исходным уровнем меньше `privacy_threshold`, разбивка не показывается вовсе. «Один
+ * человек ниже своего baseline» в маленькой группе указывает на конкретного человека.
+ */
+export type TogetherSummary = {
+  days: number;
+  participants_total: number;
+  active_period: number;
+  active_today: number;
+  episodes_period: number;
+  replacement_attempts: number;
+  successful_responses: number;
+  baseline: {
+    evaluable: number;
+    below: number | null;
+    near: number | null;
+    above: number | null;
+    median_delta_pct: number | null;
+    suppressed: boolean;
+  };
+  mechanisms: Array<{
+    mechanism: string;
+    uses: number;
+    users: number;
+    avg_helpfulness: number | null;
+  }>;
+  privacy_threshold: number;
+  generated_at: string;
+};
+
+export type ProductHealth = {
+  period_days: number;
+  people_total: number;
+  people_new: number;
+  people_active: number;
+  people_returning: number;
+  people_first_episode: number;
+  episodes_total: number;
+  episodes_resolved: number;
+  resolved_share: number | null;
+  people_improving: number;
+  errors_total: number;
+  error_surfaces: string;
+};
+
+/** Сводка по группе. Null, если функция недоступна — раздел тогда молчит, а не выдумывает. */
+export async function loadTogetherSummary(days = 7): Promise<TogetherSummary | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('get_together_summary', { p_days: days });
+  if (error || !data) return null;
+  return data as TogetherSummary;
+}
+
+/** Здоровье продукта. База откажет вызывающему без прав — тогда возвращается null. */
+export async function loadProductHealth(days = 30): Promise<ProductHealth | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('admin_product_health', { days });
+  if (error || !data) return null;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row as ProductHealth) ?? null;
+}
+
+type ReplacementRow = Omit<Replacement, 'sources'> & {
+  evidence_sources: SourceRow | SourceRow[] | null;
+};
+
+/**
+ * Приводит строку каталога замен к доменной форме: встроенный источник разворачивается
+ * в тот же тип, что и у карточек «Фактов». Один способ читать источник на весь продукт.
+ */
+function toReplacements(rows: unknown): Replacement[] {
+  return ((rows ?? []) as ReplacementRow[]).map(({ evidence_sources, ...rest }) => ({
+    ...rest,
+    sources: toSource(evidence_sources),
+  }));
 }
 
 function requireClient() {
@@ -487,12 +607,12 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     checkinRes,
     knowledge,
   ] = await Promise.all([
-    supabase.from('profiles').select('id,display_name,avatar_url,onboarding_completed_at').eq('id', userId).single(),
+    supabase.from('profiles').select('id,display_name,avatar_url,onboarding_completed_at,role').eq('id', userId).single(),
     supabase.from('user_settings').select('*').eq('user_id', userId).single(),
     supabase.from('user_nicotine_products').select('*').eq('user_id', userId).eq('enabled', true),
     supabase.from('triggers_catalog').select('code,title,description,product_types,sort_order').eq('published', true).order('sort_order'),
     supabase.from('needs_catalog').select('code,title,description,sort_order').eq('published', true).order('sort_order'),
-    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope,source_title,source_url').eq('published', true).order('sort_order'),
+    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope,' + SOURCE_COLUMNS).eq('published', true).order('sort_order'),
     supabase.from('trigger_replacement_map').select('trigger_code,replacement_code,tier,priority').order('priority'),
     supabase.from('meanings_catalog').select('id,title,body,sort_order').eq('published', true).order('sort_order'),
     supabase.from('user_meanings').select('id,user_id,title,body,active,sort_order,created_at').eq('user_id', userId).is('deleted_at', null).order('sort_order'),
@@ -517,7 +637,7 @@ export async function loadBootstrap(session: Session): Promise<Bootstrap> {
     products: (productsRes.data ?? []) as NicotineProduct[],
     triggers: (triggersRes.data ?? []) as Trigger[],
     needs: (needsRes.data ?? []) as Need[],
-    replacements: (replacementsRes.data ?? []) as Replacement[],
+    replacements: toReplacements(replacementsRes.data),
     triggerReplacementMap: (mapRes.data ?? []) as TriggerReplacement[],
     meanings: (meaningsRes.data ?? []) as Meaning[],
     userMeanings: (userMeaningsRes.data ?? []) as UserMeaning[],
@@ -572,6 +692,9 @@ export async function saveOnboarding(session: Session, draft: OnboardingDraft) {
 
   const profile = await supabase.from('profiles').update({ onboarding_completed_at: now }).eq('id', userId);
   if (profile.error) throw new Error(profile.error.message);
+
+  // Событие «настройка завершена» пишет сама база: триггер alive_record_onboarding_completed
+  // (20260817172000). Дублировать его отсюда значило бы удваивать каждый шаг воронки.
 }
 
 export type GuidedEpisodeDraft = {
@@ -641,6 +764,10 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
     });
     if (event.error) throw new Error(event.error.message);
   }
+
+  // Событие о завершённом эпизоде и о действии внутри него пишут триггеры
+  // alive_record_episode_completed и alive_record_episode_action. Отсюда не пишем
+  // ничего: два источника одного события дают двойную воронку.
 
   return episodeId;
 }
@@ -843,7 +970,7 @@ export async function loadPublicCatalog(): Promise<PublicCatalog> {
   const [triggersRes, needsRes, replacementsRes, mapRes, meaningsRes, identityRes, knowledge] = await Promise.all([
     supabase.from('triggers_catalog').select('code,title,description,product_types,sort_order').eq('published', true).order('sort_order'),
     supabase.from('needs_catalog').select('code,title,description,sort_order').eq('published', true).order('sort_order'),
-    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope,source_title,source_url').eq('published', true).order('sort_order'),
+    supabase.from('replacements_catalog').select('code,title,instruction,category,need_codes,product_types,eligibility,sort_order,icon,duration,summary,safety,mechanism,evidence_level,evidence_scope,' + SOURCE_COLUMNS).eq('published', true).order('sort_order'),
     supabase.from('trigger_replacement_map').select('trigger_code,replacement_code,tier,priority').order('priority'),
     supabase.from('meanings_catalog').select('id,title,body,sort_order').eq('published', true).order('sort_order'),
     supabase.from('identity_scripts_catalog').select('code,title,old_pattern,new_choice,sort_order').eq('published', true).order('sort_order'),
@@ -853,7 +980,7 @@ export async function loadPublicCatalog(): Promise<PublicCatalog> {
   return {
     triggers: (unwrap(triggersRes as never, 'triggers') as Trigger[]) ?? [],
     needs: (unwrap(needsRes as never, 'needs') as Need[]) ?? [],
-    replacements: (unwrap(replacementsRes as never, 'replacements') as Replacement[]) ?? [],
+    replacements: toReplacements(unwrap(replacementsRes as never, 'replacements')),
     triggerReplacementMap: (unwrap(mapRes as never, 'triggerReplacementMap') as TriggerReplacement[]) ?? [],
     meanings: (unwrap(meaningsRes as never, 'meanings') as Meaning[]) ?? [],
     identityScripts: (unwrap(identityRes as never, 'identityScripts') as IdentityScript[]) ?? [],

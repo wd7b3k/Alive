@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 import {
@@ -24,7 +24,7 @@ import {
   type UserMeaning,
   EMPTY_KNOWLEDGE,
 } from './data';
-import { saveQuickUse } from './actions';
+import { deleteMyAccount, exportMyData, saveQuickUse } from './actions';
 import { dailyUnits, replacementStats, statsForDays, triggerStats } from './domain/metrics';
 import { Icon } from './ui-icons';
 import { useLocation } from 'react-router-dom';
@@ -50,7 +50,11 @@ import {
   triggerIcon,
   when,
 } from './redesign/utils';
+import { trackEvent } from './services/analytics';
+import { reportError } from './services/error-monitoring';
 import { navigateTo as go } from './services/navigation';
+import { TogetherPage } from './redesign/together';
+import { HealthPage } from './redesign/health';
 
 /**
  * What a visitor sees before signing in: the real catalog, not a locked door.
@@ -740,6 +744,39 @@ function Guided({
     () => cardsForTrigger(data.knowledge, triggerCode, [product], 'flow'),
     [data.knowledge, triggerCode, product],
   );
+  // Открытие сценария и уход из него на полпути — единственные два события, которых
+  // не видит ни один триггер в базе: в таблицы при этом ничего не пишется. А это самый
+  // ценный сигнал воронки: человек нажал «меня тянет» и не дошёл до конца.
+  //
+  // `savedRef` отличает закрытие после сохранения от ухода. Без него каждый успешный
+  // разбор считался бы ещё и брошенным. `stepRef` нужен потому, что размонтирование
+  // видит замыкание момента подписки, а знать нужно, где человек остановился.
+  const savedRef = useRef(false);
+  const stepRef = useRef(step);
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
+
+  useEffect(() => {
+    trackEvent(session.user.id, {
+      event_type: 'flow_opened',
+      funnel_stage: 'first_episode',
+      surface: 'guided_flow',
+      trigger_code: initialTrigger || undefined,
+    });
+    return () => {
+      if (savedRef.current) return;
+      trackEvent(session.user.id, {
+        event_type: 'flow_abandoned',
+        funnel_stage: 'first_episode',
+        surface: 'guided_flow',
+        numeric_value: stepRef.current,
+      });
+    };
+    // Намеренно один раз за открытие сценария: событие про открытие, а не про шаг.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function save() {
     if (!triggerCode || !needCode) return;
     setBusy(true);
@@ -763,6 +800,7 @@ function Guided({
         outcome,
         tobacco,
       });
+      savedRef.current = true;
       await saved();
       close();
     } finally {
@@ -1538,7 +1576,7 @@ function Links({
             const cards = cardsForTrigger(data.knowledge, t.code, products, 'links');
             return (
               <div className="r-trigger-cell" key={t.code}>
-                <button onClick={() => openFlow(t.code)}>
+                <button className="r-trigger-card" onClick={() => openFlow(t.code)}>
                   <span className="r-choice-icon">
                     <Icon name={triggerIcon(t)} size={23} />
                   </span>
@@ -2009,10 +2047,69 @@ function Experiment() {
   );
 }
 
-function Profile({ data, editSetup }: { data: Bootstrap; editSetup: () => void }) {
+function Profile({
+  session,
+  data,
+  editSetup,
+}: {
+  session: Session;
+  data: Bootstrap;
+  editSetup: () => void;
+}) {
+  // Роль приезжает с профилем; ставит её не приложение, а миграция 20260817182500 по
+  // закрытому allowlist. Прячется здесь только ссылка — доступ решает база:
+  // admin_product_health отказывает не-администратору, и это проверено в
+  // supabase/tests/local, а не оставлено на совесть интерфейса.
+  const isAdmin = data.profile.role === 'admin';
+
+  const [dataBusy, setDataBusy] = useState<'export' | 'delete' | null>(null);
+  const [dataError, setDataError] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   async function logout() {
     await getSupabase()?.auth.signOut();
     go('/');
+  }
+
+  // Выгрузка собирается в браузере и сохраняется файлом. Никакого промежуточного
+  // сервиса: данные человека не должны проходить ещё через одно место только ради
+  // кнопки «скачать».
+  async function exportData() {
+    setDataBusy('export');
+    setDataError('');
+    try {
+      const payload = await exportMyData(session);
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `alive-data-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (reason) {
+      reportError(reason, { surface: 'profile-export', userId: data.profile.id });
+      setDataError('Не удалось собрать выгрузку. Попробуй ещё раз.');
+    } finally {
+      setDataBusy(null);
+    }
+  }
+
+  // Удаление необратимо, поэтому подтверждение отдельным шагом, а не `confirm()`:
+  // системное окно человек закрывает не глядя, и как раз здесь этого допускать нельзя.
+  async function deleteAccount() {
+    setDataBusy('delete');
+    setDataError('');
+    try {
+      await deleteMyAccount(session);
+      await getSupabase()?.auth.signOut();
+      go('/');
+    } catch (reason) {
+      reportError(reason, { surface: 'profile-delete', userId: data.profile.id });
+      setDataError('Не удалось удалить аккаунт. Данные на месте, попробуй ещё раз.');
+      setDataBusy(null);
+    }
   }
   return (
     <main className="r-page">
@@ -2024,6 +2121,23 @@ function Profile({ data, editSetup }: { data: Bootstrap; editSetup: () => void }
           превращаются в публичный профиль.
         </p>
       </section>
+      {isAdmin && (
+        <section className="r-section">
+          <div className="r-section-head">
+            <div>
+              <p className="r-kicker">Служебное</p>
+              <h2>Здоровье продукта</h2>
+              <p>
+                Агрегаты по всем участникам: сколько приходит, сколько остаётся, доходят ли до
+                разбора эпизода. Ни одной записи о конкретном человеке.
+              </p>
+            </div>
+            <ShellButton className="ghost small" onClick={() => go('/health')}>
+              Открыть
+            </ShellButton>
+          </div>
+        </section>
+      )}
       <section className="r-section">
         <div className="r-section-head">
           <div>
@@ -2072,6 +2186,56 @@ function Profile({ data, editSetup }: { data: Bootstrap; editSetup: () => void }
         <ShellButton className="danger" onClick={logout}>
           Выйти из аккаунта
         </ShellButton>
+      </section>
+      <section className="r-section">
+        <div className="r-section-head">
+          <div>
+            <p className="r-kicker">Твои данные</p>
+            <h2>Забрать или удалить</h2>
+            <p>
+              Всё, что ALIVE знает о тебе, можно выгрузить одним файлом или удалить целиком. Это не
+              одолжение и не поддержка по запросу — это твоё право, и оно работает без писем.
+            </p>
+          </div>
+        </div>
+        {dataError && <p className="r-data-error">{dataError}</p>}
+        <div className="r-data-actions">
+          <ShellButton className="ghost" onClick={exportData} disabled={dataBusy !== null}>
+            {dataBusy === 'export' ? 'Собираю…' : 'Выгрузить всё в файл'}
+          </ShellButton>
+          {confirmDelete ? (
+            <div className="r-confirm-delete">
+              <p>
+                <b>Удалить аккаунт?</b> Пропадут все эпизоды, Связки, Смыслы и заметки. Отменить
+                будет нельзя, и восстановить нам будет неоткуда.
+              </p>
+              <div>
+                <ShellButton
+                  className="danger"
+                  onClick={deleteAccount}
+                  disabled={dataBusy !== null}
+                >
+                  {dataBusy === 'delete' ? 'Удаляю…' : 'Да, удалить навсегда'}
+                </ShellButton>
+                <ShellButton className="ghost" onClick={() => setConfirmDelete(false)}>
+                  Отмена
+                </ShellButton>
+              </div>
+            </div>
+          ) : (
+            <ShellButton
+              className="danger"
+              onClick={() => setConfirmDelete(true)}
+              disabled={dataBusy !== null}
+            >
+              Удалить аккаунт
+            </ShellButton>
+          )}
+        </div>
+        <p className="r-footnote">
+          Перед удалением имеет смысл сначала выгрузить файл: после удаления данных не останется ни
+          у тебя, ни у нас.
+        </p>
       </section>
     </main>
   );
@@ -2206,8 +2370,11 @@ export default function RedesignApp() {
   else if (path === '/meanings')
     page = <Meanings session={session} data={data} reload={() => reload(session).then(() => {})} />;
   else if (path === '/knowledge') page = <KnowledgePage data={data} />;
+  else if (path === '/together') page = <TogetherPage data={data} />;
+  else if (path === '/health') page = <HealthPage />;
   else if (path === '/experiment') page = <Experiment />;
-  else if (path === '/profile') page = <Profile data={data} editSetup={() => setSetup(true)} />;
+  else if (path === '/profile')
+    page = <Profile session={session} data={data} editSetup={() => setSetup(true)} />;
   else if (path === '/releases') page = <Releases />;
   else
     page = (

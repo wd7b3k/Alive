@@ -42,8 +42,7 @@ function replacement(over: Partial<Replacement> & Pick<Replacement, 'code'>): Re
     mechanism: null,
     evidence_level: null,
     evidence_scope: null,
-    source_title: null,
-    source_url: null,
+    sources: [],
     ...over,
   };
 }
@@ -55,7 +54,15 @@ const knowledge: Knowledge = {
       code: 'wave',
       surfaces: ['flow', 'links', 'today'],
       sort_order: 10,
-      sources: [{ title: 'Activity', url: 'https://example.test/activity' }],
+      sources: [
+        {
+          title: 'Activity',
+          original: 'Physical activity and craving',
+          url: 'https://example.test/activity',
+          publication: 'Addiction',
+          year: 2024,
+        },
+      ],
     }),
     card({
       code: 'hookah',
@@ -63,7 +70,7 @@ const knowledge: Knowledge = {
       product_types: ['hookah'],
       surfaces: ['links', 'public'],
       sort_order: 20,
-      sources: [{ title: 'WHO', url: null }],
+      sources: [{ title: 'WHO', original: null, url: null, publication: null, year: null }],
     }),
     card({ code: 'willpower', kind: 'myth', surfaces: ['today', 'public'], sort_order: 30 }),
     card({ code: 'unsurfaced', sort_order: 40 }),
@@ -102,20 +109,25 @@ describe('evidenceForReplacement', () => {
     expect(evidence?.sources).toEqual([]);
   });
 
-  it('carries the citation that sits on the replacement itself', () => {
+  it('carries the citation the replacement points at in the shared bibliography', () => {
     const evidence = evidenceForReplacement(
       knowledge,
       replacement({
         code: 'walk',
         evidence_level: 'B',
         evidence_scope: 'только тяга в моменте',
-        source_title: 'Physical activity and craving',
-        source_url: 'https://example.test/walk',
+        sources: [
+          {
+            title: 'Физическая активность и тяга',
+            original: 'Physical activity and craving',
+            url: 'https://example.test/walk',
+            publication: 'Addiction',
+            year: 2024,
+          },
+        ],
       }),
     );
-    expect(evidence?.sources).toEqual([
-      { title: 'Physical activity and craving', url: 'https://example.test/walk' },
-    ]);
+    expect(evidence?.sources.map((item) => item.title)).toEqual(['Физическая активность и тяга']);
     expect(evidence?.scope).toBe('только тяга в моменте');
   });
 });

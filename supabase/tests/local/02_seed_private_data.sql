@@ -34,7 +34,18 @@ values
   ('11111111-1111-1111-1111-111111111111', true),
   ('22222222-2222-2222-2222-222222222222', false);
 
-insert into public.user_nicotine_products (user_id, product_type, role)
+-- baseline у первого пользователя заполнен намеренно: без него в
+-- get_together_summary некого сравнивать с исходным уровнем, `evaluable` остаётся
+-- нулём, и проверка порога подавления проходит всегда — то есть не проверяет ничего.
+-- Оба пользователя считаются завершившими настройку. get_together_summary берёт в
+-- расчёт только таких (participant_pool), и без этой строки любая проверка «Вместе»
+-- проходит на пустом множестве — то есть не проверяет ничего.
+update public.profiles
+   set onboarding_completed_at = now() - interval '10 days'
+ where id in ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222');
+
+insert into public.user_nicotine_products (user_id, product_type, role, baseline)
 values
-  ('11111111-1111-1111-1111-111111111111', 'cigarette', 'target_dependency'),
-  ('22222222-2222-2222-2222-222222222222', 'vape', 'target_dependency');
+  ('11111111-1111-1111-1111-111111111111', 'cigarette', 'target_dependency',
+   '{"cigarettes_per_day": 15}'::jsonb),
+  ('22222222-2222-2222-2222-222222222222', 'vape', 'target_dependency', '{}'::jsonb);

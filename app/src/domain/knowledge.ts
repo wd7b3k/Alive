@@ -39,7 +39,7 @@ export function evidenceForReplacement(
   knowledge: Knowledge,
   replacement: Pick<
     Replacement,
-    'code' | 'evidence_level' | 'evidence_scope' | 'mechanism' | 'source_title' | 'source_url'
+    'code' | 'evidence_level' | 'evidence_scope' | 'mechanism' | 'sources'
   >,
 ): {
   level: EvidenceLevel;
@@ -53,18 +53,17 @@ export function evidenceForReplacement(
     level,
     scope: replacement.evidence_scope,
     mechanism: replacement.mechanism,
-    sources: replacement.source_title
-      ? [{ title: replacement.source_title, url: replacement.source_url }]
-      : [],
+    sources: replacement.sources,
   };
 }
 
 /**
  * Источники карточки.
  *
- * Ссылка лежит на самой строке каталога, как и у замен, поэтому функция тривиальна.
- * Она всё равно существует: место, где раздел берёт источники, должно быть одно, и
- * когда у карточки появится второй источник, менять придётся только здесь.
+ * После 20260825140000 источник приезжает вместе со строкой каталога из общей
+ * библиографии, поэтому функция тривиальна. Она всё равно существует: место, где раздел
+ * берёт источники, должно быть одно, и когда у карточки появится второй источник,
+ * менять придётся только здесь.
  */
 export function sourcesForCard(_knowledge: Knowledge, card: KnowledgeCard): EvidenceSource[] {
   return card.sources;

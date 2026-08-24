@@ -23,8 +23,7 @@ function replacement(
     mechanism: null,
     evidence_level: null,
     evidence_scope: null,
-    source_title: null,
-    source_url: null,
+    sources: [],
   };
 }
 
@@ -33,6 +32,7 @@ const bootstrap: Bootstrap = {
     id: 'u1',
     display_name: 'Test',
     avatar_url: null,
+    role: 'participant',
     onboarding_completed_at: '2026-08-18T00:00:00.000Z',
   },
   settings: {
