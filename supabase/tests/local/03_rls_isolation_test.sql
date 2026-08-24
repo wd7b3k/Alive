@@ -179,6 +179,14 @@ begin
   if visible <> 0 then
     raise exception 'LEAK: до входа видно % неопубликованных целей', visible;
   end if;
+  -- Положительная половина появилась вместе с v3.1: раздел «Смыслы» целиком стоит на
+  -- этом чтении, и если следующая миграция закроет каталог, экран опустеет молча —
+  -- ровно так, как «Факты» пустовали месяц. Отрицательная проверка выше этого не ловит:
+  -- она проходит и на наглухо закрытой таблице.
+  select count(*) into visible from public.goals_catalog where code = 't_goal_published';
+  if visible <> 1 then
+    raise exception 'Опубликованный смысл не читается до входа — раздел «Смыслы» будет пустым';
+  end if;
 
   -- Библиография и слой микроосознанности: строк локально нет, поэтому проверяется
   -- ровно то, что здесь и может сломаться — что select вообще разрешён. Без гранта или
@@ -201,6 +209,11 @@ begin
    where schemaname = 'public' and tablename = 'myths_catalog' and cmd = 'SELECT';
   if visible <> 1 then
     raise exception 'На myths_catalog % политик чтения вместо одной', visible;
+  end if;
+  select count(*) into visible from pg_policies
+   where schemaname = 'public' and tablename = 'goals_catalog' and cmd = 'SELECT';
+  if visible <> 1 then
+    raise exception 'На goals_catalog % политик чтения вместо одной', visible;
   end if;
 
   raise notice 'Anon catalog read: PASS (опубликованные каталоги видны, черновики — нет)';
