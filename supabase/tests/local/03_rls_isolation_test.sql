@@ -189,6 +189,20 @@ begin
   perform 1 from public.awareness_content limit 1;
   perform 1 from public.awareness_content_contexts limit 1;
 
+  -- На каждой таблице каталога ровно одна разрешающая политика на чтение. Две
+  -- политики с одинаковым условием работают, но правку получает только одна из них, и
+  -- следующий человек будет менять доступ, не понимая, почему ничего не меняется.
+  select count(*) into visible from pg_policies
+   where schemaname = 'public' and tablename = 'facts_catalog' and cmd = 'SELECT';
+  if visible <> 1 then
+    raise exception 'На facts_catalog % политик чтения вместо одной', visible;
+  end if;
+  select count(*) into visible from pg_policies
+   where schemaname = 'public' and tablename = 'myths_catalog' and cmd = 'SELECT';
+  if visible <> 1 then
+    raise exception 'На myths_catalog % политик чтения вместо одной', visible;
+  end if;
+
   raise notice 'Anon catalog read: PASS (опубликованные каталоги видны, черновики — нет)';
 
   -- and nothing else may be

@@ -56,12 +56,19 @@ end $$;
 -- Раздел «Факты» — одна из вещей, которую посетитель должен увидеть до регистрации,
 -- поэтому anon читает тот же набор, что и вошедший. Персональных данных здесь нет.
 -- Условие published = true оставляет редактору возможность держать черновик в базе.
+-- Старые имена политик снимаются явно. 20260816211000 создал
+-- facts_catalog_read_published и myths_catalog_read_published для authenticated; если
+-- их не удалить, на таблице останутся две разрешающие политики с одинаковым условием.
+-- Работать будет, но следующий человек, который придёт менять доступ, будет править
+-- одну из двух и не понимать, почему ничего не изменилось.
 alter table public.facts_catalog enable row level security;
+drop policy if exists facts_catalog_read_published on public.facts_catalog;
 drop policy if exists facts_catalog_read on public.facts_catalog;
 create policy facts_catalog_read on public.facts_catalog
   for select to anon, authenticated using (published = true);
 
 alter table public.myths_catalog enable row level security;
+drop policy if exists myths_catalog_read_published on public.myths_catalog;
 drop policy if exists myths_catalog_read on public.myths_catalog;
 create policy myths_catalog_read on public.myths_catalog
   for select to anon, authenticated using (published = true);
