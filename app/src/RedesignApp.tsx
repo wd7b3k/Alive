@@ -16,6 +16,7 @@ import {
   submitMeaning,
   updateMeaning,
   type Bootstrap,
+  type Goal,
   type GuidedEpisodeDraft,
   type NicotineProduct,
   type OnboardingDraft,
@@ -36,6 +37,7 @@ import {
   KnowledgeCardView,
   KnowledgeCollapsed,
 } from './redesign/knowledge';
+import { GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
 import { Brand, Header, LoginPage, Modal, ShellButton, startGoogleSignIn } from './redesign/shared';
 import {
@@ -186,29 +188,19 @@ function PublicHome({ catalog }: { catalog: PublicCatalog | null }) {
           </section>
         )}
 
-        {catalog && catalog.meanings.length > 0 && (
+        {catalog && catalog.goals.length > 0 && (
           <section className="r-section">
             <div className="r-section-head">
               <div>
-                <p className="r-kicker">Библиотека ALIVE</p>
+                <p className="r-kicker">Смыслы</p>
                 <h2>Ради чего становится интереснее жить иначе</h2>
                 <p>
-                  ALIVE не работает запретами. Он начинается с цели, ради которой стоит менять
-                  привычку, — и возвращает тебя к ней в тот момент, когда это труднее всего.
+                  ALIVE не работает запретами. Он начинается со смысла, ради которого стоит менять
+                  привычку, — и возвращает тебя к нему в тот момент, когда это труднее всего.
                 </p>
               </div>
             </div>
-            <div className="r-meaning-grid">
-              {catalog.meanings.map((meaning) => (
-                <article key={meaning.id}>
-                  <span className="r-meaning-symbol">
-                    <Icon name="meaning" size={25} />
-                  </span>
-                  <h3>{meaning.title}</h3>
-                  <p>{meaning.body}</p>
-                </article>
-              ))}
-            </div>
+            <GoalLibrary goals={catalog.goals.slice(0, 6)} />
           </section>
         )}
 
@@ -935,6 +927,7 @@ function Guided({
               </p>
             </div>
           </div>
+          <FlowMeaning data={data} />
           {flowCards.map((card) => (
             <KnowledgeCollapsed key={card.code} knowledge={data.knowledge} card={card} />
           ))}
@@ -1253,12 +1246,12 @@ function Today({
           <p className="r-kicker">Сегодня · {data.profile.display_name}</p>
           <h1>
             {today.successfulResponses > 0
-              ? `Сегодня выбор уже ${today.successfulResponses === 1 ? 'один раз' : 'несколько раз'} остался твоим.`
-              : 'Тебе не нужно победить день целиком.'}
+              ? `Сегодня выбор уже ${today.successfulResponses === 1 ? 'один раз' : 'несколько раз'} остался твоим`
+              : 'Тебе не нужно победить день целиком'}
           </h1>
           <p>
             {data.settings.goal_text ||
-              'Нужен только следующий момент, в котором ты заметишь автоматизм чуть раньше обычного.'}
+              'Нужен только следующий момент, в котором ты заметишь автоматизм чуть раньше обычного'}
           </p>
           {phrase && <blockquote>{phrase}</blockquote>}
         </div>
@@ -1735,6 +1728,36 @@ function PathPage({ data }: { data: Bootstrap }) {
   );
 }
 
+/**
+ * The «зачем» line inside the craving flow.
+ *
+ * The Смыслы section is worth nothing if it only exists on its own page: the moment a
+ * person needs their reason is the moment they are choosing a replacement, not the
+ * moment they browse a library. Their own wording wins over the ALIVE catalog whenever
+ * they have any, and the catalog card only fills the silence.
+ */
+function FlowMeaning({ data }: { data: Bootstrap }) {
+  const mine = data.userMeanings.filter((m) => m.active);
+  const today = new Date().toISOString().slice(0, 10);
+  if (mine.length) {
+    const pick = mine[new Date().getDate() % mine.length];
+    return (
+      <p className="r-flow-meaning">
+        <Icon name="meaning" size={15} />
+        <span>{pick.title}</span>
+      </p>
+    );
+  }
+  const goal = goalOfTheDay(data.goals, today);
+  if (!goal) return null;
+  return (
+    <p className="r-flow-meaning">
+      <Icon name="meaning" size={15} />
+      <span>{goal.reflection_prompt_ru ?? goal.title_ru}</span>
+    </p>
+  );
+}
+
 function Meanings({
   session,
   data,
@@ -1747,6 +1770,8 @@ function Meanings({
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const spotlight = goalOfTheDay(data.goals, new Date().toISOString().slice(0, 10));
+  const active = data.userMeanings.filter((m) => m.active).length;
   async function add() {
     if (!title.trim() || !body.trim()) return;
     await addMeaning(session, title.trim(), body.trim());
@@ -1754,6 +1779,19 @@ function Meanings({
     setTitle('');
     setBody('');
     await reload();
+  }
+  // Taking a library card does not save it: it opens the editor with someone else's
+  // wording already in the fields, so the person edits a draft instead of facing an
+  // empty box. What lands in the database is always their own text.
+  function take(goal: Goal) {
+    setTitle(goal.title_ru);
+    setBody(goal.body_ru);
+    setAdding(true);
+    window.requestAnimationFrame(() =>
+      document
+        .getElementById('r-meaning-form')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+    );
   }
   async function remove(id: string) {
     if (window.confirm('Удалить эту цель?')) {
@@ -1775,12 +1813,23 @@ function Meanings({
           — и в момент, когда мозг предлагает старый автоматический сценарий, тебе есть что
           противопоставить ему по существу, а не силой воли.
         </p>
+        <div className="r-meaning-stats">
+          <span>
+            <b>{active}</b>
+            {` ${plural(active, 'твоя', 'твои', 'твоих')} ${plural(active, 'формулировка', 'формулировки', 'формулировок')}`}
+          </span>
+          <span>
+            <b>{data.goals.length}</b> {plural(data.goals.length, 'смысл', 'смысла', 'смыслов')} в
+            библиотеке
+          </span>
+        </div>
         <ShellButton className="ghost" onClick={() => setAdding(!adding)}>
           <Icon name="plus" size={18} /> Добавить свою цель
         </ShellButton>
       </section>
+      {spotlight && <GoalSpotlight goal={spotlight} onTake={take} />}
       {adding && (
-        <section className="r-section r-form">
+        <section className="r-section r-form" id="r-meaning-form">
           <label className="r-field">
             <span>Цель одной строкой</span>
             <input
@@ -1837,24 +1886,15 @@ function Meanings({
         <div className="r-section-head">
           <div>
             <p className="r-kicker">Библиотека ALIVE</p>
-            <h2>Чужие цели, которые можно примерить на себя</h2>
+            <h2>Чужие смыслы, которые можно примерить на себя</h2>
             <p>
               Если своя формулировка пока не находится — возьми ту, что откликается, и перепиши её
-              под себя. Чужая цель здесь не образец, а способ нащупать свою.
+              под себя. Чужая цель здесь не образец, а способ нащупать свою. У каждой карточки есть
+              вопрос: на него отвечать интереснее, чем соглашаться с лозунгом.
             </p>
           </div>
         </div>
-        <div className="r-meaning-grid">
-          {data.meanings.map((m) => (
-            <article key={m.id}>
-              <span className="r-meaning-symbol">
-                <Icon name="meaning" size={25} />
-              </span>
-              <h3>{m.title}</h3>
-              <p>{m.body}</p>
-            </article>
-          ))}
-        </div>
+        <GoalLibrary goals={data.goals} onTake={take} />
       </section>
       <section className="r-section">
         <div className="r-section-head">
