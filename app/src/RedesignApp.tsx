@@ -1576,7 +1576,7 @@ function Links({
             const cards = cardsForTrigger(data.knowledge, t.code, products, 'links');
             return (
               <div className="r-trigger-cell" key={t.code}>
-                <button onClick={() => openFlow(t.code)}>
+                <button className="r-trigger-card" onClick={() => openFlow(t.code)}>
                   <span className="r-choice-icon">
                     <Icon name={triggerIcon(t)} size={23} />
                   </span>
