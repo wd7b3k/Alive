@@ -33,7 +33,7 @@ alter table public.myths_catalog add constraint myths_catalog_surfaces_known
 -- На первый экран до входа отобраны те, что показывают выигрыш и помощь, а не ущерб.
 -- Посетитель, который ещё ничего не решил, не должен встречать продукт цифрой о
 -- потерянном десятилетии.
-update public.facts_catalog set surfaces = v.s
+update public.facts_catalog set surfaces = v.s::text[]
 from (values
   ('craving_is_signal',        array['flow', 'links', 'today']),
   ('cues_matter',              array['links', 'today']),
@@ -63,7 +63,7 @@ where facts_catalog.code = v.code;
 -- У мифа есть trigger_codes, поэтому в Связках он встаёт ровно к своему моменту:
 -- «кофе без сигареты уже не тот» — на карточке триггера «кофе», и нигде больше.
 -- В поток идут те, что отвечают на мысль, возникающую прямо во время тяги.
-update public.myths_catalog set surfaces = v.s
+update public.myths_catalog set surfaces = v.s::text[]
 from (values
   ('calms_me',                    array['flow', 'links', 'today', 'public']),
   ('can_quit_anytime',            array['links', 'today']),
@@ -106,14 +106,22 @@ begin
 
   -- Каждая из четырёх поверхностей должна получить хотя бы одну карточку, иначе на
   -- экране будет пусто, и понять это можно будет только глазами.
-  select string_agg(s, ', ') into bad from unnest(array['flow', 'links', 'today', 'public']) s
-   where not exists (
-     select 1 from public.facts_catalog where s = any(surfaces)
-     union all
-     select 1 from public.myths_catalog where s = any(surfaces)
-   );
-  if bad is not null then
-    raise exception 'Поверхность осталась без единой карточки: %', bad;
+  --
+  -- Проверка пропускается на пустых каталогах. Контент живёт в проде и в репозитории не
+  -- воспроизводится (см. 20260824110000), поэтому на чистой локальной базе — той, на
+  -- которой гоняется supabase/tests/local — обновлять здесь нечего, и требовать карточку
+  -- на каждой поверхности значило бы валить тест за то, что база пустая, а не за то, что
+  -- раскладка неверна.
+  if exists (select 1 from public.facts_catalog union all select 1 from public.myths_catalog) then
+    select string_agg(s, ', ') into bad from unnest(array['flow', 'links', 'today', 'public']) s
+     where not exists (
+       select 1 from public.facts_catalog where s = any(surfaces)
+       union all
+       select 1 from public.myths_catalog where s = any(surfaces)
+     );
+    if bad is not null then
+      raise exception 'Поверхность осталась без единой карточки: %', bad;
+    end if;
   end if;
 end $$;
 
