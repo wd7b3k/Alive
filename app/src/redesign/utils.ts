@@ -149,3 +149,22 @@ export function tobaccoSummary(event: Bootstrap['tobaccoEvents'][number] | undef
   if (event.vape_puffs) return `${fmt(event.vape_puffs)} затяжек`;
   return productLabel(event.product_type);
 }
+
+/**
+ * Русская форма слова при числе.
+ *
+ * Понадобилась, когда на боевом экране появилось «19 вещи, которые стоит знать». Пока
+ * карточек было ноль, ошибку не было видно; как только контент доехал, заголовок стал
+ * читаться как машинный перевод — на разделе, который держится на доверии к тексту.
+ *
+ * Правило неочевидное: решают две последние цифры, а не одна. 11–14 берут форму «многих»
+ * вопреки последней цифре, поэтому 11 — «вещей», а 21 — «вещь».
+ */
+export function plural(count: number, one: string, few: string, many: string): string {
+  const mod10 = Math.abs(count) % 10;
+  const mod100 = Math.abs(count) % 100;
+  if (mod100 >= 11 && mod100 <= 14) return many;
+  if (mod10 === 1) return one;
+  if (mod10 >= 2 && mod10 <= 4) return few;
+  return many;
+}

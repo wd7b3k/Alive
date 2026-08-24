@@ -43,6 +43,7 @@ import {
   localDay,
   money,
   needIcon,
+  plural,
   productIcon,
   replacementIcon,
   replacementKind,
@@ -1940,7 +1941,9 @@ function KnowledgePage({ data }: { data: Bootstrap }) {
           <div className="r-section-head">
             <div>
               <p className="r-kicker">Проверенное</p>
-              <h2>{facts.length} вещи, которые стоит знать</h2>
+              <h2>
+                {facts.length} {plural(facts.length, 'вещь', 'вещи', 'вещей')}, которые стоит знать
+              </h2>
             </div>
           </div>
           <div className="r-knowledge-grid">
@@ -1956,7 +1959,10 @@ function KnowledgePage({ data }: { data: Bootstrap }) {
           <div className="r-section-head">
             <div>
               <p className="r-kicker">Опровергнутое</p>
-              <h2>{myths.length} убеждений, которые не подтверждаются</h2>
+              <h2>
+                {myths.length} {plural(myths.length, 'убеждение', 'убеждения', 'убеждений')},
+                которые не подтверждаются
+              </h2>
               <p>
                 Заголовок каждой карточки — это то, что часто говорят, а не то, что утверждает
                 ALIVE. Разбор — ниже.
