@@ -4,7 +4,19 @@
 
 ALIVE — самостоятельный private repository `wd7b3k/Alive`.
 
-Текущая стадия: **ALIVE v3.0 — PRODUCT ALPHA / IN DEVELOPMENT**.
+Текущая стадия: **ALIVE v3.1 — RELEASED TO PRODUCTION** (24.08.2026, коммит `428af9e`,
+хост `https://alive-aw2.pages.dev`). Release unit —
+`releases/v3.1-together-facts-meanings/`.
+
+Выпуск свёл две разошедшиеся истории: прод был построен из трёх веток, которые никто не
+мержил в `main`, и с 24.08 репозиторий снова описывает то, что реально работает. В
+`schema_migrations` 44 записи из 45 файлов; недостающая `20260821140000` и то, что с ней
+делать, описаны в `releases/v3.1-together-facts-meanings/MIGRATION.md`.
+
+Что вышло к людям: «Факты», «Смыслы» на `goals_catalog`, «Вместе», закрытый экран
+здоровья продукта, выгрузка и удаление аккаунта. Что осталось за границей выпуска:
+канонический домен, ротация ключей Supabase, `awareness_content` и политика хранения
+аналитики.
 
 Раздел «Факты» добавлен 2026-08-23 поверх слоя доказательности, который уже был в
 проде, но никогда не показывался. Правило раздела вынесено в схему, а не в договорённость:
@@ -28,14 +40,15 @@ Cloudflare Pages. Проверено на самом merge-коммите, а н
 - Frontend: React + TypeScript + Vite.
 - Hosting: Cloudflare Pages.
 - Текущий production host: `https://alive-aw2.pages.dev`.
-- Planned canonical host: `https://alive.hmnos.ru`.
+- Planned canonical host: `https://alive.hmnos.ru`. На 24.08.2026 домен не делегирован
+  у регистратора; выпуск v3.1 сознательно не ждал его и живёт на `pages.dev`.
 - Auth: Google → Supabase Auth. Since 2026-08-22 sign-in is no longer a wall on the
   first screen: the interface opens immediately with the published catalog readable
   anonymously, and Google sign-in is raised only when the person does something that
   genuinely needs an account.
 - Database: Supabase PostgreSQL + RLS.
 - Supabase project: `xkigijaqimzuveyzyzyk`, `eu-west-1`.
-- GitHub CI: Node `22.12.0`, `npm ci`, format check, lint, typecheck, 26 тестов, production build, скан бандла на секреты и прогон RLS-изоляции на чистом PostgreSQL.
+- GitHub CI: Node `22.12.0`, `npm ci`, format check, lint, typecheck, 67 тестов, production build, скан бандла на секреты и прогон RLS-изоляции на чистом PostgreSQL.
 
 Google OAuth проверен реальным входом: Auth user и ALIVE profile автоматически создаются, display name/avatar приходят из Google metadata.
 

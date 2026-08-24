@@ -30,14 +30,22 @@ import { dailyUnits, replacementStats, statsForDays, triggerStats } from './doma
 import { Icon } from './ui-icons';
 import { useLocation } from 'react-router-dom';
 import { useBootstrapSession } from './hooks/useBootstrapSession';
-import { cardOfTheDay, cardsForSurface, cardsForTrigger, splitByKind } from './domain/knowledge';
 import {
+  awarenessForMoment,
+  cardOfTheDay,
+  cardsForSurface,
+  cardsForTrigger,
+  splitByKind,
+} from './domain/knowledge';
+import {
+  AwarenessCardView,
   EvidenceBadge,
   EvidenceDetail,
   KnowledgeCardView,
   KnowledgeCollapsed,
 } from './redesign/knowledge';
 import { GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
+import { ShareWin } from './redesign/share';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
 import { Brand, Header, LoginPage, Modal, ShellButton, startGoogleSignIn } from './redesign/shared';
 import {
@@ -1057,6 +1065,9 @@ function Guided({
               </div>
             </button>
           </div>
+          {outcome === 'successful_response' && (
+            <ShareWin replacementTitle={selected?.title ?? null} />
+          )}
           {outcome === 'nicotine_used' && (
             <div className="r-nicotine-detail">
               <p>
@@ -1419,7 +1430,6 @@ function Links({
   openFlow: (trigger?: string) => void;
 }) {
   const stats = triggerStats(data);
-  const products = data.products.map((p) => p.product_type);
   const [show, setShow] = useState(false);
   const [title, setTitle] = useState('');
   const [situation, setSituation] = useState('');
@@ -1560,32 +1570,25 @@ function Links({
             <h2>Что система уже видит</h2>
           </div>
         </div>
+        {/* Связка — это триггер и замены под него. Карточки знания стояли здесь до
+            24.08 и уехали в «Факты»: миф — утверждение о мире, а не свойство момента,
+            и на карте контекстов он отвлекал от того, ради чего человек сюда пришёл. */}
         <div className="r-trigger-grid">
           {data.triggers.map((t) => {
             const st = stats.find((x) => x.trigger.code === t.code);
-            // Per-trigger cards sit beside the trigger they are about, not in a
-            // separate block: «что известно про этот момент» is only useful while the
-            // person is looking at that moment. Triggers with no card render exactly
-            // as before.
-            const cards = cardsForTrigger(data.knowledge, t.code, products, 'links');
             return (
-              <div className="r-trigger-cell" key={t.code}>
-                <button className="r-trigger-card" onClick={() => openFlow(t.code)}>
-                  <span className="r-choice-icon">
-                    <Icon name={triggerIcon(t)} size={23} />
-                  </span>
-                  <div>
-                    <strong>{t.title}</strong>
-                    <p>{t.description}</p>
-                  </div>
-                  <span className="r-rate">
-                    {st?.episodes ? `${fmt(st.successRate ?? 0)}%` : 'новое'}
-                  </span>
-                </button>
-                {cards.map((card) => (
-                  <KnowledgeCollapsed key={card.code} knowledge={data.knowledge} card={card} />
-                ))}
-              </div>
+              <button className="r-trigger-card" key={t.code} onClick={() => openFlow(t.code)}>
+                <span className="r-choice-icon">
+                  <Icon name={triggerIcon(t)} size={23} />
+                </span>
+                <div>
+                  <strong>{t.title}</strong>
+                  <p>{t.description}</p>
+                </div>
+                <span className="r-rate">
+                  {st?.episodes ? `${fmt(st.successRate ?? 0)}%` : 'новое'}
+                </span>
+              </button>
             );
           })}
         </div>
@@ -1600,6 +1603,11 @@ function PathPage({ data }: { data: Bootstrap }) {
   const days = dailyUnits(data, 7);
   const rstats = replacementStats(data).slice(0, 6);
   const max = Math.max(1, ...days.map((d) => d.units));
+  // «Путь» — единственный момент, где уместно говорить о траектории, а не о ближайших
+  // минутах. Редакция это уже решила: карточки приходят с moment = 'путь', и код лишь
+  // выполняет решение, а не повторяет его.
+  const products = data.products.map((p) => p.product_type);
+  const trajectory = awarenessForMoment(data.awareness, 'путь', products);
   return (
     <main className="r-page">
       <section className="r-title">
@@ -1665,6 +1673,25 @@ function PathPage({ data }: { data: Bootstrap }) {
           </span>
         </div>
       </section>
+      {trajectory.length > 0 && (
+        <section className="r-section">
+          <div className="r-section-head">
+            <div>
+              <p className="r-kicker">Куда это ведёт</p>
+              <h2>Что известно про траекторию, а не про сегодняшний день</h2>
+              <p>
+                Графики выше показывают твои недели. Здесь — то, что известно про сам путь: как
+                меняется риск и почему первые месяцы уже относятся к другой траектории.
+              </p>
+            </div>
+          </div>
+          <div className="r-awareness-grid">
+            {trajectory.map((card) => (
+              <AwarenessCardView key={card.code} card={card} />
+            ))}
+          </div>
+        </section>
+      )}
       <section className="r-section">
         <div className="r-section-head">
           <div>
@@ -2294,6 +2321,17 @@ function Releases() {
       <article>
         <p className="r-kicker">История версий</p>
         <h1>ALIVE развивается как эксперимент</h1>
+        <div className="r-release">
+          <b>3.1</b>
+          <div>
+            <h2>Факты, Смыслы и «Вместе»</h2>
+            <p>
+              Доказательная база с источниками и границами, раздел смыслов вокруг того, ради чего
+              всё это, агрегаты по сообществу и две кнопки, без которых обещание приватности было бы
+              словами: выгрузить свои данные и удалить аккаунт.
+            </p>
+          </div>
+        </div>
         <div className="r-release">
           <b>3.0</b>
           <div>

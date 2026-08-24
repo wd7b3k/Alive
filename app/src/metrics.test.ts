@@ -173,6 +173,7 @@ const bootstrap: Bootstrap = {
   ],
   todayCheckin: null,
   knowledge: EMPTY_KNOWLEDGE,
+  awareness: [],
 };
 
 describe('business metrics', () => {
