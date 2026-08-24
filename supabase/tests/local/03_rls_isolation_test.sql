@@ -229,6 +229,26 @@ begin
       raise exception 'LEAK: anonymous visitor can read % row(s) from private table %', leaked, tbl;
     end if;
   end loop;
+  -- До входа ошибку записать можно — иначе поломки на публичных экранах не видит
+  -- никто. Но только безымянную: приписать ошибку человеку анонимный клиент не может.
+  begin
+    insert into public.system_errors (user_id, surface, error_type)
+    values (null, 'public-home', 'TestError');
+  exception
+    when others then raise exception 'anon не может записать ошибку до входа: %', sqlerrm;
+  end;
+
+  begin
+    insert into public.system_errors (user_id, surface, error_type)
+    values ('22222222-2222-2222-2222-222222222222', 'public-home', 'TestError');
+    raise exception 'LEAK: anon приписал ошибку конкретному человеку';
+  exception
+    when insufficient_privilege then null;
+    when check_violation then null;
+    when others then
+      if sqlerrm like 'LEAK:%' then raise; end if;
+  end;
+
   raise notice 'Anon privacy: PASS (0 rows readable across 18 private tables)';
 end
 $$;
