@@ -281,9 +281,18 @@ begin
   -- analytics_events_admin_read (20260817170000). Поэтому проверяется результат, а не
   -- право — и проверяется на непустой таблице: на пустой этот тест прошёл бы и с
   -- политикой `using (true)`.
-  select count(*) into visible from public.analytics_events;
+  -- Своё — видно, чужое — нет. Второе и есть предмет проверки: в журнале лежит событие
+  -- пользователя B, и оно не должно попадаться пользователю A.
+  select count(*) into visible from public.analytics_events
+   where user_id <> '11111111-1111-1111-1111-111111111111';
   if visible <> 0 then
-    raise exception 'LEAK: обычный пользователь читает % строк журнала событий', visible;
+    raise exception 'LEAK: пользователь читает % чужих строк журнала событий', visible;
+  end if;
+  insert into public.analytics_events (user_id, event_type)
+  values ('11111111-1111-1111-1111-111111111111', 'own_probe');
+  select count(*) into visible from public.analytics_events;
+  if visible = 0 then
+    raise exception 'Человек не может прочитать собственные события — выгрузка будет неполной';
   end if;
   select count(*) into visible from public.system_errors;
   if visible <> 0 then
