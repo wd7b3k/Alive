@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Bootstrap } from '../data';
 import { getSupabase } from '../supabase';
-import { configuredProviders, type AuthProvider } from '../auth-providers';
+import { GOOGLE, fetchProviders, overrideFromEnv, type AuthProvider } from '../auth-providers';
 import { navigateTo } from '../services/navigation';
 import { Icon, type IconName } from '../ui-icons';
 import logoUrl from '../assets/brand-logo-full.png';
@@ -188,7 +188,20 @@ export const startGoogleSignIn = () => startSignIn('google');
 export function LoginPage() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
-  const providers = configuredProviders();
+  // Пока Supabase не ответил, показываем Google: это способ, которым люди уже входят, и
+  // мигать кнопками на экране входа хуже, чем показать одну верную сразу.
+  const [providers, setProviders] = useState<AuthProvider[]>(() => overrideFromEnv() ?? [GOOGLE]);
+
+  useEffect(() => {
+    if (overrideFromEnv()) return;
+    let alive = true;
+    fetchProviders().then((list) => {
+      if (alive && list) setProviders(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   async function start(provider: AuthProvider) {
     setBusy(provider.id);
