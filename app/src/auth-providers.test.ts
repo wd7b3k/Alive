@@ -1,40 +1,87 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseProviders } from './auth-providers';
+import { looksEnabled, parseProviders, providersFromSettings } from './auth-providers';
 
-describe('parseProviders', () => {
-  it('falls back to Google when nothing is configured', () => {
+describe('providersFromSettings', () => {
+  it('берёт только включённое', () => {
+    const list = providersFromSettings({ google: true, apple: false, github: false });
+    expect(list.map((p) => p.id)).toEqual(['google']);
+  });
+
+  it('не делает кнопкой то, что кнопкой не показывается', () => {
+    const list = providersFromSettings({
+      google: true,
+      email: true,
+      phone: true,
+      anonymous_users: true,
+    });
+    expect(list.map((p) => p.id)).toEqual(['google']);
+  });
+
+  it('ставит Google первым, что бы ни пришло', () => {
+    const list = providersFromSettings({ 'custom:yandex': true, apple: true, google: true });
+    expect(list[0].id).toBe('google');
+  });
+
+  it('показывает незнакомого провайдера, а не прячет вход', () => {
+    const list = providersFromSettings({ 'custom:okru': true });
+    expect(list.map((p) => p.id)).toEqual(['custom:okru']);
+    expect(list[0].label).toBe('okru');
+  });
+
+  it('называет российских провайдеров по-русски', () => {
+    const list = providersFromSettings({ 'custom:yandex': true, 'custom:vk': true });
+    expect(list.map((p) => p.label)).toEqual(['Яндекс', 'VK ID']);
+  });
+
+  it('возвращает пусто, когда включать нечего — вызывающий оставит Google', () => {
+    expect(providersFromSettings({})).toEqual([]);
+    expect(providersFromSettings(undefined)).toEqual([]);
+    expect(providersFromSettings({ google: false })).toEqual([]);
+  });
+
+  it('порядок не зависит от порядка ключей в ответе', () => {
+    const a = providersFromSettings({ apple: true, google: true, 'custom:yandex': true });
+    const b = providersFromSettings({ 'custom:yandex': true, google: true, apple: true });
+    expect(a.map((p) => p.id)).toEqual(b.map((p) => p.id));
+  });
+});
+
+describe('parseProviders (ручной список)', () => {
+  it('падает обратно на Google, когда список пуст или из мусора', () => {
     expect(parseProviders(undefined).map((p) => p.id)).toEqual(['google']);
     expect(parseProviders('').map((p) => p.id)).toEqual(['google']);
     expect(parseProviders(' , , ').map((p) => p.id)).toEqual(['google']);
   });
 
-  it('keeps the configured order — the first button is the primary one', () => {
-    expect(parseProviders('google,custom:yandex').map((p) => p.id)).toEqual([
-      'google',
-      'custom:yandex',
-    ]);
+  it('сохраняет заданный порядок — первая кнопка главная', () => {
     expect(parseProviders('custom:yandex,google').map((p) => p.id)).toEqual([
       'custom:yandex',
       'google',
     ]);
   });
 
-  it('names Russian providers in Russian', () => {
-    const labels = parseProviders('custom:yandex,custom:vk,custom:mailru').map((p) => p.label);
-    expect(labels).toEqual(['Яндекс', 'VK ID', 'Mail.ru']);
-  });
-
-  it('shows an unknown provider rather than hiding the way in', () => {
-    const [provider] = parseProviders('custom:okru');
-    expect(provider.id).toBe('custom:okru');
-    expect(provider.label).toBe('okru');
-  });
-
-  it('tolerates spacing and repeats', () => {
+  it('терпит пробелы и повторы', () => {
     expect(parseProviders(' google , custom:yandex , google ').map((p) => p.id)).toEqual([
       'google',
       'custom:yandex',
     ]);
+  });
+});
+
+describe('looksEnabled', () => {
+  it('считает включённым только явный редирект', () => {
+    expect(looksEnabled({ status: 0, type: 'opaqueredirect' })).toBe(true);
+    expect(looksEnabled({ status: 302 })).toBe(true);
+  });
+
+  it('незаведённый провайдер отвечает 400 — это «нет»', () => {
+    expect(looksEnabled({ status: 400, type: 'cors' })).toBe(false);
+  });
+
+  it('ломается в безопасную сторону: непонятный ответ — это «нет»', () => {
+    expect(looksEnabled({ status: 200, type: 'basic' })).toBe(false);
+    expect(looksEnabled({ status: 500 })).toBe(false);
+    expect(looksEnabled({ status: 0 })).toBe(false);
   });
 });
