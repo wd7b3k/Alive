@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseProviders, providersFromSettings } from './auth-providers';
+import { looksEnabled, parseProviders, providersFromSettings } from './auth-providers';
 
 describe('providersFromSettings', () => {
   it('берёт только включённое', () => {
@@ -66,5 +66,22 @@ describe('parseProviders (ручной список)', () => {
       'google',
       'custom:yandex',
     ]);
+  });
+});
+
+describe('looksEnabled', () => {
+  it('считает включённым только явный редирект', () => {
+    expect(looksEnabled({ status: 0, type: 'opaqueredirect' })).toBe(true);
+    expect(looksEnabled({ status: 302 })).toBe(true);
+  });
+
+  it('незаведённый провайдер отвечает 400 — это «нет»', () => {
+    expect(looksEnabled({ status: 400, type: 'cors' })).toBe(false);
+  });
+
+  it('ломается в безопасную сторону: непонятный ответ — это «нет»', () => {
+    expect(looksEnabled({ status: 200, type: 'basic' })).toBe(false);
+    expect(looksEnabled({ status: 500 })).toBe(false);
+    expect(looksEnabled({ status: 0 })).toBe(false);
   });
 });

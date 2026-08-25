@@ -65,11 +65,16 @@ export function providersFromSettings(
     .filter(([id, on]) => on === true && !NOT_A_BUTTON.has(id))
     .map(([id]) => id);
   if (!enabled.length) return [];
+  return order(enabled.map(describe));
+}
+
+/** Порядок кнопок задаёт код, а не порядок ключей в чужом ответе. */
+function order(list: AuthProvider[]): AuthProvider[] {
   const rank = (id: string) => {
     const index = ORDER.indexOf(id);
     return index === -1 ? ORDER.length : index;
   };
-  return enabled.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b)).map(describe);
+  return [...list].sort((a, b) => rank(a.id) - rank(b.id) || a.id.localeCompare(b.id));
 }
 
 /**
@@ -99,7 +104,46 @@ export function overrideFromEnv(): AuthProvider[] | null {
 }
 
 /**
+ * Кастомные провайдеры, про которые имеет смысл спросить отдельно.
+ *
+ * Список короткий и лежит в коде намеренно: это не «какие провайдеры бывают», а «какие
+ * мы готовы показать кнопкой». Незаведённый провайдер стоит одного запроса при открытии
+ * экрана входа и ничего больше.
+ */
+const CANDIDATES = ['custom:yandex', 'custom:vk', 'custom:mailru'];
+
+/**
+ * Включён ли провайдер, судя по ответу `/auth/v1/authorize`.
+ *
+ * `/auth/v1/settings` перечисляет только встроенных провайдеров — проверено 24.08.2026
+ * на живом проекте, где `custom:yandex` был включён и в ответе не появился. А вот
+ * `authorize` отвечает по-разному и однозначно: для включённого провайдера — редиректом
+ * на его страницу (браузер отдаёт непрозрачный ответ со статусом 0), для незаведённого —
+ * 400 с текстом «custom provider … not found».
+ *
+ * Это поведение недокументированное, поэтому проверка построена так, чтобы ломаться в
+ * безопасную сторону: всё, кроме явного редиректа, считается «нет». Если Supabase
+ * однажды начнёт отвечать иначе, пропадёт кнопка — а не появится нерабочая.
+ */
+export function looksEnabled(response: { status: number; type?: string }): boolean {
+  return response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400);
+}
+
+async function probe(id: string): Promise<boolean> {
+  try {
+    const url = `${publicEnv.supabaseUrl}/auth/v1/authorize?provider=${encodeURIComponent(id)}&redirect_to=${encodeURIComponent(publicEnv.appOrigin)}`;
+    const response = await fetch(url, { redirect: 'manual' });
+    return looksEnabled(response);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Спрашивает у Supabase, что включено.
+ *
+ * Два источника, потому что одного не хватает: встроенные провайдеры перечисляет
+ * `/auth/v1/settings`, кастомных там нет, и про них приходится спрашивать поимённо.
  *
  * Ошибка сети здесь не повод показать пустой экран: возвращается `null`, и вызывающий
  * оставляет Google — способ, которым люди уже пользуются.
@@ -107,12 +151,19 @@ export function overrideFromEnv(): AuthProvider[] | null {
 export async function fetchProviders(): Promise<AuthProvider[] | null> {
   if (!publicEnv.isConfigured) return null;
   try {
-    const response = await fetch(`${publicEnv.supabaseUrl}/auth/v1/settings`, {
-      headers: { apikey: publicEnv.supabasePublishableKey },
-    });
-    if (!response.ok) return null;
-    const body = (await response.json()) as { external?: Record<string, unknown> };
-    const list = providersFromSettings(body.external);
+    const [settings, ...probes] = await Promise.all([
+      fetch(`${publicEnv.supabaseUrl}/auth/v1/settings`, {
+        headers: { apikey: publicEnv.supabasePublishableKey },
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .catch(() => null),
+      ...CANDIDATES.map((id) => probe(id)),
+    ]);
+    const builtin = providersFromSettings(
+      (settings as { external?: Record<string, unknown> } | null)?.external,
+    );
+    const custom = CANDIDATES.filter((_, index) => probes[index]).map(describe);
+    const list = order([...builtin, ...custom]);
     return list.length ? list : null;
   } catch {
     return null;
