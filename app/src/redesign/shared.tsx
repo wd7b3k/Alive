@@ -107,6 +107,66 @@ const MAIN_NAV: ReadonlyArray<[string, string, IconName]> = [
   ['/together', 'Вместе', 'people'],
 ];
 
+/**
+ * Что видно до входа.
+ *
+ * «Путь» и «Вместе» сюда не входят и это не забывчивость: путь строится на твоих
+ * эпизодах, «Вместе» — на агрегатах участников. Без аккаунта обе страницы показали бы
+ * пустые графики, и человек решил бы, что продукт пустой, а не что он ещё не вошёл.
+ *
+ * Всё остальное — редакционный каталог, он открыт для чтения ролью `anon` и одинаков
+ * для всех. Прятать его за входом значит требовать аккаунт за право посмотреть, о чём
+ * вообще речь.
+ */
+const PUBLIC_NAV: ReadonlyArray<[string, string, IconName]> = [
+  ['/', 'Главная', 'spark'],
+  ['/links', 'Связки', 'chain'],
+  ['/meanings', 'Смыслы', 'meaning'],
+  ['/knowledge', 'Факты', 'shield'],
+  ['/experiment', 'О методе', 'question'],
+];
+
+export function PublicHeader({ path }: { path: string }) {
+  return (
+    <>
+      <header className="r-header r-header-public">
+        <Brand />
+        <nav className="r-desktop-nav">
+          {PUBLIC_NAV.map(([href, label, icon]) => (
+            <button
+              key={href}
+              type="button"
+              className={path === href ? 'active' : ''}
+              onClick={() => navigateTo(href)}
+            >
+              <Icon name={icon} size={18} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="r-header-tools">
+          <ShellButton className="primary small" onClick={() => navigateTo('/login')}>
+            Войти
+          </ShellButton>
+        </div>
+      </header>
+      <nav className="r-mobile-nav">
+        {PUBLIC_NAV.map(([href, label, icon]) => (
+          <button
+            key={href}
+            type="button"
+            className={path === href ? 'active' : ''}
+            onClick={() => navigateTo(href)}
+          >
+            <Icon name={icon} size={21} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
+    </>
+  );
+}
+
 export function Header({ data, path }: { data: Bootstrap; path: string }) {
   return (
     <>
