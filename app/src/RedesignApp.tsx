@@ -18,6 +18,7 @@ import {
   type Bootstrap,
   type Goal,
   type GuidedEpisodeDraft,
+  type KnowledgeCard,
   type NicotineProduct,
   type OnboardingDraft,
   type ProductType,
@@ -47,7 +48,7 @@ import {
 import { GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
 import { ShareWin } from './redesign/share';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
-import { Brand, Header, LoginPage, Modal, ShellButton, startGoogleSignIn } from './redesign/shared';
+import { Brand, Header, LoginPage, Modal, PublicHeader, ShellButton } from './redesign/shared';
 import {
   fmt,
   localDay,
@@ -79,194 +80,360 @@ import { HealthPage } from './redesign/health';
  * without a session, asserted by the anon block in
  * supabase/tests/local/03_rls_isolation_test.sql.
  */
-function PublicHome({ catalog }: { catalog: PublicCatalog | null }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: string }) {
   // No product filter before sign-in: nobody has said what they use yet, so every
   // published card is relevant until they do.
   const publicCards = cardsForSurface(catalog?.knowledge ?? EMPTY_KNOWLEDGE, 'public');
+  const allCards = catalog?.knowledge.cards ?? [];
+  const { facts, myths } = splitByKind(allCards);
 
-  async function signIn() {
-    setBusy(true);
-    setError('');
-    const message = await startGoogleSignIn();
-    if (message) {
-      setError(message);
-      setBusy(false);
-    }
+  // Каждая кнопка, которая раньше сразу открывала Google, теперь ведёт на экран входа.
+  // Способов входа стало больше одного, и выбирать за человека, каким аккаунтом ему
+  // заходить, — это ровно та мелочь, из-за которой уходят, не начав.
+  function signIn() {
+    go('/login');
   }
+  const busy = false;
+  const error = '';
 
   return (
     <>
-      <header className="r-header r-header-public">
-        <Brand />
-        <nav className="r-desktop-nav">
-          <button type="button" className="r-method-link" onClick={() => go('/experiment')}>
-            О методе
-          </button>
-        </nav>
-        <div className="r-header-tools">
-          <ShellButton className="primary small" onClick={signIn} disabled={busy}>
-            {busy ? 'Открываю Google…' : 'Войти'}
-          </ShellButton>
-        </div>
-      </header>
+      <PublicHeader path={path} />
       <main className="r-page">
-        <section className="r-now">
-          <div className="r-now-copy">
-            <p className="r-kicker">Некоммерческий эксперимент · метод ALIVE v1</p>
-            <h1>Не запрещать себе — вернуть себе выбор</h1>
-            <p className="r-lead">
-              ALIVE помогает заметить, что именно запускает автоматический ритуал, понять, какое
-              состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.
-            </p>
-            <blockquote>
-              Ниже — настоящая система, а не витрина: те же Связки и Смыслы, которые работают
-              внутри. Аккаунт нужен только для того, чтобы сохранять твои личные записи.
-            </blockquote>
-          </div>
-          <div className="r-now-actions">
-            <button type="button" className="r-craving" onClick={signIn} disabled={busy}>
-              <span className="r-craving-icon">
-                <Icon name="spark" size={26} />
-              </span>
-              <span>
-                <small>Когда важно действовать прямо сейчас</small>
-                <strong>Меня тянет</strong>
-                <em>Разобрать момент и выбрать другой ответ</em>
-              </span>
-              <Icon name="arrow" size={22} />
-            </button>
-            <div className="r-secondary-actions">
-              <button type="button" onClick={signIn} disabled={busy}>
-                <Icon name="smoke" size={22} />
-                <span>
-                  <strong>Никотин уже был</strong>
-                  <small>Просто записать факт</small>
-                </span>
-              </button>
-              <button type="button" onClick={() => go('/experiment')}>
-                <Icon name="shield" size={22} />
-                <span>
-                  <strong>Как это работает</strong>
-                  <small>Методология и приватность</small>
-                </span>
-              </button>
-            </div>
-            {error && <p className="r-error">{error}</p>}
-            <p className="r-privacy">
-              Google нужен только для входа. Личные записи хранятся отдельно и защищаются правилами
-              доступа PostgreSQL: их не видит никто, кроме тебя.
-            </p>
-          </div>
-        </section>
-
-        {!catalog && (
-          <section className="r-section">
-            <p className="r-kicker">Загружаю каталог…</p>
-          </section>
-        )}
-
-        {catalog && catalog.triggers.length > 0 && (
-          <section className="r-section">
-            <div className="r-section-head">
-              <div>
-                <p className="r-kicker">Карта контекстов</p>
-                <h2>Что система уже умеет замечать</h2>
-                <p>
-                  Это реальные пусковые моменты из базы ALIVE. Выбери любой — и увидишь, какие
-                  ответы система подбирает под него.
+        {path === '/links' && <PublicLinks catalog={catalog} onSignIn={signIn} />}
+        {path === '/meanings' && <PublicMeanings catalog={catalog} />}
+        {path === '/knowledge' && <PublicKnowledge facts={facts} myths={myths} catalog={catalog} />}
+        {path !== '/links' && path !== '/meanings' && path !== '/knowledge' && (
+          <>
+            <section className="r-now">
+              <div className="r-now-copy">
+                <p className="r-kicker">Некоммерческий эксперимент · метод ALIVE v1</p>
+                <h1>Не запрещать себе — вернуть себе выбор</h1>
+                <p className="r-lead">
+                  ALIVE помогает заметить, что именно запускает автоматический ритуал, понять, какое
+                  состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный
+                  момент.
                 </p>
+                <blockquote>
+                  Ниже — настоящая система, а не витрина: те же Связки и Смыслы, которые работают
+                  внутри. Аккаунт нужен только для того, чтобы сохранять твои личные записи.
+                </blockquote>
               </div>
-            </div>
-            <div className="r-trigger-grid">
-              {catalog.triggers.map((trigger) => (
-                <button key={trigger.code} type="button" onClick={signIn} disabled={busy}>
-                  <span className="r-choice-icon">
-                    <Icon name={triggerIcon(trigger)} size={23} />
+              <div className="r-now-actions">
+                <button type="button" className="r-craving" onClick={signIn} disabled={busy}>
+                  <span className="r-craving-icon">
+                    <Icon name="spark" size={26} />
                   </span>
-                  <div>
-                    <strong>{trigger.title}</strong>
-                    <p>{trigger.description}</p>
-                  </div>
-                  <span className="r-rate">открыть</span>
+                  <span>
+                    <small>Когда важно действовать прямо сейчас</small>
+                    <strong>Меня тянет</strong>
+                    <em>Разобрать момент и выбрать другой ответ</em>
+                  </span>
+                  <Icon name="arrow" size={22} />
                 </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {catalog && catalog.goals.length > 0 && (
-          <section className="r-section">
-            <div className="r-section-head">
-              <div>
-                <p className="r-kicker">Смыслы</p>
-                <h2>Ради чего становится интереснее жить иначе</h2>
-                <p>
-                  ALIVE не работает запретами. Он начинается со смысла, ради которого стоит менять
-                  привычку, — и возвращает тебя к нему в тот момент, когда это труднее всего.
+                <div className="r-secondary-actions">
+                  <button type="button" onClick={signIn} disabled={busy}>
+                    <Icon name="smoke" size={22} />
+                    <span>
+                      <strong>Никотин уже был</strong>
+                      <small>Просто записать факт</small>
+                    </span>
+                  </button>
+                  <button type="button" onClick={() => go('/experiment')}>
+                    <Icon name="shield" size={22} />
+                    <span>
+                      <strong>Как это работает</strong>
+                      <small>Методология и приватность</small>
+                    </span>
+                  </button>
+                </div>
+                {error && <p className="r-error">{error}</p>}
+                <p className="r-privacy">
+                  Google нужен только для входа. Личные записи хранятся отдельно и защищаются
+                  правилами доступа PostgreSQL: их не видит никто, кроме тебя.
                 </p>
               </div>
-            </div>
-            <GoalLibrary goals={catalog.goals.slice(0, 6)} />
-          </section>
-        )}
+            </section>
 
-        {publicCards.length > 0 && (
-          <section className="r-section">
-            <div className="r-section-head">
-              <div>
-                <p className="r-kicker">Факты</p>
-                <h2>Что известно — и где это заканчивается</h2>
-                <p>
-                  Ни одного утверждения без источника и без границ. Если исследования нет — так и
-                  написано.
-                </p>
-              </div>
-            </div>
-            <div className="r-knowledge-grid">
-              {publicCards.map((card) => (
-                <KnowledgeCardView
-                  key={card.code}
-                  knowledge={catalog?.knowledge ?? EMPTY_KNOWLEDGE}
-                  card={card}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+            {!catalog && (
+              <section className="r-section">
+                <p className="r-kicker">Загружаю каталог…</p>
+              </section>
+            )}
 
-        {catalog && catalog.replacements.length > 0 && (
-          <section className="r-section">
-            <div className="r-section-head">
-              <div>
-                <p className="r-kicker">Ответы вместо запрета</p>
-                <h2>{catalog.replacements.length} замен, подобранных под ситуацию</h2>
-                <p>
-                  В момент тяги ALIVE предлагает три варианта под конкретный контекст и потребность,
-                  а не общий список полезных привычек.
-                </p>
-              </div>
-            </div>
-            <div className="r-meaning-grid">
-              {catalog.replacements.slice(0, 6).map((replacement) => (
-                <article key={replacement.code}>
-                  <span className="r-meaning-symbol">
-                    <Icon name={replacementIcon(replacement)} size={25} />
-                  </span>
-                  <h3>{replacement.title}</h3>
-                  <p>{replacement.summary || replacement.instruction}</p>
-                </article>
-              ))}
-            </div>
-            <div className="r-actions">
-              <ShellButton className="primary" onClick={signIn} disabled={busy}>
-                {busy ? 'Открываю Google…' : 'Войти и начать'} <Icon name="arrow" size={18} />
-              </ShellButton>
-            </div>
-          </section>
+            {catalog && catalog.triggers.length > 0 && (
+              <section className="r-section">
+                <div className="r-section-head">
+                  <div>
+                    <p className="r-kicker">Карта контекстов</p>
+                    <h2>Что система уже умеет замечать</h2>
+                    <p>
+                      Это реальные пусковые моменты из базы ALIVE. Выбери любой — и увидишь, какие
+                      ответы система подбирает под него.
+                    </p>
+                  </div>
+                </div>
+                <div className="r-trigger-grid">
+                  {catalog.triggers.map((trigger) => (
+                    <button key={trigger.code} type="button" onClick={signIn} disabled={busy}>
+                      <span className="r-choice-icon">
+                        <Icon name={triggerIcon(trigger)} size={23} />
+                      </span>
+                      <div>
+                        <strong>{trigger.title}</strong>
+                        <p>{trigger.description}</p>
+                      </div>
+                      <span className="r-rate">открыть</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {catalog && catalog.goals.length > 0 && (
+              <section className="r-section">
+                <div className="r-section-head">
+                  <div>
+                    <p className="r-kicker">Смыслы</p>
+                    <h2>Ради чего становится интереснее жить иначе</h2>
+                    <p>
+                      ALIVE не работает запретами. Он начинается со смысла, ради которого стоит
+                      менять привычку, — и возвращает тебя к нему в тот момент, когда это труднее
+                      всего.
+                    </p>
+                  </div>
+                </div>
+                <GoalLibrary goals={catalog.goals.slice(0, 6)} />
+              </section>
+            )}
+
+            {publicCards.length > 0 && (
+              <section className="r-section">
+                <div className="r-section-head">
+                  <div>
+                    <p className="r-kicker">Факты</p>
+                    <h2>Что известно — и где это заканчивается</h2>
+                    <p>
+                      Ни одного утверждения без источника и без границ. Если исследования нет — так
+                      и написано.
+                    </p>
+                  </div>
+                </div>
+                <div className="r-knowledge-grid">
+                  {publicCards.map((card) => (
+                    <KnowledgeCardView
+                      key={card.code}
+                      knowledge={catalog?.knowledge ?? EMPTY_KNOWLEDGE}
+                      card={card}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {catalog && catalog.replacements.length > 0 && (
+              <section className="r-section">
+                <div className="r-section-head">
+                  <div>
+                    <p className="r-kicker">Ответы вместо запрета</p>
+                    <h2>{catalog.replacements.length} замен, подобранных под ситуацию</h2>
+                    <p>
+                      В момент тяги ALIVE предлагает три варианта под конкретный контекст и
+                      потребность, а не общий список полезных привычек.
+                    </p>
+                  </div>
+                </div>
+                <div className="r-meaning-grid">
+                  {catalog.replacements.slice(0, 6).map((replacement) => (
+                    <article key={replacement.code}>
+                      <span className="r-meaning-symbol">
+                        <Icon name={replacementIcon(replacement)} size={25} />
+                      </span>
+                      <h3>{replacement.title}</h3>
+                      <p>{replacement.summary || replacement.instruction}</p>
+                    </article>
+                  ))}
+                </div>
+                <div className="r-actions">
+                  <ShellButton className="primary" onClick={signIn} disabled={busy}>
+                    Войти и начать <Icon name="arrow" size={18} />
+                  </ShellButton>
+                </div>
+              </section>
+            )}
+          </>
         )}
       </main>
+    </>
+  );
+}
+
+/**
+ * «Связки» до входа.
+ *
+ * Показывает то же, что и внутри: контекст, потребность под ним и ответы, которые ALIVE
+ * подбирает. Разница одна — здесь нельзя разобрать свой момент, потому что сохранять его
+ * некуда. Это и есть честная причина завести аккаунт, и она названа на экране, а не
+ * спрятана за кнопкой.
+ */
+function PublicLinks({
+  catalog,
+  onSignIn,
+}: {
+  catalog: PublicCatalog | null;
+  onSignIn: () => void;
+}) {
+  const triggers = catalog?.triggers ?? [];
+  const map = catalog?.triggerReplacementMap ?? [];
+  const byCode = new Map((catalog?.replacements ?? []).map((r) => [r.code, r]));
+  return (
+    <>
+      <section className="r-title">
+        <p className="r-kicker">Связки</p>
+        <h1>Ситуация → потребность → привычный ответ</h1>
+        <p className="r-lead">
+          Зависимость держится не на никотине как таковом, а на связке: определённый момент —
+          определённое состояние — один и тот же ответ. {triggers.length} таких моментов ALIVE умеет
+          разбирать, и под каждый подбирает не «полезную привычку вообще», а то, что закрывает
+          именно эту потребность.
+        </p>
+      </section>
+      {triggers.map((trigger) => {
+        const codes = map
+          .filter((m) => m.trigger_code === trigger.code)
+          .sort((a, b) => a.priority - b.priority)
+          .slice(0, 3)
+          .map((m) => byCode.get(m.replacement_code))
+          .filter(Boolean);
+        return (
+          <section className="r-section" key={trigger.code}>
+            <div className="r-section-head">
+              <div>
+                <p className="r-kicker">Контекст</p>
+                <h2>{trigger.title}</h2>
+                <p>{trigger.description}</p>
+              </div>
+            </div>
+            {codes.length > 0 && (
+              <div className="r-meaning-grid">
+                {codes.map((replacement) => (
+                  <article key={replacement!.code}>
+                    <span className="r-meaning-symbol">
+                      <Icon name={replacementIcon(replacement!)} size={25} />
+                    </span>
+                    <h3>{replacement!.title}</h3>
+                    <p>{replacement!.summary || replacement!.instruction}</p>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        );
+      })}
+      <section className="r-section">
+        <div className="r-section-head">
+          <div>
+            <p className="r-kicker">Дальше</p>
+            <h2>Разобрать свой момент</h2>
+            <p>
+              Здесь показан общий каталог. Твоя карта строится на твоих эпизодах: какой момент
+              повторяется чаще, что в нём срабатывает, а что нет. Для этого нужен аккаунт — больше
+              его хранить негде.
+            </p>
+          </div>
+        </div>
+        <div className="r-actions">
+          <ShellButton className="primary" onClick={onSignIn}>
+            Войти и начать <Icon name="arrow" size={18} />
+          </ShellButton>
+        </div>
+      </section>
+    </>
+  );
+}
+
+/** «Смыслы» до входа: вся библиотека, без переноса в свой черновик — сохранять некуда. */
+function PublicMeanings({ catalog }: { catalog: PublicCatalog | null }) {
+  const goals = catalog?.goals ?? [];
+  return (
+    <>
+      <section className="r-title meaning">
+        <p className="r-kicker">Смыслы</p>
+        <h1>Ради чего становится интереснее жить иначе</h1>
+        <p className="r-lead">
+          ALIVE не работает запретами. Он начинается со смысла, ради которого стоит менять привычку,
+          — и возвращает тебя к нему в тот момент, когда это труднее всего. У каждой карточки есть
+          вопрос: на него отвечать интереснее, чем соглашаться с лозунгом.
+        </p>
+      </section>
+      <section className="r-section">
+        <GoalLibrary goals={goals} />
+      </section>
+    </>
+  );
+}
+
+/** «Факты» до входа: те же карточки, что и внутри, с источниками и границами. */
+function PublicKnowledge({
+  facts,
+  myths,
+  catalog,
+}: {
+  facts: KnowledgeCard[];
+  myths: KnowledgeCard[];
+  catalog: PublicCatalog | null;
+}) {
+  const knowledge = catalog?.knowledge ?? EMPTY_KNOWLEDGE;
+  return (
+    <>
+      <section className="r-title">
+        <p className="r-kicker">Факты</p>
+        <h1>Что известно — и где это заканчивается</h1>
+        <p className="r-lead">
+          Ни одного утверждения без источника и без границ. Три популярных утверждения здесь
+          сознательно не опубликованы, потому что источника у них нет: «тяга длится 3–5 минут»,
+          «вейп на 95 % безопаснее» и любое соотношение «один кальян = N сигарет».
+        </p>
+      </section>
+      {facts.length > 0 && (
+        <section className="r-section">
+          <div className="r-section-head">
+            <div>
+              <p className="r-kicker">Проверенное</p>
+              <h2>
+                {facts.length} {plural(facts.length, 'вещь', 'вещи', 'вещей')}, которые стоит знать
+              </h2>
+            </div>
+          </div>
+          <div className="r-knowledge-grid">
+            {facts.map((card) => (
+              <KnowledgeCardView key={card.code} knowledge={knowledge} card={card} />
+            ))}
+          </div>
+        </section>
+      )}
+      {myths.length > 0 && (
+        <section className="r-section">
+          <div className="r-section-head">
+            <div>
+              <p className="r-kicker">Опровергнутое</p>
+              <h2>
+                {myths.length} {plural(myths.length, 'убеждение', 'убеждения', 'убеждений')},
+                которые не подтверждаются
+              </h2>
+              <p>
+                Заголовок каждой карточки — это то, что часто говорят, а не то, что утверждает
+                ALIVE.
+              </p>
+            </div>
+          </div>
+          <div className="r-knowledge-grid">
+            {myths.map((card) => (
+              <KnowledgeCardView key={card.code} knowledge={knowledge} card={card} />
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }
@@ -2397,7 +2564,7 @@ export default function RedesignApp() {
   if (path === '/experiment' && !session) return <Experiment />;
   if (path === '/releases' && !session) return <Releases />;
   if (path === '/login' && !session) return <LoginPage />;
-  if (!session) return <PublicHome catalog={publicCatalog} />;
+  if (!session) return <PublicHome catalog={publicCatalog} path={path} />;
   if (!data && error)
     return (
       <main className="r-login">

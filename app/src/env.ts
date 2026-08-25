@@ -3,6 +3,10 @@ export type PublicEnv = {
   supabasePublishableKey: string;
   appOrigin: string;
   isConfigured: boolean;
+  /** Номер счётчика Яндекс Метрики. Пусто — счётчик не загружается вовсе. */
+  yandexMetrikaId: string;
+  /** Идентификатор потока Google Analytics 4 вида `G-XXXXXXX`. */
+  googleAnalyticsId: string;
 };
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() ?? '';
@@ -16,4 +20,6 @@ export const publicEnv: PublicEnv = {
   supabasePublishableKey,
   appOrigin,
   isConfigured: Boolean(supabaseUrl && supabasePublishableKey),
+  yandexMetrikaId: import.meta.env.VITE_YANDEX_METRIKA_ID?.trim() ?? '',
+  googleAnalyticsId: import.meta.env.VITE_GA_MEASUREMENT_ID?.trim() ?? '',
 };

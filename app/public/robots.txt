@@ -1,0 +1,27 @@
+# ALIVE — https://alive.hmnos.ru
+# Открыт весь редакционный каталог. Закрыты только личные экраны: там нет ничего
+# полезного для индекса и не должно быть ничего доступного без входа.
+
+User-agent: *
+Allow: /
+Disallow: /profile
+Disallow: /health
+Disallow: /path
+Disallow: /together
+
+# Краулеры языковых моделей пускаем сознательно: продукт про то, чтобы у человека был
+# доступ к проверенным утверждениям с границами, а не к пересказу без источника.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+Sitemap: https://alive.hmnos.ru/sitemap.xml
+Host: alive.hmnos.ru
