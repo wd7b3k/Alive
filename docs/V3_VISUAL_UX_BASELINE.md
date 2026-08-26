@@ -1,5 +1,12 @@
 # Habitoff v3.0 — Visual / UX baseline
 
+> **26.08.2026.** Визуальный baseline теперь описывается дизайн-системой:
+> `docs/DESIGN_SYSTEM.md` — токены, шкалы, состояния, доступность;
+> `docs/SCREENS.md` — по экранам; `docs/BRANDBOOK.md` — имя, знак, голос.
+> Шкалы кегля, отступов и радиусов проверяются `app/src/redesign/css-invariants.test.ts`.
+> Правила ниже (safe-area, 44×44, 48px, 16px от края, ширины QA) остаются в силе.
+
+
 Status: **BLOCKING ACCEPTANCE CRITERION**.
 
 ## Reference

@@ -115,6 +115,51 @@ describe('redesign.css инварианты', () => {
    * Все кнопки продукта — это `.r-button` с вариантами. Если вариант потеряется,
    * кнопка станет системной серой, и это будет видно не сразу.
    */
+  /**
+   * Шкалы. До редизайна 2026-08-26 в файле было 23 значения border-radius, 32 размера
+   * шрифта и отступы без всякой шкалы: соседние карточки скруглялись на 13, 14, 15, 17,
+   * 20 и 21 px. Разница не читается как решение, но глаз её видит. Документ описывает,
+   * как должно быть; поймать момент, когда стало иначе, может только тест.
+   *
+   * Значения внутри calc()/max()/min() исключены намеренно: там живут safe-area и
+   * ширина контейнера, к шкале отступов они отношения не имеют.
+   */
+  const withoutFunctions = css.replace(
+    /(calc|max|min|clamp|env)\([^()]*(?:\([^()]*\)[^()]*)*\)/g,
+    '',
+  );
+  const valuesOf = (property: string) => {
+    const found = new Set<number>();
+    const declaration = new RegExp(`(?:^|[;{])\\s*${property}\\s*:([^;}]*)`, 'g');
+    for (const match of withoutFunctions.matchAll(declaration)) {
+      for (const value of match[1].matchAll(/(\d+(?:\.\d+)?)px/g)) found.add(Number(value[1]));
+    }
+    return [...found].sort((a, b) => a - b);
+  };
+
+  it('скругляет только по шкале радиусов', () => {
+    const allowed = [8, 12, 16, 22, 28, 999];
+    expect(valuesOf('border-radius').filter((v) => !allowed.includes(v))).toEqual([]);
+  });
+
+  it('набирает только по шкале кегля', () => {
+    const allowed = [10, 11, 13, 15, 17, 20, 24, 29, 35, 44];
+    expect(valuesOf('font-size').filter((v) => !allowed.includes(v))).toEqual([]);
+  });
+
+  it('отбивает только по шкале отступов', () => {
+    const allowed = [0, 4, 8, 12, 16, 20, 24, 32, 40];
+    const off: number[] = [];
+    for (const property of ['padding', 'gap', 'column-gap', 'row-gap']) {
+      off.push(...valuesOf(property).filter((v) => !allowed.includes(v)));
+    }
+    expect([...new Set(off)].sort((a, b) => a - b)).toEqual([]);
+  });
+
+  it('не оставляет выведенный лаймовый токен', () => {
+    expect(css).not.toContain('--r-lime');
+  });
+
   it('держит варианты кнопок в одном месте', () => {
     for (const selector of ['.r-button', '.r-button.primary', '.r-button.ghost']) {
       expect(find(selector).length, `${selector} должен быть объявлен один раз`).toBe(1);

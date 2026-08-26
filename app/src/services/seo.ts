@@ -10,7 +10,7 @@
  * Личные экраны закрыты от индекса не только в `robots.txt`, но и мета-тегом: файл
  * запрещает обход, но не запрещает показ уже известного адреса, а `noindex` запрещает.
  */
-export const ORIGIN = 'https://alive.hmnos.ru';
+export const ORIGIN = 'https://habitoff.ru';
 
 type PageMeta = { title: string; description: string; noindex?: boolean };
 

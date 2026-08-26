@@ -69,7 +69,7 @@ Habitoff должен постепенно увеличивать простра
 
 ## Домены и инфраструктура
 
-Планируемый пользовательский адрес: `alive.hmnos.ru`.
+Пользовательский адрес: `https://habitoff.ru` — собственный VPS.
 
 Текущая v3-архитектура: Cloudflare Pages + Google Sign-In через Supabase Auth + Supabase PostgreSQL/RLS + Edge/DB Functions только для privileged logic.
 

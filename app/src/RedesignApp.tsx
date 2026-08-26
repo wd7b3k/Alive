@@ -128,17 +128,28 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                 </blockquote>
               </div>
               <div className="r-now-actions">
-                <button type="button" className="r-craving" onClick={signIn} disabled={busy}>
+                <button
+                  type="button"
+                  className="r-craving"
+                  onClick={signIn}
+                  disabled={busy}
+                  aria-describedby="cta-vape-note-public"
+                >
                   <span className="r-craving-icon">
                     <Icon name="spark" size={26} />
                   </span>
                   <span>
                     <small>Когда важно действовать прямо сейчас</small>
-                    <strong>Меня тянет</strong>
+                    <strong>
+                      Хочу курить<sup aria-hidden="true">*</sup>
+                    </strong>
                     <em>Разобрать момент и выбрать другой ответ</em>
                   </span>
                   <Icon name="arrow" size={22} />
                 </button>
+                <p className="r-cta-note" id="cta-vape-note-public">
+                  <span aria-hidden="true">*</span> для вэйперов, конечно же, — парить
+                </p>
                 <div className="r-secondary-actions">
                   <button type="button" onClick={signIn} disabled={busy}>
                     <Icon name="smoke" size={22} />
@@ -973,7 +984,7 @@ export function Guided({
   );
   // Открытие сценария и уход из него на полпути — единственные два события, которых
   // не видит ни один триггер в базе: в таблицы при этом ничего не пишется. А это самый
-  // ценный сигнал воронки: человек нажал «меня тянет» и не дошёл до конца.
+  // ценный сигнал воронки: человек нажал «хочу курить» и не дошёл до конца.
   //
   // `savedRef` отличает закрытие после сохранения от ухода. Без него каждый успешный
   // разбор считался бы ещё и брошенным. `stepRef` нужен потому, что размонтирование
@@ -1134,7 +1145,7 @@ export function Guided({
               попытке его соблюсти. */}
           {shortlist.length > 0 && (
             <>
-              <p className="r-flow-hint">Чаще всего у тебя включается здесь</p>
+              <p className="r-flow-hint personal">Чаще всего у тебя включается здесь</p>
               <div className="r-choice-grid">{shortlist.map((t) => triggerCard(t))}</div>
               <p className="r-flow-hint">Остальные контексты</p>
             </>
@@ -1554,17 +1565,22 @@ function Today({
           {phrase && <blockquote>{phrase}</blockquote>}
         </div>
         <div className="r-now-actions">
-          <button className="r-craving" onClick={() => openFlow()}>
+          <button className="r-craving" onClick={() => openFlow()} aria-describedby="cta-vape-note">
             <span className="r-craving-icon">
               <Icon name="spark" size={30} />
             </span>
             <span>
               <small>Когда важно действовать прямо сейчас</small>
-              <strong>Меня тянет</strong>
+              <strong>
+                Хочу курить<sup aria-hidden="true">*</sup>
+              </strong>
               <em>Разобрать момент и выбрать другой ответ</em>
             </span>
             <Icon name="arrow" size={24} />
           </button>
+          <p className="r-cta-note" id="cta-vape-note">
+            <span aria-hidden="true">*</span> для вэйперов, конечно же, — парить
+          </p>
           <div className="r-secondary-actions">
             <button onClick={openQuick}>
               <Icon name="smoke" />
