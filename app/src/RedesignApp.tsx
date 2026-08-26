@@ -23,11 +23,19 @@ import {
   type OnboardingDraft,
   type ProductType,
   type PublicCatalog,
+  type Trigger,
   type UserMeaning,
   EMPTY_KNOWLEDGE,
 } from './data';
 import { deleteMyAccount, exportMyData, saveQuickUse } from './actions';
 import { dailyUnits, replacementStats, statsForDays, triggerStats } from './domain/metrics';
+import {
+  flowOpening,
+  frequentTriggers,
+  needGuess,
+  stepAfterTrigger,
+  type NeedGuess,
+} from './domain/flow-defaults';
 import { Icon } from './ui-icons';
 import { useLocation } from 'react-router-dom';
 import { useBootstrapSession } from './hooks/useBootstrapSession';
@@ -868,7 +876,40 @@ function QuickUse({
   );
 }
 
-function Guided({
+/**
+ * Сила тяги «до».
+ *
+ * Вынесено из шага «потребность» отдельным компонентом, потому что у ползунка теперь
+ * два места: полный экран потребности и свёрнутая подпись на шаге ответа. Значение
+ * `craving_before` — вход для craving delta в H-ALIVE-001, и потерять его на коротком
+ * пути было бы хуже, чем не сокращать сценарий вовсе.
+ */
+function CravingBefore({ value, onChange }: { value: number; onChange: (next: number) => void }) {
+  return (
+    <div className="r-slider">
+      <label>
+        <span>Сила тяги</span>
+        <b>{value}/10</b>
+      </label>
+      <input
+        type="range"
+        min="1"
+        max="10"
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
+    </div>
+  );
+}
+
+/**
+ * Управляемый сценарий тяги.
+ *
+ * Экспортируется ради flow-shortcuts.test.tsx: короткие пути через этот сценарий
+ * решают, какой экран человек не увидит в момент тяги, и проверять их пересказом
+ * кода нельзя — только рендером.
+ */
+export function Guided({
   session,
   data,
   close,
@@ -881,14 +922,19 @@ function Guided({
   saved: () => Promise<void>;
   initialTrigger?: string;
 }) {
-  const initialProduct =
-    data.products.find((p) => p.role === 'target_dependency')?.product_type ??
-    data.products[0]?.product_type ??
-    'cigarette';
-  const [product, setProduct] = useState<ProductType>(initialProduct);
-  const [step, setStep] = useState(data.products.length > 1 ? 0 : 1);
-  const [triggerCode, setTrigger] = useState(initialTrigger ?? '');
-  const [needCode, setNeed] = useState('');
+  // Смарт-дефолты сценария: то, что система уже знает по личной истории и потому не
+  // переспрашивает. Считается один раз на открытие — пересчёт в момент тяги двигал бы
+  // экран под руками. Правила и пороги живут в domain/flow-defaults.ts.
+  //
+  // Контекст, названный карточкой на Главной, до этого всё равно переспрашивался:
+  // значение подставлялось в состояние, а экран выбора показывался поверх него. Теперь
+  // он засчитывается как пройденный шаг.
+  const [start] = useState(() => flowOpening(data, initialTrigger));
+  const [product, setProduct] = useState<ProductType>(start.product);
+  const [step, setStep] = useState(start.first);
+  const [triggerCode, setTrigger] = useState(start.trigger);
+  const [needCode, setNeed] = useState(start.need?.needCode ?? '');
+  const [needFromHistory, setNeedFromHistory] = useState<NeedGuess | null>(start.need);
   const [before, setBefore] = useState(7);
   const [replacementCode, setReplacement] = useState<string | null>(null);
   const [after, setAfter] = useState(4);
@@ -905,6 +951,19 @@ function Guided({
   );
   const selected = data.replacements.find((r) => r.code === replacementCode);
   const triggers = data.triggers.filter((t) => t.product_types.includes(product));
+  // 3–5 личных контекстов наверх сетки; остальные 20+ карточек уезжают за раскрытие
+  // (P3). Полный каталог никуда не девается — он перестаёт быть первым, что человек
+  // видит в момент тяги.
+  const shortlist = useMemo(() => frequentTriggers(data, product), [data, product]);
+  const restTriggers = useMemo(
+    () =>
+      shortlist.length
+        ? triggers.filter((t) => !shortlist.some((item) => item.code === t.code))
+        : triggers,
+    [triggers, shortlist],
+  );
+  const chosenTrigger = data.triggers.find((t) => t.code === triggerCode) ?? null;
+  const chosenNeed = data.needs.find((n) => n.code === needCode) ?? null;
   // One collapsed line above the three suggestions, and only for triggers that have a
   // card opted into the flow surface. Mid-craving is the worst possible moment for a
   // paragraph, so this stays closed until the person chooses to open it.
@@ -930,7 +989,16 @@ function Guided({
       event_type: 'flow_opened',
       funnel_stage: 'first_episode',
       surface: 'guided_flow',
+      product_type: start.product,
       trigger_code: initialTrigger || undefined,
+      // Без этого воронка H-ALIVE-001 перестанет быть сравнимой: короткий и полный
+      // сценарий дают одинаковую запись эпизода, и по ней не отличить, какой из них
+      // человек прошёл.
+      metadata: {
+        product_prefilled: data.products.length > 1 && start.first > 0,
+        trigger_prefilled: Boolean(start.trigger),
+        need_prefilled: Boolean(start.need),
+      },
     });
     return () => {
       if (savedRef.current) return;
@@ -944,6 +1012,35 @@ function Guided({
     // Намеренно один раз за открытие сценария: событие про открытие, а не про шаг.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Выбор продукта и выбор контекста — единственные два места, откуда сценарий может
+  // перепрыгнуть через экран. Логика перехода собрана здесь, а не в обработчиках
+  // кнопок, чтобы «куда дальше» нельзя было починить в одном месте и забыть в другом.
+  function chooseTrigger(code: string, forProduct: ProductType = product) {
+    setTrigger(code);
+    const guess = needGuess(data, forProduct, code);
+    setNeedFromHistory(guess);
+    setNeed(guess?.needCode ?? '');
+    setStep(stepAfterTrigger(guess));
+  }
+
+  function triggerCard(t: Trigger) {
+    return (
+      <button key={t.code} onClick={() => chooseTrigger(t.code)}>
+        <span className="r-choice-icon">
+          <Icon name={triggerIcon(t)} size={23} />
+        </span>
+        <strong>{t.title}</strong>
+        <small>{t.description}</small>
+      </button>
+    );
+  }
+
+  function chooseProduct(next: ProductType) {
+    setProduct(next);
+    if (triggerCode) chooseTrigger(triggerCode, next);
+    else setStep(1);
+  }
 
   async function save() {
     if (!triggerCode || !needCode) return;
@@ -998,13 +1095,7 @@ function Guided({
           <h3>К чему сейчас тянет?</h3>
           <div className="r-choice-grid products">
             {data.products.map((p) => (
-              <button
-                key={p.product_type}
-                onClick={() => {
-                  setProduct(p.product_type);
-                  setStep(1);
-                }}
-              >
+              <button key={p.product_type} onClick={() => chooseProduct(p.product_type)}>
                 <Icon name={productIcon(p.product_type)} size={28} />
                 <strong>{productLabel(p.product_type)}</strong>
               </button>
@@ -1023,23 +1114,32 @@ function Guided({
               <p>Не ищем виноватого. Ищем повторяющийся пусковой момент.</p>
             </div>
           </div>
-          <div className="r-choice-grid">
-            {triggers.map((t) => (
-              <button
-                key={t.code}
-                onClick={() => {
-                  setTrigger(t.code);
-                  setStep(2);
-                }}
-              >
-                <span className="r-choice-icon">
-                  <Icon name={triggerIcon(t)} size={23} />
-                </span>
-                <strong>{t.title}</strong>
-                <small>{t.description}</small>
-              </button>
-            ))}
-          </div>
+          {data.products.length > 1 && (
+            <div className="r-flow-prefill">
+              <p>
+                <Icon name={productIcon(product)} size={17} />
+                <b>{productLabel(product)}</b>
+                {start.productConfident && <small>Последние разборы были про это</small>}
+              </p>
+              <div className="r-flow-prefill-actions">
+                <button type="button" onClick={() => setStep(0)}>
+                  Другой продукт
+                </button>
+              </div>
+            </div>
+          )}
+          {/* Личные контексты наверх, остальной каталог остаётся ниже и остаётся
+              одним тапом: прятать его за раскрытие означало бы добавить действие
+              ровно тем, у кого сегодня новый контекст, — то есть нарушить P17 в
+              попытке его соблюсти. */}
+          {shortlist.length > 0 && (
+            <>
+              <p className="r-flow-hint">Чаще всего у тебя включается здесь</p>
+              <div className="r-choice-grid">{shortlist.map((t) => triggerCard(t))}</div>
+              <p className="r-flow-hint">Остальные контексты</p>
+            </>
+          )}
+          <div className="r-choice-grid">{restTriggers.map((t) => triggerCard(t))}</div>
         </section>
       )}
       {step === 2 && (
@@ -1062,6 +1162,7 @@ function Guided({
                 key={n.code}
                 onClick={() => {
                   setNeed(n.code);
+                  setNeedFromHistory(null);
                   setStep(3);
                 }}
               >
@@ -1073,19 +1174,7 @@ function Guided({
               </button>
             ))}
           </div>
-          <div className="r-slider">
-            <label>
-              <span>Сила тяги</span>
-              <b>{before}/10</b>
-            </label>
-            <input
-              type="range"
-              min="1"
-              max="10"
-              value={before}
-              onChange={(e) => setBefore(Number(e.target.value))}
-            />
-          </div>
+          <CravingBefore value={before} onChange={setBefore} />
         </section>
       )}
       {step === 3 && (
@@ -1102,6 +1191,37 @@ function Guided({
               </p>
             </div>
           </div>
+          {needFromHistory && (
+            <div className="r-flow-prefill collapsed">
+              <p>
+                <Icon name="eye" size={17} />
+                <b>{chosenTrigger?.title ?? 'Контекст'}</b>
+                <span aria-hidden="true">·</span>
+                <b>{chosenNeed?.title ?? 'Потребность'}</b>
+              </p>
+              <small>
+                {`Так было в ${needFromHistory.episodes} из ${needFromHistory.total} ` +
+                  `${plural(needFromHistory.total, 'разбора', 'разборов', 'разборов')} ` +
+                  'этого контекста. Шаг с потребностью свёрнут в эту строку, а не пропущен: ' +
+                  'в эпизод она запишется так же.'}
+              </small>
+              <div className="r-flow-prefill-actions">
+                <button type="button" onClick={() => setStep(1)}>
+                  Другой контекст
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNeedFromHistory(null);
+                    setStep(2);
+                  }}
+                >
+                  Другая потребность
+                </button>
+              </div>
+              <CravingBefore value={before} onChange={setBefore} />
+            </div>
+          )}
           <FlowMeaning data={data} />
           {flowCards.map((card) => (
             <KnowledgeCollapsed key={card.code} knowledge={data.knowledge} card={card} />
