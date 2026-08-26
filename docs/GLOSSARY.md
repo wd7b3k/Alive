@@ -1,6 +1,6 @@
-# Глоссарий ALIVE
+# Глоссарий Habitoff
 
-## ALIVE unit
+## Habitoff unit
 
 Условная внутренняя единица behavioural normalization для сопоставления разных никотиновых продуктов. **Не медицинский эквивалент вреда или никотина.**
 
@@ -58,7 +58,7 @@ Nicotine Replacement Therapy: никотинзаместительные сре�
 
 ## Raw event
 
-Исходный факт: количество сигарет, кальянных сессий, vape puffs и т. п. Не зависит от ALIVE equivalence model.
+Исходный факт: количество сигарет, кальянных сессий, vape puffs и т. п. Не зависит от Habitoff equivalence model.
 
 ## Derived metric
 
@@ -74,8 +74,8 @@ User-generated content: пользовательские Смыслы/Связк
 
 ## Methodology version
 
-Версия экспериментальной логики ALIVE, определяющая смысл measurements/criteria.
+Версия экспериментальной логики Habitoff, определяющая смысл measurements/criteria.
 
 ## Equivalence model
 
-Версия правил преобразования raw nicotine usage в ALIVE units.
+Версия правил преобразования raw nicotine usage в Habitoff units.

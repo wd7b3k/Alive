@@ -100,7 +100,7 @@ export function EvidenceDetail({
           <SourceList sources={evidence.sources} />
         ) : (
           <p className="r-evidence-limit">
-            Исследования по этому приёму здесь не приводится — это собственная эвристика ALIVE, и
+            Исследования по этому приёму здесь не приводится — это собственная эвристика Habitoff, и
             честнее сказать это прямо.
           </p>
         )}
@@ -113,7 +113,7 @@ export function EvidenceDetail({
  * One card of «Факты и Мифы», in the owner's three-part form.
  *
  * A myth's claim is rendered inside «Миф:» and struck through in the section so it can
- * never be skim-read as something ALIVE is asserting. That framing is load-bearing, not
+ * never be skim-read as something Habitoff is asserting. That framing is load-bearing, not
  * decoration: a person scrolling fast must not come away having learned the myth.
  */
 export function KnowledgeCardView({

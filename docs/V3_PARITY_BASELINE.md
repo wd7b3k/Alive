@@ -1,10 +1,10 @@
-# ALIVE v3.0 — product depth / parity baseline
+# Habitoff v3.0 — product depth / parity baseline
 
 Статус: **BLOCKING ACCEPTANCE CRITERION**.
 
 ## Почему этот документ существует
 
-Технический bootstrap v3.0 (React/Supabase/Auth/RLS) сам по себе не является новым продуктовым релизом. ALIVE v3.0 обязан сохранить минимум продуктовой глубины канонического v2.7 и развить её в новой универсальной архитектуре.
+Технический bootstrap v3.0 (React/Supabase/Auth/RLS) сам по себе не является новым продуктовым релизом. Habitoff v3.0 обязан сохранить минимум продуктовой глубины канонического v2.7 и развить её в новой универсальной архитектуре.
 
 Нельзя считать пустой shell, configuration demo или набор объясняющих карточек функциональным преемником v2.7.
 
@@ -72,7 +72,7 @@ v3.0 должен сохранить указанную глубину и доб
 1. универсальный multi-user Google identity;
 2. PostgreSQL + RLS вместо Google Sheets;
 3. cigarette + hookah + vape как разные raw products;
-4. versioned ALIVE units с явным объяснением, что это behavioural heuristic;
+4. versioned Habitoff units с явным объяснением, что это behavioural heuristic;
 5. vape-specific continuous-use logic;
 6. food/drink replacements с guardrails;
 7. NRT как intervention, а не relapse;

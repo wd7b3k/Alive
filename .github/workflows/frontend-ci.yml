@@ -1,4 +1,4 @@
-name: ALIVE frontend CI
+name: Habitoff frontend CI
 
 on:
   push:

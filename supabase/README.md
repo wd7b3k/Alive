@@ -1,4 +1,4 @@
-# ALIVE v3 Supabase / PostgreSQL
+# Habitoff v3 Supabase / PostgreSQL
 
 ## Source of truth
 

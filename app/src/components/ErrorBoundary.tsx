@@ -23,7 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return (
       <main className="r-login">
         <section className="r-login-card">
-          <p className="r-kicker">ALIVE</p>
+          <p className="r-kicker">Habitoff</p>
           <h1>Интерфейс столкнулся с ошибкой</h1>
           <p>Перезагрузи страницу, чтобы вернуться к работе.</p>
           <button className="r-button primary" onClick={() => window.location.reload()}>

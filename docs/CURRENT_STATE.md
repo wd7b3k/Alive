@@ -1,10 +1,54 @@
-# Текущее состояние ALIVE
+# Текущее состояние Habitoff
+
+## Ребрендинг 26.08.2026
+
+До 26.08.2026 продукт назывался **ALIVE**. Решение и его границы —
+`docs/decisions/ADR-0003-rebrand.md`.
+
+- Имя: **Habitoff**. В прозе — одно слово, одна заглавная; `HabitOff` и `habitoff`
+  допустимы только как технические идентификаторы.
+- Домен `habitoff.ru` оплачен. **Прод адрес пока прежний** — переключение выполняет
+  ветка инфраструктуры, эта ветка адреса не трогала.
+- **Слаг репозитория остаётся `wd7b3k/Alive`.** Переименование репозитория ломает
+  remotes у всех клонов и является отдельным инфраструктурным действием.
+- Знак: разомкнутое кольцо с точкой в разрыве, `app/src/assets/brand-mark.svg`.
+  Om выведен по прямому запросу владельца — исключение, предусмотренное
+  `RELEASE_POLICY.md` §7. Om-гейт в `docs/V3_VISUAL_UX_BASELINE.md` снят,
+  Om-чекбокс в `releases/v3.0-platform/VALIDATION.md` закрыт как снятый, а не пройденный.
+- Растровый комплект иконок и OG-картинка перевыпущены. PNG-лого на 363 КБ удалён:
+  словесный знак теперь SVG на 2,8 КБ и инлайнится в бандл.
+
+**Палитра не менялась, и это решение, а не пропуск.** Предложение вывести `--r-lime`
+отозвано: лайм — основной цвет действия, им залиты CTA «Меня тянет» и кнопка «Войти»,
+и он же кодирует уровень «хорошо подтверждено» и тип карточки-мифа. Его вывод
+обесцветил бы главное действие и переписал эпистемическую разметку побочным эффектом
+переименования. Знак использует существующие `--r-teal` и `--r-amber`; новых токенов
+не заведено. Вопрос о втором акценте остаётся открытым и требует своего решения.
+
+**Анимационный промт от 23.08 в этой ветке не исполнен — сознательно.**
+`css-invariants.test.ts` требует ровно одного объявления `.r-button`, `.r-button.primary`
+и `.r-button.ghost`; главная CTA «Меня тянет» — не `.r-button.primary`, а составная
+карточка в двух местах `RedesignApp.tsx`, и её анимация потребовала бы правки разметки.
+count-up, draw-in и skeleton требуют JavaScript на самом тяжёлом экране при бандле 587 КБ
+и 30 запросах к Supabase на первом экране — а этот паттерн переделывает ветка переезда
+на VPS. Условие возврата: после того как переезд закроет вес бандла и число запросов.
+
+**Заодно закрыто:** `app/package.json` — `alive-web` → `habitoff-web`, версия
+`3.0.0-dev` → `3.1.0` (не совпадала с выпущенным v3.1); устаревшая строка «Google нужен
+только для входа» переписана провайдер-независимо, способов входа два.
+
+**`grep -ri alive` по репозиторию не пуст, и это объяснено.** Не тронуты:
+`supabase/migrations/**` (там `alive` — имена функций, таблиц, колонок и значения ключей,
+на которые ссылаются строки в проде), имена RPC в коде приложения, адреса
+`alive.hmnos.ru` и `alive-aw2.pages.dev`, `releases/**`, `docs/ai_sessions/**`,
+`ADR-0001` и `ADR-0002` — записи о том, что было сделано под прежним именем.
+
 
 ## Статус
 
-ALIVE — самостоятельный private repository `wd7b3k/Alive`.
+Habitoff — самостоятельный private repository `wd7b3k/Alive`.
 
-Текущая стадия: **ALIVE v3.1 — RELEASED TO PRODUCTION** (24.08.2026, коммит `428af9e`,
+Текущая стадия: **Habitoff v3.1 — RELEASED TO PRODUCTION** (24.08.2026, коммит `428af9e`,
 хост `https://alive-aw2.pages.dev`). Release unit —
 `releases/v3.1-together-facts-meanings/`.
 
@@ -50,7 +94,7 @@ Cloudflare Pages. Проверено на самом merge-коммите, а н
 - Supabase project: `xkigijaqimzuveyzyzyk`, `eu-west-1`.
 - GitHub CI: Node `22.12.0`, `npm ci`, format check, lint, typecheck, 67 тестов, production build, скан бандла на секреты и прогон RLS-изоляции на чистом PostgreSQL.
 
-Google OAuth проверен реальным входом: Auth user и ALIVE profile автоматически создаются, display name/avatar приходят из Google metadata.
+Google OAuth проверен реальным входом: Auth user и Habitoff profile автоматически создаются, display name/avatar приходят из Google metadata.
 
 ## Ключевое решение после первого platform bootstrap
 
@@ -186,7 +230,7 @@ owner-scoped, and `supabase/tests/local/03_rls_isolation_test.sql` now asserts e
 that for the `anon` role — a future migration that widens the anonymous surface fails
 the test instead of leaking quietly.
 
-Current Supabase Security Advisor has one remaining Auth warning: leaked-password protection is disabled. ALIVE currently exposes Google OAuth only, not password sign-in, so the warning does not represent an active password-login surface. Revisit before ever enabling password auth.
+Current Supabase Security Advisor has one remaining Auth warning: leaked-password protection is disabled. Habitoff currently exposes Google OAuth only, not password sign-in, so the warning does not represent an active password-login surface. Revisit before ever enabling password auth.
 
 ## CI state
 

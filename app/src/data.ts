@@ -283,7 +283,7 @@ export const EVIDENCE_LEVELS: readonly EvidenceLevel[] = [
   {
     code: 'C',
     rank: 3,
-    label_ru: 'Эвристика ALIVE',
+    label_ru: 'Эвристика Habitoff',
     claim_ru: 'Приём или наблюдение, собранное из практики и здравого смысла продукта.',
     limit_ru:
       'Исследованием не проверено. Работает или нет — покажет твоя собственная статистика в разделе «Путь».',
@@ -369,7 +369,7 @@ export type AwarenessCard = {
  *
  * `kind` — полярность. У мифа `claim_ru` — это утверждение, которому продукт
  * возражает, и оно не должно попасть на экран так, чтобы его можно было прочитать как
- * позицию ALIVE. У факта `claim_ru` — то, что продукт утверждает сам.
+ * позицию Habitoff. У факта `claim_ru` — то, что продукт утверждает сам.
  */
 export type KnowledgeCard = {
   code: string;
@@ -1021,7 +1021,7 @@ export function productLabel(product: ProductType) {
   return 'Электронка';
 }
 
-export function eventAliveUnits(event: TobaccoEvent) {
+export function eventHabitoffUnits(event: TobaccoEvent) {
   if (event.product_type === 'cigarette') return Number(event.cigarette_quantity ?? 0);
   if (event.product_type === 'hookah') return Number(event.hookah_session_count ?? 0) * 10;
   return Number(event.vape_puffs ?? 0) * 0.1;
@@ -1114,7 +1114,7 @@ export type PublicCatalog = {
 /**
  * Loads only the published editorial catalog — no personal data, no session needed.
  *
- * Used by the pre-login screens so a visitor can see what ALIVE actually is before
+ * Used by the pre-login screens so a visitor can see what Habitoff actually is before
  * deciding to sign in. Anonymous read access is granted by migration
  * 20260822120000_v3_public_catalog_read_for_anon.sql and is limited to `published`
  * rows of these catalogs; every table holding personal data stays authenticated-only

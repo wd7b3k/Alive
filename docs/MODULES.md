@@ -1,4 +1,4 @@
-# Карта модулей ALIVE v3
+# Карта модулей Habitoff v3
 
 ## 1. Identity & Profile
 
@@ -112,13 +112,13 @@ Canonical behavioural event:
 - hookah sessions/cost/duration;
 - vape puffs/device/consumable facts.
 
-Raw facts отделены от ALIVE units.
+Raw facts отделены от Habitoff units.
 
 ## 12. Metrics & Equivalence
 
 Владеет derived metrics:
 
-- ALIVE units;
+- Habitoff units;
 - baseline delta;
 - money/time estimates;
 - successful responses;
@@ -150,7 +150,7 @@ Private original остаётся у исходного модуля.
 
 Владеет пользовательским объяснением:
 
-- что проверяет ALIVE;
+- что проверяет Habitoff;
 - факты vs hypotheses vs heuristics;
 - privacy explanation;
 - methodology versions.

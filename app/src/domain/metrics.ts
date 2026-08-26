@@ -1,8 +1,8 @@
 import type { Bootstrap, Episode, EpisodeAction, TobaccoEvent, Trigger } from '../data';
-import { baselineDailyCost, baselineDailyUnits, eventAliveUnits } from '../data';
+import { baselineDailyCost, baselineDailyUnits, eventHabitoffUnits } from '../data';
 
 export type PeriodStats = {
-  aliveUnits: number;
+  habitoffUnits: number;
   baselineUnits: number;
   baselineDeltaPct: number | null;
   successfulResponses: number;
@@ -31,17 +31,17 @@ export function inPeriod(timestamp: string, days: number) {
 export function statsForDays(data: Bootstrap, days: number): PeriodStats {
   const events = data.tobaccoEvents.filter((event) => inPeriod(event.occurred_at, days));
   const episodes = data.episodes.filter((episode) => inPeriod(episode.started_at, days));
-  const aliveUnits = events.reduce((sum, event) => sum + eventAliveUnits(event), 0);
+  const habitoffUnits = events.reduce((sum, event) => sum + eventHabitoffUnits(event), 0);
   const baselineUnits = baselineDailyUnits(data.products) * days;
   const baselineDeltaPct =
-    baselineUnits > 0 ? ((aliveUnits - baselineUnits) / baselineUnits) * 100 : null;
+    baselineUnits > 0 ? ((habitoffUnits - baselineUnits) / baselineUnits) * 100 : null;
   const actualCost = events.reduce((sum, event) => sum + Number(event.cost_actual_rub ?? 0), 0);
   const baselineCost = baselineDailyCost(data.products) * days;
   const daysSet = new Set<string>();
   episodes.forEach((episode) => daysSet.add(episode.started_at.slice(0, 10)));
   events.forEach((event) => daysSet.add(event.occurred_at.slice(0, 10)));
   return {
-    aliveUnits,
+    habitoffUnits,
     baselineUnits,
     baselineDeltaPct,
     successfulResponses: episodes.filter((episode) => episode.outcome === 'successful_response')
@@ -152,7 +152,7 @@ export function dailyUnits(data: Bootstrap, days = 7) {
     const key = date.toISOString().slice(0, 10);
     const units = data.tobaccoEvents
       .filter((event: TobaccoEvent) => event.occurred_at.slice(0, 10) === key)
-      .reduce((sum, event) => sum + eventAliveUnits(event), 0);
+      .reduce((sum, event) => sum + eventHabitoffUnits(event), 0);
     const successes = data.episodes.filter(
       (episode) =>
         episode.started_at.slice(0, 10) === key && episode.outcome === 'successful_response',

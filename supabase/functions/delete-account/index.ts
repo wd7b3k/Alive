@@ -1,4 +1,4 @@
-// ALIVE — authenticated account deletion Edge Function.
+// Habitoff — authenticated account deletion Edge Function.
 //
 // Replaces the public SECURITY DEFINER RPC `delete_my_alive_account` that was removed
 // in supabase/migrations/20260815221000_v3_remove_public_account_delete_rpc.sql after

@@ -3,7 +3,7 @@ import {
   EMPTY_KNOWLEDGE,
   baselineDailyCost,
   baselineDailyUnits,
-  eventAliveUnits,
+  eventHabitoffUnits,
   type Bootstrap,
   type NicotineProduct,
   type TobaccoEvent,
@@ -178,7 +178,7 @@ const bootstrap: Bootstrap = {
 
 describe('business metrics', () => {
   it('normalizes product events and baseline costs consistently', () => {
-    expect(eventAliveUnits(bootstrap.tobaccoEvents[0] as TobaccoEvent)).toBe(1);
+    expect(eventHabitoffUnits(bootstrap.tobaccoEvents[0] as TobaccoEvent)).toBe(1);
     expect(baselineDailyUnits(products)).toBeCloseTo(30);
     expect(baselineDailyCost(products)).toBeCloseTo(1560);
   });

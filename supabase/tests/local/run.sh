@@ -22,7 +22,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-DB_NAME="${ALIVE_RLS_TEST_DB:-alive_rls_test}"
+DB_NAME="${HABITOFF_RLS_TEST_DB:-habitoff_rls_test}"
 PSQL="psql -v ON_ERROR_STOP=1"
 
 echo "==> Dropping/creating disposable test database: $DB_NAME"

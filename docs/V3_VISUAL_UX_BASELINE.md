@@ -1,21 +1,26 @@
-# ALIVE v3.0 — Visual / UX baseline
+# Habitoff v3.0 — Visual / UX baseline
 
 Status: **BLOCKING ACCEPTANCE CRITERION**.
 
 ## Reference
 
-Canonical visual-quality reference for v3.0 is the approved ALIVE v2.7 production UI. v3 may change implementation and information architecture, but it must not regress in perceived quality, hierarchy, brand continuity or mobile ergonomics.
+Canonical visual-quality reference for v3.0 is the approved Habitoff v2.7 production UI. v3 may change implementation and information architecture, but it must not regress in perceived quality, hierarchy, brand continuity or mobile ergonomics.
 
 The v3.0 product alpha exposed a regression: generic oversized SaaS-like cards, excessive green cast, insufficient spacing around actions on mobile, controls too close to screen/system edges and loss of the approved Om identity. This class of regression blocks formal v3.0 release.
 
 ## Brand continuity
 
-- Approved Om logo is immutable unless the owner explicitly requests a brand change.
-- Do not regenerate, redraw, approximate or replace the Om with a Unicode symbol, infinity sign or unrelated icon.
-- **2026-08-21 owner decision**: none of the previously documented canonical hashes below matched any asset ever present in the runtime (the shipped `brand-logo-full.png` was a corrupted file, SHA-256 `110738ee37aef8b4486b777b3e2d3f5004a5f254582b464f0f265495997f8ce3`, undecodable). Per direct owner command, the brand lockup was replaced with the owner's own supplied reference artwork (Om symbol + "ALIVE" wordmark, traditional-forms/modern-art fusion), not an AI-generated redraw. Canonical hashes below updated accordingly; this is an explicit brand-identity decision by the owner, not an AI-initiated substitution.
-- Canonical Om-only mark SHA-256: `b479fafb36ad49adf6d6895746885d95f41d33128c3c846d00011905546547e1` (`app/src/assets/om-mark.png`, 1024×1024, cropped from the owner-supplied artwork).
-- Canonical full ALIVE logo SHA-256: `37b33ba0664db913ee054f0b2f46a1171583225276ff968fe03a2a75ab6966c9` (`app/src/assets/brand-logo-full.png` / `app/public/brand-logo-full.png`, 2031×699, owner-supplied artwork).
-- Desktop may use the full logo or Om + wordmark; compact/mobile uses the Om mark.
+- **2026-08-26 (ADR-0003): бренд сменён, Om выведен из проекта по прямому запросу владельца.**
+  `RELEASE_POLICY.md` §7 допускает это как явное исключение из immutable-правила.
+  Om-ассеты `app/src/assets/om-mark.png` и `app/src/assets/brand-logo-full.png` удалены,
+  оба канонических SHA-256 больше не описывают ничего существующего и удалены отсюда.
+- Знак бренда теперь вектор: `app/src/assets/brand-mark.svg` (разомкнутое кольцо с точкой
+  в разрыве) и `app/src/assets/brand-logo-full.svg` (знак + словесный знак Habitoff).
+  Гейт SHA-256 заменён на проверку глазами: знак читается на 16, 32 и 56 px, точка
+  в разрыве не сливается с кольцом, разрыв виден. Хэш вектора не фиксируем — SVG
+  правится осмысленно, а не заменяется целиком, и хэш ломался бы на каждом пробеле.
+- Не подменять знак Unicode-символом, знаком бесконечности или посторонней иконкой.
+- Desktop uses the full logo; compact/mobile uses `brand-mark.svg`.
 - Hero/watermark usage must be subtle and subordinate to content.
 
 ## Visual language
