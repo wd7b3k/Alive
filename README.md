@@ -66,12 +66,16 @@ Habitoff должен постепенно увеличивать простра
 17. [`docs/V3_PARITY_BASELINE.md`](docs/V3_PARITY_BASELINE.md) — blocking acceptance criterion: минимум продуктовой глубины v2.7, обязателен к прохождению перед `v3.0 RELEASED`.
 18. [`docs/V3_VISUAL_UX_BASELINE.md`](docs/V3_VISUAL_UX_BASELINE.md) — blocking acceptance criterion: визуальный/UX-baseline, mobile safe zones, бренд-continuity.
 19. [`docs/V3_REDESIGN.md`](docs/V3_REDESIGN.md) — активная спецификация текущего UI (глубокий редизайн интерфейса), blocking перед финальным `v3.0`.
+20. [`docs/BRANDBOOK.md`](docs/BRANDBOOK.md) — имя, знак, палитра, цвет наблюдения, голос, применение.
+21. [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) — токены, шкалы, компоненты и их состояния.
+22. [`docs/SCREENS.md`](docs/SCREENS.md) — документация по каждому экрану.
+23. [`docs/ROLLOUT.md`](docs/ROLLOUT.md) — как довести работу из ветки до прода и что проверить после.
 
 ## Домены и инфраструктура
 
 Пользовательский адрес: `https://habitoff.ru` — собственный VPS.
 
-Текущая v3-архитектура: Cloudflare Pages + Google Sign-In через Supabase Auth + Supabase PostgreSQL/RLS + Edge/DB Functions только для privileged logic.
+Текущая v3-архитектура: собственный VPS (Caddy + self-hosted Supabase) + вход через Google и Яндекс + PostgreSQL/RLS + Edge/DB Functions только для privileged logic. Порядок раскатки — [`docs/ROLLOUT.md`](docs/ROLLOUT.md).
 
 ## Ключевое правило
 
