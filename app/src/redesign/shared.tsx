@@ -267,9 +267,6 @@ export async function startSignIn(provider = 'google'): Promise<string | null> {
   return result.error ? result.error.message : null;
 }
 
-/** Прежнее имя: вызовов много, и переименовывать их все ради одного смысла незачем. */
-export const startGoogleSignIn = () => startSignIn('google');
-
 export function LoginPage() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');

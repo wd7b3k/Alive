@@ -2,7 +2,6 @@ import type {
   AwarenessCard,
   AwarenessMoment,
   EvidenceLevel,
-  EvidenceLevelCode,
   EvidenceSource,
   Knowledge,
   KnowledgeCard,
@@ -146,12 +145,6 @@ export function splitByKind(cards: KnowledgeCard[]): {
     facts: cards.filter((card) => card.kind === 'fact'),
     myths: cards.filter((card) => card.kind === 'myth'),
   };
-}
-
-/** Короткая подпись уровня для бейджа. Откатывается к голой букве. */
-export function levelBadge(level: EvidenceLevel | null, code?: EvidenceLevelCode | null): string {
-  if (level) return `${level.code} · ${level.label_ru}`;
-  return code ?? '';
 }
 
 /**
