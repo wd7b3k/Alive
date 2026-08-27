@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""Загрузка копий в папку приложения на Яндекс.Диске.
+
+Написан вместо rclone по двум причинам. Драйвер Яндекса в rclone работает с
+корнем Диска, а токен с правом `cloud_api:disk.app_folder` пускает только в
+`app:/…` — пришлось бы расширять права на весь личный Диск ради инструмента.
+И версия rclone в Ubuntu — 2022 года.
+
+Команды:
+  habitoff-yadisk token <код>        обменять код подтверждения на токены
+  habitoff-yadisk upload <файл>      залить файл под его же именем
+  habitoff-yadisk prune <дней>       удалить в папке всё старше N дней
+  habitoff-yadisk list               показать, что лежит в папке
+  habitoff-yadisk check              проверить, что токен жив
+"""
+import json
+import os
+import re
+import subprocess
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
+
+ENVF = "/etc/habitoff/backup.env"
+API = "https://cloud-api.yandex.net/v1/disk"
+OAUTH = "https://oauth.yandex.ru/token"
+
+
+def load_env():
+    env = {}
+    with open(ENVF, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            env[k.strip()] = v.strip()
+    return env
+
+
+def set_env(**pairs):
+    """Правит backup.env на месте, не трогая комментарии и порядок строк."""
+    text = pathlib_read()
+    for k, v in pairs.items():
+        pattern = re.compile(rf"^{re.escape(k)}=.*$", re.M)
+        if pattern.search(text):
+            text = pattern.sub(f"{k}={v}", text, count=1)
+        else:
+            text += f"\n{k}={v}\n"
+    with open(ENVF, "w", encoding="utf-8") as f:
+        f.write(text)
+    os.chmod(ENVF, 0o600)
+
+
+def pathlib_read():
+    with open(ENVF, encoding="utf-8") as f:
+        return f.read()
+
+
+def post_form(url, data):
+    body = urllib.parse.urlencode(data).encode()
+    req = urllib.request.Request(url, data=body, method="POST")
+    with urllib.request.urlopen(req, timeout=30) as r:
+        return json.load(r)
+
+
+def api(method, path, token, body=None):
+    """Возвращает (код, распарсенное_тело_или_None)."""
+    req = urllib.request.Request(API + path, method=method, data=body)
+    req.add_header("Authorization", f"OAuth {token}")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            raw = r.read()
+            return r.status, (json.loads(raw) if raw else None)
+    except urllib.error.HTTPError as e:
+        raw = e.read()
+        try:
+            return e.code, json.loads(raw)
+        except Exception:
+            return e.code, None
+
+
+def refresh(env):
+    """Меняет refresh-токен на новый доступ. Токены Яндекса живут год и
+    протухают молча — без этого схема однажды остановится без объяснений."""
+    if not env.get("YADISK_REFRESH_TOKEN"):
+        return None
+    try:
+        r = post_form(OAUTH, {
+            "grant_type": "refresh_token",
+            "refresh_token": env["YADISK_REFRESH_TOKEN"],
+            "client_id": env["YADISK_CLIENT_ID"],
+            "client_secret": env["YADISK_CLIENT_SECRET"],
+        })
+    except Exception as e:
+        print(f"обновление токена не удалось: {e}", file=sys.stderr)
+        return None
+    at = r.get("access_token")
+    if not at:
+        return None
+    upd = {"YADISK_ACCESS_TOKEN": at,
+           "YADISK_TOKEN_OBTAINED": datetime.now(timezone.utc).strftime("%Y-%m-%d")}
+    if r.get("refresh_token"):
+        upd["YADISK_REFRESH_TOKEN"] = r["refresh_token"]
+    set_env(**upd)
+    return at
+
+
+def with_token(fn):
+    """Выполняет запрос, а при 401 один раз обновляет токен и повторяет."""
+    env = load_env()
+    token = env.get("YADISK_ACCESS_TOKEN", "")
+    code, body = fn(token)
+    if code == 401:
+        token = refresh(env)
+        if not token:
+            return 401, None
+        code, body = fn(token)
+    return code, body
+
+
+def cmd_token(code_value):
+    env = load_env()
+    r = post_form(OAUTH, {
+        "grant_type": "authorization_code",
+        "code": code_value,
+        "client_id": env["YADISK_CLIENT_ID"],
+        "client_secret": env["YADISK_CLIENT_SECRET"],
+    })
+    if "access_token" not in r:
+        print(f"обмен не удался: {r}", file=sys.stderr)
+        return 1
+    set_env(YADISK_ACCESS_TOKEN=r["access_token"],
+            YADISK_REFRESH_TOKEN=r.get("refresh_token", ""),
+            YADISK_TOKEN_OBTAINED=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    print("токены получены и записаны в /etc/habitoff/backup.env")
+    print(f"срок жизни доступа: {r.get('expires_in', '?')} сек")
+    return 0
+
+
+def cmd_check():
+    """Проверяем именно папку приложения.
+
+    Раньше здесь запрашивалась статистика всего Диска (`GET /v1/disk/`), и
+    токен с правом `app_folder` получал на это законный 403: он туда не пускает,
+    и правильно делает. Проверять надо ровно то, к чему у нас есть доступ.
+    """
+    try:
+        lst = items()
+    except SystemExit as e:
+        print(e, file=sys.stderr)
+        return 1
+    total = sum(i.get("size", 0) for i in lst) / 2**20
+    print(f"Папка приложения отвечает. Копий: {len(lst)}, суммарно {total:.2f} МБ")
+    return 0
+
+
+def cmd_upload(path):
+    name = os.path.basename(path)
+    q = urllib.parse.urlencode({"path": f"app:/{name}", "overwrite": "true"})
+    code, body = with_token(lambda t: api("GET", f"/resources/upload?{q}", t))
+    if code != 200 or not body or "href" not in body:
+        print(f"не удалось получить ссылку загрузки, код {code}", file=sys.stderr)
+        return 1
+    # curl вместо urllib: потоковая заливка без чтения файла в память целиком
+    r = subprocess.run(["curl", "-s", "-m", "900", "-o", "/dev/null",
+                        "-w", "%{http_code}", "-T", path, body["href"]],
+                       capture_output=True, text=True)
+    if r.stdout.strip() not in ("201", "202"):
+        print(f"загрузка вернула {r.stdout.strip()}", file=sys.stderr)
+        return 1
+    print(f"залито: {name}")
+    return 0
+
+
+def items():
+    q = urllib.parse.urlencode({
+        "path": "app:/", "limit": "500",
+        "fields": "_embedded.items.name,_embedded.items.created,_embedded.items.size",
+    })
+    code, body = with_token(lambda t: api("GET", f"/resources?{q}", t))
+    if code == 404:
+        return []          # папки ещё нет — это не ошибка
+    if code != 200 or not body:
+        raise SystemExit(f"не удалось прочитать папку, код {code}")
+    return body.get("_embedded", {}).get("items", [])
+
+
+def cmd_list():
+    for it in sorted(items(), key=lambda i: i.get("created", "")):
+        size = it.get("size", 0) / 2**20
+        print(f"{it.get('created','?')[:19]}  {size:8.2f} МБ  {it['name']}")
+    return 0
+
+
+def cmd_prune(days):
+    days = int(days)
+    now = datetime.now(timezone.utc)
+    removed = 0
+    for it in items():
+        created = it.get("created")
+        if not created:
+            continue
+        age = (now - datetime.fromisoformat(created)).days
+        if age <= days:
+            continue
+        q = urllib.parse.urlencode({"path": f"app:/{it['name']}", "permanently": "true"})
+        code, _ = with_token(lambda t: api("DELETE", f"/resources?{q}", t))
+        if code in (200, 202, 204):
+            removed += 1
+        else:
+            print(f"не удалось удалить {it['name']}, код {code}", file=sys.stderr)
+    print(f"удалено старых копий: {removed}")
+    return 0
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(__doc__)
+        return 2
+    cmd, *rest = sys.argv[1:]
+    return {
+        "token": lambda: cmd_token(rest[0]),
+        "upload": lambda: cmd_upload(rest[0]),
+        "prune": lambda: cmd_prune(rest[0]),
+        "list": cmd_list,
+        "check": cmd_check,
+    }.get(cmd, lambda: (print(f"неизвестная команда: {cmd}"), 2)[1])()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

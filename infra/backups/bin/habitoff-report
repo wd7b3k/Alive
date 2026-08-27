@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Еженедельный сигнал «всё живо».
+#
+# Уведомление об ошибке не придёт, если сервер умер целиком — а это ровно тот
+# случай, ради которого бэкапы и существуют. Поэтому раз в неделю приходит
+# короткий положительный отчёт, и тогда МОЛЧАНИЕ САМО становится сигналом.
+
+set -uo pipefail
+. /etc/habitoff/backup.env
+STATE=/var/lib/habitoff
+DIR=/srv/alive/backups
+
+age_days() { # файл со временем в epoch
+  [ -r "$1" ] || { echo "никогда"; return; }
+  echo "$(( ( $(date -u +%s) - $(cat "$1") ) / 86400 )) дн. назад"
+}
+
+LAST_BACKUP=$(cat "$STATE/last-backup" 2>/dev/null || echo "ещё не было")
+LAST_VERIFY=$(cat "$STATE/last-verify" 2>/dev/null || echo "ещё не было")
+UPLOAD_AGE=$(age_days "$STATE/last-upload")
+LOCAL_COUNT=$(ls -1 "$DIR"/db-*.dump 2>/dev/null | wc -l)
+OUTBOX=$(ls -1 "$DIR"/outbox/*.gpg 2>/dev/null | wc -l)
+FREE=$(df -h /srv | tail -1 | awk '{print $4}')
+TOKEN_AGE="${YADISK_TOKEN_OBTAINED:-неизвестно}"
+
+WARN=""
+case "$UPLOAD_AGE" in
+  никогда) WARN="$WARN
+⚠ на Диск не уехало ни одной копии";;
+  *) DAYS=${UPLOAD_AGE%% *}
+     [ "$DAYS" -ge 3 ] 2>/dev/null && WARN="$WARN
+⚠ последняя копия на Диске старше трёх дней";;
+esac
+[ "$OUTBOX" -gt 0 ] && WARN="$WARN
+⚠ в очереди на отправку застряло файлов: $OUTBOX"
+case "$LAST_VERIFY" in FAIL*) WARN="$WARN
+⚠ последняя проверка восстановления провалена";; esac
+
+/usr/local/bin/habitoff-notify "Habitoff — недельная сводка
+
+Последний бэкап: $LAST_BACKUP
+На Яндекс.Диск: $UPLOAD_AGE
+Проверка восстановления: $LAST_VERIFY
+Копий на сервере: $LOCAL_COUNT · свободно: $FREE
+Токен Диска получен: $TOKEN_AGE$WARN"
+exit 0
