@@ -14,7 +14,7 @@ export function shareText(replacementTitle: string | null, origin: string): stri
   const what = replacementTitle
     ? `Сработало: ${replacementTitle.toLowerCase()}.`
     : 'Просто заметил момент — и этого хватило.';
-  return `Только что поймал автоматизм и выбрал другой ответ. ${what} Я разбираю такие моменты в ALIVE: ${origin}`;
+  return `Только что поймал автоматизм и выбрал другой ответ. ${what} Я разбираю такие моменты в Habitoff: ${origin}`;
 }
 
 /**
@@ -32,7 +32,7 @@ export function ShareWin({ replacementTitle }: { replacementTitle: string | null
     const text = shareText(replacementTitle, origin);
     try {
       if (typeof navigator !== 'undefined' && navigator.share) {
-        await navigator.share({ title: 'ALIVE', text });
+        await navigator.share({ title: 'Habitoff', text });
         return;
       }
       await navigator.clipboard.writeText(text);

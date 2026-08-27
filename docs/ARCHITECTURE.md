@@ -1,4 +1,4 @@
-# Архитектура ALIVE v3 — принятое направление
+# Архитектура Habitoff v3 — принятое направление
 
 ## 1. Статус
 
@@ -84,13 +84,13 @@ Edge Functions/DB functions используются только там, где
 
 ## 8. Module boundaries
 
-ALIVE v3 реализуется как modular monolith на уровне приложения/БД с явным ownership и public contracts между модулями.
+Habitoff v3 реализуется как modular monolith на уровне приложения/БД с явным ownership и public contracts между модулями.
 
 Никакой необходимости в microservices на ранней стадии нет.
 
 ## 9. Data model evolution
 
-Raw tobacco facts не зависят от ALIVE equivalence model.
+Raw tobacco facts не зависят от Habitoff equivalence model.
 
 Пример:
 

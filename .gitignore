@@ -1,4 +1,4 @@
-# ALIVE local/runtime artifacts
+# Habitoff local/runtime artifacts
 app/node_modules/
 app/dist/
 app/.env.local

@@ -15,7 +15,7 @@ type ErrorRecord = {
   surface: string;
 };
 
-const STORAGE_KEY = 'alive:error-log:v1';
+const STORAGE_KEY = 'habitoff:error-log:v1';
 const MAX_RECORDS = 20;
 let monitoringInstalled = false;
 
@@ -33,7 +33,7 @@ function fingerprint(value: string) {
     hash = (hash << 5) - hash + value.charCodeAt(index);
     hash |= 0;
   }
-  return `alive-${Math.abs(hash)}`;
+  return `habitoff-${Math.abs(hash)}`;
 }
 
 export function reportError(reason: unknown, context: ErrorContext = {}) {
@@ -47,7 +47,7 @@ export function reportError(reason: unknown, context: ErrorContext = {}) {
     surface: context.surface ?? 'web',
   };
 
-  console.error('[ALIVE]', record, reason);
+  console.error('[Habitoff]', record, reason);
 
   // Отпечаток уезжает в базу, текст — нет. Сообщение об ошибке умеет утаскивать за
   // собой пользовательские данные: значение поля, кусок ввода, идентификатор. По

@@ -6,7 +6,7 @@ import { initGlobalErrorMonitoring } from './services/error-monitoring';
 import './redesign.css';
 
 const root = document.getElementById('root');
-if (!root) throw new Error('Не найден корневой элемент ALIVE');
+if (!root) throw new Error('Не найден корневой элемент Habitoff');
 
 initGlobalErrorMonitoring();
 

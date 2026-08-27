@@ -38,7 +38,7 @@ const KNOWN: Record<string, Omit<AuthProvider, 'id'>> = {
 const ORDER = ['google', 'custom:yandex', 'yandex'];
 
 /**
- * Не провайдеры входа: это способы, которые ALIVE не показывает кнопкой, и попадать в
+ * Не провайдеры входа: это способы, которые Habitoff не показывает кнопкой, и попадать в
  * список им нельзя, даже когда они включены в проекте.
  */
 const NOT_A_BUTTON = new Set(['email', 'phone', 'anonymous_users']);

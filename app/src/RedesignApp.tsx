@@ -107,10 +107,10 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
           <>
             <section className="r-now">
               <div className="r-now-copy">
-                <p className="r-kicker">Некоммерческий эксперимент · метод ALIVE v1</p>
+                <p className="r-kicker">Некоммерческий эксперимент · метод Habitoff v1</p>
                 <h1>Не запрещать себе — вернуть себе выбор</h1>
                 <p className="r-lead">
-                  ALIVE помогает заметить, что именно запускает автоматический ритуал, понять, какое
+                  Habitoff помогает заметить, что именно запускает автоматический ритуал, понять, какое
                   состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный
                   момент.
                 </p>
@@ -149,8 +149,9 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                 </div>
                 {error && <p className="r-error">{error}</p>}
                 <p className="r-privacy">
-                  Google нужен только для входа. Личные записи хранятся отдельно и защищаются
-                  правилами доступа PostgreSQL: их не видит никто, кроме тебя.
+                  Вход нужен только чтобы узнать тебя при следующем заходе. Личные записи
+                  хранятся отдельно и защищаются правилами доступа PostgreSQL: их не видит
+                  никто, кроме тебя.
                 </p>
               </div>
             </section>
@@ -168,7 +169,7 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                     <p className="r-kicker">Карта контекстов</p>
                     <h2>Что система уже умеет замечать</h2>
                     <p>
-                      Это реальные пусковые моменты из базы ALIVE. Выбери любой — и увидишь, какие
+                      Это реальные пусковые моменты из базы Habitoff. Выбери любой — и увидишь, какие
                       ответы система подбирает под него.
                     </p>
                   </div>
@@ -197,7 +198,7 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                     <p className="r-kicker">Смыслы</p>
                     <h2>Ради чего становится интереснее жить иначе</h2>
                     <p>
-                      ALIVE не работает запретами. Он начинается со смысла, ради которого стоит
+                      Habitoff не работает запретами. Он начинается со смысла, ради которого стоит
                       менять привычку, — и возвращает тебя к нему в тот момент, когда это труднее
                       всего.
                     </p>
@@ -238,7 +239,7 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                     <p className="r-kicker">Ответы вместо запрета</p>
                     <h2>{catalog.replacements.length} замен, подобранных под ситуацию</h2>
                     <p>
-                      В момент тяги ALIVE предлагает три варианта под конкретный контекст и
+                      В момент тяги Habitoff предлагает три варианта под конкретный контекст и
                       потребность, а не общий список полезных привычек.
                     </p>
                   </div>
@@ -271,7 +272,7 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
 /**
  * «Связки» до входа.
  *
- * Показывает то же, что и внутри: контекст, потребность под ним и ответы, которые ALIVE
+ * Показывает то же, что и внутри: контекст, потребность под ним и ответы, которые Habitoff
  * подбирает. Разница одна — здесь нельзя разобрать свой момент, потому что сохранять его
  * некуда. Это и есть честная причина завести аккаунт, и она названа на экране, а не
  * спрятана за кнопкой.
@@ -293,7 +294,7 @@ function PublicLinks({
         <h1>Ситуация → потребность → привычный ответ</h1>
         <p className="r-lead">
           Зависимость держится не на никотине как таковом, а на связке: определённый момент —
-          определённое состояние — один и тот же ответ. {triggers.length} таких моментов ALIVE умеет
+          определённое состояние — один и тот же ответ. {triggers.length} таких моментов Habitoff умеет
           разбирать, и под каждый подбирает не «полезную привычку вообще», а то, что закрывает
           именно эту потребность.
         </p>
@@ -361,7 +362,7 @@ function PublicMeanings({ catalog }: { catalog: PublicCatalog | null }) {
         <p className="r-kicker">Смыслы</p>
         <h1>Ради чего становится интереснее жить иначе</h1>
         <p className="r-lead">
-          ALIVE не работает запретами. Он начинается со смысла, ради которого стоит менять привычку,
+          Habitoff не работает запретами. Он начинается со смысла, ради которого стоит менять привычку,
           — и возвращает тебя к нему в тот момент, когда это труднее всего. У каждой карточки есть
           вопрос: на него отвечать интереснее, чем соглашаться с лозунгом.
         </p>
@@ -423,7 +424,7 @@ function PublicKnowledge({
               </h2>
               <p>
                 Заголовок каждой карточки — это то, что часто говорят, а не то, что утверждает
-                ALIVE.
+                Habitoff.
               </p>
             </div>
           </div>
@@ -619,7 +620,7 @@ function Setup({
         <div className="r-note">
           <Icon name="shield" />
           <p>
-            Единицы ALIVE — только внутренняя шкала поведения: сигарета = 1, кальянная сессия = 10,
+            Единицы Habitoff — только внутренняя шкала поведения: сигарета = 1, кальянная сессия = 10,
             10 затяжек электронной сигареты = 1. Это не медицинское сравнение вреда.
           </p>
         </div>
@@ -1572,7 +1573,7 @@ function Today({
             <Icon name="chain" size={30} />
             <h3>Пока нет живых эпизодов</h3>
             <p>
-              Ничего не нужно заполнять «для статистики». Используй ALIVE в следующий настоящий
+              Ничего не нужно заполнять «для статистики». Используй Habitoff в следующий настоящий
               момент тяги.
             </p>
             <ShellButton className="primary small" onClick={() => openFlow()}>
@@ -1667,7 +1668,7 @@ function Links({
           <label className="r-field">
             <span>Какой ответ хочу попробовать первым?</span>
             <select value={replacement} onChange={(e) => setReplacement(e.target.value)}>
-              <option value="">Пусть ALIVE подбирает по ситуации</option>
+              <option value="">Пусть Habitoff подбирает по ситуации</option>
               {data.replacements.map((r) => (
                 <option key={r.code} value={r.code}>
                   {r.title}
@@ -1832,7 +1833,7 @@ function PathPage({ data }: { data: Bootstrap }) {
         <div className="r-legend">
           <span>
             <i className="use" />
-            единицы ALIVE
+            единицы Habitoff
           </span>
           <span>
             <i className="success" />
@@ -1914,7 +1915,7 @@ function PathPage({ data }: { data: Bootstrap }) {
           </div>
         </div>
         <p className="r-footnote">
-          Единицы ALIVE нужны только для внутренней динамики. Они не означают равный медицинский
+          Единицы Habitoff нужны только для внутренней динамики. Они не означают равный медицинский
           вред.
         </p>
       </section>
@@ -1927,7 +1928,7 @@ function PathPage({ data }: { data: Bootstrap }) {
  *
  * The Смыслы section is worth nothing if it only exists on its own page: the moment a
  * person needs their reason is the moment they are choosing a replacement, not the
- * moment they browse a library. Their own wording wins over the ALIVE catalog whenever
+ * moment they browse a library. Their own wording wins over the Habitoff catalog whenever
  * they have any, and the catalog card only fills the silence.
  */
 function FlowMeaning({ data }: { data: Bootstrap }) {
@@ -2079,7 +2080,7 @@ function Meanings({
       <section className="r-section">
         <div className="r-section-head">
           <div>
-            <p className="r-kicker">Библиотека ALIVE</p>
+            <p className="r-kicker">Библиотека Habitoff</p>
             <h2>Чужие смыслы, которые можно примерить на себя</h2>
             <p>
               Если своя формулировка пока не находится — возьми ту, что откликается, и перепиши её
@@ -2199,7 +2200,7 @@ function KnowledgePage({ data }: { data: Bootstrap }) {
               </h2>
               <p>
                 Заголовок каждой карточки — это то, что часто говорят, а не то, что утверждает
-                ALIVE. Разбор — ниже.
+                Habitoff. Разбор — ниже.
               </p>
             </div>
           </div>
@@ -2227,7 +2228,7 @@ function Experiment() {
       <Brand compact />
       <article>
         <p className="r-kicker">Эксперимент над автоматизмом</p>
-        <h1>ALIVE ничего тебе не обещает</h1>
+        <h1>Habitoff ничего тебе не обещает</h1>
         <p className="r-lead">
           Мы проверяем простую гипотезу: если достаточно раз заметить повторяющуюся Связку, понять
           её функцию и удовлетворить ту же потребность другим ответом, автоматический сценарий может
@@ -2239,7 +2240,7 @@ function Experiment() {
           уровня, замеченные моменты тяги, прерванные Связки, рабочие Замены, увеличение промежутков
           без продукта и возвращение в систему после употребления.
         </p>
-        <h2>Что известно, а что является гипотезой ALIVE</h2>
+        <h2>Что известно, а что является гипотезой Habitoff</h2>
         <div className="r-evidence">
           <div>
             <b>Хорошо подтверждено</b>
@@ -2256,16 +2257,16 @@ function Experiment() {
             </p>
           </div>
           <div>
-            <b>Эксперимент ALIVE</b>
+            <b>Эксперимент Habitoff</b>
             <p>
               Наша конкретная система Связок, Смыслов, персонального ранжирования Замен и единиц
-              ALIVE — собственная продуктовая гипотеза, которую нужно проверять на данных.
+              Habitoff — собственная продуктовая гипотеза, которую нужно проверять на данных.
             </p>
           </div>
         </div>
         <h2>Безопасность и медицина</h2>
         <p>
-          ALIVE не является лечением и не заменяет врача, психотерапию или доказательные методы
+          Habitoff не является лечением и не заменяет врача, психотерапию или доказательные методы
           отказа от табака. Никотин-заместительная терапия учитывается как поддержка, а не как срыв;
           дозировки сервис не назначает.
         </p>
@@ -2279,7 +2280,7 @@ function Experiment() {
         </p>
         <div className="r-actions">
           <ShellButton className="primary" onClick={() => go('/')}>
-            Вернуться в ALIVE
+            Вернуться в Habitoff
           </ShellButton>
         </div>
       </article>
@@ -2325,7 +2326,7 @@ function Profile({
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `alive-data-${new Date().toISOString().slice(0, 10)}.json`;
+      link.download = `habitoff-data-${new Date().toISOString().slice(0, 10)}.json`;
       link.click();
       URL.revokeObjectURL(url);
     } catch (reason) {
@@ -2418,7 +2419,7 @@ function Profile({
             <Icon name="path" />
             <span>
               <strong>История версий</strong>
-              <small>Что меняется в ALIVE</small>
+              <small>Что меняется в Habitoff</small>
             </span>
             <Icon name="arrow" />
           </button>
@@ -2433,7 +2434,7 @@ function Profile({
             <p className="r-kicker">Твои данные</p>
             <h2>Забрать или удалить</h2>
             <p>
-              Всё, что ALIVE знает о тебе, можно выгрузить одним файлом или удалить целиком. Это не
+              Всё, что Habitoff знает о тебе, можно выгрузить одним файлом или удалить целиком. Это не
               одолжение и не поддержка по запросу — это твоё право, и оно работает без писем.
             </p>
           </div>
@@ -2487,7 +2488,7 @@ function Releases() {
       <Brand compact />
       <article>
         <p className="r-kicker">История версий</p>
-        <h1>ALIVE развивается как эксперимент</h1>
+        <h1>Habitoff развивается как эксперимент</h1>
         <div className="r-release">
           <b>3.1</b>
           <div>
@@ -2521,7 +2522,7 @@ function Releases() {
         </div>
         <div className="r-actions">
           <ShellButton className="primary" onClick={() => go('/')}>
-            Назад в ALIVE
+            Назад в Habitoff
           </ShellButton>
         </div>
       </article>
@@ -2554,7 +2555,7 @@ export default function RedesignApp() {
     return (
       <main className="r-loading">
         <span />
-        <p>Загружаю ALIVE…</p>
+        <p>Загружаю Habitoff…</p>
       </main>
     );
   // Pre-login routing. The reading screens stand on their own without an account, and
@@ -2569,7 +2570,7 @@ export default function RedesignApp() {
     return (
       <main className="r-login">
         <section className="r-login-card">
-          <p className="r-kicker">ALIVE</p>
+          <p className="r-kicker">Habitoff</p>
           <h1>Личная карта не загрузилась</h1>
           <p>{error}</p>
           <ShellButton className="primary" onClick={() => window.location.reload()}>

@@ -1,4 +1,4 @@
-# ALIVE — состояние внешней инфраструктуры
+# Habitoff — состояние внешней инфраструктуры
 
 Этот документ фиксирует безопасное версионируемое отражение внешнего состояния. Секреты и private credentials здесь запрещены.
 
@@ -8,7 +8,7 @@
 - Visibility: `private`
 - Default branch: `main`
 - Активная разработка v3.0 (platform → hardening → redesign) фактически уже находится
-  на `main` (tip `86b4608`, "ALIVE v3.0: deep interface redesign", 2026-08-15).
+  на `main` (tip `86b4608`, "Habitoff v3.0: deep interface redesign", 2026-08-15).
   `v3.0-platform` / `v3.0-hardening` / `v3.0-redesign` — исторические ветки, каждая
   отстаёт от `main`, никакого активного development сейчас на них не ведётся.
 - **Открытый вопрос по PR #4** (не проверяемо только из содержимого git — нет доступа
@@ -21,8 +21,8 @@
 - Canonical standalone merge: `d1bcec0ae7f8feb2fee0cfe64c28bde44ef585cb`
 - Historical source before extraction: `wd7b3k/humanos/projectsv2.0/products/alive/`
 - HumanOS cleanup merge: `78f2f74ef223d1da20c6c65203e5806263ec85e3`
-- Current HumanOS `main` no longer contains the ALIVE product subtree; only pointer/audit history remains.
-- Rule: дальнейшая ALIVE-разработка ведётся только в `wd7b3k/Alive`; HumanOS не используется как источник текущего кода, дизайна или ассетов.
+- Current HumanOS `main` no longer contains the Habitoff product subtree; only pointer/audit history remains.
+- Rule: дальнейшая Habitoff-разработка ведётся только в `wd7b3k/Alive`; HumanOS не используется как источник текущего кода, дизайна или ассетов.
 
 ### Ветки repository — снимок аудита (2026-08-20)
 
@@ -104,7 +104,7 @@ Google OAuth Client Secret никогда не сохранять в repo, front
 
 Status: `PRODUCTION HEALTHY / REDESIGN PREVIEW HEALTHY`.
 
-Dashboard project label: `alive`.
+Dashboard project label: `habitoff`.
 
 Production host:
 
@@ -131,7 +131,7 @@ Canonical host: `https://alive.hmnos.ru`.
 | Зона `hmnos.ru` в Cloudflare | создана, статус `initializing` |
 | Назначенные NS | `ben.ns.cloudflare.com`, `cloe.ns.cloudflare.com` |
 | NS у регистратора | **не переключены** — это единственный оставшийся шаг, и он у владельца |
-| Custom domain на Pages-проекте `alive` | `alive.hmnos.ru` добавлен, статус `initializing`, сертификат Google |
+| Custom domain на Pages-проекте `habitoff` | `alive.hmnos.ru` добавлен, статус `initializing`, сертификат Google |
 | DNS-запись | `CNAME alive.hmnos.ru → alive-aw2.pages.dev`, proxied |
 | Supabase Auth Site URL | всё ещё `https://alive-aw2.pages.dev` |
 

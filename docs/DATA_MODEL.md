@@ -1,4 +1,4 @@
-# Концептуальная модель данных ALIVE v3
+# Концептуальная модель данных Habitoff v3
 
 Это не финальная SQL schema. Документ фиксирует business entities и границы до реализации migrations.
 
@@ -68,7 +68,7 @@ Product-specific typed details должны позволять хранить:
 - hookah session count/duration;
 - vape puffs/device type/liquid/device data.
 
-Raw facts не переписываются при изменении ALIVE equivalence model.
+Raw facts не переписываются при изменении Habitoff equivalence model.
 
 ## Catalogs
 
@@ -121,7 +121,7 @@ Versioned weights, например:
 Rebuildable daily projection:
 
 - raw usage by product;
-- ALIVE units by model version;
+- Habitoff units by model version;
 - baseline delta;
 - successful responses;
 - broken Links;

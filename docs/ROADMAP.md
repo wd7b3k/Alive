@@ -1,10 +1,10 @@
-# Roadmap ALIVE
+# Roadmap Habitoff
 
 ## F0 — Project Foundation
 
 Цель:
 
-- отделить ALIVE как самостоятельный продуктовый контур;
+- отделить Habitoff как самостоятельный продуктовый контур;
 - зафиксировать миссию, некоммерческий статус, происхождение, privacy, methodology, architecture direction, modules, hypotheses и release discipline.
 
 Gate:
@@ -25,7 +25,7 @@ Scope:
 - PostgreSQL + RLS;
 - onboarding/baseline;
 - cigarette/hookah/vape;
-- raw events + ALIVE Equivalence v1;
+- raw events + Habitoff Equivalence v1;
 - craving flow;
 - Trigger/Need/Replacement catalogs;
 - Replacement Engine v1;

@@ -145,7 +145,7 @@ export function GoalLibrary({ goals, onTake }: { goals: Goal[]; onTake?: (goal: 
 /**
  * Today's card, shown once and large.
  *
- * This is the one place in ALIVE that is allowed to be purely inspiring: it asserts
+ * This is the one place in Habitoff that is allowed to be purely inspiring: it asserts
  * nothing about the person's data and asks a single question.
  */
 export function GoalSpotlight({ goal, onTake }: { goal: Goal; onTake?: (goal: Goal) => void }) {

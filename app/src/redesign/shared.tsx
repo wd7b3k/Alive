@@ -4,7 +4,7 @@ import { getSupabase } from '../supabase';
 import { GOOGLE, fetchProviders, overrideFromEnv, type AuthProvider } from '../auth-providers';
 import { navigateTo } from '../services/navigation';
 import { Icon, type IconName } from '../ui-icons';
-import logoUrl from '../assets/brand-logo-full.png';
+import logoUrl from '../assets/brand-logo-full.svg';
 
 export function ShellButton({
   children,
@@ -53,7 +53,7 @@ export function Modal({
  * Инициалы вместо фотографии из Google.
  *
  * Раньше сюда подставлялся `avatar_url` из профиля Google. Это стоило двух вещей:
- * каждая страница ALIVE запрашивала картинку у `lh3.googleusercontent.com`, то есть
+ * каждая страница Habitoff запрашивала картинку у `lh3.googleusercontent.com`, то есть
  * сообщала Google о посещении, — а в продукте, который обещает приватность, это плохой
  * размен ради украшения; и картинка приходила квадратной 96×96, а вставала в сетку
  * искажённой.
@@ -84,9 +84,9 @@ export function Brand({ compact = false }: { compact?: boolean }) {
       type="button"
       className={`r-brand ${compact ? 'compact' : ''}`}
       onClick={() => navigateTo('/')}
-      aria-label="ALIVE — на главную"
+      aria-label="Habitoff — на главную"
     >
-      <img src={logoUrl} alt="ALIVE" />
+      <img src={logoUrl} alt="Habitoff" />
     </button>
   );
 }
@@ -254,12 +254,12 @@ export function LoginPage() {
 
   useEffect(() => {
     if (overrideFromEnv()) return;
-    let alive = true;
+    let mounted = true;
     fetchProviders().then((list) => {
-      if (alive && list) setProviders(list);
+      if (mounted && list) setProviders(list);
     });
     return () => {
-      alive = false;
+      mounted = false;
     };
   }, []);
 
@@ -276,11 +276,11 @@ export function LoginPage() {
   return (
     <main className="r-login">
       <section className="r-login-card">
-        <img src={logoUrl} className="r-login-logo" alt="ALIVE" />
-        <p className="r-kicker">Некоммерческий эксперимент · метод ALIVE v1</p>
+        <img src={logoUrl} className="r-login-logo" alt="Habitoff" />
+        <p className="r-kicker">Некоммерческий эксперимент · метод Habitoff v1</p>
         <h1>Не запрещать себе — вернуть себе выбор</h1>
         <p className="r-lead">
-          ALIVE помогает заметить, что именно запускает автоматический ритуал, понять, какое
+          Habitoff помогает заметить, что именно запускает автоматический ритуал, понять, какое
           состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.
         </p>
         <div className="r-login-actions">
@@ -305,7 +305,7 @@ export function LoginPage() {
         <p className="r-privacy">
           {providers.length > 1
             ? 'Любой из этих аккаунтов нужен только для входа.'
-            : 'Google нужен только для входа.'}{' '}
+            : `${providers[0].label} нужен только для входа.`}{' '}
           Поведенческие данные хранятся отдельно и защищаются правилами доступа PostgreSQL.
         </p>
       </section>

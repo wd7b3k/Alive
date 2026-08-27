@@ -1,4 +1,4 @@
-# ALIVE v3 frontend
+# Habitoff v3 frontend
 
 ## Требования
 

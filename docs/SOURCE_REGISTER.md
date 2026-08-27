@@ -1,4 +1,4 @@
-# Source Register ALIVE
+# Source Register Habitoff
 
 Реестр конкретных источников, заимствований и научных оснований.
 
@@ -6,7 +6,7 @@
 
 ## Формат записи
 
-| ID | Механика/утверждение | Источник | Тип использования | Адаптация ALIVE | Evidence status | Copyright/license note | Product location |
+| ID | Механика/утверждение | Источник | Тип использования | Адаптация Habitoff | Evidence status | Copyright/license note | Product location |
 |---|---|---|---|---|---|---|---|
 
 ## Правила

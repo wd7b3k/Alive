@@ -98,7 +98,7 @@ describe('evidenceForReplacement', () => {
     expect(evidenceForReplacement(knowledge, replacement({ code: 'walk' }))).toBeNull();
   });
 
-  // A level C heuristic with no study is a real, informative state — "ALIVE's own
+  // A level C heuristic with no study is a real, informative state — "Habitoff's own
   // reasoning, no research" is something the reader should see, not something to hide.
   it('returns the level even when there is no source at all', () => {
     const evidence = evidenceForReplacement(
