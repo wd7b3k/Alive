@@ -2126,10 +2126,16 @@ function FlowMeaning({ data }: { data: Bootstrap }) {
   }
   const goal = goalOfTheDay(data.goals, today);
   if (!goal) return null;
+  // Здесь стоит название смысла, а не вопрос из его карточки. Вопрос
+  // (`reflection_prompt_ru`) написан для библиотеки, где на него садятся и отвечают;
+  // в потоке тяги он просит работы там, где человек выбирает действие, и вдобавок
+  // приходит из смысла дня, а не из разобранного момента — поэтому читается как
+  // случайный. Личные формулировки показываются здесь заголовком, каталожные теперь
+  // тоже: один жанр в одном месте.
   return (
     <p className="r-flow-meaning">
       <Icon name="meaning" size={15} />
-      <span>{goal.reflection_prompt_ru ?? goal.title_ru}</span>
+      <span>{goal.title_ru}</span>
     </p>
   );
 }
