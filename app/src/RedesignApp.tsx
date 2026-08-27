@@ -2710,13 +2710,6 @@ function Releases() {
             <div>
               <h2>{release.title}</h2>
               <p>{release.summary}</p>
-              {release.changes && (
-                <ul className="r-release-changes">
-                  {release.changes.map((change) => (
-                    <li key={change}>{change}</li>
-                  ))}
-                </ul>
-              )}
             </div>
           </div>
         ))}
