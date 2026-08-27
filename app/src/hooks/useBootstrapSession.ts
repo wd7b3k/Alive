@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { loadBootstrap, type Bootstrap } from '../data';
 import { publicEnv } from '../env';
+import { recordConsent } from '../services/consent';
 import { reportError } from '../services/error-monitoring';
 import { getSupabase } from '../supabase';
 
@@ -39,6 +40,9 @@ export function useBootstrapSession() {
         if (cancelled) return;
         setSession(current);
         if (!current) return;
+        // Согласие даётся до входа, галочкой на экране входа; сюда оно доезжает первым
+        // же запросом после возврата от провайдера. Ошибка записи вход не ломает.
+        void recordConsent(current);
         try {
           const next = await loadBootstrap(current);
           if (!cancelled) setData(next);

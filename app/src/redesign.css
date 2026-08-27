@@ -192,4 +192,25 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
    на две строки. Рамка нужна была только чтобы отделить колонку от текста — на одной
    колонке отделять нечего. */
 @media(max-width:760px){.r-login-enter{padding:0;border:0;background:none}}
+/* Согласие участника. Галочка стоит над кнопками входа, а не под ними: она условие,
+   а не примечание, и кнопки до неё выключены. */
+.r-consent{display:grid;grid-template-columns:20px minmax(0,1fr);gap:12px;align-items:start;margin-bottom:16px;font-size:var(--r-fs-sm);line-height:1.5;color:var(--r-muted);cursor:pointer}
+.r-consent input{width:20px;height:20px;margin:0;accent-color:var(--r-teal);cursor:pointer}
+.r-linklike{appearance:none;border:0;background:none;padding:0;font:inherit;color:var(--r-teal);text-decoration:underline;cursor:pointer}
+/* Витрина гипотез. Непосчитанные метрики не прячутся и не выкрашиваются в тревожный
+   цвет: список того, чего продукт про себя не знает, — это результат, а не ошибка. */
+.r-hypotheses{display:grid;gap:24px;margin-top:16px}
+.r-hypotheses section{border:1px solid var(--r-line);border-radius:var(--r-r-lg);padding:16px;background:rgba(255,255,255,.02)}
+.r-hypotheses dl{margin:12px 0 0;display:grid;gap:8px}
+.r-hypotheses dl>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:baseline;padding-bottom:8px;border-bottom:1px solid var(--r-line)}
+.r-hypotheses dl>div:last-child{padding-bottom:0;border-bottom:0}
+.r-hypotheses dt{font-size:var(--r-fs-sm);color:var(--r-text);min-width:0}
+.r-hypotheses dt small{display:block;margin-top:4px;font-size:var(--r-fs-xs);line-height:1.45;color:var(--r-dim)}
+.r-hypotheses dd{margin:0;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.r-hypotheses dd b{font-size:var(--r-fs-h3);font-weight:700}
+.r-hypotheses dd span{font-size:var(--r-fs-xs);color:var(--r-muted)}
+.r-hypotheses dd small{display:block;font-size:var(--r-fs-xs);color:var(--r-dim)}
+.r-hypotheses dd em{font-style:normal;font-size:var(--r-fs-sm);color:var(--r-dim)}
+.r-hypotheses .unavailable dt{color:var(--r-muted)}
+@media(max-width:600px){.r-hypotheses dl>div{grid-template-columns:1fr;gap:4px}.r-hypotheses dd{text-align:left}}
 

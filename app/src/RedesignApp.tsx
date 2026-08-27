@@ -7,6 +7,7 @@ import {
   deleteEpisode,
   deleteLink,
   deleteMeaning,
+  describeOffer,
   pickReplacements,
   productLabel,
   saveCheckin,
@@ -498,28 +499,39 @@ function Setup({
   const [error, setError] = useState('');
   async function save() {
     const products: OnboardingDraft['products'] = [];
+    // Пустое поле — это «не знаю», а не «ноль». Раньше `Number('' || 0)` молча писал в
+    // исходный уровень ноль, и сравнение «сейчас против исходного» для этого участника
+    // становилось бессмысленным, а он об этом не узнавал. См. ADR-0006.
+    const answered = (raw: string) => {
+      const value = Number(raw);
+      return raw.trim() !== '' && Number.isFinite(value) && value >= 0 ? { value } : null;
+    };
+    const baseline = (raw: string, key: string) => {
+      const parsed = answered(raw);
+      return parsed ? { [key]: parsed.value } : {};
+    };
     if (chosen.cigarette)
       products.push({
         productType: 'cigarette',
         role: 'target_dependency',
-        baseline: { cigarettes_per_day: Number(cigs || 0) },
-        defaults: { pack_price_rub: Number(pack || 0), pack_size: 20 },
+        baseline: baseline(cigs, 'cigarettes_per_day'),
+        defaults: { ...baseline(pack, 'pack_price_rub'), pack_size: 20 },
       });
     if (chosen.hookah)
       products.push({
         productType: 'hookah',
         role: 'target_dependency',
-        baseline: { sessions_per_week: Number(hookahs || 0) },
-        defaults: { hookah_default_price_rub: Number(hookahPrice || 2500) },
+        baseline: baseline(hookahs, 'sessions_per_week'),
+        defaults: { hookah_default_price_rub: answered(hookahPrice)?.value ?? 2500 },
       });
     if (chosen.vape)
       products.push({
         productType: 'vape',
         role: 'target_dependency',
-        baseline: { puffs_per_day: Number(puffs || 0) },
+        baseline: baseline(puffs, 'puffs_per_day'),
         defaults: {
           claimed_puffs: 5000,
-          consumable_price_rub: Number(vapePrice || 1500),
+          consumable_price_rub: answered(vapePrice)?.value ?? 1500,
           device_type: 'disposable',
         },
       });
@@ -550,9 +562,17 @@ function Setup({
               собой.
             </p>
           </div>
-          {cancel && (
+          {cancel ? (
             <button className="r-icon-button" onClick={cancel}>
               <Icon name="close" />
+            </button>
+          ) : (
+            // Первый заход: закрыть экран нечем, и до этой правки человек, не готовый
+            // заполнять форму, упирался в тупик — ни «Отмена», ни «Назад». Теперь есть
+            // выход в открытую часть продукта; настройка спросит снова при следующем
+            // заходе, ничего не теряется. См. ADR-0006.
+            <button className="r-button ghost small" onClick={() => go('/knowledge')}>
+              Пока просто посмотреть
             </button>
           )}
         </div>
@@ -895,20 +915,28 @@ function QuickUse({
  * `craving_before` — вход для craving delta в H-ALIVE-001, и потерять его на коротком
  * пути было бы хуже, чем не сокращать сценарий вовсе.
  */
-function CravingBefore({ value, onChange }: { value: number; onChange: (next: number) => void }) {
+function CravingBefore({
+  value,
+  onChange,
+}: {
+  value: number | null;
+  onChange: (next: number) => void;
+}) {
   return (
     <div className="r-slider">
       <label>
         <span>Сила тяги</span>
-        <b>{value}/10</b>
+        <b>{value === null ? '—' : `${value}/10`}</b>
       </label>
       <input
         type="range"
-        min="1"
+        min="0"
         max="10"
-        value={value}
+        value={value ?? 5}
+        aria-valuetext={value === null ? 'не отвечено' : `${value} из 10`}
         onChange={(e) => onChange(Number(e.target.value))}
       />
+      {value === null && <small>Можно не отвечать — тогда это не запишется</small>}
     </div>
   );
 }
@@ -946,10 +974,13 @@ export function Guided({
   const [triggerCode, setTrigger] = useState(start.trigger);
   const [needCode, setNeed] = useState(start.need?.needCode ?? '');
   const [needFromHistory, setNeedFromHistory] = useState<NeedGuess | null>(start.need);
-  const [before, setBefore] = useState(7);
+  // Ползунки начинаются с «не отвечено», а не с числа. Предзаполненные 7 / 4 / 3
+  // записывались в базу, даже если человек их не трогал: на пилоте из пяти участников
+  // это делало craving delta бесполезной, а выглядело как их ответ. См. ADR-0006.
+  const [before, setBefore] = useState<number | null>(null);
   const [replacementCode, setReplacement] = useState<string | null>(null);
-  const [after, setAfter] = useState(4);
-  const [help, setHelp] = useState(3);
+  const [after, setAfter] = useState<number | null>(null);
+  const [help, setHelp] = useState<number | null>(null);
   const [outcome, setOutcome] = useState<'successful_response' | 'nicotine_used' | 'abandoned'>(
     'successful_response',
   );
@@ -960,6 +991,13 @@ export function Guided({
     () => (triggerCode && needCode ? pickReplacements(data, product, triggerCode, needCode) : []),
     [data, product, triggerCode, needCode],
   );
+  // Экран ответа мог не открыться: тогда показывать было нечего, и в эпизод уходит
+  // пустой список, а не «показали ноль вариантов».
+  const offerSeen = useRef(false);
+  useEffect(() => {
+    if (step === 3 && candidates.length) offerSeen.current = true;
+  }, [step, candidates.length]);
+  const offer = useMemo(() => describeOffer(data, candidates), [data, candidates]);
   const selected = data.replacements.find((r) => r.code === replacementCode);
   const triggers = data.triggers.filter((t) => t.product_types.includes(product));
   // 3–5 личных контекстов наверх сетки; остальные 20+ карточек уезжают за раскрытие
@@ -1073,6 +1111,9 @@ export function Guided({
         cravingAfter: after,
         helpfulness: help,
         replacementCode,
+        offeredReplacements: offerSeen.current ? candidates.map((item) => item.code) : [],
+        offerPersonalized: offerSeen.current ? offer.personalized : null,
+        offerReason: offerSeen.current ? offer.reason : null,
         outcome,
         tobacco,
       });
@@ -1307,26 +1348,28 @@ export function Guided({
             <div className="r-slider">
               <label>
                 <span>Тяга после</span>
-                <b>{after}/10</b>
+                <b>{after === null ? '—' : `${after}/10`}</b>
               </label>
               <input
                 type="range"
                 min="0"
                 max="10"
-                value={after}
+                value={after ?? 5}
+                aria-valuetext={after === null ? 'не отвечено' : `${after} из 10`}
                 onChange={(e) => setAfter(Number(e.target.value))}
               />
             </div>
             <div className="r-slider">
               <label>
                 <span>Насколько помогло</span>
-                <b>{help}/5</b>
+                <b>{help === null ? '—' : `${help}/5`}</b>
               </label>
               <input
                 type="range"
-                min="0"
+                min="1"
                 max="5"
-                value={help}
+                value={help ?? 3}
+                aria-valuetext={help === null ? 'не отвечено' : `${help} из 5`}
                 onChange={(e) => setHelp(Number(e.target.value))}
               />
             </div>

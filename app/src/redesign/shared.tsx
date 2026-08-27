@@ -5,6 +5,7 @@ import { GOOGLE, fetchProviders, overrideFromEnv, type AuthProvider } from '../a
 import { navigateTo } from '../services/navigation';
 import { Icon, type IconName } from '../ui-icons';
 import { ProviderMark, providerTile } from './provider-marks';
+import { rememberConsent } from '../services/consent';
 import logoUrl from '../assets/brand-logo-full.svg';
 
 export function ShellButton({
@@ -249,6 +250,7 @@ export const startGoogleSignIn = () => startSignIn('google');
 export function LoginPage() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
+  const [consented, setConsented] = useState(false);
   // Пока Supabase не ответил, показываем Google: это способ, которым люди уже входят, и
   // мигать кнопками на экране входа хуже, чем показать одну верную сразу.
   const [providers, setProviders] = useState<AuthProvider[]>(() => overrideFromEnv() ?? [GOOGLE]);
@@ -265,6 +267,10 @@ export function LoginPage() {
   }, []);
 
   async function start(provider: AuthProvider) {
+    if (!consented) return;
+    // Отметка ставится до ухода к провайдеру: обратно человек вернётся уже другой
+    // загрузкой страницы, и состояние компонента до неё не доживёт.
+    rememberConsent();
     setBusy(provider.id);
     setError('');
     const message = await startSignIn(provider.id);
@@ -287,6 +293,23 @@ export function LoginPage() {
           </p>
         </div>
         <div className="r-login-enter">
+          <label className="r-consent">
+            <input
+              type="checkbox"
+              checked={consented}
+              onChange={(event) => setConsented(event.target.checked)}
+            />
+            <span id="consent-note">
+              Я понимаю, что это исследование, и согласен участвовать.{' '}
+              <button
+                type="button"
+                className="r-linklike"
+                onClick={() => navigateTo('/experiment')}
+              >
+                Как устроен эксперимент
+              </button>
+            </span>
+          </label>
           <div className="r-login-actions">
             {providers.map((provider) => (
               <button
@@ -294,8 +317,9 @@ export function LoginPage() {
                 type="button"
                 className="r-provider"
                 onClick={() => start(provider)}
-                disabled={busy !== ''}
+                disabled={busy !== '' || !consented}
                 aria-busy={busy === provider.id}
+                aria-describedby="consent-note"
               >
                 <span className="r-provider-mark" style={{ background: providerTile(provider.id) }}>
                   <ProviderMark id={provider.id} />
@@ -316,8 +340,8 @@ export function LoginPage() {
               </button>
             ))}
             <div className="r-login-alt">
-              <ShellButton className="ghost" onClick={() => navigateTo('/experiment')}>
-                Как устроен эксперимент
+              <ShellButton className="ghost" onClick={() => navigateTo('/knowledge')}>
+                Сначала почитать Факты
               </ShellButton>
             </div>
           </div>
