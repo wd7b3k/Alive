@@ -1,6 +1,11 @@
 # Habitoff local/runtime artifacts
 app/node_modules/
 node_modules/
+# В корне репозитория своего package.json нет: приложение живёт в app/. Всё, что
+# появляется здесь, — след случайного `npm install` не в той папке, и однажды такой
+# след едва не заехал в индекс на 759 файлов вместе с чужими node_modules.
+/package.json
+/package-lock.json
 app/dist/
 app/.env.local
 app/.env.*.local

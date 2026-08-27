@@ -58,6 +58,8 @@ import { GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
 import { ShareWin } from './redesign/share';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
 import { Brand, Header, LoginPage, Modal, PublicHeader, ShellButton } from './redesign/shared';
+import { RELEASES } from './redesign/releases';
+import { buildInfo } from './env';
 import {
   fmt,
   localDay,
@@ -2685,37 +2687,23 @@ function Releases() {
       <article>
         <p className="r-kicker">История версий</p>
         <h1>Habitoff развивается как эксперимент</h1>
-        <div className="r-release">
-          <b>3.1</b>
-          <div>
-            <h2>Факты, Смыслы и «Вместе»</h2>
-            <p>
-              Доказательная база с источниками и границами, раздел смыслов вокруг того, ради чего
-              всё это, агрегаты по сообществу и две кнопки, без которых обещание приватности было бы
-              словами: выгрузить свои данные и удалить аккаунт.
-            </p>
+        {RELEASES.map((release) => (
+          <div className="r-release" key={release.version}>
+            <b>{release.version}</b>
+            <div>
+              <h2>{release.title}</h2>
+              <p>{release.summary}</p>
+              {release.changes && (
+                <ul className="r-release-changes">
+                  {release.changes.map((change) => (
+                    <li key={change}>{change}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="r-release">
-          <b>3.0</b>
-          <div>
-            <h2>Универсальная платформа</h2>
-            <p>
-              Google-вход, отдельная база данных, сигареты / кальян / электронка, Связки, Смыслы,
-              контекстные Замены и персональная аналитика.
-            </p>
-          </div>
-        </div>
-        <div className="r-release">
-          <b>2.7</b>
-          <div>
-            <h2>Последний эталон предыдущей архитектуры</h2>
-            <p>
-              Версия, от которой 3.0 обязана не регрессировать по глубине, вовлечению и качеству
-              интерфейса.
-            </p>
-          </div>
-        </div>
+        ))}
+        <BuildStamp />
         <div className="r-actions">
           <ShellButton className="primary" onClick={() => go('/')}>
             Назад в Habitoff
@@ -2723,6 +2711,31 @@ function Releases() {
         </div>
       </article>
     </main>
+  );
+}
+
+/**
+ * Из какого коммита собрана эта страница.
+ *
+ * Строка выглядит служебной, и она служебная. Она здесь потому, что расхождение между
+ * репозиторием и живым продом до 27.08.2026 обнаруживалось только тем, что кто-то
+ * однажды открывал сайт и читал заголовок. Теперь ответ на вопрос «а это вообще
+ * свежая сборка» стоит одного взгляда — и на этой странице, и в `/version.json`,
+ * который читает `scripts/check-deploy-drift.mjs`.
+ */
+function BuildStamp() {
+  const { version, commit } = buildInfo;
+  if (!version && !commit) return null;
+  return (
+    <p className="r-build-stamp">
+      Эта страница собрана из версии {version || '—'}
+      {commit && (
+        <>
+          , коммит <code>{commit.slice(0, 7)}</code>
+        </>
+      )}
+      .
+    </p>
   );
 }
 

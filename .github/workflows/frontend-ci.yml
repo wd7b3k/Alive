@@ -63,6 +63,36 @@ jobs:
       - name: Scan production bundle for leaked secrets
         run: node ../scripts/scan-bundle-for-secrets.mjs dist
 
+  current-state:
+    name: Изменение кода без обновления CURRENT_STATE.md
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      # RELEASE_POLICY §4 и §9 требуют держать docs/CURRENT_STATE.md в актуальном
+      # состоянии. Требование верное и до 27.08.2026 ничем не проверялось: документ
+      # описывал Cloudflare Pages спустя сутки после переезда на свой сервер.
+      #
+      # Это предупреждение, а не блокировка. Бывают правки, для которых обновление
+      # состояния действительно не нужно, и превращать их в спор с CI дороже, чем
+      # изредка получить лишнюю строку в логе. ADR-0009.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Warn when CURRENT_STATE.md is untouched
+        run: |
+          base="origin/${{ github.base_ref }}"
+          git fetch --quiet origin "${{ github.base_ref }}"
+          changed="$(git diff --name-only "$base"...HEAD)"
+          code="$(echo "$changed" | grep -E '^(app|supabase)/' || true)"
+          state="$(echo "$changed" | grep -E '^docs/CURRENT_STATE\.md$' || true)"
+          if [ -n "$code" ] && [ -z "$state" ]; then
+            echo "::warning file=docs/CURRENT_STATE.md::PR меняет app/** или supabase/**, но не трогает docs/CURRENT_STATE.md. RELEASE_POLICY §4/§9 — обновите состояние в этом же PR или объясните в описании, почему не нужно."
+          else
+            echo "OK: либо код не тронут, либо CURRENT_STATE.md обновлён вместе с ним."
+          fi
+
   rls-isolation:
     name: RLS cross-tenant isolation (local Postgres, no live Supabase credentials)
     runs-on: ubuntu-latest
