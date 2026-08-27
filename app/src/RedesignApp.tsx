@@ -123,7 +123,6 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                 главное действие переставало быть главным. */}
             <section className="r-now">
               <div className="r-now-copy">
-                <p className="r-kicker">Некоммерческий эксперимент · метод Habitoff v1</p>
                 <h1>Не запрещать себе — вернуть себе выбор</h1>
                 <p className="r-lead">
                   Habitoff помогает заметить, что именно запускает автоматический ритуал, понять,
