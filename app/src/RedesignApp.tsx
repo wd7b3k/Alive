@@ -184,7 +184,7 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
               <section className="r-section">
                 <div className="r-section-head">
                   <div>
-                    <p className="r-kicker">Карта контекстов</p>
+                    <p className="r-kicker observe">Карта контекстов</p>
                     <h2>Что система уже умеет замечать</h2>
                     <p>
                       Это реальные пусковые моменты из базы Habitoff. Выбери любой — и увидишь,
@@ -1117,7 +1117,7 @@ export function Guided({
       {step === 1 && (
         <section className="r-flow">
           <div className="r-flow-title">
-            <span className="r-step-icon">
+            <span className="r-step-icon observe">
               <Icon name="eye" />
             </span>
             <div>
@@ -1275,7 +1275,7 @@ export function Guided({
       )}
       {step === 4 && (
         <section className="r-flow">
-          <div className="r-result-choice">
+          <div className={selected ? 'r-result-choice' : 'r-result-choice observe'}>
             {selected ? (
               <>
                 <span className="r-big-icon">
@@ -1652,7 +1652,7 @@ function Today({
       <section className="r-section">
         <div className="r-section-head">
           <div>
-            <p className="r-kicker">Карта внимания</p>
+            <p className="r-kicker observe">Карта внимания</p>
             <h2>Где автоматизм сейчас сильнее всего</h2>
             <p>
               Это не рейтинг «слабостей». Это места, где следующий эксперимент даст больше всего
@@ -1869,7 +1869,7 @@ function Links({
       <section className="r-section">
         <div className="r-section-head">
           <div>
-            <p className="r-kicker">Карта контекстов</p>
+            <p className="r-kicker observe">Карта контекстов</p>
             <h2>Что система уже видит</h2>
           </div>
         </div>

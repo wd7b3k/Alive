@@ -160,6 +160,42 @@ describe('redesign.css инварианты', () => {
     expect(css).not.toContain('--r-lime');
   });
 
+  /**
+   * Янтарь переименован в цвет наблюдения и больше не значит «статус».
+   * Токена `--r-amber` не должно остаться нигде: пока он существует, любой новый статус
+   * покрасится им обратно, и цвет снова начнёт значить две вещи сразу. См. ADR-0005.
+   */
+  it('не оставляет янтарный токен статуса', () => {
+    expect(css).not.toContain('--r-amber');
+  });
+
+  /**
+   * Цвет наблюдения приходит прямо из знака: точка над разомкнутым кольцом и слог «off».
+   * Он отмечает моменты, где продукт просит заметить автоматизм, и ничего больше. Список
+   * закрытый: чтобы добавить сюда селектор, нужна причина уровня ADR, а не удобство.
+   *
+   * Ровно так был потерян лайм — им покрасили действие, потом успех, потом цель, потом
+   * миф, и каждый шаг по отдельности выглядел разумным.
+   */
+  it('ставит цвет наблюдения только в местах наблюдения', () => {
+    const allowed = new Set([
+      ':root',
+      '.r-kicker.observe',
+      '.r-kicker.observe::before',
+      '.r-step-icon.observe',
+      '.r-flow-prefill.collapsed>p>svg',
+      '.r-attention-grid>button .r-choice-icon',
+      '.r-attention-grid>button:hover .r-choice-icon',
+      '.r-result-choice.observe',
+      '.r-result-choice.observe .r-big-icon',
+    ]);
+    const observing = rules
+      .filter((rule) => /--r-observe|242,\s*202,\s*105|#f2ca69/i.test(rule.body))
+      .map((rule) => rule.selector)
+      .filter((selector) => !allowed.has(selector));
+    expect(observing).toEqual([]);
+  });
+
   it('держит варианты кнопок в одном месте', () => {
     for (const selector of ['.r-button', '.r-button.primary', '.r-button.ghost']) {
       expect(find(selector).length, `${selector} должен быть объявлен один раз`).toBe(1);

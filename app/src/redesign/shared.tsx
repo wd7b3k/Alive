@@ -4,6 +4,7 @@ import { getSupabase } from '../supabase';
 import { GOOGLE, fetchProviders, overrideFromEnv, type AuthProvider } from '../auth-providers';
 import { navigateTo } from '../services/navigation';
 import { Icon, type IconName } from '../ui-icons';
+import { ProviderMark, providerTile } from './provider-marks';
 import logoUrl from '../assets/brand-logo-full.svg';
 
 export function ShellButton({
@@ -275,39 +276,59 @@ export function LoginPage() {
 
   return (
     <main className="r-login">
-      <section className="r-login-card">
-        <img src={logoUrl} className="r-login-logo" alt="Habitoff" />
-        <p className="r-kicker">Некоммерческий эксперимент · метод Habitoff v1</p>
-        <h1>Не запрещать себе — вернуть себе выбор</h1>
-        <p className="r-lead">
-          Habitoff помогает заметить, что именно запускает автоматический ритуал, понять, какое
-          состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.
-        </p>
-        <div className="r-login-actions">
-          {providers.map((provider, index) => (
-            <ShellButton
-              key={provider.id}
-              className={index === 0 ? 'primary' : 'ghost'}
-              onClick={() => start(provider)}
-              disabled={busy !== ''}
-            >
-              {busy === provider.id
-                ? `Открываю ${provider.opening}…`
-                : `Войти через ${provider.label}`}{' '}
-              <Icon name="arrow" size={18} />
-            </ShellButton>
-          ))}
-          <ShellButton className="ghost" onClick={() => navigateTo('/experiment')}>
-            Как устроен эксперимент
-          </ShellButton>
+      <section className="r-login-card split">
+        <div className="r-login-copy">
+          <img src={logoUrl} className="r-login-logo" alt="Habitoff" />
+          <p className="r-kicker">Некоммерческий эксперимент · метод Habitoff v1</p>
+          <h1>Не запрещать себе — вернуть себе выбор</h1>
+          <p className="r-lead">
+            Habitoff помогает заметить, что именно запускает автоматический ритуал, понять, какое
+            состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный момент.
+          </p>
         </div>
-        {error && <p className="r-error">{error}</p>}
-        <p className="r-privacy">
-          {providers.length > 1
-            ? 'Любой из этих аккаунтов нужен только для входа.'
-            : `${providers[0].label} нужен только для входа.`}{' '}
-          Поведенческие данные хранятся отдельно и защищаются правилами доступа PostgreSQL.
-        </p>
+        <div className="r-login-enter">
+          <div className="r-login-actions">
+            {providers.map((provider) => (
+              <button
+                key={provider.id}
+                type="button"
+                className="r-provider"
+                onClick={() => start(provider)}
+                disabled={busy !== ''}
+                aria-busy={busy === provider.id}
+              >
+                <span className="r-provider-mark" style={{ background: providerTile(provider.id) }}>
+                  <ProviderMark id={provider.id} />
+                </span>
+                <span className="r-provider-text">
+                  <strong>
+                    {busy === provider.id
+                      ? `Открываю ${provider.opening}…`
+                      : `Войти через ${provider.label}`}
+                  </strong>
+                  <small>
+                    {busy === provider.id
+                      ? 'Открывается страница провайдера'
+                      : 'Подтвердит, что это ты, и вернёт сюда'}
+                  </small>
+                </span>
+                <Icon name="arrow" size={18} />
+              </button>
+            ))}
+            <div className="r-login-alt">
+              <ShellButton className="ghost" onClick={() => navigateTo('/experiment')}>
+                Как устроен эксперимент
+              </ShellButton>
+            </div>
+          </div>
+          {error && <p className="r-error">{error}</p>}
+          <p className="r-privacy">
+            {providers.length > 1
+              ? 'Любой из этих аккаунтов нужен только для входа.'
+              : `${providers[0].label} нужен только для входа.`}{' '}
+            Поведенческие данные хранятся отдельно и защищаются правилами доступа PostgreSQL.
+          </p>
+        </div>
       </section>
     </main>
   );
