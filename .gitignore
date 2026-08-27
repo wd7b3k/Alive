@@ -7,6 +7,8 @@ node_modules/
 /package.json
 /package-lock.json
 app/dist/
+# собранная страница доски: артефакт сборки, не исходник
+dist/
 app/.env.local
 app/.env.*.local
 .DS_Store

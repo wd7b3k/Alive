@@ -1,0 +1,3079 @@
+{
+  "schema": 1,
+  "generated": "2026-08-27",
+  "appliedCommit": "b2251d08c19ad00f521a0cda1ea7b2d67d9b9919",
+  "repo": "https://github.com/wd7b3k/Alive",
+  "branch": "main",
+  "project": "Alive",
+  "headline": "Habitoff 3.2.0 живёт на своём сервере в Москве, прод и main на одном коммите.",
+  "lede": "Вход через Google и Яндекс работает, бэкапы с проверкой восстановления идут по таймеру, тексты вычищены от латиницы.",
+  "columns": [
+    {
+      "id": "backlog",
+      "name": "Бэклог",
+      "hint": "не начато, ждёт своей очереди"
+    },
+    {
+      "id": "next",
+      "name": "Следующее",
+      "hint": "готово брать в работу"
+    },
+    {
+      "id": "doing",
+      "name": "В работе",
+      "hint": "начато прямо сейчас"
+    },
+    {
+      "id": "verify",
+      "name": "На проверке",
+      "hint": "сделано, но не подтверждено живой проверкой"
+    },
+    {
+      "id": "done",
+      "name": "Сделано",
+      "hint": "подтверждено"
+    }
+  ],
+  "types": [
+    {
+      "id": "feature",
+      "name": "фича"
+    },
+    {
+      "id": "bug",
+      "name": "баг"
+    },
+    {
+      "id": "tech",
+      "name": "долг"
+    },
+    {
+      "id": "infra",
+      "name": "инфра"
+    },
+    {
+      "id": "docs",
+      "name": "док"
+    },
+    {
+      "id": "research",
+      "name": "вопрос"
+    }
+  ],
+  "tags": [
+    {
+      "id": "pilot",
+      "name": "держит пилот"
+    },
+    {
+      "id": "owner",
+      "name": "только владелец"
+    },
+    {
+      "id": "live",
+      "name": "живая проверка"
+    }
+  ],
+  "epics": [
+    {
+      "id": "infra",
+      "name": "Свой контур в РФ",
+      "about": "VPS в Москве, self-hosted Supabase, домен habitoff.ru, бэкапы. Ради того, чтобы продукт открывался с российских мобильных сетей.",
+      "release": "v3.0"
+    },
+    {
+      "id": "auth",
+      "name": "Вход",
+      "about": "Google и Яндекс на своём контуре. Мост Яндекса написан свой: GoTrue про Яндекс не знает.",
+      "release": "v3.0"
+    },
+    {
+      "id": "brand",
+      "name": "Ребренд Habitoff",
+      "about": "ALIVE → Habitoff. Имя называет механизм, а не результат. Знак, иконки, ярлык, правило применения.",
+      "release": "v3.0"
+    },
+    {
+      "id": "design",
+      "name": "Дизайн-система",
+      "about": "Пересборка оформления в систему: шкалы, цвет наблюдения, вход, вёрстка на всех ширинах.",
+      "release": "v3.0"
+    },
+    {
+      "id": "flow",
+      "name": "Сценарий тяги",
+      "about": "Ядро продукта: триггер → потребность → три замены → результат. Работа над трением.",
+      "release": "v3.0"
+    },
+    {
+      "id": "content",
+      "name": "Контент и тон голоса",
+      "about": "Каталоги фактов, мифов, контекстов и замен. Продукт говорит по-русски и не стыдит.",
+      "release": "v3.0"
+    },
+    {
+      "id": "pilot",
+      "name": "Готовность к пилоту",
+      "about": "Всё, без чего эксперимент можно провести и ничего не узнать: согласие, честные данные, формулы метрик.",
+      "release": "v3.0"
+    },
+    {
+      "id": "privacy",
+      "name": "Приватность и данные",
+      "about": "Граница анонимного доступа, выгрузка, удаление аккаунта, где физически лежат данные.",
+      "release": "v3.0"
+    },
+    {
+      "id": "perf",
+      "name": "Вес и скорость клиента",
+      "about": "570 КБ JS одним чанком и 30 запросов на старте. Бьёт по мобильному и особенно по РФ.",
+      "release": "v3.0"
+    },
+    {
+      "id": "seo",
+      "name": "Выдача и аналитика",
+      "about": "Статический текст в index.html, llms.txt, счётчики на новом домене, вебвизор выключен.",
+      "release": "v3.0"
+    },
+    {
+      "id": "process",
+      "name": "Процесс и дрейф",
+      "about": "Пять расхождений репозитория и прода за историю. Каждый пойманный баг превращается в тест.",
+      "release": "—"
+    },
+    {
+      "id": "release",
+      "name": "Релизный gate",
+      "about": "VALIDATION 36/38. Переход по evidence, а не потому, что следующая версия описана.",
+      "release": "v3.0"
+    },
+    {
+      "id": "next",
+      "name": "v3.1 Together и дальше",
+      "about": "Социальная поддержка без соревнования, затем админка и product intelligence.",
+      "release": "v3.1+"
+    }
+  ],
+  "releases": [
+    {
+      "id": "F0",
+      "name": "F0 · Основание",
+      "status": "done",
+      "goal": "Отделить Habitoff как самостоятельный продуктовый контур: миссия, некоммерческий статус, происхождение, приватность, методика, архитектура, модули, гипотезы, релизная дисциплина.",
+      "gate": "Foundation PR влит; новый разработчик или ИИ восстанавливает состояние без чата; кода новой серии до завершения основания нет."
+    },
+    {
+      "id": "v3.0",
+      "name": "v3.0 · Платформа и ядро",
+      "status": "doing",
+      "goal": "Минимально полноценная многопользовательская платформа на своём стеке и проверка основного поведенческого цикла. habitoff.ru, свой сервер в Москве, self-hosted Supabase, Google и Яндекс, RLS, онбординг, сигареты/кальян/вейп, сырые события и эквивалентность v1, сценарий тяги, каталоги, движок замен v1, НЗТ, Смыслы, Связки, UGC, страница «Эксперимент», выгрузка и удаление.",
+      "gate": "Минимум два независимых пользователя; изоляция RLS проходит; новый человек понимает первый вход без устной инструкции; сырые события корректны; сценарий тяги пригоден к использованию."
+    },
+    {
+      "id": "v3.1",
+      "name": "v3.1 · Вместе",
+      "status": "planned",
+      "goal": "Проверить гипотезу социальной поддержки без соревнования: агрегаты группы, карточки участников, сравнение с личным базисом, возвращающие подсказки, белый список приватности, пульс активности.",
+      "gate": "Нет утечки личных данных; качественная обратная связь не указывает на вред от стыда или соревнования; есть измеримый сигнал возвращения либо понятное решение «дорабатываем»."
+    },
+    {
+      "id": "v3.2",
+      "name": "v3.2 · Админка и наблюдаемость",
+      "status": "planned",
+      "goal": "Сделать эксплуатацию и развитие наблюдаемыми: роль и панель администратора, воронка продукта, интеллект замен, аналитика Связок и Смыслов, входящие UGC, здоровье системы, инциденты, письма-оповещения, недельная сводка, операционный аудит.",
+      "gate": "Администратор не читает личный текст по умолчанию; инциденты дедуплицированы OPEN/RECOVERED; недельная сводка отвечает «что улучшать», а не выгружает цифры."
+    },
+    {
+      "id": "post",
+      "name": "После v3.2",
+      "status": "planned",
+      "goal": "Только по доказательствам: сложное персональное ранжирование, необязательные объяснения через LLM, широкие когорты, углублённая методика, другие никотиновые продукты, нативное приложение и PWA, исследовательский экспорт, возможная связка с HumanOS через отдельный ADR.",
+      "gate": "—"
+    }
+  ],
+  "cards": [
+    {
+      "id": "inf-vps",
+      "title": "Сервер в Москве поднят",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 0,
+      "status": "done",
+      "body": "Timeweb Cloud, 4×3.3 ГГц / 8 ГБ / 80 ГБ NVMe, Ubuntu 24.04, вход только по ключу, ufw 22/80/443, fail2ban, автообновления, swap 2 ГБ. Вышло 2 760 ₽/мес против плановых 1 800 ₽.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-perimeter",
+      "title": "Периметр проверен снаружи",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 0,
+      "status": "done",
+      "body": "22/80/443 открыты, 3000/5432/8000 закрыты. Ловушка «Docker публикует порты мимо ufw» не сработала: все публикации прибиты к 127.0.0.1. Проверено nmap снаружи, а не предположено.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-docker-mirror",
+      "title": "Зеркало реестра Docker",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 0,
+      "status": "done",
+      "body": "Docker Hub и download.docker.com не отдают образы на российские IP. Без зеркала Timeweb стек не поднимается вовсе, и выяснилось бы это в самый неудачный момент.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        },
+        {
+          "label": "alive-vps-migration-runbook §2.4",
+          "slug": "alive-vps-migration-runbook-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-supabase",
+      "title": "Self-hosted Supabase, семь сервисов",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 0,
+      "status": "done",
+      "body": "Postgres 17.6.1, GoTrue 2.189.0, PostgREST 14.12, edge-runtime 1.74.0, Envoy 1.39.0, ~2 ГБ из 8. Лишнее (realtime, storage, imgproxy, supavisor) выключено профилями в override, а не вырезано из compose.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-caddy",
+      "title": "Caddy и сертификаты",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 1,
+      "status": "done",
+      "body": "Caddy 2.11.4, Let's Encrypt на habitoff.ru и www, www → apex 301. Домен на Рег.ру.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-deploy",
+      "title": "Выкладка одной командой с двумя гейтами",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 1,
+      "status": "done",
+      "body": "deploy.sh: чистое рабочее дерево git, число файлов миграций равно числу записей в schema_migrations, сборка, атомарное переключение симлинка, пять последних сборок на диске. Гейт сработал по назначению 27.08: «миграций в репозитории 51, в базе 50».",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-migrations-clean",
+      "title": "Все миграции прогнаны на чистой базе",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 0,
+      "status": "done",
+      "body": "Пункт релизного гейта, который числился документированным и ни разу не выполнялся. 45 → 50 → 51 → 54 миграции проходят на пустом Postgres.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        },
+        {
+          "label": "habitoff-pilot-readiness",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-rls-audit",
+      "title": "RLS и гранты проверены на живой базе",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 0,
+      "status": "done",
+      "body": "50 таблиц public с включённым RLS; anon читает 42 каталога, authenticated — 45. anon на user_goals даёт 42501.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-secrets",
+      "title": "Секреты сгенерированы заново",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 0,
+      "status": "done",
+      "body": "Ротация service_role, висевшая отдельным незакрытым пунктом с 25.08, при переезде произошла сама: ключи выпущены заново, ни одного значения из .env.example.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-vps-migration-runbook §4.4",
+          "slug": "alive-vps-migration-runbook-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-backups",
+      "title": "Бэкапы с проверкой восстановления",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 0,
+      "status": "done",
+      "body": "Три таймера: ежедневный дамп с шифрованием и отправкой, воскресная проверка восстановления, недельная сводка. Локально 7 дней, на Яндекс.Диске 14. Первый прогон сошёлся: пользователи 3/3, таблицы 45/45, миграции 51/51.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-backups-2026-08-27",
+          "slug": "habitoff-backups-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-restore-nonempty",
+      "title": "Восстановление в непустую базу молча теряло данные",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 0,
+      "status": "done",
+      "body": "Первая же проверка дала FAIL: 3 пользователя в живой базе, 0 в копии. pg_restore разворачивался в базу postgres, которую образ уже наполнил при старте. Лечение — createdb пустой базы; записано в процедуру ручного восстановления.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-backups-2026-08-27",
+          "slug": "habitoff-backups-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-users-migration",
+      "title": "Перенести пользователей из Supabase Cloud",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 0,
+      "status": "next",
+      "body": "pg_dump --data-only по auth.users, auth.identities, profiles и user_*; каталоги не трогать, они приезжают миграциями. Сверка агрегатными SHA-256, проверка RLS заново после переноса.",
+      "updated": "2026-08-27",
+      "tags": [
+        "pilot",
+        "owner"
+      ],
+      "deps": "Бэкапы — сняты 27.08 вечером",
+      "docs": [
+        {
+          "label": "ROLLOUT §5 п.2",
+          "path": "docs/ROLLOUT.md"
+        }
+      ],
+      "chats": [
+        {
+          "label": "habitoff-backups-2026-08-27",
+          "slug": "habitoff-backups-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-observability",
+      "title": "Наблюдаемость: health по таймеру",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 1,
+      "status": "next",
+      "body": "alive-health.sh раз в пять минут: /auth/v1/health, публичная страница, заполненность диска. OnFailure в юните цепляет уведомление. Без этого первым мониторингом будет владелец, открывший сайт с телефона.",
+      "updated": "2026-08-27",
+      "tags": [
+        "pilot",
+        "owner"
+      ],
+      "docs": [
+        {
+          "label": "ROLLOUT §5 п.4",
+          "path": "docs/ROLLOUT.md"
+        }
+      ],
+      "chats": [
+        {
+          "label": "alive-vps-migration-runbook §9",
+          "slug": "alive-vps-migration-runbook-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-reboot",
+      "title": "Проверить, что стек поднимается после reboot",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 1,
+      "status": "next",
+      "body": "У всех сервисов restart: unless-stopped. Проверять перезагрузкой до появления людей, а не после.",
+      "updated": "2026-08-27",
+      "tags": [
+        "pilot",
+        "owner"
+      ],
+      "docs": [
+        {
+          "label": "ROLLOUT §5 п.5",
+          "path": "docs/ROLLOUT.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-in-repo",
+      "title": "Положить infra/ в репозиторий",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 0,
+      "status": "next",
+      "body": "docker-compose.yml, docker-compose.override.yml и Caddyfile с зафиксированными версиями образов. Сейчас конфигурация сервера существует только на сервере — восстановить прод по репозиторию нельзя. Единственное оставшееся нарушение правила «репозиторий — единственный источник истины».",
+      "updated": "2026-08-27",
+      "tags": [
+        "pilot"
+      ],
+      "deps": "У облачных сессий агента нет доступа к серверу",
+      "docs": [
+        {
+          "label": "ROLLOUT §5 п.3",
+          "path": "docs/ROLLOUT.md"
+        }
+      ],
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-old-prod",
+      "title": "Старый адрес держать с 301",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 1,
+      "status": "doing",
+      "body": "alive.hmnos.ru не выключать до подтверждения стабильности, ориентир — не раньше ~10.09.2026.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-telegram",
+      "title": "Канал уведомлений о бэкапах",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Пока в backup.env не прописан токен Telegram, сообщения уходят только в journalctl, и «узнать о поломке не заходя на сервер» не работает. Добавляется одной строкой, отложено сознательно.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-backups-2026-08-27",
+          "slug": "habitoff-backups-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "risk-backup-geo",
+      "title": "Бэкапы: нет разнесения и ключ рядом с данными",
+      "type": "research",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Обе копии в РФ, географического разнесения нет. Пароль шифрования лежит на том же сервере, что и данные, — иначе автоматика не смогла бы шифровать. Защищает от доступа к хранилищу, не от взлома сервера. Плюс сам архив является секретом: в нём JWT-ключи из .env.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-backups-2026-08-27",
+          "slug": "habitoff-backups-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-apikey-caddy",
+      "title": "При смене ключей обновить apikey в Caddyfile",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Caddy подставляет заголовок apikey для /functions/v1/yandex/*, иначе Envoy отдаёт 401. При перегенерации ключей это второе место, где значение придётся поменять.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-ttl",
+      "title": "TTL зоны 3600 против требования 300",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Рег.ру не даёт TTL меньше 3600. Требование «понизить до 300 перед переключением» остаётся актуальным для hmnos.ru, где переключается живой трафик. Противоречие в документах не разрешено.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        },
+        {
+          "label": "alive-ru-availability-2026-08-26",
+          "slug": "alive-ru-availability-and-domain-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-postgres-tuning",
+      "title": "Конфиг Postgres под 8 ГБ",
+      "type": "infra",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "shared_buffers 2 ГБ, effective_cache_size 5 ГБ, work_mem 16 МБ, maintenance_work_mem 256 МБ, max_connections 100. В runbook заложено; подтверждения, что применено, в отчётах нет.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-vps-migration-runbook §4.6",
+          "slug": "alive-vps-migration-runbook-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-spof",
+      "title": "Одна машина — одна точка отказа",
+      "type": "research",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Принято осознанно на время проверки гипотезы. Плюс 8 ГБ может не хватить, если выключенные сервисы вернутся: следить за постоянным использованием swap, а не за пиками.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-ru-selfhosting-plan-2026-08-26",
+          "slug": "alive-ru-selfhosting-plan-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-preview",
+      "title": "Чем заменить preview-развёртывания",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Вместе с Cloudflare Pages ветка перестала получать свой адрес. Два варианта: npm run dev на сервере через ssh-туннель, либо внешние Pages только под превью. Решение не зафиксировано.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-vps-migration-runbook §11.6",
+          "slug": "alive-vps-migration-runbook-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-152fz",
+      "title": "Где физически лежат данные — записано",
+      "type": "docs",
+      "epic": "infra",
+      "priority": 1,
+      "status": "done",
+      "body": "PRIVACY_AND_DATA §12 называет Timeweb Cloud в Москве и self-hosted Supabase, Cloudflare из схемы убран. Записано до появления живых пользователей.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "ROLLOUT §5 п.6",
+          "path": "docs/ROLLOUT.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "inf-agent-link",
+      "title": "Связка «агент — сервер» выяснена",
+      "type": "research",
+      "epic": "infra",
+      "priority": 2,
+      "status": "done",
+      "body": "Прямого доступа у агента нет и не будет: из контейнера наружу только 80 и 443 через прокси, SSH не проходит; мост к машине владельца сети не имеет; api.anthropic.com с российского IP отвечает 403. Работа идёт через VS Code Remote-SSH, файлы передаются архивом, не через буфер.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-backups-2026-08-27",
+          "slug": "habitoff-backups-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-yandex-claim",
+      "title": "Вход через Яндекс: GoTrue не находит почту",
+      "type": "bug",
+      "epic": "auth",
+      "priority": 0,
+      "status": "done",
+      "body": "Согласие выдавалось, обратно приходило unexpected_failure «Error getting user email from external provider»: GoTrue ищет claim email, а login.yandex.ru/info отдаёт default_email и массив emails. Настройкой не лечится ни в облаке, ни на своём сервере — только своим мостом.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-vps-migration-runbook §1.4",
+          "slug": "alive-vps-migration-runbook-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "auth-yandex-bridge",
+      "title": "Свой мост входа через Яндекс",
+      "type": "feature",
+      "epic": "auth",
+      "priority": 0,
+      "status": "done",
+      "body": "supabase/functions/yandex: start кладёт state в httpOnly-cookie, callback меняет код на токен, профиль берётся с заголовком OAuth, пользователь создаётся админским API GoTrue, сессия выдаётся через generate_link типа magiclink и verifyOtp по token_hash. Писем не отправляет — следствие: SMTP не нужен вовсе.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "auth-google",
+      "title": "Вход через Google на своём контуре",
+      "type": "feature",
+      "epic": "auth",
+      "priority": 0,
+      "status": "done",
+      "body": "GOTRUE_EXTERNAL_GOOGLE_* в override, redirect URI в Google Cloud Console. Проверен живым входом.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "auth-consoles",
+      "title": "Site URL и redirect URI в консолях",
+      "type": "infra",
+      "epic": "auth",
+      "priority": 0,
+      "status": "done",
+      "body": "Каждый пункт этого списка — отдельная точка отказа входа. Починено владельцем; вход на habitoff.ru проверен 27.08.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-observation-colour-and-signin-2026-08-27",
+          "slug": "habitoff-observation-colour-and-signin-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "auth-live-check",
+      "title": "Пройти вход обоими провайдерами руками",
+      "type": "tech",
+      "epic": "auth",
+      "priority": 1,
+      "status": "verify",
+      "body": "Компонент LoginPage — ровно то место, где сходились ветка сервера и ветка редизайна. Удалённо не проверяется: /functions/v1/yandex/start закрыт robots.txt, содержимое бандла снаружи не читается.",
+      "updated": "2026-08-27",
+      "tags": [
+        "live",
+        "owner"
+      ],
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "auth-delete-vps",
+      "title": "Удаление аккаунта доехало на новый сервер",
+      "type": "feature",
+      "epic": "auth",
+      "priority": 1,
+      "status": "done",
+      "body": "Функции удаления на новом сервере не было вовсе. Код на месте; живой сценарий — отдельной карточкой.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "brand-rebrand",
+      "title": "ALIVE → Habitoff",
+      "type": "feature",
+      "epic": "brand",
+      "priority": 0,
+      "status": "done",
+      "body": "habit + off — один поисковый токен без чужой истории, имя называет механизм, а не результат. Написание закреплено как Habitoff. Решение — ADR-0003. Имя OnMyWay рассмотрено и отклонено: домены заняты, фраза частотнее слова alive.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-rebrand-onmyway",
+          "slug": "alive-rebrand-onmyway-2026-08-26",
+          "url": ""
+        },
+        {
+          "label": "alive-rebrand-habitoff-implementation",
+          "slug": "alive-rebrand-habitoff-implementation-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "brand-mark",
+      "title": "Знак: разомкнутое кольцо с точкой в разрыве",
+      "type": "feature",
+      "epic": "brand",
+      "priority": 0,
+      "status": "done",
+      "body": "Кольцо — цикл, разрыв — место вмешательства, точка — человек. SVG вместо PNG: сотни байт вместо сотен килобайт. Перевыпущены фавиконы, иконки приложения, apple-touch и картинка для ссылок.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-rebrand-habitoff-implementation",
+          "slug": "alive-rebrand-habitoff-implementation-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "brand-wordmark",
+      "title": "Словесный знак перерисован из шрифта",
+      "type": "feature",
+      "epic": "brand",
+      "priority": 1,
+      "status": "done",
+      "body": "В нарисованных руками контурах были дефекты: у b торчал шпор ниже базовой линии, у t верх и низ срезаны по диагонали. Контуры получены заново из Inter Semi Bold с настоящим шейпингом; пропорции 122×32, ширины в CSS пересчитаны так, что видимая высота не изменилась.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "brand-om",
+      "title": "Om выведен из идентичности",
+      "type": "feature",
+      "epic": "brand",
+      "priority": 0,
+      "status": "done",
+      "body": "Удалены brand-logo-full.png (363 КБ) и om-mark.png (338 КБ). Гейт по SHA-256 в baseline снят и заменён проверкой глазами; чек-бокс в VALIDATION закрыт как «снят решением», а не как «пройден».",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-rebrand-habitoff-implementation",
+          "slug": "alive-rebrand-habitoff-implementation-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "brand-usage-test",
+      "title": "Правило применения знака держит тест",
+      "type": "tech",
+      "epic": "brand",
+      "priority": 1,
+      "status": "done",
+      "body": "Знак — это файл; имя, стоящее отдельно, ставится знаком, а не текстом. brand-usage.test.ts нашёл два нарушения: экран ошибки и «Личная карта не загрузилась» ставили имя абзацем, и off переставал быть жёлтым.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "CURRENT_STATE 27.08",
+          "path": "docs/CURRENT_STATE.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "brand-shortcut",
+      "title": "Ярлык на домашнем экране",
+      "type": "feature",
+      "epic": "brand",
+      "priority": 1,
+      "status": "done",
+      "body": "Набор иконок: any 66 % знака, maskable 50 % внутри безопасного круга, apple-touch без скругления. Предложение стоит на главной под главным действием и держится, пока человек не поставит ярлык или не откажется. Решение — ADR-0008.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "CURRENT_STATE 27.08",
+          "path": "docs/CURRENT_STATE.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-shortcut-ios",
+      "title": "Инструкция для iPhone показывалась всем",
+      "type": "bug",
+      "epic": "brand",
+      "priority": 1,
+      "status": "done",
+      "body": "Первая версия блока показывала сценарий iPhone каждому, у кого не было системного окна, — то есть большинству: пользователей Android больше, а событие приходит к ним не сразу (Chrome ждёт около тридцати секунд). Теперь сценарий свой на каждой платформе.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "CURRENT_STATE 27.08",
+          "path": "docs/CURRENT_STATE.md"
+        },
+        {
+          "label": "ADR-0008",
+          "path": "docs/decisions/ADR-0008-home-screen-shortcut.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-viewport-fit",
+      "title": "Безопасная зона на iPhone была мёртвым кодом",
+      "type": "bug",
+      "epic": "brand",
+      "priority": 1,
+      "status": "done",
+      "body": "viewport-fit=cover отсутствовал, поэтому env() возвращал ноль и вся разметка безопасной зоны в redesign.css ничего не делала. Добавлены мета-теги iOS, theme_color приведён к #061013.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "CURRENT_STATE 27.08",
+          "path": "docs/CURRENT_STATE.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "brand-play",
+      "title": "Проверить правила Google Play о коллизии имени",
+      "type": "research",
+      "epic": "brand",
+      "priority": 1,
+      "status": "backlog",
+      "body": "В той же категории есть MINUS — HabitOff (Smoke, Diet), 5 000+ установок, курение названо прямо. Зарегистрированного знака HABITOFF не найдено, habitoff.com и .app заняты и припаркованы. Риск принят владельцем; проверить ДО подачи Android-приложения, не после.",
+      "updated": "2026-08-27",
+      "tags": [
+        "owner"
+      ],
+      "chats": [
+        {
+          "label": "alive-rebrand-onmyway",
+          "slug": "alive-rebrand-onmyway-2026-08-26",
+          "url": ""
+        },
+        {
+          "label": "habitoff-main-consolidation",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "brand-logo-weight",
+      "title": "Логотип 363 КБ PNG",
+      "type": "tech",
+      "epic": "brand",
+      "priority": 3,
+      "status": "backlog",
+      "body": "Больше, чем весь CSS и HTML вместе. Кандидат в WebP или SVG.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "ROLLOUT §6",
+          "path": "docs/ROLLOUT.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "design-system",
+      "title": "Пересборка оформления в систему",
+      "type": "feature",
+      "epic": "design",
+      "priority": 1,
+      "status": "done",
+      "body": "До: 23 разных радиуса, 32 кегля включая половинные, 145 классов, карточки соседних блоков скруглены на 13, 14, 15, 17, 20 и 21 px. Стало: типографическая шкала, шкалы отступов и радиусов, три уровня глубины, шесть состояний компонента, иконография, моушн-токены. Решение — ADR-0004.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-redesign-prompt-2026-08-26",
+          "slug": "habitoff-redesign-prompt-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "design-lime",
+      "title": "Лайм выведен из палитры",
+      "type": "tech",
+      "epic": "design",
+      "priority": 1,
+      "status": "done",
+      "body": "--r-lime означал одновременно четыре вещи: действие, успех, цель и миф. Разведено: teal — единственный цвет действия, sand — человек и личное, отдельная шкала подтверждённости, red — только деструктив. Решение о выводе отзывалось дважды, пока код не показал, что лайм — основной цвет действия.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-redesign-prompt",
+          "slug": "habitoff-redesign-prompt-2026-08-26",
+          "url": ""
+        },
+        {
+          "label": "habitoff-observation-colour",
+          "slug": "habitoff-observation-colour-and-signin-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "design-observe",
+      "title": "Цвет наблюдения",
+      "type": "feature",
+      "epic": "design",
+      "priority": 1,
+      "status": "done",
+      "body": "--r-observe #f2ca69 — тот же цвет, что точка над разрывом кольца и слог off в написании. Отмечает моменты, где продукт просит заметить автоматизм, и больше ничего не значит. Список мест закрыт тестом: шестой селектор роняет сборку. --r-amber удалён полностью. Решение — ADR-0005.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-observation-colour-and-signin-2026-08-27",
+          "slug": "habitoff-observation-colour-and-signin-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "design-links-observe",
+      "title": "Связки окрашены в наблюдение",
+      "type": "feature",
+      "epic": "design",
+      "priority": 2,
+      "status": "done",
+      "body": "Расширение закрытого списка с пяти селекторов до семи по решению владельца. Карточки выбора в сценарии тяги остаются бирюзовыми: там человек выбирает, а не замечает.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "CURRENT_STATE 27.08",
+          "path": "docs/CURRENT_STATE.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "design-login",
+      "title": "Экран входа переделан",
+      "type": "feature",
+      "epic": "design",
+      "priority": 1,
+      "status": "done",
+      "body": "Знаки провайдеров: четырёхцветная G и белая Я на красном. Плитка под знаком принадлежит провайдеру — единственное место в интерфейсе с чужими цветами, в токены они не входят. Подпись «Подтвердит, что это ты, и вернёт сюда», две колонки от 900 px.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-observation-colour-and-signin-2026-08-27",
+          "slug": "habitoff-observation-colour-and-signin-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "design-css-invariants",
+      "title": "Инварианты вёрстки держит тест",
+      "type": "tech",
+      "epic": "design",
+      "priority": 1,
+      "status": "done",
+      "body": "css-invariants.test.ts разбирает сам redesign.css и проверяет шесть правил. Документ описывает, как должно быть; поймать момент, когда стало иначе, может только тест. Появился после того, как вёрстка ломалась трижды подряд.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-actions-overflow",
+      "title": "Блок действий шире экрана: 403 px в окне 390",
+      "type": "bug",
+      "epic": "design",
+      "priority": 0,
+      "status": "done",
+      "body": "Планшетное правило ставило вторую колонку, а мобильное меняло только шаблон колонок — явная вторая колонка создавала неявный трек. Ширины 320–760, контент за краем экрана.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-layout-fixes-2026-08-27",
+          "slug": "habitoff-layout-fixes-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-header-login",
+      "title": "«Войти» за краем на 7 px",
+      "type": "bug",
+      "epic": "design",
+      "priority": 1,
+      "status": "done",
+      "body": "Шапка ужималась только с 1000, а полный знак 290 px и пять пунктов меню не помещаются раньше 1100. Порог поднят, сетка шапки переписана.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-layout-fixes-2026-08-27",
+          "slug": "habitoff-layout-fixes-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-css-invariants-red",
+      "title": "Меню набрано мимо шкалы, тест красный",
+      "type": "bug",
+      "epic": "design",
+      "priority": 1,
+      "status": "done",
+      "body": "В правках 26.08 в меню заехали gap 2px и padding 8px 10px — значения вне шкалы.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-layout-fixes-2026-08-27",
+          "slug": "habitoff-layout-fixes-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-fact-cards-380",
+      "title": "Карточки фактов на 3 px шире экрана при ≤380",
+      "type": "bug",
+      "epic": "design",
+      "priority": 2,
+      "status": "done",
+      "body": "Неразрывное слово задавало min-content шире вьюпорта.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-layout-fixes-2026-08-27",
+          "slug": "habitoff-layout-fixes-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-secondary-titles",
+      "title": "Заголовки вторичных карточек ломались",
+      "type": "bug",
+      "epic": "design",
+      "priority": 2,
+      "status": "done",
+      "body": "«Никотин / уже был» на ширинах 1001–1160 из-за жёстких равных колонок в узкой правой колонке.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-layout-fixes-2026-08-27",
+          "slug": "habitoff-layout-fixes-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-bottom-nav",
+      "title": "Нижняя панель прижималась к левому краю",
+      "type": "bug",
+      "epic": "design",
+      "priority": 1,
+      "status": "done",
+      "body": "В CSS стояло число колонок 6, а наборов пунктов два: шесть за входом и пять до входа. Число из CSS убрано — колонки создаются по числу пришедших кнопок, тест запрещает возвращать константу.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "CURRENT_STATE 27.08",
+          "path": "docs/CURRENT_STATE.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "tech-overflow-method",
+      "title": "Метод обнаружения переполнения заменён",
+      "type": "tech",
+      "epic": "design",
+      "priority": 1,
+      "status": "done",
+      "body": "scrollWidth − clientWidth вернул ноль при содержимом 403 px в окне 390: часть переполнения съедается обрезкой у предка. Признак ненадёжный. Рабочая проверка — обойти каждый элемент и сравнить getBoundingClientRect().right с шириной вьюпорта.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-layout-fixes-2026-08-27",
+          "slug": "habitoff-layout-fixes-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-preview-scale",
+      "title": "Кадр превью резал содержимое",
+      "type": "bug",
+      "epic": "design",
+      "priority": 2,
+      "status": "done",
+      "body": "transform: scale не сжимает блок в потоке; без компенсации отрицательными полями у рамки появляется своя горизонтальная прокрутка.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-layout-fixes-2026-08-27",
+          "slug": "habitoff-layout-fixes-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "tech-sweep-script",
+      "title": "Прогон по ширинам сделать скриптом",
+      "type": "tech",
+      "epic": "design",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Сейчас это ручная работа: 9 экранов × 65 ширин поэлементно. Либо тест, либо сознательно суженная выборка 320/390/768 с принятым риском — но не руками каждый раз.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "working-style-coaching-2026-08-27",
+          "slug": "working-style-coaching-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "design-goal-course",
+      "title": "Цель типа «курс» носит цвет действия",
+      "type": "tech",
+      "epic": "design",
+      "priority": 3,
+      "status": "backlog",
+      "body": "Осталась бирюзовой. Свести цель, ценность и курс к одному цвету правильно, но это отдельная работа с просмотром экрана Смыслов. Записано в ADR-0005.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "ROLLOUT §6",
+          "path": "docs/ROLLOUT.md"
+        }
+      ],
+      "chats": [
+        {
+          "label": "habitoff-observation-colour",
+          "slug": "habitoff-observation-colour-and-signin-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "design-second-accent",
+      "title": "Нужен ли системе второй акцент",
+      "type": "research",
+      "epic": "design",
+      "priority": 3,
+      "status": "backlog",
+      "body": "Открытый вопрос после того, как решение о выводе лайма было отозвано. Требует своего визуального QA, а не строки в чужой задаче.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-rebrand-habitoff-implementation",
+          "slug": "alive-rebrand-habitoff-implementation-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "design-motion",
+      "title": "Отложенная анимация",
+      "type": "research",
+      "epic": "design",
+      "priority": 3,
+      "status": "backlog",
+      "body": "Count-up чисел, прорисовка графиков, скелетоны и зерно отложены сознательно: всем нужен JS или полноэкранная отрисовка на самом тяжёлом экране, а бандл 570 КБ при 30 запросах. Условие возврата записано в ADR-0003 — после того, как закроется вес бандла.",
+      "updated": "2026-08-27",
+      "deps": "perf-bundle · perf-catalogs",
+      "chats": [
+        {
+          "label": "alive-redesign-prompt-premium-animated",
+          "slug": "alive-redesign-prompt-premium-animated-2026-08-23",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "docs-brandbook",
+      "title": "Брендбук развёрнут до 14 разделов",
+      "type": "docs",
+      "epic": "design",
+      "priority": 1,
+      "status": "done",
+      "body": "Имя, знак и размеры на трёх ширинах, палитра ролями, три акцента и как их не спутать, типографика, шкалы, иконки, чужие знаки, голос с микрокопией, порядок изменения системы. Попутно исправлено расхождение: §2 описывал знак, которого нет.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-observation-colour-and-signin-2026-08-27",
+          "slug": "habitoff-observation-colour-and-signin-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "flow-friction",
+      "title": "Сценарий тяги стал короче на треть",
+      "type": "feature",
+      "epic": "flow",
+      "priority": 1,
+      "status": "done",
+      "body": "Смарт-дефолт продукта по серии из трёх разборов, шортлист частых контекстов, уверенная потребность при ≥4 разборах и ≥60 % доле, роутинг короткими путями одной чистой функцией. Среднее: 5.4 → 4.2 тапа, 4.2 → 3.0 экрана, 40.4 → 13.4 карточки. Вход с карточки контекста на главной: 5 → 3 тапа, 40 → 3 карточки.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-craving-flow-friction-2026-08-26",
+          "slug": "alive-craving-flow-friction-2026-08-26",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-26/011-craving-flow-friction-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-context-prefill",
+      "title": "Контекст приходилось называть дважды",
+      "type": "bug",
+      "epic": "flow",
+      "priority": 1,
+      "status": "done",
+      "body": "Карточки на главной подставляли контекст в состояние, но начальный шаг об этом не знал: человек называл контекст и тут же получал экран, где его надо назвать второй раз. Дефекта не было в постановке — нашёлся при работе.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-craving-flow-friction-2026-08-26",
+          "slug": "alive-craving-flow-friction-2026-08-26",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-26/011-craving-flow-friction-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "flow-merge-contexts",
+      "title": "Четыре пусковых контекста слиты в один",
+      "type": "feature",
+      "epic": "flow",
+      "priority": 1,
+      "status": "done",
+      "body": "after_task, task_reward, significant_action и thought_complete описывали одно событие. Выживает «После сделанного». Три остальных сняты с публикации, но не удалены: на них ссылаются эпизоды и личные Связки, удаление переписало бы историю.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-tone-of-voice-pass-2026-08-27",
+          "slug": "habitoff-tone-of-voice-pass-2026-08-27",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-27/012-tone-pass-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "flow-live-run",
+      "title": "Пройти сценарий тяги руками в браузере",
+      "type": "tech",
+      "epic": "flow",
+      "priority": 1,
+      "status": "verify",
+      "body": "Живого прогона на реальной сессии не было — только рендер-тесты и сборка. Проверить заодно: сетка контекстов должна быть на три карточки меньше, над карточками ответов — название смысла, а не вопрос.",
+      "updated": "2026-08-27",
+      "tags": [
+        "live",
+        "owner"
+      ],
+      "chats": [
+        {
+          "label": "alive-craving-flow-friction",
+          "slug": "alive-craving-flow-friction-2026-08-26",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-26/011-craving-flow-friction-response.md"
+        },
+        {
+          "label": "habitoff-tone-of-voice-pass",
+          "slug": "habitoff-tone-of-voice-pass-2026-08-27",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-27/012-tone-pass-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "flow-thresholds",
+      "title": "Пересмотреть пороги смарт-дефолтов",
+      "type": "research",
+      "epic": "flow",
+      "priority": 2,
+      "status": "backlog",
+      "body": "3 разбора, 4 разбора, 60 % — эвристики из соображений, а не из данных. Метаданные события flow_opened добавлены в том числе чтобы их пересмотреть: без них короткий и полный сценарий постфактум неразличимы.",
+      "updated": "2026-08-27",
+      "deps": "Накопленные данные пилота",
+      "chats": [
+        {
+          "label": "alive-craving-flow-friction-2026-08-26",
+          "slug": "alive-craving-flow-friction-2026-08-26",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-26/011-craving-flow-friction-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "flow-context-other",
+      "title": "Вариант «другое» для контекста",
+      "type": "feature",
+      "epic": "flow",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Схема и запись эпизода его поддерживают, карточки в интерфейсе нет. Участник с контекстом вне 28 карточек вынужден выбрать неправильный. Осознанно не сделано перед пилотом.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "content-layer",
+      "title": "Контентный слой сведён с продом",
+      "type": "feature",
+      "epic": "content",
+      "priority": 0,
+      "status": "done",
+      "body": "Четвёртое расхождение прода и репозитория: одиннадцать таблиц — факты, мифы, цели, микроосознанность, доказательные утверждения и библиография — жили в проде мимо миграций. Три готовые миграции от 23.08 были удалены, а не применены: они построили бы вторую конкурирующую подсистему.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-content-layer-divergence-2026-08-24",
+          "slug": "alive-content-layer-divergence-2026-08-24",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-content-rls",
+      "title": "Анонима от TRUNCATE каталогов отделяла одна строка",
+      "type": "bug",
+      "epic": "content",
+      "priority": 0,
+      "status": "done",
+      "body": "На трёх каталогах RLS включён, а политик не было вообще; у ролей anon и authenticated висели гранты INSERT / UPDATE / DELETE / TRUNCATE на большинстве контентных таблиц. Исправлено миграцией: лишние гранты сняты, политики чтения написаны.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-content-layer-divergence-2026-08-24",
+          "slug": "alive-content-layer-divergence-2026-08-24",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "content-russian",
+      "title": "Каталоги переписаны по-русски",
+      "type": "feature",
+      "epic": "content",
+      "priority": 1,
+      "status": "done",
+      "body": "38 карточек: контент был наполовину английским. Введён guard, роняющий миграцию при латинице, и третий слот формы «Миф → что известно → что это меняет для тебя». Починена битая ссылка мифа на несуществующую замену.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-content-layer-divergence-2026-08-24",
+          "slug": "alive-content-layer-divergence-2026-08-24",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "content-surfaces",
+      "title": "Карточки разложены по четырём поверхностям",
+      "type": "feature",
+      "epic": "content",
+      "priority": 1,
+      "status": "done",
+      "body": "Поток тяги, Связки, Сегодня, экран до входа. Решение редакторское, а не выводимое правилом: карточка про потерянное десятилетие не должна перебивать человека в момент тяги.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-content-layer-divergence-2026-08-24",
+          "slug": "alive-content-layer-divergence-2026-08-24",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "content-goals",
+      "title": "«Смыслы» переведены на каталог целей",
+      "type": "feature",
+      "epic": "content",
+      "priority": 1,
+      "status": "done",
+      "body": "Тип, вопрос для размышления, смысл дня с суточной ротацией, перенос чужой формулировки в свой черновик.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "tone-pass",
+      "title": "Проход по всем текстам продукта",
+      "type": "feature",
+      "epic": "content",
+      "priority": 1,
+      "status": "done",
+      "body": "790 строк русского текста в 23 файлах плюс 15 каталогов из базы. Изменено 27 мест в интерфейсе и 63 в каталогах. Три системные болезни: мужской род там, где человек говорит от своего имени; отрицание, вводящее рамку, которую отрицает («не провал» в пяти экранах подряд, в том числе сразу после употребления); редакторский язык вместо человеческого. Решение — ADR-0010.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-tone-of-voice-pass-2026-08-27",
+          "slug": "habitoff-tone-of-voice-pass-2026-08-27",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-27/012-tone-pass-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-meaning-in-flow",
+      "title": "Над карточками ответов стоял вопрос из библиотеки",
+      "type": "bug",
+      "epic": "content",
+      "priority": 1,
+      "status": "done",
+      "body": "Смысл дня показывался вопросом для размышления там, где человек выбирает действие, и не был связан с разобранным моментом. Внутри одного компонента личные формулировки показывались заголовком, а каталожные — вопросом.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-tone-of-voice-pass-2026-08-27",
+          "slug": "habitoff-tone-of-voice-pass-2026-08-27",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-27/012-tone-pass-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "tone-journal",
+      "title": "Правка каталогов с журналом и откатом",
+      "type": "infra",
+      "epic": "content",
+      "priority": 1,
+      "status": "done",
+      "body": "Миграция ведёт журнал со старым и новым значением каждой строки; правка применяется только при совпадении со старым значением, расхождение называется в NOTICE, а не переписывается молча. На боевой базе 63 правки из 63.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-tone-of-voice-pass-2026-08-27",
+          "slug": "habitoff-tone-of-voice-pass-2026-08-27",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-27/012-tone-pass-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-latin-purge",
+      "title": "Английский в «Границах» дожил до прода",
+      "type": "bug",
+      "epic": "content",
+      "priority": 1,
+      "status": "done",
+      "body": "Правило «продукт говорит по-русски» существовало с 24.08, но guard закрывал только два каталога. Поле evidence_scope осталось снаружи: 63 строки в 29 формулировках — «Population cardiovascular risk», «Cue-restructuring эвристика», «Myth Engine remains experimental». Рядом — имя родительского проекта на экране Habitoff в трёх карточках.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-latin-purge-2026-08-27",
+          "slug": "habitoff-latin-purge-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "content-latin-guard",
+      "title": "Guard против латиницы расширен на всё видимое",
+      "type": "infra",
+      "epic": "content",
+      "priority": 1,
+      "status": "done",
+      "body": "12 таблиц, 39 колонок: применение падает и называет таблицу, колонку и текст. Разрешены имя продукта, аббревиатуры организаций и журналов, маркировка light/low-tar. Правило записано с разграничением: тексты по-русски, служебные ключи остаются машинными, подписи живут в интерфейсе.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-latin-purge-2026-08-27",
+          "slug": "habitoff-latin-purge-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-mechanism-labels",
+      "title": "Машинные ключи на экране «Вместе»",
+      "type": "bug",
+      "epic": "content",
+      "priority": 1,
+      "status": "done",
+      "body": "В блоке «Что у людей срабатывает» человеку показывались context_change, evidence_treatment, grounding. Это ключ группировки: в базе он остался ключом, русские подписи добавлены в интерфейс, тест требует подпись каждому механизму.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-latin-purge-2026-08-27",
+          "slug": "habitoff-latin-purge-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "content-mobile-check",
+      "title": "Прочитать новые тексты на телефоне",
+      "type": "tech",
+      "epic": "content",
+      "priority": 1,
+      "status": "verify",
+      "body": "«Поделиться», чекбокс согласия, сетка контекстов, смысл над карточками ответов. Правило из ROLLOUT §7: проверка перед показом — не «прогнал и цифра ноль», а «открыл скриншот и посмотрел».",
+      "updated": "2026-08-27",
+      "tags": [
+        "live",
+        "owner"
+      ],
+      "chats": [
+        {
+          "label": "habitoff-tone-of-voice-pass-2026-08-27",
+          "slug": "habitoff-tone-of-voice-pass-2026-08-27",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-27/012-tone-pass-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "content-awareness",
+      "title": "Микроосознанность почти не доходит до экрана",
+      "type": "tech",
+      "epic": "content",
+      "priority": 2,
+      "status": "backlog",
+      "body": "18 карточек и 19 привязок к моментам. Решение владельца: мифы относятся к фактам, ими владеет каталог мифов — одиннадцать мифов отсюда не выводятся. Судьба остальных карточек не решена; проход по их текстам сделан авансом.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        },
+        {
+          "label": "habitoff-tone-of-voice-pass",
+          "slug": "habitoff-tone-of-voice-pass-2026-08-27",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-27/012-tone-pass-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "content-cleanup",
+      "title": "Убрать резервные копии и старый каталог смыслов",
+      "type": "tech",
+      "epic": "content",
+      "priority": 3,
+      "status": "backlog",
+      "body": "Когда тексты приняты окончательно. Пять таблиц-снимков уже убраны миграцией 27.08; остаётся meanings_catalog.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "docs-tone",
+      "title": "Документ о тоне голоса",
+      "type": "docs",
+      "epic": "content",
+      "priority": 1,
+      "status": "done",
+      "body": "Аудитория и одиннадцать её ценностей, двенадцать правил, чёрный список, правило одного отрицания, границы «мы», формула подкрепления, словарь, §8а про латиницу.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-tone-of-voice-pass-2026-08-27",
+          "slug": "habitoff-tone-of-voice-pass-2026-08-27",
+          "url": "",
+          "session": "docs/ai_sessions/2026-08-27/012-tone-pass-response.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "pilot-consent",
+      "title": "Согласие участника",
+      "type": "feature",
+      "epic": "pilot",
+      "priority": 0,
+      "status": "done",
+      "body": "Согласия не существовало — ни экрана, ни галочки, ни записи. Сделано: галочка на входе, версия и дата в профиле, отдельная миграция. Пилот с людьми без этого невозможен.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-prod-alive-title",
+      "title": "Прод отдавал заголовок со старым именем",
+      "type": "bug",
+      "epic": "pilot",
+      "priority": 0,
+      "status": "done",
+      "body": "Сутки после того, как ребренд попал в main, живой habitoff.ru показывал «…— ALIVE»: прод собирался с ветки сервера. Именно этот случай породил машинную сверку main и прода.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-catalog-alive",
+      "title": "153 строки каталогов со старым именем",
+      "type": "bug",
+      "epic": "pilot",
+      "priority": 0,
+      "status": "done",
+      "body": "Факты, мифы, 66 описаний замен. Проверка латиницы сама вносила ALIVE в белый список разрешённого. Переименовано миграцией — 89 значений на боевой базе; после прогона ноль вхождений в читаемом тексте.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-sliders",
+      "title": "Ползунки записывали ответы, которых человек не давал",
+      "type": "bug",
+      "epic": "pilot",
+      "priority": 0,
+      "status": "done",
+      "body": "Писали 7 / 4 / 3 по умолчанию. Плюс «Тяга после» размечена от нуля при проверке 1..10 — лучший возможный ответ приводил к отказу записи. Теперь начальное состояние «не отвечено», в базу уходит null, шкала расширена миграцией.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-setup-zeros",
+      "title": "Из первичной настройки не было выхода",
+      "type": "bug",
+      "epic": "pilot",
+      "priority": 1,
+      "status": "done",
+      "body": "Пустые числовые поля молча превращались в ноль. Добавлен выход «Пока просто посмотреть», пустое поле теперь значит «не знаю», а не ноль.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "pilot-h002",
+      "title": "Гипотеза о персонализации замен не считалась никогда",
+      "type": "feature",
+      "epic": "pilot",
+      "priority": 1,
+      "status": "done",
+      "body": "Показанный список замен, его порядок и признак персонализации нигде не сохранялись — payload действия уходил пустым. Теперь эпизод хранит предложенный подбор и причину.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "pilot-metrics",
+      "title": "Витрина метрик и раздел «Гипотезы»",
+      "type": "feature",
+      "epic": "pilot",
+      "priority": 1,
+      "status": "done",
+      "body": "Формул метрик не было нигде — ни view, ни функции, ни скрипта. Появилась функция admin_hypothesis_metrics(days) и раздел на служебной странице.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "pilot-9-metrics",
+      "title": "Девять метрик нечем считать",
+      "type": "research",
+      "epic": "pilot",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Витрина показывает их строкой «нечем считать» с объяснением, а не нулём: пилот заранее говорит, на какие вопросы он ответить не сможет. Каждая тянет свою доработку — они разложены отдельными карточками ниже.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "metric-baseline",
+      "title": "История исходного уровня",
+      "type": "feature",
+      "epic": "pilot",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Сохранение настроек перезаписывает строку продукта, и базис исчезает без истории. Без отдельной таблицы версий не считается расход против исходного уровня.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "metric-link-episode",
+      "title": "Ссылка на Связку внутри эпизода",
+      "type": "feature",
+      "epic": "pilot",
+      "priority": 2,
+      "status": "backlog",
+      "body": "В эпизоде нет ссылки на личную Связку — повторное узнавание Связки посчитать нечем.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "metric-meaning-views",
+      "title": "События просмотра Смыслов и «помогло»",
+      "type": "feature",
+      "epic": "pilot",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Нет ни события просмотра, ни поля пользы — польза Смыслов не измеряется.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "metric-reminders",
+      "title": "Механизм напоминаний",
+      "type": "feature",
+      "epic": "pilot",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Механизма нет вовсе, поэтому возврат после напоминания посчитать нечем.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "metric-episode-edit",
+      "title": "Редактирование записи эпизода",
+      "type": "feature",
+      "epic": "pilot",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Исправить уже сделанную запись нельзя — значит, и число исправлений как сигнал понимания единиц не существует.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "metric-food-nrt",
+      "title": "Переключатели пищевых замен и НЗТ",
+      "type": "feature",
+      "epic": "pilot",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Хранятся в базе, интерфейса нет. Без них не считается доля отключивших пищевые замены.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "metric-privacy-log",
+      "title": "Реестр инцидентов приватности",
+      "type": "docs",
+      "epic": "pilot",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Реестра нет; ноль в отчёте означал бы «не проверяли», а не «не было».",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "pilot-together-empty",
+      "title": "«Вместе» на когорте 3–5 будет пустым",
+      "type": "research",
+      "epic": "pilot",
+      "priority": 3,
+      "status": "backlog",
+      "body": "Подавление ниже когорты три. Порог правильный; решено предупредить участников, а не снижать его.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-pilot-readiness-2026-08-27",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "pilot-invite",
+      "title": "Позвать первых участников",
+      "type": "feature",
+      "epic": "pilot",
+      "priority": 0,
+      "status": "backlog",
+      "body": "Пилот на когорте из 3–5 близких людей. Цель — доказательства, а не рост; друзья проверяют честность продукта пристальнее анонимных пользователей.",
+      "updated": "2026-08-27",
+      "tags": [
+        "owner"
+      ],
+      "deps": "Перенос пользователей · наблюдаемость · reboot · живой сценарий выгрузки и удаления",
+      "docs": [
+        {
+          "label": "ROLLOUT §5",
+          "path": "docs/ROLLOUT.md"
+        }
+      ],
+      "chats": [
+        {
+          "label": "alive-strategy-review-2026-08-20",
+          "slug": "alive-strategy-review-2026-08-20",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "priv-anon",
+      "title": "Граница анонимного доступа под тестом",
+      "type": "tech",
+      "epic": "privacy",
+      "priority": 0,
+      "status": "done",
+      "body": "Продукт открывается до входа: только чтение опубликованных редакционных каталогов, только select, только восемь таблиц. SQL-тест сеет в каждый каталог опубликованную карточку и черновик и требует, чтобы аноним видел ровно опубликованную — подсчёт строк этого не проверяет, он проходит и с политикой using(true). Проверено негативно.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-release-readiness",
+          "slug": "alive-release-readiness-2026-08-23",
+          "url": ""
+        },
+        {
+          "label": "alive-content-layer-divergence",
+          "slug": "alive-content-layer-divergence-2026-08-24",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "priv-export",
+      "title": "Выгрузка данных стала видна людям",
+      "type": "feature",
+      "epic": "privacy",
+      "priority": 1,
+      "status": "done",
+      "body": "Функция экспорта была в коде, кнопки не было.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "priv-delete",
+      "title": "Удаление аккаунта стало видно людям",
+      "type": "feature",
+      "epic": "privacy",
+      "priority": 1,
+      "status": "done",
+      "body": "Функция была задеплоена и проверена в обе стороны, кнопки не было.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "priv-live-check",
+      "title": "Пройти выгрузку и удаление на новом сервере",
+      "type": "tech",
+      "epic": "privacy",
+      "priority": 1,
+      "status": "verify",
+      "body": "Живым сценарием, на одноразовом аккаунте, до того как появятся чужие данные.",
+      "updated": "2026-08-27",
+      "tags": [
+        "pilot",
+        "live",
+        "owner"
+      ],
+      "chats": [
+        {
+          "label": "habitoff-backups-2026-08-27",
+          "slug": "habitoff-backups-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "priv-retention",
+      "title": "Политика хранения аналитики",
+      "type": "docs",
+      "epic": "privacy",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Сколько живут события и что с ними происходит потом — не записано.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "perf-bundle",
+      "title": "Разбить бандл по маршрутам",
+      "type": "tech",
+      "epic": "perf",
+      "priority": 0,
+      "status": "backlog",
+      "body": "Сейчас один чанк: 570 КБ распакованного, 158 КБ brotli, всего ~996 КБ и 35 запросов. При лимите ТСПУ около 16 КБ на соединение такой бандл не грузится в принципе. Порог для сборки: стартовый JS больше 200 КБ роняет сборку.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-ru-availability-and-domain-2026-08-26",
+          "slug": "alive-ru-availability-and-domain-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "perf-catalogs",
+      "title": "Запекать публичные каталоги в статический JSON",
+      "type": "feature",
+      "epic": "perf",
+      "priority": 0,
+      "status": "backlog",
+      "body": "Факты, мифы, контексты, потребности, замены, смыслы, цели меняются миграциями, а не в рантайме. 30 запросов на старте превращаются в 0–2. Это та же работа, что и предрендер: три четверти времени до готового экрана — API, а не хостинг (последний ответ 1488 мс при своей статике на 428 мс).",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-ru-availability-and-domain-2026-08-26",
+          "slug": "alive-ru-availability-and-domain-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-dup-requests",
+      "title": "Два каталога запрашиваются по два раза",
+      "type": "bug",
+      "epic": "perf",
+      "priority": 1,
+      "status": "backlog",
+      "body": "Замер на старте: 30 запросов, каждый 863–1218 мс, из них два дубля. Дешёвая правка с измеримым эффектом.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-ru-availability-and-domain-2026-08-26",
+          "slug": "alive-ru-availability-and-domain-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "perf-lazy-personal",
+      "title": "Личные данные грузить лениво и после входа",
+      "type": "tech",
+      "epic": "perf",
+      "priority": 1,
+      "status": "backlog",
+      "body": "Профиль, настройки и пользовательские таблицы не должны участвовать в первом экране.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-ru-availability-and-domain-2026-08-26",
+          "slug": "alive-ru-availability-and-domain-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "perf-prerender",
+      "title": "Предрендер публичных адресов",
+      "type": "feature",
+      "epic": "perf",
+      "priority": 1,
+      "status": "backlog",
+      "body": "Google выполняет JS и видит настоящие заголовки; для Яндекса и краулеров моделей отдельный статический HTML под каждый публичный адрес — ограничение снимается. Живые карточки в index.html не копировать: содержание правится миграциями, HTML руками, первое расхождение станет ложью в выдаче.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "perf-cache",
+      "title": "Вечный кэш на хешированных ассетах",
+      "type": "tech",
+      "epic": "perf",
+      "priority": 1,
+      "status": "done",
+      "body": "Было must-revalidate на хешированном файле — телефон ходил за 304 на каждый визит. В Caddyfile переезда заложен immutable.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-ru-availability-and-domain-2026-08-26",
+          "slug": "alive-ru-availability-and-domain-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "tech-sourcemap",
+      "title": "Sourcemap больше не уезжает в прод",
+      "type": "tech",
+      "epic": "perf",
+      "priority": 1,
+      "status": "done",
+      "body": "2,8 МБ карт при сборке 4,2 МБ — исходники продукта в открытом виде. deploy.sh удалял их постфактум, это было лечение симптома. Теперь сборка 780 КБ и ноль карт.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "seo-static",
+      "title": "Суть метода в index.html статическим текстом",
+      "type": "feature",
+      "epic": "seo",
+      "priority": 1,
+      "status": "done",
+      "body": "Робот без JavaScript видел пустой корень. Теперь 326 слов, настоящий H1, частые вопросы, модель приватности.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "seo-llms",
+      "title": "llms.txt с запретными утверждениями",
+      "type": "docs",
+      "epic": "seo",
+      "priority": 1,
+      "status": "done",
+      "body": "Три утверждения, которые приписывать продукту нельзя, потому что источника у них нет: тяга длится 3–5 минут, вейп на 95 % безопаснее, любое соотношение «один кальян = N сигарет».",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "seo-counters",
+      "title": "Завести счётчики и вебмастера на новом домене",
+      "type": "infra",
+      "epic": "seo",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Код включается сам, как только в окружении появятся идентификаторы. Заводить сразу на habitoff.ru, иначе двойная работа. Для Вебмастера и Search Console нужны TXT-записи в зоне.",
+      "updated": "2026-08-27",
+      "tags": [
+        "owner"
+      ],
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "analytics-no-ga",
+      "title": "Google Analytics не включаем",
+      "type": "infra",
+      "epic": "seo",
+      "priority": 1,
+      "status": "done",
+      "body": "Внешний сервис в рантайме у каждого посетителя — прямое нарушение первого инварианта продукта.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "analytics-metrika",
+      "title": "Метрика выключена, решение о включении не принято",
+      "type": "infra",
+      "epic": "seo",
+      "priority": 1,
+      "status": "doing",
+      "body": "В коде вебвизор выключен явно с комментарием. Сниппет из кабинета содержит вебвизор включённым — вставлять его нельзя. Настройка «Записывать все поля: Откл» вебвизор не выключает: она касается полей ввода, запись экрана продолжается, включая личные записи.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-lame-delegation",
+      "title": "Домен сутки не открывался",
+      "type": "bug",
+      "epic": "seo",
+      "priority": 0,
+      "status": "done",
+      "body": "Выглядело как «регистратор не делегировал». Регистратор был ни при чём: зона висела в состоянии инициализации, потому что при создании не был доведён до конца шаг выбора тарифа, и NS отвечали REFUSED. Правило: при «домен не открывается» смотреть, что отвечает DNS, а не что показывает страница.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "seo-releases-crawler",
+      "title": "Страница «Что нового» рисуется на клиенте",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 3,
+      "status": "backlog",
+      "body": "Краулер без JS видит статический слепок главной. То же свойство, что у остальных внутренних страниц; закроется вместе с предрендером.",
+      "updated": "2026-08-27",
+      "deps": "perf-prerender",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-merge-main",
+      "title": "Все ветки сведены в main",
+      "type": "tech",
+      "epic": "process",
+      "priority": 0,
+      "status": "done",
+      "body": "Ожидалось четыре слияния — потребовалось два: merge-base показал, что ветка пилота уже содержит все четыре. Семь конфликтов в документации разрешены руками по одному правилу: факт инфраструктуры из ветки контура, факт продукта и дизайна из main. Ни одного автомерджа.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-drift-check",
+      "title": "Расхождение main и прода ловит машина",
+      "type": "feature",
+      "epic": "process",
+      "priority": 0,
+      "status": "done",
+      "body": "До 27.08 между «код в main» и «это на проде» не стояло ни одной автоматической проверки — и расхождение случалось пять раз за историю проекта. Теперь сборка подписана коммитом в version.json, тот же отпечаток человек видит внизу страницы релизов, а скрипт сверки выходит ненулевым кодом и печатает отставшие коммиты. Решение — ADR-0009.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-drift-html",
+      "title": "Сверка падала на HTML вместо JSON",
+      "type": "bug",
+      "epic": "process",
+      "priority": 1,
+      "status": "done",
+      "body": "Caddy отдаёт index.html на неизвестный путь, поэтому старая сборка возвращала 200 и HTML, а не 404 — сверка ломалась с «Unexpected token '<'». Теперь HTML в ответе называется своим именем: сборка без отпечатка — это расхождение, а не ошибка парсера.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "bug-ci-format",
+      "title": "CI падал на первом шаге и не доходил до проверок",
+      "type": "bug",
+      "epic": "process",
+      "priority": 0,
+      "status": "done",
+      "body": "site.webmanifest не проходил проверку форматирования — значит, CI не доходил ни до тестов, ни до сборки, ни до скана секретов. Вся защита не работала. Исправлено форматированием, ни одно значение манифеста не изменилось.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-migr-invariant",
+      "title": "Инвариант «репозиторий равен проду» стал гейтом",
+      "type": "tech",
+      "epic": "process",
+      "priority": 0,
+      "status": "done",
+      "body": "Число файлов миграций обязано равняться числу записей в schema_migrations. Вынесено в deploy.sh — расхождение ловится машиной, а не через месяц глазами.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-vps-state-2026-08-26",
+          "slug": "habitoff-vps-state-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-no-manual-prod",
+      "title": "Прод перестаёт быть местом ручных правок",
+      "type": "docs",
+      "epic": "process",
+      "priority": 0,
+      "status": "doing",
+      "body": "Четыре расхождения прода и репозитория родились в SQL Editor. Своя база убирает эту кнопку — но только если её место не займёт psql по SSH. Любое изменение схемы или контента — миграция в репозитории. Правило сформулировано, механически закреплено частично: гейт миграций есть, запрета на прямой psql нет.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-ru-selfhosting-plan",
+          "slug": "alive-ru-selfhosting-plan-2026-08-26",
+          "url": ""
+        },
+        {
+          "label": "runbook §11.1",
+          "slug": "alive-vps-migration-runbook-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-gitattributes",
+      "title": ".gitattributes с переводом строк",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "done",
+      "body": "Две сессии подряд видели 184–188 «изменённых» файлов из-за CRLF, и настоящая правка в этом тонула.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-gitignore",
+      "title": "Гигиена .gitignore",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "done",
+      "body": "Корневые package.json и package-lock.json подхватывались при git add -A. Отдельно: app/.env не был в списке — файл с ключами ждал команды.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-env-example",
+      "title": ".env.example догнал код",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "done",
+      "body": "Код читает шесть переменных окружения, в примере было три.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-backup-tables",
+      "title": "Уборка пяти таблиц-снимков",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "done",
+      "body": "Следы ручных правок прода 24–25.08, попавшие в состав миграций. Перед применением сняты CSV: бэкапов ещё не было, и это была единственная копия каталогов на те даты.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-agents-md",
+      "title": "Правила работы в AGENTS.md",
+      "type": "docs",
+      "epic": "process",
+      "priority": 1,
+      "status": "done",
+      "body": "Сессия заканчивается пушем всего, что прошло проверку. Раздел «Параллельные сессии»: читать файл непосредственно перед правкой, ветка на задачу, начало работы с git pull, не копировать в документы числа, которые проверяет машина — по итогам того, что дважды была затёрта чужая работа.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        },
+        {
+          "label": "habitoff-backups",
+          "slug": "habitoff-backups-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-ci-current-state",
+      "title": "CI предупреждает о неописанном изменении",
+      "type": "infra",
+      "epic": "process",
+      "priority": 2,
+      "status": "done",
+      "body": "Если PR трогает код приложения или миграции и не трогает CURRENT_STATE.md — предупреждение, не блокировка.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-adr-numbering",
+      "title": "Нумерация ADR разъезжалась дважды за день",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "done",
+      "body": "Ветка контура принесла ADR-0004, а он был занят дизайн-системой; пока писался ADR о расхождении, владелец параллельно занял 0008. Ряд сведён: 0001 контур, 0002 репозиторий, 0003 ребренд, 0004 дизайн-система, 0005 цвет наблюдения, 0006 пилот, 0007 свой контур в РФ, 0008 ярлык, 0009 сверка, 0010 тон голоса.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-state-sh",
+      "title": "scripts/state.sh — снимок состояния в первый промпт",
+      "type": "infra",
+      "epic": "process",
+      "priority": 1,
+      "status": "done",
+      "body": "Топология веток, сверка с продом, число миграций в репозитории и в базе, git status. Убирает ошибки от неверной вводной и экономит агенту 20–40 вызовов на разведку. Карта в голове расходится с git: 27.08 топология оказалась проще, чем в постановке.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "working-style-coaching-2026-08-27",
+          "slug": "working-style-coaching-2026-08-27",
+          "url": ""
+        },
+        {
+          "label": "чат 2026-08-27",
+          "slug": "",
+          "url": "https://claude.ai/code/session_01WkyC5doSqxb7NGEwLA87uK"
+        }
+      ],
+      "commits": [
+        "b2251d08c19ad00f521a0cda1ea7b2d67d9b9919"
+      ]
+    },
+    {
+      "id": "proc-next-adr",
+      "title": "scripts/next-adr.sh — номер ADR выдаёт скрипт",
+      "type": "infra",
+      "epic": "process",
+      "priority": 2,
+      "status": "done",
+      "body": "Максимум по каталогу плюс один. Нумерацию не считать глазами.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "working-style-coaching-2026-08-27",
+          "slug": "working-style-coaching-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": [
+        "b2251d08c19ad00f521a0cda1ea7b2d67d9b9919"
+      ]
+    },
+    {
+      "id": "proc-backlog-md",
+      "title": "BACKLOG.md как обязательное место для найденного попутно",
+      "type": "docs",
+      "epic": "process",
+      "priority": 2,
+      "status": "done",
+      "body": "Одна сессия — одна ветка — один критерий приёмки, записанный до начала. Найденное попутно уходит строкой в бэклог, а не в текущую ветку. Форма уже есть, надо сделать обязательной. В репозитории файла пока нет.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "working-style-coaching-2026-08-27",
+          "slug": "working-style-coaching-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": [
+        "b2251d08c19ad00f521a0cda1ea7b2d67d9b9919"
+      ]
+    },
+    {
+      "id": "proc-agent-branches",
+      "title": "Семь веток agent/* не смержены",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "В remote висят ветки с коммитами до 18.08, от 2 до 225 коммитов впереди main. На двух присвоена версия v4.0.0-alpha при том, что v3.0 ещё не выпущен, — прямое расхождение с релизной политикой; на третьей начат объём v3.2 до прохождения гейта v3.0. Нужно владельческое решение: бросить, забрать как вход в планирование, либо формализовать через ADR.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-strategy-review-2026-08-20",
+          "slug": "alive-strategy-review-2026-08-20",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-pr10",
+      "title": "Незакрытый PR со стабилизацией",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Рефакторинг: тесты, ErrorBoundary, разбиение главного компонента. Два известных конфликта. Отложено с 23.08, дальше не всплывало.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-release-readiness-2026-08-23",
+          "slug": "alive-release-readiness-2026-08-23",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "proc-releases-page",
+      "title": "Страница «Что нового» доведена до правды",
+      "type": "feature",
+      "epic": "process",
+      "priority": 2,
+      "status": "done",
+      "body": "Обрывалась на 3.1, при том что продукт сменил имя, переехал на свой сервер, получил второй способ входа и вдвое более короткий разбор тяги. Список стал данными, а не разметкой, и накрыт тестом: версии из package.json нет на странице — тест красный.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation-2026-08-27",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "docs-rollout",
+      "title": "Порядок раскатки записан",
+      "type": "docs",
+      "epic": "process",
+      "priority": 1,
+      "status": "done",
+      "body": "ROLLOUT.md: конфликт входа, порядок миграций, инфраструктурные пункты до первых участников, известный бэклог, найденный попутно.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-observation-colour-and-signin-2026-08-27",
+          "slug": "habitoff-observation-colour-and-signin-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "rel-v30-gate",
+      "title": "Гейт v3.0: 36 из 38",
+      "type": "tech",
+      "epic": "release",
+      "priority": 0,
+      "status": "doing",
+      "body": "Оставшиеся два пункта — запуск локального стека Supabase CLI и db reset. Существо пункта («база из миграций равна проду») доказано иначе: агрегатные SHA-256 совпадают с продом, миграции прогоняются на чистой Postgres. Не доказан сам инструмент, а не эквивалентность. Решение «v3.0 выпущен» принимает владелец.",
+      "updated": "2026-08-27",
+      "tags": [
+        "owner"
+      ],
+      "chats": [
+        {
+          "label": "alive-release-readiness",
+          "slug": "alive-release-readiness-2026-08-23",
+          "url": ""
+        },
+        {
+          "label": "habitoff-pilot-readiness",
+          "slug": "habitoff-pilot-readiness-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "rel-prod-repo",
+      "title": "Расхождение прода и репозитория закрыто",
+      "type": "bug",
+      "epic": "release",
+      "priority": 0,
+      "status": "done",
+      "body": "29 замен, 3 переименования и 20 колонок существовали только в проде, мимо миграций. Документированный шаг релиза db reset уничтожил бы боевой контент. По решению владельца прод принят за истину, репозиторий подтянут двумя миграциями, эквивалентность доказана хэшами.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-release-readiness-2026-08-23",
+          "slug": "alive-release-readiness-2026-08-23",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "rel-v31",
+      "title": "v3.1 выпущен",
+      "type": "feature",
+      "epic": "release",
+      "priority": 0,
+      "status": "done",
+      "body": "Тег v3.1.0, GitHub Release, релизная единица «Вместе, факты, смыслы». Объявлен владельцем 25.08.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-production-readiness-2026-08-25",
+          "slug": "alive-production-readiness-2026-08-25",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "rel-live-owner",
+      "title": "Четыре живых теста владельца пройдены",
+      "type": "tech",
+      "epic": "release",
+      "priority": 0,
+      "status": "done",
+      "body": "Изоляция двух аккаунтов, удаление аккаунта, мобильная вёрстка, новый первый экран.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-release-readiness-2026-08-23",
+          "slug": "alive-release-readiness-2026-08-23",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "rel-redeploy",
+      "title": "Прод догнал main",
+      "type": "infra",
+      "epic": "release",
+      "priority": 0,
+      "status": "done",
+      "body": "Версия 3.2.0, сборка от 27.08. Проверено снаружи: заголовок страницы и llms.txt называют продукт Habitoff, слова ALIVE на витрине нет; CSS на сервере побайтово совпадает с собранным локально.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "habitoff-main-consolidation",
+          "slug": "habitoff-main-consolidation-and-drift-2026-08-27",
+          "url": ""
+        },
+        {
+          "label": "habitoff-latin-purge",
+          "slug": "habitoff-latin-purge-2026-08-27",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "rel-remote-unverified",
+      "title": "Что снаружи проверить нельзя",
+      "type": "research",
+      "epic": "release",
+      "priority": 2,
+      "status": "verify",
+      "body": "Экран входа, мост Яндекса (закрыт robots.txt), экраны за входом, раздел «Гипотезы» на служебной странице. Содержимое js-бандла удалённо не читается — он отдаётся обрезанным. Всё это проверяется только браузером на живом домене.",
+      "updated": "2026-08-27",
+      "tags": [
+        "live"
+      ],
+      "docs": [
+        {
+          "label": "CURRENT_STATE 27.08",
+          "path": "docs/CURRENT_STATE.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "v31-together",
+      "title": "v3.1 · Вместе",
+      "type": "feature",
+      "epic": "next",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Агрегаты группы, карточки участников, сравнение с личным базисом, возвращающие подсказки, белый список приватности, пульс активности. Гипотеза: социальная поддержка без соревнования. Гейт: нет утечки личных данных, качественная обратная связь не указывает на вред от стыда, есть измеримый сигнал возвращения.",
+      "updated": "2026-08-27",
+      "deps": "Гейт v3.0",
+      "docs": [
+        {
+          "label": "ROADMAP.md",
+          "path": "docs/ROADMAP.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "v32-admin",
+      "title": "v3.2 · Админка и product intelligence",
+      "type": "feature",
+      "epic": "next",
+      "priority": 3,
+      "status": "backlog",
+      "body": "Роль и панель администратора, воронка продукта, интеллект замен, аналитика Связок и Смыслов, входящие UGC, здоровье системы, инциденты, письма-оповещения, недельная сводка. Гейт: администратор не читает личный текст по умолчанию, инциденты дедуплицированы, сводка отвечает «что улучшать».",
+      "updated": "2026-08-27",
+      "deps": "Гейт v3.1",
+      "docs": [
+        {
+          "label": "ROADMAP.md",
+          "path": "docs/ROADMAP.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "post-v32",
+      "title": "После v3.2 — только по доказательствам",
+      "type": "research",
+      "epic": "next",
+      "priority": 3,
+      "status": "backlog",
+      "body": "Сложное персональное ранжирование, необязательные объяснения через LLM, широкие когорты, углублённая методика, другие никотиновые продукты, нативное приложение и PWA, исследовательский экспорт, возможная связка с HumanOS — через отдельный ADR и границу согласия.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "ROADMAP.md",
+          "path": "docs/ROADMAP.md"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "open-local-first",
+      "title": "Local-first без аккаунтов — рассмотрен, не принят",
+      "type": "research",
+      "epic": "next",
+      "priority": 3,
+      "status": "backlog",
+      "body": "Цена: пропадает «Вместе» (агрегаты требуют сервера), нет синхронизации между устройствами, данные теряются при чистке браузера, восстановления нет. Для продукта про многомесячный отказ потеря истории — тяжёлый удар по доверию. Решение продуктовое, а не техническое.",
+      "updated": "2026-08-27",
+      "chats": [
+        {
+          "label": "alive-ru-selfhosting-plan-2026-08-26",
+          "slug": "alive-ru-selfhosting-plan-2026-08-26",
+          "url": ""
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "board-from-repo",
+      "title": "Доска работ собирается из репозитория",
+      "type": "infra",
+      "epic": "process",
+      "priority": 1,
+      "status": "done",
+      "body": "Состояние работ жило в трёх местах сразу: доки чатов, CURRENT_STATE и память. Теперь карточки — данные репозитория, а двигает их трейлер Board: в коммите; CI ловит расхождение, BACKLOG.md собирается, ручные правки живут отдельным слоем и не стираются пересборкой.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "ADR-0012",
+          "path": "docs/decisions/ADR-0012-board-from-repo.md"
+        },
+        {
+          "label": "board/README.md",
+          "path": "docs/board/README.md"
+        },
+        {
+          "label": "cards.json",
+          "path": "docs/board/cards.json"
+        }
+      ],
+      "chats": [
+        {
+          "label": "habitoff-board-2026-08-27",
+          "slug": "habitoff-board-2026-08-27",
+          "url": "https://claude.ai/code/session_01WkyC5doSqxb7NGEwLA87uK"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "board-publish-cron",
+      "title": "Публикация доски по расписанию",
+      "type": "infra",
+      "epic": "process",
+      "priority": 2,
+      "status": "doing",
+      "body": "Скрипт собирает dist/board.html, но публикует страницу сессия Claude: у скрипта доступа к артефакту нет. Ежедневный запуск клонирует репозиторий, пересобирает доску и публикует её по постоянному адресу. Не выполнилась сессия — отпечаток коммита в шапке страницы это покажет.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "board/README.md",
+          "path": "docs/board/README.md"
+        }
+      ],
+      "chats": [
+        {
+          "label": "habitoff-board-2026-08-27",
+          "slug": "habitoff-board-2026-08-27",
+          "url": "https://claude.ai/code/session_01WkyC5doSqxb7NGEwLA87uK"
+        }
+      ],
+      "commits": []
+    },
+    {
+      "id": "board-chat-links",
+      "title": "У старых карточек нет ссылок на чаты",
+      "type": "docs",
+      "epic": "process",
+      "priority": 3,
+      "status": "backlog",
+      "body": "У 147 карточек первой сборки проставлены документы проекта, а не адреса чатов: восстановить их неоткуда. Ссылку можно добавить руками прямо на карточке; новые сессии привязывают свой чат трейлером Board: chat.",
+      "updated": "2026-08-27",
+      "docs": [
+        {
+          "label": "ADR-0012",
+          "path": "docs/decisions/ADR-0012-board-from-repo.md"
+        }
+      ],
+      "commits": []
+    }
+  ]
+}
