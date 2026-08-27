@@ -143,6 +143,37 @@ export function replacementKind(item: Replacement) {
   return 'Другой ответ';
 }
 
+/**
+ * `mechanism` в каталоге замен — машинный ключ: по нему группируются ответы в разделе
+ * «Вместе». До 27.08.2026 он показывался человеку как есть, и на экране стояло
+ * `context_change`. Русские подписи живут здесь, а не в базе: ключ должен оставаться
+ * ключом, иначе группировка развалится от первой же редакторской правки.
+ */
+const MECHANISM_LABEL: Record<string, string> = {
+  attention: 'Внимание',
+  breathing: 'Дыхание',
+  context_change: 'Смена обстановки',
+  drink: 'Напиток',
+  evidence_treatment: 'Доказательное средство',
+  focus: 'Фокус',
+  food: 'Еда',
+  grounding: 'Опора в теле',
+  manual: 'Занять руки',
+  meaning: 'Смысл',
+  movement: 'Движение',
+  oral: 'Занять рот',
+  pause: 'Пауза',
+  reflection: 'Размышление',
+  reward: 'Награда',
+  ritual: 'Ритуал',
+  sensory: 'Ощущения',
+  social: 'Контакт с человеком',
+};
+
+export function mechanismLabel(code: string) {
+  return MECHANISM_LABEL[code] ?? 'Другой механизм';
+}
+
 export function tobaccoSummary(event: Bootstrap['tobaccoEvents'][number] | undefined) {
   if (!event) return 'Никотин использован';
   if (event.cigarette_quantity) {

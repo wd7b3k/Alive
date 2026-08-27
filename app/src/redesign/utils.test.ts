@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { triggerIcon } from './utils';
+import { mechanismLabel, triggerIcon } from './utils';
 
 /**
  * The trigger codes the catalog actually publishes, read from the migrations rather
@@ -70,5 +70,32 @@ describe('triggerIcon', () => {
       (code) => code !== 'spontaneous' && triggerIcon({ code, title: '' }) === 'spark',
     );
     expect(unmapped, `no icon assigned: ${unmapped.join(', ')}`).toEqual([]);
+  });
+});
+
+/**
+ * Механизмы замен показываются человеку в разделе «Вместе». В базе это машинные ключи,
+ * подписи живут в коде — значит, новый ключ в каталоге обязан получить подпись, иначе на
+ * экране снова появится `context_change`. Список читается из миграций, а не дублируется
+ * руками.
+ */
+const mechanismCodes = [
+  ...new Set([...sql.matchAll(/"mechanism":\s*"([a-z_]+)"/g)].map((match) => match[1]!)),
+];
+
+describe('mechanismLabel', () => {
+  it('finds the mechanisms the catalog actually seeds', () => {
+    expect(mechanismCodes.length).toBeGreaterThanOrEqual(15);
+  });
+
+  it('gives every seeded mechanism a Russian label', () => {
+    const unlabelled = mechanismCodes.filter((code) => mechanismLabel(code) === 'Другой механизм');
+    expect(unlabelled, `без подписи: ${unlabelled.join(', ')}`).toEqual([]);
+  });
+
+  it('never shows a latin code to the person', () => {
+    for (const code of mechanismCodes) {
+      expect(mechanismLabel(code)).not.toMatch(/[A-Za-z]/);
+    }
   });
 });
