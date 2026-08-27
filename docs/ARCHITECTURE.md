@@ -4,7 +4,7 @@
 
 Документ фиксирует архитектуру текущей серии. С 27.08.2026 весь контур работает на
 собственном сервере; причины ухода с Cloudflare Pages и Supabase Cloud — в
-[`decisions/ADR-0003-self-hosted-ru-contour.md`](decisions/ADR-0003-self-hosted-ru-contour.md),
+[`decisions/ADR-0004-self-hosted-ru-contour.md`](decisions/ADR-0004-self-hosted-ru-contour.md),
 фактическое состояние развёртывания — в
 [`INFRASTRUCTURE_STATE.md`](INFRASTRUCTURE_STATE.md).
 

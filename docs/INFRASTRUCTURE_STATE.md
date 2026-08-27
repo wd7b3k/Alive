@@ -5,7 +5,7 @@ credentials здесь запрещены.
 
 Обновлено 27.08.2026 — после переезда с Cloudflare Pages и Supabase Cloud на
 собственный сервер. Причины переезда и отвергнутые альтернативы:
-[`decisions/ADR-0003-self-hosted-ru-contour.md`](decisions/ADR-0003-self-hosted-ru-contour.md).
+[`decisions/ADR-0004-self-hosted-ru-contour.md`](decisions/ADR-0004-self-hosted-ru-contour.md).
 
 ## Имена
 

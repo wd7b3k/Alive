@@ -16,10 +16,15 @@ Habitoff не претендует на уникальное авторство 
 прекращения употребления никотина. Конкретные источники и заимствования фиксируются по
 мере развития проекта.
 
-Продукт до августа 2026 назывался ALIVE. Репозиторий по историческим причинам остался
-`wd7b3k/Alive`, каталоги на сервере — `/srv/alive`; переименовывать их не планируется.
-Старое имя встречается в исторических документах — `docs/ai_sessions/` и `releases/` — и
-там остаётся намеренно: это журнал того, что было, а не описание того, что есть.
+> До 26.08.2026 продукт назывался **ALIVE**. Причина смены, что стало с логотипом и где
+> `alive` осознанно оставлен — [`docs/decisions/ADR-0003-rebrand.md`](docs/decisions/ADR-0003-rebrand.md).
+> Слаг репозитория остаётся `wd7b3k/Alive`: переименование репозитория ломает remotes у
+> всех клонов и является отдельным инфраструктурным действием. Каталоги на сервере по той
+> же причине остались `/srv/alive`.
+
+Старое имя встречается в `docs/ai_sessions/`, `releases/`, `supabase/migrations/` и в
+именах RPC — там оно остаётся намеренно: в первых двух это журнал того, что было, а в
+последних двух `alive` является идентификатором, на который ссылаются живые данные.
 
 ## Source of truth
 
@@ -82,7 +87,7 @@ Habitoff должен постепенно увеличивать простра
 18. [`docs/V3_PARITY_BASELINE.md`](docs/V3_PARITY_BASELINE.md) — blocking acceptance criterion: минимум продуктовой глубины v2.7.
 19. [`docs/V3_VISUAL_UX_BASELINE.md`](docs/V3_VISUAL_UX_BASELINE.md) — blocking acceptance criterion: визуальный/UX-baseline, mobile safe zones, бренд-continuity.
 20. [`docs/V3_REDESIGN.md`](docs/V3_REDESIGN.md) — активная спецификация текущего UI.
-21. [`docs/decisions/`](docs/decisions/) — ADR, в том числе решение об уходе на свой сервер.
+21. [`docs/decisions/`](docs/decisions/) — ADR: смена имени (0003) и уход на свой сервер (0004).
 
 ## Домены и инфраструктура
 
@@ -93,7 +98,7 @@ Habitoff должен постепенно увеличивать простра
 edge-runtime). Cloudflare не участвует ни в одном звене, включая DNS.
 
 Подробности — в [`docs/INFRASTRUCTURE_STATE.md`](docs/INFRASTRUCTURE_STATE.md), причины —
-в [`docs/decisions/ADR-0003-self-hosted-ru-contour.md`](docs/decisions/ADR-0003-self-hosted-ru-contour.md).
+в [`docs/decisions/ADR-0004-self-hosted-ru-contour.md`](docs/decisions/ADR-0004-self-hosted-ru-contour.md).
 
 ## Ключевое правило
 
