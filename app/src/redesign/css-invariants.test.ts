@@ -188,6 +188,12 @@ describe('redesign.css инварианты', () => {
       '.r-attention-grid>button:hover .r-choice-icon',
       '.r-result-choice.observe',
       '.r-result-choice.observe .r-big-icon',
+      // Расширение от 27.08 по решению владельца: Связки — та же карта замеченного,
+      // развёрнутая в отдельный экран. Карточки выбора в сценарии тяги сюда не входят.
+      '.r-personal-links .r-choice-icon,.r-trigger-card .r-choice-icon',
+      '.r-trigger-card:hover .r-choice-icon',
+      // Плитка ярлыка повторяет фон иконки на домашнем экране, а не красит наблюдение.
+      '.r-install-mark',
     ]);
     const observing = rules
       .filter((rule) => /--r-observe|242,\s*202,\s*105|#f2ca69/i.test(rule.body))
