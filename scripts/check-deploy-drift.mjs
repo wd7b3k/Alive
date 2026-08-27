@@ -47,16 +47,41 @@ try {
 }
 
 let live;
+let body;
 try {
   const response = await fetch(`${origin}/version.json`, { cache: 'no-store' });
   if (!response.ok) {
     fail(
-      `${origin}/version.json отвечает ${response.status}. Прод собран до 27.08.2026 или отдаёт не то — это расхождение.`,
+      `РАСХОЖДЕНИЕ: ${origin}/version.json отвечает ${response.status}. Прод собран до появления отпечатка — выкладка не запускалась.`,
     );
   }
-  live = await response.json();
+  body = await response.text();
 } catch (error) {
-  fail(`Не смог прочитать ${origin}/version.json: ${error instanceof Error ? error.message : error}`);
+  fail(
+    `Не смог достучаться до ${origin}/version.json: ${error instanceof Error ? error.message : error}`,
+  );
+}
+
+try {
+  live = JSON.parse(body);
+} catch {
+  // Caddy отдаёт index.html на любой неизвестный путь — так устроено одностраничное
+  // приложение. Значит сборка старше 27.08.2026 и version.json в ней просто нет.
+  // Это расхождение, а не поломка проверки, и говорить об этом надо словами, а не
+  // ошибкой парсера JSON.
+  const looksLikeHtml = body.trimStart().slice(0, 9).toLowerCase() === '<!doctype';
+  fail(
+    [
+      'РАСХОЖДЕНИЕ: прод не отдаёт version.json.',
+      looksLikeHtml
+        ? `  ${origin}/version.json вернул HTML — это index.html, подставленный на неизвестный путь.`
+        : `  ${origin}/version.json вернул не JSON: ${body.slice(0, 80)}`,
+      '  Значит живая сборка сделана до того, как появился отпечаток, и выкладка с текущего main не запускалась.',
+      '',
+      'Лечится передеплоем: ssh alive@habitoff.ru, затем',
+      '  cd /srv/alive/repo && git fetch && git checkout main && git pull && /srv/alive/deploy.sh',
+    ].join('\n'),
+  );
 }
 
 const liveCommit = String(live.commit ?? '');
