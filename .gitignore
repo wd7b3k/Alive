@@ -1,5 +1,6 @@
 # Habitoff local/runtime artifacts
 app/node_modules/
+node_modules/
 app/dist/
 app/.env.local
 app/.env.*.local
@@ -9,3 +10,8 @@ app/.env.*.local
 # Supabase local state
 supabase/.temp/
 .supabase/
+
+# локальные переменные окружения — секреты в git не место
+.env
+.env.local
+.env.*.local

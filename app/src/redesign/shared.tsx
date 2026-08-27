@@ -234,7 +234,27 @@ export function Header({ data, path }: { data: Bootstrap; path: string }) {
  * настроен провайдер или нет, знает только проект Supabase, и он же скажет об этом
  * ошибкой, которую увидит человек.
  */
+/**
+ * Провайдеры, вход которых живёт своим мостом на этом же домене.
+ *
+ * GoTrue знать о них не может: в self-hosted список внешних провайдеров фиксирован, и
+ * Яндекса в нём нет. Плюс GoTrue ищет claim `email`, а Яндекс отдаёт `default_email` —
+ * настройкой это не лечится. Поэтому обмен кода на профиль делает наша функция, а
+ * кнопка просто уводит на неё.
+ */
+const BRIDGED: Record<string, string> = {
+  yandex: '/functions/v1/yandex/start',
+  'custom:yandex': '/functions/v1/yandex/start',
+};
+
 export async function startSignIn(provider = 'google'): Promise<string | null> {
+  const bridge = BRIDGED[provider];
+  if (bridge) {
+    // Навигация верхнего уровня, а не fetch: дальше человек попадает на страницу
+    // согласия Яндекса, и это должен быть настоящий переход.
+    window.location.assign(bridge);
+    return null;
+  }
   const supabase = getSupabase();
   if (!supabase) return 'Supabase не настроен';
   const result = await supabase.auth.signInWithOAuth({
