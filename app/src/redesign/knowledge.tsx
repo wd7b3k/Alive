@@ -100,8 +100,8 @@ export function EvidenceDetail({
           <SourceList sources={evidence.sources} />
         ) : (
           <p className="r-evidence-limit">
-            Исследования по этому приёму здесь не приводится — это собственная эвристика Habitoff, и
-            честнее сказать это прямо.
+            Исследований по этому приёму здесь не приводится: это собственная эвристика Habitoff, и
+            честнее сказать прямо.
           </p>
         )}
       </div>

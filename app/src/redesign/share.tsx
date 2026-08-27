@@ -13,8 +13,8 @@ import { Icon } from '../ui-icons';
 export function shareText(replacementTitle: string | null, origin: string): string {
   const what = replacementTitle
     ? `Сработало: ${replacementTitle.toLowerCase()}.`
-    : 'Просто заметил момент — и этого хватило.';
-  return `Только что поймал автоматизм и выбрал другой ответ. ${what} Я разбираю такие моменты в Habitoff: ${origin}`;
+    : 'Хватило того, что момент вообще замечен.';
+  return `Автоматизм включился — и ответ на него был другой. ${what} Я разбираю такие моменты в Habitoff: ${origin}`;
 }
 
 /**
@@ -53,7 +53,7 @@ export function ShareWin({ replacementTitle }: { replacementTitle: string | null
           ? 'Текст скопирован — вставь его туда, где общаешься с этим человеком.'
           : state === 'failed'
             ? 'Не получилось открыть окно «Поделиться». Скопируй текст вручную или попробуй ещё раз.'
-            : 'Кто-то рядом сейчас в том же месте, где был ты. Одного примера бывает достаточно.'}
+            : 'Кто-то рядом сейчас в той же точке. Одного живого примера бывает достаточно.'}
       </span>
       <button type="button" onClick={share}>
         Поделиться с другом

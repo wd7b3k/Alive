@@ -323,7 +323,7 @@ export function LoginPage() {
               onChange={(event) => setConsented(event.target.checked)}
             />
             <span id="consent-note">
-              Я понимаю, что это исследование, и согласен участвовать.{' '}
+              Я понимаю, что это исследование, и даю согласие на участие.{' '}
               <button
                 type="button"
                 className="r-linklike"
