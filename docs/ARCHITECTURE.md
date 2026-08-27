@@ -2,52 +2,85 @@
 
 ## 1. Статус
 
-Документ фиксирует архитектуру новой серии. **Platform bootstrap уже начат:** frontend и PostgreSQL/RLS schema существуют, Google OAuth и Cloudflare deployment ещё проходят V3-GATE-01.
+Документ фиксирует архитектуру текущей серии. С 27.08.2026 весь контур работает на
+собственном сервере; причины ухода с Cloudflare Pages и Supabase Cloud — в
+[`decisions/ADR-0003-self-hosted-ru-contour.md`](decisions/ADR-0003-self-hosted-ru-contour.md),
+фактическое состояние развёртывания — в
+[`INFRASTRUCTURE_STATE.md`](INFRASTRUCTURE_STATE.md).
 
-Основной принцип: **простая архитектура, достаточная для нескольких участников и дальнейшего роста, без преждевременного усложнения.**
+Основной принцип: **простая архитектура, достаточная для нескольких участников и
+дальнейшего роста, без преждевременного усложнения.**
 
 ## 2. High-level
 
-`Browser / Mobile Web`
-→ `alive.hmnos.ru`
-→ `Cloudflare Pages`
-→ `Supabase Auth (Google)`
-→ `Supabase PostgreSQL + RLS`
-→ `Edge Functions / DB functions`
+```
+Браузер / мобильный веб (РФ)
+        │ 443
+        ▼
+   habitoff.ru — один сервер в Москве
+        │
+   ┌────┴──────────────────────────────────────────┐
+   │ Caddy: TLS (Let's Encrypt), маршрутизация     │
+   │   /                → статика из current/      │
+   │   /rest/v1  ┐                                 │
+   │   /auth/v1  ├─────► Envoy (шлюз Supabase)     │
+   │   /functions/v1 ┘        ├ GoTrue (вход)      │
+   │                          ├ PostgREST          │
+   │                          ├ edge-runtime       │
+   │                          └ postgres-meta      │
+   │                              │                │
+   │                          PostgreSQL + RLS     │
+   │   studio — только через SSH-туннель           │
+   └───────────────────────────────────────────────┘
+```
 
-Operational jobs позднее:
+Наружу открыты только `22`, `80`, `443`. Всё остальное слушает `127.0.0.1`.
 
-`Supabase Cron → aggregation / health / maintenance`
+**Никаких внешних сервисов в рантайме.** Единственные внешние обращения продакшна:
+Let's Encrypt за сертификатом и сами провайдеры входа (`accounts.google.com`,
+`oauth.yandex.ru`) в момент нажатия кнопки — без них OAuth не бывает. Ни CDN, ни
+внешнего мониторинга, ни облачных функций, ни S3.
 
-Incident/digest email позднее:
-
-`Edge Function → email provider`
+Операционные задачи и почтовые уведомления, если появятся, живут на этом же сервере
+systemd-таймерами, а не внешним планировщиком.
 
 ## 3. Frontend
 
-Web-first responsive client находится в `app/`.
+Web-first responsive client в `app/`. Сборка — статические файлы, которые отдаёт Caddy
+из каталога, на который смотрит симлинк `current`.
 
 Требования:
 
 - mobile-first craving flow;
 - desktop-friendly analytics/settings/methodology;
 - no service secrets;
-- direct authenticated Supabase client допустим только для RLS-защищённых user-scoped операций;
-- privileged/admin/server operations только через server-side functions.
+- прямой аутентифицированный клиент Supabase допустим только для RLS-защищённых
+  user-scoped операций;
+- privileged/admin/server operations — только через server-side functions.
 
-Cloudflare Pages — static hosting/deployment layer, а не business backend.
+Адрес API и адрес сайта совпадают: `VITE_SUPABASE_URL=https://habitoff.ru`. Разведение
+идёт по путям на уровне Caddy, отдельного хоста бэкенда не существует. Побочный эффект,
+ради которого это в том числе и делается: браузер не ходит ни на один сторонний домен.
 
 ## 4. Auth
 
-Google Sign-In через Supabase Auth.
+Два способа входа, устроенные по-разному, и это важно понимать.
 
-Не создавать собственные passwords/invite sessions.
+**Google** — встроенный провайдер GoTrue, включается переменными окружения.
 
-Внутренняя модель использует `auth.uid()`/internal UUID для tenant isolation.
+**Яндекс** — собственный мост в edge-функциях. GoTrue не знает Яндекса и знать не может:
+в self-hosted список провайдеров фиксирован, и вдобавок GoTrue ищет OIDC-claim `email`,
+которого Яндекс не отдаёт. Мост сам меняет код на профиль и выпускает сессию через
+админский API. Подробности и требования безопасности — в
+[`AUTH_PROVIDERS.md`](AUTH_PROVIDERS.md).
+
+Собственные пароли и invite-сессии не создаются. Внутренняя модель использует
+`auth.uid()`/internal UUID для tenant isolation. Почтовый сервис не требуется.
 
 ## 5. Database
 
-PostgreSQL — durable runtime data store. **Schema source of truth — только `supabase/migrations/` в `wd7b3k/Alive`.**
+PostgreSQL — durable runtime data store. **Источник истины схемы — только
+`supabase/migrations/` в репозитории.**
 
 Основные принципы:
 
@@ -58,15 +91,19 @@ PostgreSQL — durable runtime data store. **Schema source of truth — толь
 - soft delete where auditability matters;
 - schema migrations versioned in git.
 
+С переездом появилось следствие, которого не было в облаке: база теперь **поднимается из
+миграций**, а не существует как данность. Прогон всех миграций на чистой базе перестал
+быть документированным шагом и стал обязательным условием.
+
 ## 6. Privileged logic
 
-Edge Functions/DB functions используются только там, где действительно требуются privileged credentials/authorization, в частности для будущих:
+Edge Functions/DB functions используются только там, где действительно требуются
+privileged credentials/authorization:
 
-- admin operations;
-- UGC publish/review;
-- weekly digests;
-- health checks;
-- privileged aggregations.
+- удаление аккаунта (`supabase/functions/delete-account`);
+- мост входа через Яндекс (`supabase/functions/yandex`);
+- будущие admin operations, UGC publish/review, дайджесты, health checks, privileged
+  агрегации.
 
 Не использовать Edge Functions для каждой простой CRUD-операции без причины.
 
@@ -80,17 +117,18 @@ Edge Functions/DB functions используются только там, где
 
 Не дублировать sensitive text в analytics.
 
-Для будущей групповой статистики использовать заранее агрегированные daily metrics, а не тяжёлые пересчёты всей истории при каждом открытии.
+Для групповой статистики использовать заранее агрегированные daily metrics, а не тяжёлые
+пересчёты всей истории при каждом открытии. На своём сервере это перестало быть вопросом
+стиля: за процессор теперь платит владелец.
 
 ## 8. Module boundaries
 
-Habitoff v3 реализуется как modular monolith на уровне приложения/БД с явным ownership и public contracts между модулями.
-
-Никакой необходимости в microservices на ранней стадии нет.
+Реализуется как modular monolith на уровне приложения/БД с явным ownership и public
+contracts между модулями. Микросервисы на ранней стадии не нужны.
 
 ## 9. Data model evolution
 
-Raw tobacco facts не зависят от Habitoff equivalence model.
+Raw tobacco facts не зависят от equivalence model.
 
 Пример:
 
@@ -103,28 +141,36 @@ Raw tobacco facts не зависят от Habitoff equivalence model.
 
 До внешнего пилота:
 
-- RLS coverage/tenant isolation tests;
+- RLS coverage/tenant isolation tests — включая проверку снаружи, через боевой путь;
 - admin authorization tests, когда admin появится;
-- secret scanning;
+- secret scanning бандла;
 - CSP/security headers;
 - audit critical privileged actions;
-- backup/restore path;
-- export/delete test.
+- **backup/restore path, проверенный восстановлением на пустом стеке**;
+- export/delete test;
+- сканирование периметра снаружи: открыты ровно 22, 80, 443.
 
-## 11. Domain
+Два последних пункта появились вместе со своим сервером. Раньше за периметр и
+восстановление отвечал провайдер.
 
-Основной адрес: `alive.hmnos.ru`.
+## 11. Домен
 
-DNS/deployment metadata после настройки отражаются в repo docs, но реальные secrets — нет.
+Основной адрес: `habitoff.ru`, регистратор и DNS — Рег.ру. Cloudflare не участвует ни в
+одном звене.
 
-## 12. Что не требуется v3.0
+`alive.hmnos.ru` остаётся на прежней инфраструктуре и после переключения отвечает 301.
+Старый прод не выключается две недели после перевода трафика.
+
+## 12. Что не требуется
 
 - Kubernetes;
-- microservices;
+- микросервисы;
 - ClickHouse;
 - Redis cluster;
 - GPU/LLM infrastructure;
 - event bus;
-- сложный data warehouse.
+- сложный data warehouse;
+- CDN, второй сервер под staging, реплика Postgres, anti-DDoS — это этап 2, после
+  подтверждения продуктовой гипотезы, а не вместе с переездом.
 
 Добавлять только при измеренном trigger.

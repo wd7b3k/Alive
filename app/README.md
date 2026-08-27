@@ -1,32 +1,39 @@
-# Habitoff v3 frontend
+# Habitoff — frontend
 
 ## Требования
 
 - Node.js `>=22.12.0`;
 - npm;
-- Supabase project URL;
-- Supabase publishable key.
+- адрес Supabase и publishable key.
 
 ## Локальный запуск
 
-Из корня `wd7b3k/Alive`:
+Из корня репозитория:
 
 ```bash
 cd app
-cp .env.example .env.local
-npm install
+cp .env.example .env
+npm ci
 npm run dev
 ```
 
-Заполнить в `.env.local`:
+Заполнить в `.env`:
 
 ```env
-VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_URL=https://habitoff.ru
 VITE_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
 VITE_APP_ORIGIN=http://localhost:5173
+VITE_AUTH_PROVIDERS=google,yandex
+VITE_GA_MEASUREMENT_ID=
+VITE_YANDEX_METRIKA_ID=
 ```
 
-`.env.local` не коммитится.
+`VITE_SUPABASE_URL` — это адрес сайта, а не отдельный хост бэкенда: на своём сервере
+Caddy разводит `/rest/v1`, `/auth/v1` и `/functions/v1` на шлюз Supabase по путям,
+а всё остальное отдаёт статикой. Отдельного адреса вида `<ref>.supabase.co` больше нет.
+
+`.env` не коммитится — он в `.gitignore`. Это не формальность: на self-hosted там лежат
+ключи, а не только адрес проекта.
 
 ## Проверка
 
@@ -35,20 +42,31 @@ npm run typecheck
 npm run build
 ```
 
-Cloudflare Pages contract:
+## Выкладка
 
-- Repository: `wd7b3k/Alive`
-- Root directory: `app`
-- Build command: `npm run build`
-- Build output: `dist`
+Вручную ничего собирать не надо. На сервере:
+
+```bash
+/srv/alive/deploy.sh
+```
+
+Скрипт проверяет, что рабочее дерево git чистое и что число файлов миграций равно числу
+записей в журнале миграций базы, собирает, кладёт сборку в новый каталог и атомарно
+переключает симлинк. Подробности и откат — в [`../docs/RELEASE_POLICY.md`](../docs/RELEASE_POLICY.md).
+
+## Переменные окружения на проде
+
+Vite подставляет `VITE_*` **на этапе сборки**, а не в рантайме. Поэтому изменение любой
+из них требует пересборки и новой выкладки — само по себе оно ничего не поменяет.
 
 ## Security
 
 В `VITE_*` запрещено помещать:
 
-- Supabase service-role/secret key;
-- Google OAuth client secret;
-- database password;
-- email provider tokens.
+- `service_role` / secret key Supabase;
+- client secret Google или Яндекса;
+- пароль базы;
+- токены почтовых сервисов.
 
-Frontend может содержать только browser-safe Supabase URL/publishable key; доступ к private data ограничивается RLS.
+Frontend может содержать только публичный адрес и publishable key; доступ к приватным
+данным ограничивается RLS. Скан собранного бандла на секреты — постоянный шаг CI.

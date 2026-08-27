@@ -1,154 +1,234 @@
 # Habitoff — состояние внешней инфраструктуры
 
-Этот документ фиксирует безопасное версионируемое отражение внешнего состояния. Секреты и private credentials здесь запрещены.
+Безопасное версионируемое отражение того, что развёрнуто снаружи. Секреты и private
+credentials здесь запрещены.
+
+Обновлено 27.08.2026 — после переезда с Cloudflare Pages и Supabase Cloud на
+собственный сервер. Причины переезда и отвергнутые альтернативы:
+[`decisions/ADR-0003-self-hosted-ru-contour.md`](decisions/ADR-0003-self-hosted-ru-contour.md).
+
+## Имена
+
+Продукт называется **Habitoff**. Репозиторий по историческим причинам остался
+`wd7b3k/Alive`, каталоги на сервере — `/srv/alive`, пользователь системы — `alive`.
+Переименовывать их не планируется: цена правки путей в скриптах выкладки, бэкапов и
+конфигурации выше пользы от единообразия. Если это когда-нибудь изменится, менять надо
+все три места сразу.
 
 ## GitHub
 
 - Canonical repository: `wd7b3k/Alive`
 - Visibility: `private`
 - Default branch: `main`
-- Активная разработка v3.0 (platform → hardening → redesign) фактически уже находится
-  на `main` (tip `86b4608`, "Habitoff v3.0: deep interface redesign", 2026-08-15).
-  `v3.0-platform` / `v3.0-hardening` / `v3.0-redesign` — исторические ветки, каждая
-  отстаёт от `main`, никакого активного development сейчас на них не ведётся.
-- **Открытый вопрос по PR #4** (не проверяемо только из содержимого git — нет доступа
-  к GitHub API/PR-статусу из этой сессии): ранее здесь числился "Active PR: `#4` ...
-  draft до визуального smoke-test". Коммиты на `main` линейны, без merge-commit —
-  значит либо PR #4 был смержен fast-forward и его нужно закрыть/отметить смерженным,
-  либо push в `main` произошёл в обход PR-процесса, описанного в `AGENTS.md`
-  ("Git workflow"). Владельцу нужно явно зафиксировать, какой из двух вариантов верен,
-  и обновить этот пункт по факту.
-- Canonical standalone merge: `d1bcec0ae7f8feb2fee0cfe64c28bde44ef585cb`
-- Historical source before extraction: `wd7b3k/humanos/projectsv2.0/products/alive/`
-- HumanOS cleanup merge: `78f2f74ef223d1da20c6c65203e5806263ec85e3`
-- Current HumanOS `main` no longer contains the Habitoff product subtree; only pointer/audit history remains.
-- Rule: дальнейшая Habitoff-разработка ведётся только в `wd7b3k/Alive`; HumanOS не используется как источник текущего кода, дизайна или ассетов.
+- Прод собирается **только** с `main`.
+- Доступ сервера к репозиторию — deploy key с правом записи, заведённый в
+  Settings → Deploy keys репозитория. Ключ аккаунта на сервер не копируется: при
+  компрометации машины отзывается доступ к одному репозиторию, а не ко всем.
 
-### Ветки repository — снимок аудита (2026-08-20)
+Исторический источник до отделения продукта: `wd7b3k/humanos/projectsv2.0/products/alive/`.
+После миграции считается архивным и неканоническим.
 
-Помимо `main`, в remote есть ещё 11 веток. Ниже — их состояние относительно `main`
-на момент снимка (`git rev-list --count`, дата последнего коммита). Таблицу нужно
-обновлять при следующем аудите, а не считать статичной.
+Снимок веток здесь больше не ведётся: он устаревал быстрее, чем обновлялся, и создавал
+ложное ощущение точности. Актуальное состояние смотреть в самом git.
 
-| Ветка | Впереди `main` | Позади `main` | Последний коммит | Статус |
-|---|---|---|---|---|
-| `agent/owner-vision-delivery-protocol` | 225 | 0 | 2026-08-18 | несмержена, не в roadmap |
-| `agent/v4.0.0-alpha.1-hotfix.1` | 225 | 0 | 2026-08-18 | несмержена; содержит release unit `v4.0.0-alpha.1-hotfix.1` — версия впереди факта, см. ниже |
-| `agent/v4.0.0-alpha.1` | 222 | 0 | 2026-08-18 | несмержена; содержит release unit `v4.0.0-alpha.1` |
-| `agent/r1-data-evidence-admin` | 100 | 0 | 2026-08-17 | несмержена; содержит release unit `r1-data-evidence-admin` (v3.2-scope) |
-| `agent/v3.1-behavioral-depth-together` | 67 | 0 | 2026-08-17 | несмержена (v3.1-scope) |
-| `agent/product-strategy-foundation` | 22 | 0 | 2026-08-17 | несмержена |
-| `agent/stabilization-release` | 2 | 0 | 2026-08-18 | несмержена |
-| `migration/standalone-repo` | 1 | 4 | 2026-08-15 | устаревшая, позади `main` |
-| `v3.0-hardening` | 14 | 2 | 2026-08-15 | историческая, слита в `main` через redesign |
-| `v3.0-platform` | 30 | 3 | 2026-08-15 | историческая, слита в `main` |
-| `v3.0-redesign` | 8 | 1 | 2026-08-15 | историческая, слита в `main` |
-| `docs/ai-session-2026-08-20-strategy-audit` | 1 | 0 | 2026-08-20 | audit-trail ветка этого аудита |
+## Сервер
 
-**Значимая находка (не решение — вопрос владельцу):** на `agent/v4.0.0-alpha.1` и
-`agent/v4.0.0-alpha.1-hotfix.1` уже присвоена версия `v4.0.0-alpha`, хотя `v3.0` ещё
-не объявлен `RELEASED` — это расходится с `docs/RELEASE_POLICY.md` §3/§10 и
-`docs/ROADMAP.md` ("переходы идут по evidence gates"). На `agent/r1-data-evidence-admin`
-уже начат v3.2-scope (admin/intelligence) до прохождения v3.0/v3.1 гейта. Этот документ
-не abandon'ит, не мержит и не переименовывает эти ветки — решение о их судьбе
-(archive / частично забрать в v3.1–v3.2 планирование / формализовать ADR) остаётся за
-владельцем.
-
-## Supabase
-
-- Project ref: `xkigijaqimzuveyzyzyk`
-- Project URL: `https://xkigijaqimzuveyzyzyk.supabase.co`
-- Region: `eu-west-1`
-- Status при последней проверке: `ACTIVE_HEALTHY`
-- Runtime role: Auth + PostgreSQL + RLS
-- Browser-safe publishable key существует и активен; его значение не является секретом, но не фиксируется как immutable source of truth, поскольку ключ может ротироваться.
-- Service-role/database/OAuth secrets: **не сохраняются в git**.
-
-### Remote migrations applied
-
-Канонические SQL-файлы находятся в `supabase/migrations/`; remote schema разворачивается только versioned migrations из repo.
-
-### Security state
-
-После применения hardening migrations Supabase Database Security Advisor: `0 warnings`.
-
-Performance Advisor на пустой/малой БД может показывать `unused_index`; это не является основанием удалять индексы до реальных query metrics.
-
-## Google OAuth
-
-Status: `E2E PASS`.
-
-2026-08-15 реальный Google OAuth flow подтверждён:
-
-- Google consent — PASS;
-- `auth.users` row — PASS;
-- `public.profiles` auto-create — PASS;
-- display name из Google metadata — PASS;
-- возврат в Cloudflare Pages frontend — PASS после настройки Supabase Auth URL Configuration.
-
-Supabase callback:
-
-`https://xkigijaqimzuveyzyzyk.supabase.co/auth/v1/callback`
-
-До подключения custom domain production Auth configuration использует Pages host:
-
-- Site URL: `https://alive-aw2.pages.dev`
-- Redirect URL: `https://alive-aw2.pages.dev/**`
-- local development redirect при необходимости: `http://localhost:5173/**`
-
-После подключения custom domain production Site URL должен быть переведён на `https://alive.hmnos.ru`.
-
-Google OAuth Client Secret никогда не сохранять в repo, frontend или обычных логах.
-
-## Cloudflare Pages
-
-Status: `PRODUCTION HEALTHY / REDESIGN PREVIEW HEALTHY`.
-
-Dashboard project label: `habitoff`.
-
-Production host:
-
-`https://alive-aw2.pages.dev`
-
-Production source: `main`.
-
-Активный preview редизайна:
-
-- branch: `v3.0-redesign`;
-- branch alias: `https://v3-0-redesign.alive-aw2.pages.dev`;
-- atomic preview текущего состояния: `https://e52c8d13.alive-aw2.pages.dev`;
-- Cloudflare Pages check: PASS;
-- GitHub frontend typecheck/build: PASS.
-
-2026-08-15 единичный `DNS_PROBE_FINISHED_NXDOMAIN` на мобильном устройстве не подтвердился как outage: production host и preview deployments фактически доступны. Не считать это инфраструктурным blocker без повторяемого подтверждения.
-
-Canonical host: `https://alive.hmnos.ru`.
-
-Состояние на 2026-08-25 — подготовлено, ждёт делегирования:
-
-| Что | Состояние |
+| | |
 |---|---|
-| Зона `hmnos.ru` в Cloudflare | создана, статус `initializing` |
-| Назначенные NS | `ben.ns.cloudflare.com`, `cloe.ns.cloudflare.com` |
-| NS у регистратора | **не переключены** — это единственный оставшийся шаг, и он у владельца |
-| Custom domain на Pages-проекте `habitoff` | `alive.hmnos.ru` добавлен, статус `initializing`, сертификат Google |
-| DNS-запись | `CNAME alive.hmnos.ru → alive-aw2.pages.dev`, proxied |
-| Supabase Auth Site URL | всё ещё `https://alive-aw2.pages.dev` |
+| Провайдер | Timeweb Cloud, зона Москва |
+| Конфигурация | 4 vCPU / 8 ГБ RAM / 80 ГБ NVMe / 1 Гбит/с |
+| Стоимость | 2 760 ₽/мес |
+| ОС | Ubuntu 24.04 LTS |
+| Пользователь | `alive`, вход только по ключу, `sudo` без пароля |
 
-Порядок оставшихся действий обязателен: сначала NS у регистратора, потом дождаться
-статуса `active` и выдачи сертификата, и только потом менять Site URL и Redirect URLs в
-Supabase. Смена Site URL раньше рабочего домена ломает вход всем.
+Ubuntu 24.04, а не 26.04, сознательно: весь стек живёт в контейнерах и от версии хоста не
+зависит, поэтому выигрыша от свежей ОС нет, а риск нештатного поведения Docker с новым
+ядром есть.
 
-Отступление от Drift rule ниже зафиксировано осознанно: зона, custom domain и DNS-запись
-были созданы в Cloudflare раньше, чем описаны здесь, потому что имена NS-серверов
-назначаются при создании зоны и узнать их заранее нельзя. Документ обновлён сразу после.
+Первичная настройка выполнена cloud-init при создании сервера: пользователь, SSH-ключ,
+выключенный парольный вход, `ufw`, `fail2ban`, автообновления безопасности, swap 2 ГБ,
+Docker с зеркалом реестра, раскладка каталогов. Настройка через cloud-init, а не руками
+после первого входа, закрывает окно в несколько минут, когда root с паролем доступен из
+интернета и его сканируют.
 
-## Drift rule
+### Периметр
 
-Если Dashboard/remote state расходится с repo:
+Наружу открыты ровно три порта: `22`, `80`, `443`. Проверено сканированием снаружи, а не
+чтением `ufw status`.
+
+**Ловушка, о которую ломаются такие установки:** Docker пишет правила в цепочку
+`DOCKER-USER` и публикует порты **в обход `ufw`**. Запись `"8000:8000"` в compose откроет
+порт всему интернету, а `ufw status` будет показывать, что всё закрыто. Поэтому каждая
+публикация порта в этом проекте пишется только в форме `"127.0.0.1:<порт>:<порт>"`.
+Ни одного исключения. Проверка — с чужой машины:
+
+```bash
+nmap -Pn -p 22,80,443,3000,5432,8000,9999 <IP>
+```
+
+### Реестр образов
+
+Docker Hub не отдаёт образы на российские IP, `download.docker.com` тоже. Поэтому:
+
+- Docker поставлен из репозитория Ubuntu (`docker.io`, `docker-compose-v2`);
+- в `/etc/docker/daemon.json` прописано зеркало `https://dockerhub.timeweb.cloud`;
+- там же ротация логов контейнеров: без неё они съедают диск за месяцы и роняют базу.
+
+## Домен и TLS
+
+- Пользовательский адрес: `https://habitoff.ru`
+- Регистратор и DNS: Рег.ру, NS `ns1.reg.ru` / `ns2.reg.ru`
+- Записи: `A @` и `A www` на IP сервера
+- TTL зоны: `1h` — минимум, который даёт Рег.ру
+- `www` отвечает 301 на apex
+
+Cloudflare не участвует ни в одном звене: ни DNS, ни прокси, ни хостинг. Это условие
+всего переезда, а не предпочтение.
+
+Сертификаты — Let's Encrypt, выпускает и продлевает Caddy сам. Обращение к
+`acme-v02.api.letsencrypt.org` — единственный регулярный внешний вызов инфраструктуры.
+
+## Раскладка на диске
+
+```
+/srv/alive/
+  repo/                      git clone, рабочая копия, её открывает VS Code Remote-SSH
+  releases/20260827-101717/  собранная статика
+  current -> releases/…      симлинк, его отдаёт Caddy
+  backups/                   дампы
+  deploy.sh                  выкладка
+/srv/supabase/
+  docker-compose.yml         официальный, не правится
+  docker-compose.override.yml наши изменения
+  .env                       права 600
+  volumes/                   данные Postgres и код функций
+```
+
+Разделение существенно: `repo` можно ломать и пересобирать, `current` — то, что видят
+люди. Откат — переключение симлинка, полсекунды.
+
+## Веб-сервер
+
+Caddy (репозиторий Cloudsmith, не Ubuntu — в Ubuntu лежит версия 2022 года).
+`/etc/caddy/Caddyfile`:
+
+- `/rest/v1/*`, `/auth/v1/*`, `/functions/v1/*` → `127.0.0.1:8000` (шлюз Supabase);
+- всё остальное — статика из `/srv/alive/current`, `try_files` на `index.html`;
+- `/assets/*` отдаётся с `Cache-Control: immutable`, остальное с `no-cache`;
+- `/functions/v1/yandex/*` получает подставленный заголовок `apikey`.
+
+Последний пункт неочевиден и важен. Шлюз требует `apikey` на всех путях, а браузер при
+переходе по ссылке заголовков не шлёт — и Яндекс, возвращая человека на `callback`, тем
+более. Без подстановки вход через Яндекс упирался бы в 401. Ключ публичный по замыслу,
+поэтому лежит прямо в конфиге; **при перегенерации ключей его надо обновить и там**.
+
+## Supabase self-hosted
+
+Официальный compose из `supabase/supabase`, каталог `docker/`. Версии образов
+зафиксированы тем, что было на момент клонирования, и не выдумываются:
+
+| Сервис | Образ |
+|---|---|
+| db | `supabase/postgres:17.6.1.136` |
+| auth | `supabase/gotrue:v2.189.0` |
+| rest | `postgrest/postgrest:v14.12` |
+| functions | `supabase/edge-runtime:v1.74.0` |
+| meta | `supabase/postgres-meta:v0.96.6` |
+| studio | `supabase/studio:2026.08.03-sha-022b374` |
+| api-gw | `envoyproxy/envoy:v1.39.0` |
+
+**Оригинальный `docker-compose.yml` не правится.** Все изменения лежат в
+`docker-compose.override.yml`: выключение лишних сервисов профилями, привязка портов к
+loopback, переменные внешних провайдеров. Вырезанные руками сервисы сделали бы приём
+обновлений Supabase ручной работой на полдня.
+
+Чтобы override подхватывался, в `.env` расширен `COMPOSE_FILE`:
+`docker-compose.yml:docker-compose.override.yml`. Без этой строки override игнорируется
+молча, и все порты уезжают наружу при закрытом на вид `ufw`.
+
+Выключены: `realtime` (подписок на изменения в коде нет), `storage` и `imgproxy` (файлов
+пользователей нет), `supavisor` (пул на одно приложение избыточен, PostgREST держит свой).
+`analytics` и `vector` в текущей версии compose отсутствуют сами.
+
+Работающий стек занимает около 2 ГБ из 8. Остальное — на сборку и всплески. Постоянно
+занятый swap означает, что что-то из выключенного вернулось.
+
+Публикация портов — только на loopback: шлюз `8000`, studio `3000`, Postgres `5432`.
+Studio смотреть через туннель со своей машины:
+
+```bash
+ssh -L 3000:127.0.0.1:3000 alive@<IP>
+```
+
+Отклонение от исходного плана: Postgres всё-таки публикуется на `127.0.0.1:5432`, чтобы
+миграции и сверку хэшей можно было гонять с хоста. Наружу он не смотрит. Оговорка: на
+хосте `psql` версии 16, сервер 17 — `psql` работает, `pg_dump` надо звать через
+`docker exec`.
+
+## Секреты
+
+Все сгенерированы на сервере скриптами `utils/generate-keys.sh` и
+`utils/add-new-auth-keys.sh`. Ни одного значения из `.env.example` не осталось.
+
+`.env` с правами `600`, в git — никогда. Ротация `service_role`, висевшая открытым
+вопросом на облачном проекте, произошла сама: ключи новые, старые мертвы вместе с
+проектом.
+
+В браузер попадает только `SUPABASE_PUBLISHABLE_KEY`. `SERVICE_ROLE_KEY` существует
+внутри docker-сети и в `.env`, наружу не выходит ни при каких условиях.
+
+## Вход
+
+Google — переменными `GOTRUE_EXTERNAL_GOOGLE_*` в override. Redirect URI
+`https://habitoff.ru/auth/v1/callback` добавлен в Google Cloud Console; старый URI на
+`supabase.co` оставлен до окончательного вывода облачного проекта.
+
+Яндекс — собственный мост в edge-функциях. Подробности и причина в
+[`AUTH_PROVIDERS.md`](AUTH_PROVIDERS.md).
+
+Почтовый сервис не подключён и **не требуется**: мост выпускает сессию без письма.
+Зафиксировано явно, чтобы через месяц никто не начал искать SMTP.
+
+## Бэкапы
+
+Раздел заполняется по мере реализации. На 27.08.2026 автоматических резервных копий нет —
+это открытый пункт и главный риск в момент, когда приедут живые данные.
+
+Что планируется: `pg_dump` по systemd-таймеру в `/srv/alive/backups`, конфиги в том же
+архиве (без `.env` база не поднимется — JWT-ключи лежат там, и без них все выданные
+сессии мертвы), ежедневная тяга копии на машину владельца по SSH. Резервные копии в
+панели Timeweb сознательно выключены: копия на том же аккаунте не закрывает сценарий
+«аккаунт у провайдера недоступен».
+
+**Восстановление проверяется на пустом контейнере до того, как на сервер попадут живые
+данные, и повторяется раз в месяц.** Непроверенный бэкап — не бэкап, а надежда.
+
+## Наблюдаемость
+
+Дашборда Supabase больше нет. Раздел заполняется по мере реализации; сейчас первым
+мониторингом является владелец, открывший сайт с телефона, и это временное состояние.
+
+Планируется `alive-health.sh` по таймеру раз в пять минут: `/auth/v1/health`, ответ
+главной страницы, заполненность диска; `OnFailure=` в юните цепляет уведомление.
+Внешних сервисов не требуется.
+
+У всех сервисов в compose стоит `restart: unless-stopped`. Что перезагрузка сервера
+поднимает всё сама — **проверяется `reboot`-ом**, а не предполагается.
+
+## Правило расхождения
+
+Если состояние сервера расходится с репозиторием:
 
 1. не считать ручное изменение новой нормой;
-2. определить, является ли remote change ошибкой или желаемым изменением;
-3. желаемое изменение сначала оформить в repo;
-4. затем синхронизировать remote;
+2. определить, ошибка это или желаемое изменение;
+3. желаемое сначала оформить в репозитории;
+4. затем применить на сервере;
 5. обновить этот документ.
+
+Прямой `psql` на боевой базе — **только чтение**. Схема и контент меняются исключительно
+миграциями. За историю проекта четыре расхождения прода и репозитория, и все родились из
+ручной правки; своя база убирает кнопку SQL Editor, но только если её место не займёт
+`psql` по SSH.
+
+Проверка встроена в `deploy.sh` и работает при каждой выкладке: число файлов миграций
+обязано равняться числу записей в `supabase_migrations.schema_migrations`.

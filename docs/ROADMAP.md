@@ -19,9 +19,9 @@ Gate:
 
 Scope:
 
-- `alive.hmnos.ru`;
-- Cloudflare Pages;
-- Supabase Auth + Google;
+- `habitoff.ru`;
+- собственный сервер в Москве, Caddy отдаёт статику;
+- self-hosted Supabase Auth: Google и Яндекс;
 - PostgreSQL + RLS;
 - onboarding/baseline;
 - cigarette/hookah/vape;
