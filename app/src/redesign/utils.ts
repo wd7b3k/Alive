@@ -68,7 +68,10 @@ const TRIGGER_ICONS: Readonly<Record<string, IconName>> = {
   task_start: 'target',
   task_transition: 'pause',
   task_reward: 'check',
-  after_task: 'chart',
+  // after_task вобрал в себя task_reward, significant_action и thought_complete
+  // (миграция 20260827210000). Значок «галочка» описывает слитый смысл — «сделано» —
+  // точнее прежнего графика. Значки снятых контекстов остаются: по ним рисуется история.
+  after_task: 'check',
   important_decision: 'path',
   significant_action: 'flag',
   after_sex: 'heart',

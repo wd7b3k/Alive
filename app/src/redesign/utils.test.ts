@@ -12,15 +12,24 @@ const migrations = fileURLToPath(new URL('../../../supabase/migrations/', import
 const sql = [
   '20260815215100_v3_product_depth_catalog_a.sql',
   '20260821140000_v3_sync_production_catalog_content.sql',
+  '20260827210000_v3_merge_after_action_triggers.sql',
 ]
   .map((name) => readFileSync(`${migrations}/${name}`, 'utf8'))
   .join('\n');
 
-const dropped = new Set(
-  [...sql.matchAll(/delete from public\.triggers_catalog[\s\S]*?code in \(([^)]*)\)/g)]
+/**
+ * Контекст уходит с экрана двумя способами: его удаляют или снимают с публикации при
+ * слиянии (20260827210000). Во втором случае строка остаётся в базе ради истории
+ * эпизодов, но в сетке выбора её нет — и значок она делит с тем, в кого влилась.
+ */
+const dropped = new Set([
+  ...[...sql.matchAll(/delete from public\.triggers_catalog[\s\S]*?code in \(([^)]*)\)/g)]
     .flatMap((match) => [...match[1]!.matchAll(/'([a-z_]+)'/g)])
     .map((match) => match[1]!),
-);
+  ...[...sql.matchAll(/retired\s+text\[\]\s*:=\s*array\[([^\]]*)\]/g)]
+    .flatMap((match) => [...match[1]!.matchAll(/'([a-z_]+)'/g)])
+    .map((match) => match[1]!),
+]);
 
 const triggerCodes = [
   ...new Set([
