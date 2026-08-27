@@ -80,7 +80,7 @@ export function TogetherPage({ data }: { data: Bootstrap }) {
     <main className="r-page">
       <section className="r-reading">
         <p className="r-kicker">Вместе</p>
-        <h1>Ты не один в этом эксперименте</h1>
+        <h1>Ты в этом не в одиночку</h1>
         <p className="r-lead">
           Здесь только общие числа по всем, кто сейчас в Habitoff. Ни имён, ни записей, ни рейтингов
           — и это не настройка приватности, а устройство: прав читать чужие эпизоды у приложения
