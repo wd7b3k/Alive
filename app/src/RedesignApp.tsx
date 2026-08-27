@@ -54,7 +54,7 @@ import {
   KnowledgeCardView,
   KnowledgeCollapsed,
 } from './redesign/knowledge';
-import { GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
+import { GoalCard, GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
 import { ShareWin } from './redesign/share';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
 import { Brand, Header, LoginPage, Modal, PublicHeader, ShellButton } from './redesign/shared';
@@ -117,6 +117,10 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
         {path === '/knowledge' && <PublicKnowledge facts={facts} myths={myths} catalog={catalog} />}
         {path !== '/links' && path !== '/meanings' && path !== '/knowledge' && (
           <>
+            {/* Первый экран несёт только имя, обещание и одно действие. Всё остальное —
+                вторичные действия, оговорка о приватности, приглашение вглубь — стоит
+                ниже: до перестройки они делили первый экран с главным действием, и
+                главное действие переставало быть главным. */}
             <section className="r-now">
               <div className="r-now-copy">
                 <p className="r-kicker">Некоммерческий эксперимент · метод Habitoff v1</p>
@@ -126,10 +130,6 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                   какое состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный
                   момент.
                 </p>
-                <blockquote>
-                  Ниже — настоящая система, а не витрина: те же Связки и Смыслы, которые работают
-                  внутри. Аккаунт нужен только для того, чтобы сохранять твои личные записи.
-                </blockquote>
               </div>
               <div className="r-now-actions">
                 <button
@@ -154,29 +154,35 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                 <p className="r-cta-note" id="cta-vape-note-public">
                   <span aria-hidden="true">*</span> для вэйперов, конечно же, — парить
                 </p>
-                <div className="r-secondary-actions">
-                  <button type="button" onClick={signIn} disabled={busy}>
-                    <Icon name="smoke" size={22} />
-                    <span>
-                      <strong>Никотин уже был</strong>
-                      <small>Просто записать факт</small>
-                    </span>
-                  </button>
-                  <button type="button" onClick={() => go('/experiment')}>
-                    <Icon name="shield" size={22} />
-                    <span>
-                      <strong>Как это работает</strong>
-                      <small>Методология и приватность</small>
-                    </span>
-                  </button>
-                </div>
                 {error && <p className="r-error">{error}</p>}
-                <p className="r-privacy">
-                  Вход нужен только для того, чтобы узнать тебя при следующем заходе. Личные записи
-                  хранятся отдельно и защищаются правилами доступа PostgreSQL: их не видит никто,
-                  кроме тебя.
-                </p>
               </div>
+            </section>
+
+            {/* Тихая секция: без рамки и фона. Чередование рамка / не рамка само рисует
+                границы разделов — до этого шесть одинаковых карточек подряд читались как
+                одно бесконечное полотно. */}
+            <section className="r-section plain">
+              <div className="r-secondary-actions">
+                <button type="button" onClick={signIn} disabled={busy}>
+                  <Icon name="smoke" size={22} />
+                  <span>
+                    <strong>Никотин уже был</strong>
+                    <small>Просто записать факт</small>
+                  </span>
+                </button>
+                <button type="button" onClick={() => go('/experiment')}>
+                  <Icon name="shield" size={22} />
+                  <span>
+                    <strong>Как это работает</strong>
+                    <small>Методология и приватность</small>
+                  </span>
+                </button>
+              </div>
+              <p className="r-privacy">
+                Вход нужен только для того, чтобы узнать тебя при следующем заходе. Личные записи
+                хранятся отдельно и защищаются правилами доступа PostgreSQL: их не видит никто,
+                кроме тебя.
+              </p>
             </section>
 
             {!catalog && (
@@ -185,21 +191,30 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
               </section>
             )}
 
+            {/* Ниже каталоги показаны превью, а не целиком: каждый из них — отдельный
+                экран, до которого уже ведёт нижнее меню. Полный каталог на главной
+                означал, что главная дублирует четыре других экрана и растягивается на
+                шесть с половиной экранов прокрутки. */}
             {catalog && catalog.triggers.length > 0 && (
               <section className="r-section">
                 <div className="r-section-head">
                   <div>
                     <p className="r-kicker observe">Карта контекстов</p>
                     <h2>Что система уже умеет замечать</h2>
-                    <p>
-                      Это реальные пусковые моменты из базы Habitoff. Выбери любой — и увидишь,
-                      какие ответы система подбирает под него.
-                    </p>
                   </div>
+                  <button onClick={() => go('/links')}>
+                    Вся карта · {catalog.triggers.length} <Icon name="arrow" size={16} />
+                  </button>
                 </div>
-                <div className="r-trigger-grid">
-                  {catalog.triggers.map((trigger) => (
-                    <button key={trigger.code} type="button" onClick={signIn} disabled={busy}>
+                <div className="r-strip">
+                  {catalog.triggers.slice(0, 6).map((trigger) => (
+                    <button
+                      key={trigger.code}
+                      type="button"
+                      className="r-trigger-card"
+                      onClick={signIn}
+                      disabled={busy}
+                    >
                       <span className="r-choice-icon">
                         <Icon name={triggerIcon(trigger)} size={23} />
                       </span>
@@ -215,19 +230,23 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
             )}
 
             {catalog && catalog.goals.length > 0 && (
-              <section className="r-section">
+              <section className="r-section plain">
                 <div className="r-section-head">
                   <div>
                     <p className="r-kicker">Смыслы</p>
                     <h2>Ради чего становится интереснее жить иначе</h2>
-                    <p>
-                      Habitoff не работает запретами. Он начинается со смысла, ради которого стоит
-                      менять привычку, — и возвращает тебя к нему в тот момент, когда это труднее
-                      всего.
-                    </p>
                   </div>
+                  <button onClick={() => go('/meanings')}>
+                    Все смыслы · {catalog.goals.length} <Icon name="arrow" size={16} />
+                  </button>
                 </div>
-                <GoalLibrary goals={catalog.goals.slice(0, 6)} />
+                {/* Фильтр по типу здесь не нужен: это превью из трёх карточек, а не
+                    библиотека. Библиотека — на своём экране. */}
+                <div className="r-strip">
+                  {catalog.goals.slice(0, 3).map((goal) => (
+                    <GoalCard key={goal.code} goal={goal} preview />
+                  ))}
+                </div>
               </section>
             )}
 
@@ -237,39 +256,39 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                   <div>
                     <p className="r-kicker">Факты</p>
                     <h2>Что известно — и где это заканчивается</h2>
-                    <p>
-                      Ни одного утверждения без источника и без границ. Если исследования нет — так
-                      и написано.
-                    </p>
                   </div>
+                  <button onClick={() => go('/knowledge')}>
+                    Все факты · {allCards.length} <Icon name="arrow" size={16} />
+                  </button>
                 </div>
-                <div className="r-knowledge-grid">
-                  {publicCards.map((card) => (
-                    <KnowledgeCardView
-                      key={card.code}
-                      knowledge={catalog?.knowledge ?? EMPTY_KNOWLEDGE}
-                      card={card}
-                    />
-                  ))}
-                </div>
+                {/* Одна карточка, а не весь слой: раздел на главной обязан быть
+                    приглашением, иначе экран «Факты» нечего открывать. */}
+                <KnowledgeCardView
+                  knowledge={catalog?.knowledge ?? EMPTY_KNOWLEDGE}
+                  card={publicCards[0]}
+                />
               </section>
             )}
 
-            {catalog && catalog.replacements.length > 0 && (
-              <section className="r-section">
-                <div className="r-section-head">
-                  <div>
-                    <p className="r-kicker">Ответы вместо запрета</p>
-                    <h2>{catalog.replacements.length} замен, подобранных под ситуацию</h2>
-                    <p>
-                      В момент тяги Habitoff предлагает три варианта под конкретный контекст и
-                      потребность, а не общий список полезных привычек.
-                    </p>
-                  </div>
+            {/* Замены и закрывающее действие — один блок. Действие повторяется внизу:
+                до перестройки «Хочу курить» стояло на 600px и больше не возвращалось на
+                оставшихся 4800, то есть доскроллив, человек не мог начать, не вернувшись
+                наверх. */}
+            <section className="r-section">
+              <div className="r-section-head">
+                <div>
+                  <p className="r-kicker">Ответы вместо запрета</p>
+                  <h2>
+                    {catalog && catalog.replacements.length > 0
+                      ? `${catalog.replacements.length} замен, подобранных под ситуацию`
+                      : 'Здесь настоящая система, а не витрина'}
+                  </h2>
                 </div>
-                <div className="r-meaning-grid">
-                  {catalog.replacements.slice(0, 6).map((replacement) => (
-                    <article key={replacement.code}>
+              </div>
+              {catalog && catalog.replacements.length > 0 && (
+                <div className="r-strip">
+                  {catalog.replacements.slice(0, 3).map((replacement) => (
+                    <article key={replacement.code} className="r-meaning-card">
                       <span className="r-meaning-symbol">
                         <Icon name={replacementIcon(replacement)} size={25} />
                       </span>
@@ -278,13 +297,15 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                     </article>
                   ))}
                 </div>
-                <div className="r-actions">
-                  <ShellButton className="primary" onClick={signIn} disabled={busy}>
-                    Войти и начать <Icon name="arrow" size={18} />
-                  </ShellButton>
-                </div>
-              </section>
-            )}
+              )}
+              <p className="r-closing-note">
+                Те же Связки и Смыслы, которые работают внутри. Аккаунт нужен только для того, чтобы
+                сохранять твои личные записи.
+              </p>
+              <ShellButton className="primary" onClick={signIn} disabled={busy}>
+                Войти и начать <Icon name="arrow" size={18} />
+              </ShellButton>
+            </section>
           </>
         )}
       </main>
@@ -1681,7 +1702,7 @@ function Today({
         </div>
       </section>
       {todayCard && (
-        <section className="r-section">
+        <section className="r-section plain">
           <div className="r-section-head">
             <div>
               <p className="r-kicker">Факты</p>
@@ -1732,7 +1753,7 @@ function Today({
           })}
         </div>
       </section>
-      <section className="r-section">
+      <section className="r-section plain">
         <div className="r-section-head">
           <div>
             <p className="r-kicker">История обучения</p>
@@ -1742,10 +1763,15 @@ function Today({
               электронка никогда не называются заменой.
             </p>
           </div>
+          {data.episodes.length > 2 && (
+            <button onClick={() => go('/path')}>
+              Весь путь · {data.episodes.length} <Icon name="arrow" size={16} />
+            </button>
+          )}
         </div>
         {data.episodes.length ? (
           <div className="r-episode-list">
-            {data.episodes.slice(0, 8).map((e) => (
+            {data.episodes.slice(0, 2).map((e) => (
               <EpisodeCard key={e.id} data={data} episode={e} remove={remove} />
             ))}
           </div>

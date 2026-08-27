@@ -194,6 +194,10 @@ describe('redesign.css инварианты', () => {
       '.r-trigger-card:hover .r-choice-icon',
       // Плитка ярлыка повторяет фон иконки на домашнем экране, а не красит наблюдение.
       '.r-install-mark',
+      // ADR-0010: активный пункт меню. Ровно один на экране — как единственная точка
+      // над кольцом в знаке. Неактивные пункты остаются нейтральными: шесть золотых
+      // пунктов это уже не знак, а шесть точек.
+      '.r-desktop-nav button.active',
     ]);
     const observing = rules
       .filter((rule) => /--r-observe|242,\s*202,\s*105|#f2ca69/i.test(rule.body))
@@ -220,6 +224,21 @@ describe('redesign.css инварианты', () => {
       'grid-template-columns',
     );
     expect(bar![1]).toContain('grid-auto-flow:column');
+  });
+
+  /**
+   * Нижнее меню живёт внутри `@media`, куда разбор правил верхнего уровня не заглядывает.
+   * Поэтому обещание «золотой только у активного» здесь проверяется отдельно и прямо:
+   * иначе закрытый список ADR-0005 держал бы только половину меню.
+   */
+  it('золотит в нижнем меню только активный пункт', () => {
+    const idle = /\.r-mobile-nav button\{([^}]*min-height[^}]*)\}/.exec(css);
+    const active = /\.r-mobile-nav button\.active\{([^}]*)\}/.exec(css);
+    expect(idle, 'нет базового правила пункта меню').not.toBeNull();
+    expect(active, 'нет правила активного пункта меню').not.toBeNull();
+    expect(active![1], 'активный пункт обязан нести цвет наблюдения').toContain('--r-observe');
+    expect(idle![1], 'неактивные пункты золотыми не бывают').not.toContain('--r-observe');
+    expect(idle![1]).not.toMatch(/f2ca69|242,\s*202,\s*105/i);
   });
 
   it('держит варианты кнопок в одном месте', () => {

@@ -65,7 +65,23 @@ export function GoalTypeBadge({ type }: { type: GoalType }) {
  * is what turns the library from a wall of other people's words into a starting draft of
  * their own — it is absent on the pre-login screens, where there is nowhere to save to.
  */
-export function GoalCard({ goal, onTake }: { goal: Goal; onTake?: (goal: Goal) => void }) {
+/**
+ * Карточка смысла.
+ *
+ * `preview` убирает вопрос для размышления и теги: на главной это тизер из трёх
+ * карточек, приглашение открыть раздел. Вопрос требует остановиться и подумать — он
+ * уместен там, где человек пришёл за смыслами, а не проходит мимо по дороге к
+ * главному действию. Разница в высоте — 467px против ~300 на 390.
+ */
+export function GoalCard({
+  goal,
+  onTake,
+  preview = false,
+}: {
+  goal: Goal;
+  onTake?: (goal: Goal) => void;
+  preview?: boolean;
+}) {
   return (
     <article className={`r-goal-card ${typeSlug(goal.goal_type)}`}>
       <header>
@@ -73,23 +89,25 @@ export function GoalCard({ goal, onTake }: { goal: Goal; onTake?: (goal: Goal) =
       </header>
       <h3>{goal.title_ru}</h3>
       <p>{goal.body_ru}</p>
-      {goal.reflection_prompt_ru && (
+      {!preview && goal.reflection_prompt_ru && (
         <blockquote className="r-goal-prompt">{goal.reflection_prompt_ru}</blockquote>
       )}
-      <footer>
-        {goal.context_tags.length > 0 && (
-          <span className="r-goal-tags">
-            {goal.context_tags.slice(0, 3).map((tag) => (
-              <em key={tag}>{tag}</em>
-            ))}
-          </span>
-        )}
-        {onTake && (
-          <button type="button" className="r-goal-take" onClick={() => onTake(goal)}>
-            Примерить на себя <Icon name="arrow" size={14} />
-          </button>
-        )}
-      </footer>
+      {!preview && (
+        <footer>
+          {goal.context_tags.length > 0 && (
+            <span className="r-goal-tags">
+              {goal.context_tags.slice(0, 3).map((tag) => (
+                <em key={tag}>{tag}</em>
+              ))}
+            </span>
+          )}
+          {onTake && (
+            <button type="button" className="r-goal-take" onClick={() => onTake(goal)}>
+              Примерить на себя <Icon name="arrow" size={14} />
+            </button>
+          )}
+        </footer>
+      )}
     </article>
   );
 }
