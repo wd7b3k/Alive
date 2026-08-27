@@ -74,6 +74,7 @@ import {
 import { trackEvent } from './services/analytics';
 import { reportError } from './services/error-monitoring';
 import { navigateTo as go } from './services/navigation';
+import { InstallPrompt, isStandalone, markJustOnboarded } from './redesign/install';
 import { TogetherPage } from './redesign/together';
 import { HealthPage } from './redesign/health';
 
@@ -543,6 +544,9 @@ function Setup({
     setError('');
     try {
       await saveOnboarding(session, { goalText: goal, products });
+      // Ярлык предлагается сразу после настройки: это первый момент, когда понятно, что
+      // человек остаётся, и последний, когда он ещё настроен что-то настраивать.
+      markJustOnboarded();
       await done();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить настройки');
@@ -1642,6 +1646,9 @@ function Today({
           </div>
         </div>
       </section>
+      {/* Стоит сразу под главным действием и держится, пока человек не поставит
+          ярлык или не откажется. Решение о показе живёт внутри компонента. */}
+      <InstallPrompt />
       <section className="r-pulse">
         <div className="r-pulse-main">
           <span className="r-pulse-icon">
@@ -2606,6 +2613,17 @@ function Profile({
           Выйти из аккаунта
         </ShellButton>
       </section>
+      {!isStandalone() && (
+        <section className="r-section">
+          <div className="r-section-head">
+            <div>
+              <p className="r-kicker">Быстрый доступ</p>
+              <h2>Ярлык на домашнем экране</h2>
+            </div>
+          </div>
+          <InstallPrompt always />
+        </section>
+      )}
       <section className="r-section">
         <div className="r-section-head">
           <div>
@@ -2714,6 +2732,18 @@ export default function RedesignApp() {
   const publicCatalog = usePublicCatalog(session);
   const [setup, setSetup] = useState(false);
   const [flow, setFlow] = useState<{ open: boolean; trigger?: string }>({ open: false });
+  // Ярлык на телефоне умеет длинное нажатие: «Хочу курить» открывает разбор сразу,
+  // минуя главный экран. Манифест ведёт на /?flow=1, адрес чистится после открытия,
+  // чтобы обновление страницы не открывало сценарий второй раз.
+  useEffect(() => {
+    if (!session) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('flow') !== '1') return;
+    params.delete('flow');
+    const rest = params.toString();
+    window.history.replaceState(null, '', window.location.pathname + (rest ? `?${rest}` : ''));
+    setFlow({ open: true });
+  }, [session]);
   const [quick, setQuick] = useState(false);
   const [evening, setEvening] = useState(false);
   if (!configured)
@@ -2748,7 +2778,9 @@ export default function RedesignApp() {
     return (
       <main className="r-login">
         <section className="r-login-card">
-          <p className="r-kicker">Habitoff</p>
+          {/* Имя, стоящее отдельно, ставится знаком: в надзаголовке оно получило бы
+              цвет надзаголовка целиком, и `off` перестал бы быть жёлтым. BRANDBOOK §3. */}
+          <Brand />
           <h1>Личная карта не загрузилась</h1>
           <p>{error}</p>
           <ShellButton className="primary" onClick={() => window.location.reload()}>
