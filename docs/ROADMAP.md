@@ -20,8 +20,8 @@ Gate:
 Scope:
 
 - `habitoff.ru`;
-- Cloudflare Pages;
-- Supabase Auth + Google;
+- собственный сервер в Москве, Caddy отдаёт статику;
+- self-hosted Supabase Auth: Google и Яндекс;
 - PostgreSQL + RLS;
 - onboarding/baseline;
 - cigarette/hookah/vape;
