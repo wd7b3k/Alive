@@ -19,7 +19,7 @@ Gate:
 
 Scope:
 
-- `alive.hmnos.ru`;
+- `habitoff.ru`;
 - Cloudflare Pages;
 - Supabase Auth + Google;
 - PostgreSQL + RLS;

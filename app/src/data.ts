@@ -691,6 +691,32 @@ export async function loadTogetherSummary(days = 7): Promise<TogetherSummary | n
 }
 
 /** Здоровье продукта. База откажет вызывающему без прав — тогда возвращается null. */
+/** Строка витрины метрик гипотез. `computable = false` — данных для метрики нет. */
+export type HypothesisMetric = {
+  hypothesis: string;
+  metric: string;
+  value: number | null;
+  unit: string | null;
+  observations: number;
+  computable: boolean;
+  note: string | null;
+};
+
+/**
+ * Метрики гипотез за окно.
+ *
+ * Отдельный вызов, а не поле в сводке здоровья: это разные вопросы. «Живёт ли продукт» —
+ * операционный, «подтверждается ли гипотеза» — исследовательский, и смешивать их на одном
+ * экране значит принимать решение о продолжении эксперимента по числу ошибок.
+ */
+export async function loadHypothesisMetrics(days = 14): Promise<HypothesisMetric[] | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('admin_hypothesis_metrics', { days });
+  if (error || !data) return null;
+  return (data as HypothesisMetric[]) ?? null;
+}
+
 export async function loadProductHealth(days = 30): Promise<ProductHealth | null> {
   const supabase = getSupabase();
   if (!supabase) return null;
@@ -856,10 +882,16 @@ export type GuidedEpisodeDraft = {
   triggerCode: string;
   customTriggerText?: string;
   needCode: string;
-  cravingBefore: number;
+  /** Null — человек не трогал ползунок. Это не то же самое, что «тяга ноль». */
+  cravingBefore: number | null;
   cravingAfter: number | null;
   helpfulness: number | null;
   replacementCode: string | null;
+  /** Коды замен в том порядке, в каком их показали. Пусто — экран ответа не открывался. */
+  offeredReplacements?: string[];
+  /** Подбор опирался на личную историю. Null — экран ответа не открывался. */
+  offerPersonalized?: boolean | null;
+  offerReason?: string | null;
   outcome: 'successful_response' | 'nicotine_used' | 'abandoned';
   note?: string;
   tobacco?: {
@@ -885,6 +917,12 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
     craving_before: draft.cravingBefore,
     craving_after: draft.cravingAfter,
     helpfulness: draft.helpfulness,
+    // Что человеку показали, а не только что он выбрал. Без этого H-ALIVE-002 —
+    // «персонализированный подбор лучше общего каталога» — не считается никогда:
+    // ранжирование живёт в клиенте и нигде не оставляет следа. См. ADR-0006.
+    offered_replacements: draft.offeredReplacements ?? [],
+    offer_personalized: draft.offerPersonalized ?? null,
+    offer_reason: draft.offerReason ?? null,
     outcome: draft.outcome,
     private_note: draft.note || null,
     completed_at: completedAt,
@@ -1098,6 +1136,25 @@ export function pickReplacements(data: Bootstrap, product: ProductType, triggerC
     .sort((a, b) => score(b) - score(a));
 
   return candidates.slice(0, 3);
+}
+
+/** Чем был подбор: личной историей или общим каталогом. */
+export type OfferShape = { personalized: boolean; reason: 'personal_history' | 'catalog' };
+
+/**
+ * Опирался ли показанный подбор на личную историю.
+ *
+ * Определение узкое намеренно: в `pickReplacements` личный вес добавляется только тем
+ * заменам, которые человек уже пробовал. Значит «персонализировано» — это ровно «среди
+ * показанного есть то, что он уже пробовал». Более широкое определение («мы посмотрели
+ * в историю») было бы правдой всегда и не разделяло бы ничего.
+ */
+export function describeOffer(data: Bootstrap, offered: Replacement[]): OfferShape {
+  const tried = new Set(
+    data.actions.map((action) => action.replacement_code).filter((code): code is string => Boolean(code)),
+  );
+  const personalized = offered.some((item) => tried.has(item.code));
+  return { personalized, reason: personalized ? 'personal_history' : 'catalog' };
 }
 
 export type PublicCatalog = {

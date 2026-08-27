@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { ProductHealth } from '../data';
-import { loadProductHealth } from '../data';
+import type { HypothesisMetric, ProductHealth } from '../data';
+import { loadHypothesisMetrics, loadProductHealth } from '../data';
 import { reportError } from '../services/error-monitoring';
 import { Icon } from '../ui-icons';
 
@@ -33,19 +33,66 @@ function Metric({ label, value, hint }: { label: string; value: string; hint: st
   );
 }
 
+/**
+ * Таблица метрик по гипотезам.
+ *
+ * Непосчитанное показывается строкой, а не прячется: список того, чего продукт про себя
+ * не знает, — сам по себе результат, и он должен попадаться на глаза каждый раз.
+ */
+function HypothesisTable({ rows }: { rows: HypothesisMetric[] }) {
+  const groups = rows.reduce<Record<string, HypothesisMetric[]>>((acc, row) => {
+    (acc[row.hypothesis] ??= []).push(row);
+    return acc;
+  }, {});
+  return (
+    <div className="r-hypotheses">
+      {Object.entries(groups).map(([hypothesis, list]) => (
+        <section key={hypothesis}>
+          <p className="r-kicker">{hypothesis}</p>
+          <dl>
+            {list.map((row) => (
+              <div key={row.metric} className={row.computable ? '' : 'unavailable'}>
+                <dt>
+                  {row.metric}
+                  {row.note && <small>{row.note}</small>}
+                </dt>
+                <dd>
+                  {row.computable && row.value !== null ? (
+                    <>
+                      <b>{row.value}</b>
+                      {row.unit && <span> {row.unit}</span>}
+                      {row.observations > 0 && <small>n = {row.observations}</small>}
+                    </>
+                  ) : (
+                    <em>нечем считать</em>
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 export function HealthPage() {
   const [days, setDays] = useState<number>(30);
   const [health, setHealth] = useState<ProductHealth | null>(null);
+  const [metrics, setMetrics] = useState<HypothesisMetric[] | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'denied'>('loading');
 
   useEffect(() => {
     let cancelled = false;
     setState('loading');
     loadProductHealth(days)
-      .then((next) => {
+      .then(async (next) => {
         if (cancelled) return;
         setHealth(next);
         setState(next ? 'ready' : 'denied');
+        if (!next) return;
+        const rows = await loadHypothesisMetrics(days);
+        if (!cancelled) setMetrics(rows);
       })
       .catch((reason) => {
         reportError(reason, { surface: 'health' });
@@ -87,9 +134,11 @@ export function HealthPage() {
             <div>
               <strong>Раздел недоступен</strong>
               <p>
-                Сводку отдаёт только администраторам. Добавить администратора можно единственным
-                способом — строкой в таблице <code>app_admins</code> через SQL Editor; из приложения
-                этот список не меняется ни в какой роли.
+                Сводку отдаёт только администраторам. Список закрыт и из приложения не меняется ни в
+                какой роли: строка в <code>private.alive_admin_allowlist</code> через SQL, и роль
+                выдаётся при первом входе через Google. Если аккаунт уже создан или вход был через
+                другого провайдера, роль ставится вручную:{' '}
+                <code>update public.profiles set role = &apos;admin&apos; where id = …</code>
               </p>
             </div>
           </div>
@@ -168,6 +217,19 @@ export function HealthPage() {
               не доходит до базы. Различить это можно только тем, что журнал заполняется и в других
               разделах.
             </p>
+
+            <h2>Гипотезы</h2>
+            <p className="r-lead">
+              Метрики из <code>docs/HYPOTHESES_AND_METRICS.md</code> за те же {health.period_days}{' '}
+              дней. Часть из них посчитать нечем — там, где данные не собираются, стоит «нечем
+              считать», а не ноль. Ноль и «не проверяли» — разные ответы, и на пилоте из пяти
+              человек их особенно легко перепутать.
+            </p>
+            {metrics === null ? (
+              <p className="r-muted">Считаю метрики…</p>
+            ) : (
+              <HypothesisTable rows={metrics} />
+            )}
           </>
         )}
       </section>

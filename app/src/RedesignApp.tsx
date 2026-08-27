@@ -7,6 +7,7 @@ import {
   deleteEpisode,
   deleteLink,
   deleteMeaning,
+  describeOffer,
   pickReplacements,
   productLabel,
   saveCheckin,
@@ -23,11 +24,19 @@ import {
   type OnboardingDraft,
   type ProductType,
   type PublicCatalog,
+  type Trigger,
   type UserMeaning,
   EMPTY_KNOWLEDGE,
 } from './data';
 import { deleteMyAccount, exportMyData, saveQuickUse } from './actions';
 import { dailyUnits, replacementStats, statsForDays, triggerStats } from './domain/metrics';
+import {
+  flowOpening,
+  frequentTriggers,
+  needGuess,
+  stepAfterTrigger,
+  type NeedGuess,
+} from './domain/flow-defaults';
 import { Icon } from './ui-icons';
 import { useLocation } from 'react-router-dom';
 import { useBootstrapSession } from './hooks/useBootstrapSession';
@@ -110,8 +119,8 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                 <p className="r-kicker">Некоммерческий эксперимент · метод Habitoff v1</p>
                 <h1>Не запрещать себе — вернуть себе выбор</h1>
                 <p className="r-lead">
-                  Habitoff помогает заметить, что именно запускает автоматический ритуал, понять, какое
-                  состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный
+                  Habitoff помогает заметить, что именно запускает автоматический ритуал, понять,
+                  какое состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный
                   момент.
                 </p>
                 <blockquote>
@@ -120,17 +129,28 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                 </blockquote>
               </div>
               <div className="r-now-actions">
-                <button type="button" className="r-craving" onClick={signIn} disabled={busy}>
+                <button
+                  type="button"
+                  className="r-craving"
+                  onClick={signIn}
+                  disabled={busy}
+                  aria-describedby="cta-vape-note-public"
+                >
                   <span className="r-craving-icon">
                     <Icon name="spark" size={26} />
                   </span>
                   <span>
                     <small>Когда важно действовать прямо сейчас</small>
-                    <strong>Меня тянет</strong>
+                    <strong>
+                      Хочу курить<sup aria-hidden="true">*</sup>
+                    </strong>
                     <em>Разобрать момент и выбрать другой ответ</em>
                   </span>
                   <Icon name="arrow" size={22} />
                 </button>
+                <p className="r-cta-note" id="cta-vape-note-public">
+                  <span aria-hidden="true">*</span> для вэйперов, конечно же, — парить
+                </p>
                 <div className="r-secondary-actions">
                   <button type="button" onClick={signIn} disabled={busy}>
                     <Icon name="smoke" size={22} />
@@ -149,9 +169,8 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                 </div>
                 {error && <p className="r-error">{error}</p>}
                 <p className="r-privacy">
-                  Вход нужен только чтобы узнать тебя при следующем заходе. Личные записи
-                  хранятся отдельно и защищаются правилами доступа PostgreSQL: их не видит
-                  никто, кроме тебя.
+                  Вход нужен только чтобы узнать тебя при следующем заходе. Личные записи хранятся
+                  отдельно и защищаются правилами доступа PostgreSQL: их не видит никто, кроме тебя.
                 </p>
               </div>
             </section>
@@ -166,11 +185,11 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
               <section className="r-section">
                 <div className="r-section-head">
                   <div>
-                    <p className="r-kicker">Карта контекстов</p>
+                    <p className="r-kicker observe">Карта контекстов</p>
                     <h2>Что система уже умеет замечать</h2>
                     <p>
-                      Это реальные пусковые моменты из базы Habitoff. Выбери любой — и увидишь, какие
-                      ответы система подбирает под него.
+                      Это реальные пусковые моменты из базы Habitoff. Выбери любой — и увидишь,
+                      какие ответы система подбирает под него.
                     </p>
                   </div>
                 </div>
@@ -294,8 +313,8 @@ function PublicLinks({
         <h1>Ситуация → потребность → привычный ответ</h1>
         <p className="r-lead">
           Зависимость держится не на никотине как таковом, а на связке: определённый момент —
-          определённое состояние — один и тот же ответ. {triggers.length} таких моментов Habitoff умеет
-          разбирать, и под каждый подбирает не «полезную привычку вообще», а то, что закрывает
+          определённое состояние — один и тот же ответ. {triggers.length} таких моментов Habitoff
+          умеет разбирать, и под каждый подбирает не «полезную привычку вообще», а то, что закрывает
           именно эту потребность.
         </p>
       </section>
@@ -362,9 +381,9 @@ function PublicMeanings({ catalog }: { catalog: PublicCatalog | null }) {
         <p className="r-kicker">Смыслы</p>
         <h1>Ради чего становится интереснее жить иначе</h1>
         <p className="r-lead">
-          Habitoff не работает запретами. Он начинается со смысла, ради которого стоит менять привычку,
-          — и возвращает тебя к нему в тот момент, когда это труднее всего. У каждой карточки есть
-          вопрос: на него отвечать интереснее, чем соглашаться с лозунгом.
+          Habitoff не работает запретами. Он начинается со смысла, ради которого стоит менять
+          привычку, — и возвращает тебя к нему в тот момент, когда это труднее всего. У каждой
+          карточки есть вопрос: на него отвечать интереснее, чем соглашаться с лозунгом.
         </p>
       </section>
       <section className="r-section">
@@ -480,28 +499,39 @@ function Setup({
   const [error, setError] = useState('');
   async function save() {
     const products: OnboardingDraft['products'] = [];
+    // Пустое поле — это «не знаю», а не «ноль». Раньше `Number('' || 0)` молча писал в
+    // исходный уровень ноль, и сравнение «сейчас против исходного» для этого участника
+    // становилось бессмысленным, а он об этом не узнавал. См. ADR-0006.
+    const answered = (raw: string) => {
+      const value = Number(raw);
+      return raw.trim() !== '' && Number.isFinite(value) && value >= 0 ? { value } : null;
+    };
+    const baseline = (raw: string, key: string) => {
+      const parsed = answered(raw);
+      return parsed ? { [key]: parsed.value } : {};
+    };
     if (chosen.cigarette)
       products.push({
         productType: 'cigarette',
         role: 'target_dependency',
-        baseline: { cigarettes_per_day: Number(cigs || 0) },
-        defaults: { pack_price_rub: Number(pack || 0), pack_size: 20 },
+        baseline: baseline(cigs, 'cigarettes_per_day'),
+        defaults: { ...baseline(pack, 'pack_price_rub'), pack_size: 20 },
       });
     if (chosen.hookah)
       products.push({
         productType: 'hookah',
         role: 'target_dependency',
-        baseline: { sessions_per_week: Number(hookahs || 0) },
-        defaults: { hookah_default_price_rub: Number(hookahPrice || 2500) },
+        baseline: baseline(hookahs, 'sessions_per_week'),
+        defaults: { hookah_default_price_rub: answered(hookahPrice)?.value ?? 2500 },
       });
     if (chosen.vape)
       products.push({
         productType: 'vape',
         role: 'target_dependency',
-        baseline: { puffs_per_day: Number(puffs || 0) },
+        baseline: baseline(puffs, 'puffs_per_day'),
         defaults: {
           claimed_puffs: 5000,
-          consumable_price_rub: Number(vapePrice || 1500),
+          consumable_price_rub: answered(vapePrice)?.value ?? 1500,
           device_type: 'disposable',
         },
       });
@@ -532,9 +562,17 @@ function Setup({
               собой.
             </p>
           </div>
-          {cancel && (
+          {cancel ? (
             <button className="r-icon-button" onClick={cancel}>
               <Icon name="close" />
+            </button>
+          ) : (
+            // Первый заход: закрыть экран нечем, и до этой правки человек, не готовый
+            // заполнять форму, упирался в тупик — ни «Отмена», ни «Назад». Теперь есть
+            // выход в открытую часть продукта; настройка спросит снова при следующем
+            // заходе, ничего не теряется. См. ADR-0006.
+            <button className="r-button ghost small" onClick={() => go('/knowledge')}>
+              Пока просто посмотреть
             </button>
           )}
         </div>
@@ -620,8 +658,8 @@ function Setup({
         <div className="r-note">
           <Icon name="shield" />
           <p>
-            Единицы Habitoff — только внутренняя шкала поведения: сигарета = 1, кальянная сессия = 10,
-            10 затяжек электронной сигареты = 1. Это не медицинское сравнение вреда.
+            Единицы Habitoff — только внутренняя шкала поведения: сигарета = 1, кальянная сессия =
+            10, 10 затяжек электронной сигареты = 1. Это не медицинское сравнение вреда.
           </p>
         </div>
         {error && <p className="r-error">{error}</p>}
@@ -869,7 +907,48 @@ function QuickUse({
   );
 }
 
-function Guided({
+/**
+ * Сила тяги «до».
+ *
+ * Вынесено из шага «потребность» отдельным компонентом, потому что у ползунка теперь
+ * два места: полный экран потребности и свёрнутая подпись на шаге ответа. Значение
+ * `craving_before` — вход для craving delta в H-ALIVE-001, и потерять его на коротком
+ * пути было бы хуже, чем не сокращать сценарий вовсе.
+ */
+function CravingBefore({
+  value,
+  onChange,
+}: {
+  value: number | null;
+  onChange: (next: number) => void;
+}) {
+  return (
+    <div className="r-slider">
+      <label>
+        <span>Сила тяги</span>
+        <b>{value === null ? '—' : `${value}/10`}</b>
+      </label>
+      <input
+        type="range"
+        min="0"
+        max="10"
+        value={value ?? 5}
+        aria-valuetext={value === null ? 'не отвечено' : `${value} из 10`}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
+      {value === null && <small>Можно не отвечать — тогда это не запишется</small>}
+    </div>
+  );
+}
+
+/**
+ * Управляемый сценарий тяги.
+ *
+ * Экспортируется ради flow-shortcuts.test.tsx: короткие пути через этот сценарий
+ * решают, какой экран человек не увидит в момент тяги, и проверять их пересказом
+ * кода нельзя — только рендером.
+ */
+export function Guided({
   session,
   data,
   close,
@@ -882,18 +961,26 @@ function Guided({
   saved: () => Promise<void>;
   initialTrigger?: string;
 }) {
-  const initialProduct =
-    data.products.find((p) => p.role === 'target_dependency')?.product_type ??
-    data.products[0]?.product_type ??
-    'cigarette';
-  const [product, setProduct] = useState<ProductType>(initialProduct);
-  const [step, setStep] = useState(data.products.length > 1 ? 0 : 1);
-  const [triggerCode, setTrigger] = useState(initialTrigger ?? '');
-  const [needCode, setNeed] = useState('');
-  const [before, setBefore] = useState(7);
+  // Смарт-дефолты сценария: то, что система уже знает по личной истории и потому не
+  // переспрашивает. Считается один раз на открытие — пересчёт в момент тяги двигал бы
+  // экран под руками. Правила и пороги живут в domain/flow-defaults.ts.
+  //
+  // Контекст, названный карточкой на Главной, до этого всё равно переспрашивался:
+  // значение подставлялось в состояние, а экран выбора показывался поверх него. Теперь
+  // он засчитывается как пройденный шаг.
+  const [start] = useState(() => flowOpening(data, initialTrigger));
+  const [product, setProduct] = useState<ProductType>(start.product);
+  const [step, setStep] = useState(start.first);
+  const [triggerCode, setTrigger] = useState(start.trigger);
+  const [needCode, setNeed] = useState(start.need?.needCode ?? '');
+  const [needFromHistory, setNeedFromHistory] = useState<NeedGuess | null>(start.need);
+  // Ползунки начинаются с «не отвечено», а не с числа. Предзаполненные 7 / 4 / 3
+  // записывались в базу, даже если человек их не трогал: на пилоте из пяти участников
+  // это делало craving delta бесполезной, а выглядело как их ответ. См. ADR-0006.
+  const [before, setBefore] = useState<number | null>(null);
   const [replacementCode, setReplacement] = useState<string | null>(null);
-  const [after, setAfter] = useState(4);
-  const [help, setHelp] = useState(3);
+  const [after, setAfter] = useState<number | null>(null);
+  const [help, setHelp] = useState<number | null>(null);
   const [outcome, setOutcome] = useState<'successful_response' | 'nicotine_used' | 'abandoned'>(
     'successful_response',
   );
@@ -904,8 +991,28 @@ function Guided({
     () => (triggerCode && needCode ? pickReplacements(data, product, triggerCode, needCode) : []),
     [data, product, triggerCode, needCode],
   );
+  // Экран ответа мог не открыться: тогда показывать было нечего, и в эпизод уходит
+  // пустой список, а не «показали ноль вариантов».
+  const offerSeen = useRef(false);
+  useEffect(() => {
+    if (step === 3 && candidates.length) offerSeen.current = true;
+  }, [step, candidates.length]);
+  const offer = useMemo(() => describeOffer(data, candidates), [data, candidates]);
   const selected = data.replacements.find((r) => r.code === replacementCode);
   const triggers = data.triggers.filter((t) => t.product_types.includes(product));
+  // 3–5 личных контекстов наверх сетки; остальные 20+ карточек уезжают за раскрытие
+  // (P3). Полный каталог никуда не девается — он перестаёт быть первым, что человек
+  // видит в момент тяги.
+  const shortlist = useMemo(() => frequentTriggers(data, product), [data, product]);
+  const restTriggers = useMemo(
+    () =>
+      shortlist.length
+        ? triggers.filter((t) => !shortlist.some((item) => item.code === t.code))
+        : triggers,
+    [triggers, shortlist],
+  );
+  const chosenTrigger = data.triggers.find((t) => t.code === triggerCode) ?? null;
+  const chosenNeed = data.needs.find((n) => n.code === needCode) ?? null;
   // One collapsed line above the three suggestions, and only for triggers that have a
   // card opted into the flow surface. Mid-craving is the worst possible moment for a
   // paragraph, so this stays closed until the person chooses to open it.
@@ -915,7 +1022,7 @@ function Guided({
   );
   // Открытие сценария и уход из него на полпути — единственные два события, которых
   // не видит ни один триггер в базе: в таблицы при этом ничего не пишется. А это самый
-  // ценный сигнал воронки: человек нажал «меня тянет» и не дошёл до конца.
+  // ценный сигнал воронки: человек нажал «хочу курить» и не дошёл до конца.
   //
   // `savedRef` отличает закрытие после сохранения от ухода. Без него каждый успешный
   // разбор считался бы ещё и брошенным. `stepRef` нужен потому, что размонтирование
@@ -931,7 +1038,16 @@ function Guided({
       event_type: 'flow_opened',
       funnel_stage: 'first_episode',
       surface: 'guided_flow',
+      product_type: start.product,
       trigger_code: initialTrigger || undefined,
+      // Без этого воронка H-ALIVE-001 перестанет быть сравнимой: короткий и полный
+      // сценарий дают одинаковую запись эпизода, и по ней не отличить, какой из них
+      // человек прошёл.
+      metadata: {
+        product_prefilled: data.products.length > 1 && start.first > 0,
+        trigger_prefilled: Boolean(start.trigger),
+        need_prefilled: Boolean(start.need),
+      },
     });
     return () => {
       if (savedRef.current) return;
@@ -945,6 +1061,35 @@ function Guided({
     // Намеренно один раз за открытие сценария: событие про открытие, а не про шаг.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Выбор продукта и выбор контекста — единственные два места, откуда сценарий может
+  // перепрыгнуть через экран. Логика перехода собрана здесь, а не в обработчиках
+  // кнопок, чтобы «куда дальше» нельзя было починить в одном месте и забыть в другом.
+  function chooseTrigger(code: string, forProduct: ProductType = product) {
+    setTrigger(code);
+    const guess = needGuess(data, forProduct, code);
+    setNeedFromHistory(guess);
+    setNeed(guess?.needCode ?? '');
+    setStep(stepAfterTrigger(guess));
+  }
+
+  function triggerCard(t: Trigger) {
+    return (
+      <button key={t.code} onClick={() => chooseTrigger(t.code)}>
+        <span className="r-choice-icon">
+          <Icon name={triggerIcon(t)} size={23} />
+        </span>
+        <strong>{t.title}</strong>
+        <small>{t.description}</small>
+      </button>
+    );
+  }
+
+  function chooseProduct(next: ProductType) {
+    setProduct(next);
+    if (triggerCode) chooseTrigger(triggerCode, next);
+    else setStep(1);
+  }
 
   async function save() {
     if (!triggerCode || !needCode) return;
@@ -966,6 +1111,9 @@ function Guided({
         cravingAfter: after,
         helpfulness: help,
         replacementCode,
+        offeredReplacements: offerSeen.current ? candidates.map((item) => item.code) : [],
+        offerPersonalized: offerSeen.current ? offer.personalized : null,
+        offerReason: offerSeen.current ? offer.reason : null,
         outcome,
         tobacco,
       });
@@ -999,13 +1147,7 @@ function Guided({
           <h3>К чему сейчас тянет?</h3>
           <div className="r-choice-grid products">
             {data.products.map((p) => (
-              <button
-                key={p.product_type}
-                onClick={() => {
-                  setProduct(p.product_type);
-                  setStep(1);
-                }}
-              >
+              <button key={p.product_type} onClick={() => chooseProduct(p.product_type)}>
                 <Icon name={productIcon(p.product_type)} size={28} />
                 <strong>{productLabel(p.product_type)}</strong>
               </button>
@@ -1016,7 +1158,7 @@ function Guided({
       {step === 1 && (
         <section className="r-flow">
           <div className="r-flow-title">
-            <span className="r-step-icon">
+            <span className="r-step-icon observe">
               <Icon name="eye" />
             </span>
             <div>
@@ -1024,23 +1166,32 @@ function Guided({
               <p>Не ищем виноватого. Ищем повторяющийся пусковой момент.</p>
             </div>
           </div>
-          <div className="r-choice-grid">
-            {triggers.map((t) => (
-              <button
-                key={t.code}
-                onClick={() => {
-                  setTrigger(t.code);
-                  setStep(2);
-                }}
-              >
-                <span className="r-choice-icon">
-                  <Icon name={triggerIcon(t)} size={23} />
-                </span>
-                <strong>{t.title}</strong>
-                <small>{t.description}</small>
-              </button>
-            ))}
-          </div>
+          {data.products.length > 1 && (
+            <div className="r-flow-prefill">
+              <p>
+                <Icon name={productIcon(product)} size={17} />
+                <b>{productLabel(product)}</b>
+                {start.productConfident && <small>Последние разборы были про это</small>}
+              </p>
+              <div className="r-flow-prefill-actions">
+                <button type="button" onClick={() => setStep(0)}>
+                  Другой продукт
+                </button>
+              </div>
+            </div>
+          )}
+          {/* Личные контексты наверх, остальной каталог остаётся ниже и остаётся
+              одним тапом: прятать его за раскрытие означало бы добавить действие
+              ровно тем, у кого сегодня новый контекст, — то есть нарушить P17 в
+              попытке его соблюсти. */}
+          {shortlist.length > 0 && (
+            <>
+              <p className="r-flow-hint personal">Чаще всего у тебя включается здесь</p>
+              <div className="r-choice-grid">{shortlist.map((t) => triggerCard(t))}</div>
+              <p className="r-flow-hint">Остальные контексты</p>
+            </>
+          )}
+          <div className="r-choice-grid">{restTriggers.map((t) => triggerCard(t))}</div>
         </section>
       )}
       {step === 2 && (
@@ -1063,6 +1214,7 @@ function Guided({
                 key={n.code}
                 onClick={() => {
                   setNeed(n.code);
+                  setNeedFromHistory(null);
                   setStep(3);
                 }}
               >
@@ -1074,19 +1226,7 @@ function Guided({
               </button>
             ))}
           </div>
-          <div className="r-slider">
-            <label>
-              <span>Сила тяги</span>
-              <b>{before}/10</b>
-            </label>
-            <input
-              type="range"
-              min="1"
-              max="10"
-              value={before}
-              onChange={(e) => setBefore(Number(e.target.value))}
-            />
-          </div>
+          <CravingBefore value={before} onChange={setBefore} />
         </section>
       )}
       {step === 3 && (
@@ -1103,6 +1243,37 @@ function Guided({
               </p>
             </div>
           </div>
+          {needFromHistory && (
+            <div className="r-flow-prefill collapsed">
+              <p>
+                <Icon name="eye" size={17} />
+                <b>{chosenTrigger?.title ?? 'Контекст'}</b>
+                <span aria-hidden="true">·</span>
+                <b>{chosenNeed?.title ?? 'Потребность'}</b>
+              </p>
+              <small>
+                {`Так было в ${needFromHistory.episodes} из ${needFromHistory.total} ` +
+                  `${plural(needFromHistory.total, 'разбора', 'разборов', 'разборов')} ` +
+                  'этого контекста. Шаг с потребностью свёрнут в эту строку, а не пропущен: ' +
+                  'в эпизод она запишется так же.'}
+              </small>
+              <div className="r-flow-prefill-actions">
+                <button type="button" onClick={() => setStep(1)}>
+                  Другой контекст
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNeedFromHistory(null);
+                    setStep(2);
+                  }}
+                >
+                  Другая потребность
+                </button>
+              </div>
+              <CravingBefore value={before} onChange={setBefore} />
+            </div>
+          )}
           <FlowMeaning data={data} />
           {flowCards.map((card) => (
             <KnowledgeCollapsed key={card.code} knowledge={data.knowledge} card={card} />
@@ -1145,7 +1316,7 @@ function Guided({
       )}
       {step === 4 && (
         <section className="r-flow">
-          <div className="r-result-choice">
+          <div className={selected ? 'r-result-choice' : 'r-result-choice observe'}>
             {selected ? (
               <>
                 <span className="r-big-icon">
@@ -1177,26 +1348,28 @@ function Guided({
             <div className="r-slider">
               <label>
                 <span>Тяга после</span>
-                <b>{after}/10</b>
+                <b>{after === null ? '—' : `${after}/10`}</b>
               </label>
               <input
                 type="range"
                 min="0"
                 max="10"
-                value={after}
+                value={after ?? 5}
+                aria-valuetext={after === null ? 'не отвечено' : `${after} из 10`}
                 onChange={(e) => setAfter(Number(e.target.value))}
               />
             </div>
             <div className="r-slider">
               <label>
                 <span>Насколько помогло</span>
-                <b>{help}/5</b>
+                <b>{help === null ? '—' : `${help}/5`}</b>
               </label>
               <input
                 type="range"
-                min="0"
+                min="1"
                 max="5"
-                value={help}
+                value={help ?? 3}
+                aria-valuetext={help === null ? 'не отвечено' : `${help} из 5`}
                 onChange={(e) => setHelp(Number(e.target.value))}
               />
             </div>
@@ -1435,17 +1608,22 @@ function Today({
           {phrase && <blockquote>{phrase}</blockquote>}
         </div>
         <div className="r-now-actions">
-          <button className="r-craving" onClick={() => openFlow()}>
+          <button className="r-craving" onClick={() => openFlow()} aria-describedby="cta-vape-note">
             <span className="r-craving-icon">
               <Icon name="spark" size={30} />
             </span>
             <span>
               <small>Когда важно действовать прямо сейчас</small>
-              <strong>Меня тянет</strong>
+              <strong>
+                Хочу курить<sup aria-hidden="true">*</sup>
+              </strong>
               <em>Разобрать момент и выбрать другой ответ</em>
             </span>
             <Icon name="arrow" size={24} />
           </button>
+          <p className="r-cta-note" id="cta-vape-note">
+            <span aria-hidden="true">*</span> для вэйперов, конечно же, — парить
+          </p>
           <div className="r-secondary-actions">
             <button onClick={openQuick}>
               <Icon name="smoke" />
@@ -1517,7 +1695,7 @@ function Today({
       <section className="r-section">
         <div className="r-section-head">
           <div>
-            <p className="r-kicker">Карта внимания</p>
+            <p className="r-kicker observe">Карта внимания</p>
             <h2>Где автоматизм сейчас сильнее всего</h2>
             <p>
               Это не рейтинг «слабостей». Это места, где следующий эксперимент даст больше всего
@@ -1734,7 +1912,7 @@ function Links({
       <section className="r-section">
         <div className="r-section-head">
           <div>
-            <p className="r-kicker">Карта контекстов</p>
+            <p className="r-kicker observe">Карта контекстов</p>
             <h2>Что система уже видит</h2>
           </div>
         </div>
@@ -2434,8 +2612,8 @@ function Profile({
             <p className="r-kicker">Твои данные</p>
             <h2>Забрать или удалить</h2>
             <p>
-              Всё, что Habitoff знает о тебе, можно выгрузить одним файлом или удалить целиком. Это не
-              одолжение и не поддержка по запросу — это твоё право, и оно работает без писем.
+              Всё, что Habitoff знает о тебе, можно выгрузить одним файлом или удалить целиком. Это
+              не одолжение и не поддержка по запросу — это твоё право, и оно работает без писем.
             </p>
           </div>
         </div>

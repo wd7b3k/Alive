@@ -9,7 +9,7 @@
 ## 2. High-level
 
 `Browser / Mobile Web`
-→ `alive.hmnos.ru`
+→ `habitoff.ru`
 → `Cloudflare Pages`
 → `Supabase Auth (Google)`
 → `Supabase PostgreSQL + RLS`
@@ -113,7 +113,7 @@ Raw tobacco facts не зависят от Habitoff equivalence model.
 
 ## 11. Domain
 
-Основной адрес: `alive.hmnos.ru`.
+Основной адрес: `habitoff.ru`.
 
 DNS/deployment metadata после настройки отражаются в repo docs, но реальные secrets — нет.
 

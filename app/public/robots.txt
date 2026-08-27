@@ -1,4 +1,4 @@
-# Habitoff — https://alive.hmnos.ru
+# Habitoff — https://habitoff.ru
 # Открыт весь редакционный каталог. Закрыты только личные экраны: там нет ничего
 # полезного для индекса и не должно быть ничего доступного без входа.
 
@@ -23,5 +23,5 @@ Allow: /
 User-agent: YandexBot
 Allow: /
 
-Sitemap: https://alive.hmnos.ru/sitemap.xml
-Host: alive.hmnos.ru
+Sitemap: https://habitoff.ru/sitemap.xml
+Host: habitoff.ru
