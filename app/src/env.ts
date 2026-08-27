@@ -23,3 +23,15 @@ export const publicEnv: PublicEnv = {
   yandexMetrikaId: import.meta.env.VITE_YANDEX_METRIKA_ID?.trim() ?? '',
   googleAnalyticsId: import.meta.env.VITE_GA_MEASUREMENT_ID?.trim() ?? '',
 };
+
+/**
+ * Отпечаток сборки: версия продукта и коммит, из которого собран этот бандл.
+ *
+ * Подставляется `vite.config.ts` на этапе сборки. Пустая строка означает, что сборка
+ * шла там, где git недоступен, и это видно честно, а не заменяется выдуманным
+ * значением. Машинно то же самое лежит в `/version.json`.
+ */
+export const buildInfo = {
+  version: import.meta.env.VITE_BUILD_VERSION?.trim() ?? '',
+  commit: import.meta.env.VITE_COMMIT_SHA?.trim() ?? '',
+};
