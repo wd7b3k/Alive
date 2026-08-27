@@ -60,8 +60,8 @@ export function useBootstrapSession() {
     }
 
     let cancelled = false;
-    supabase.auth
-      .getSession()
+    consumeBridgeToken(supabase)
+      .then(() => supabase.auth.getSession())
       .then(async ({ data: { session: current } }) => {
         if (cancelled) return;
         setSession(current);
