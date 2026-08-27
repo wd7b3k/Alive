@@ -4,7 +4,7 @@ import { loadTogetherSummary } from '../data';
 import { statsForDays } from '../domain/metrics';
 import { reportError } from '../services/error-monitoring';
 import { Icon } from '../ui-icons';
-import { plural } from './utils';
+import { mechanismLabel, plural } from './utils';
 
 /**
  * «Вместе» — слой социальной нормализации.
@@ -164,7 +164,7 @@ export function TogetherPage({ data }: { data: Bootstrap }) {
                     <li key={item.mechanism}>
                       <strong>{item.uses}</strong>
                       <span>
-                        {item.mechanism}
+                        {mechanismLabel(item.mechanism)}
                         {item.avg_helpfulness !== null && ` · польза ${item.avg_helpfulness}/5`}
                       </span>
                     </li>
