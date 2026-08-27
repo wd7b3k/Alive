@@ -55,13 +55,27 @@ begin
   raise notice 'Слияние контекстов: перенесено связей с заменами — %', n;
 
   -- 4. Карточки микроосознанности, привязанные к снятым моментам.
+  -- Уникальность здесь держит не первичный ключ, а индекс по выражениям с coalesce
+  -- (20260817170500): trigger_code и product_type стали необязательными. Под такой
+  -- индекс `on conflict` по списку колонок не подходит, поэтому дубликаты отсекаются
+  -- явной проверкой.
   insert into public.awareness_content_contexts (content_code, trigger_code, product_type, moment, priority)
-  select distinct on (c.content_code, c.product_type, c.moment)
-         c.content_code, survivor, c.product_type, c.moment, c.priority
-    from public.awareness_content_contexts c
-   where c.trigger_code = any(retired)
-   order by c.content_code, c.product_type, c.moment, c.priority
-  on conflict (content_code, trigger_code, product_type, moment) do nothing;
+  select c.content_code, survivor, c.product_type, c.moment, c.priority
+    from (
+      select distinct on (content_code, product_type, moment)
+             content_code, product_type, moment, priority
+        from public.awareness_content_contexts
+       where trigger_code = any(retired)
+       order by content_code, product_type, moment, priority
+    ) c
+   where not exists (
+     select 1
+       from public.awareness_content_contexts e
+      where e.content_code = c.content_code
+        and e.trigger_code is not distinct from survivor
+        and e.product_type is not distinct from c.product_type
+        and e.moment = c.moment
+   );
 
   get diagnostics n = row_count;
   raise notice 'Слияние контекстов: перенесено привязок микроосознанности — %', n;
