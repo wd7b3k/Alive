@@ -10,16 +10,11 @@ import qrUrl from '../assets/qr-habitoff.svg';
  * труднее всего. Ярлык на первом экране телефона убирает этот поиск: одно нажатие, и
  * человек уже внутри, без адресной строки и вкладок (`display: standalone` в манифесте).
  *
- * Блок стоит на главной, сразу под главным действием, и держится там, пока человек не
- * поставит ярлык или не откажется. Раньше он показывался один раз после настройки — то
- * есть ровно в тот момент, когда человек ещё не понимает, зачем ему это, и почти всегда
- * проходил мимо.
- *
- * Сессия сохраняется: Supabase держит её в хранилище браузера, и повторно входить не
- * нужно. **Кроме одного случая**, и о нём здесь сказано честно: на iPhone приложение с
- * домашнего экрана получает собственное хранилище, отдельное от Safari. Значит первый
- * заход внутри ярлыка попросит войти ещё раз — один раз. Умолчать значило бы пообещать
- * то, что не выполнится, и первое же нажатие это покажет.
+ * **Сценарий разный на разных телефонах, и это главное в этом файле.** Первая версия
+ * знала только про iPhone: она показывала «Поделиться → На экран „Домой“» всем, у кого
+ * браузер не дал системного окна установки. На Android эти слова не значат ничего —
+ * такого пункта в меню нет, — а пользователей Android больше. Теперь платформа
+ * определяется явно, и каждая получает свой короткий путь.
  */
 
 const KEY = 'habitoff.install';
@@ -64,14 +59,41 @@ export function isStandalone(): boolean {
   return iosStandalone || media('(display-mode: standalone)');
 }
 
-function isIos(): boolean {
-  const ua = window.navigator.userAgent;
-  // iPadOS 13+ представляется маком, поэтому одного userAgent мало.
-  return /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
+export type Platform = 'android' | 'ios' | 'desktop';
+
+/**
+ * Платформа по строке браузера.
+ *
+ * Определяется ровно для того, чтобы выбрать слова инструкции, поэтому неизвестное
+ * считается десктопом: там показывается QR-код, который не врёт ни на одном телефоне.
+ * iPadOS 13+ представляется маком, поэтому одного `userAgent` мало — нужен признак
+ * касания.
+ */
+export function detectPlatform(ua: string, touch: boolean): Platform {
+  if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
+  if (/Macintosh/.test(ua) && touch) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return 'desktop';
 }
 
-function isPhone(): boolean {
-  return media('(pointer: coarse)') || media('(max-width: 900px)') || isIos();
+export type InstallKind = 'one-tap' | 'android-menu' | 'ios-share' | 'qr';
+
+/**
+ * Какой сценарий показать.
+ *
+ * `one-tap` — единственный настоящий «в один клик»: браузер отдал событие установки, и
+ * нажатие открывает системное окно. С декабря 2022 (Chrome 108 на мобильных) для этого
+ * не нужен service worker — достаточно манифеста, который у продукта есть. Событие
+ * приходит не сразу: Chrome ждёт около тридцати секунд на странице и хотя бы одно
+ * нажатие, поэтому до него показывается путь через меню, а не пустая кнопка.
+ *
+ * Десктоп не получает кнопку установки намеренно: ярлык нужен на телефоне, и с большого
+ * экрана быстрее всего туда попасть через QR-код.
+ */
+export function planInstall(platform: Platform, hasEvent: boolean): InstallKind {
+  if (platform === 'desktop') return 'qr';
+  if (hasEvent) return 'one-tap';
+  return platform === 'ios' ? 'ios-share' : 'android-menu';
 }
 
 /** Событие Chrome, которого нет в типах DOM. */
@@ -81,32 +103,126 @@ type InstallEvent = Event & {
 };
 
 /**
- * Отметка «человек только что закончил настройку».
+ * Событие установки живёт в модуле, а не в компоненте.
  *
- * Блок и так стоит на главной постоянно; отметка нужна, чтобы сразу после регистрации
- * показать его раскрытым с инструкцией, а не свёрнутой строкой.
+ * `beforeinstallprompt` приходит один раз за загрузку страницы. Слушатель внутри эффекта
+ * терял его при любом уходе с главной: человек заглянул в «Факты», вернулся — компонент
+ * смонтировался заново, а событие уже случилось и второй раз не придёт. Здесь оно
+ * переживает размонтирование.
  */
-export function markJustOnboarded() {
-  try {
-    window.sessionStorage.setItem('habitoff.onboarded', '1');
-  } catch {
-    /* переживём */
-  }
+let deferred: InstallEvent | null = null;
+let installedNow = false;
+let attached = false;
+const listeners = new Set<() => void>();
+
+function emit() {
+  listeners.forEach((notify) => notify());
 }
 
-function justOnboarded(): boolean {
-  try {
-    return window.sessionStorage.getItem('habitoff.onboarded') === '1';
-  } catch {
-    return false;
-  }
+function attach() {
+  if (attached || typeof window === 'undefined') return;
+  attached = true;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Без этого Chrome покажет собственную мини-плашку внизу экрана, и предложений
+    // станет два: наше и его.
+    e.preventDefault();
+    deferred = e as InstallEvent;
+    emit();
+  });
+  window.addEventListener('appinstalled', () => {
+    deferred = null;
+    installedNow = true;
+    remember('installed');
+    emit();
+  });
+}
+
+function subscribe(notify: () => void): () => void {
+  attach();
+  listeners.add(notify);
+  return () => {
+    listeners.delete(notify);
+  };
+}
+
+/**
+ * Карточка предложения.
+ *
+ * Отделена от решения о показе, чтобы каждый из четырёх сценариев можно было отрендерить
+ * в тесте и прочитать глазами то, что увидит человек.
+ */
+export function InstallCard({
+  kind,
+  onInstall,
+  onDismiss,
+}: {
+  kind: InstallKind;
+  onInstall?: () => void;
+  onDismiss?: () => void;
+}) {
+  return (
+    <section className="r-install">
+      {/* Показываем ровно ту картинку, которая появится на экране телефона: обещание
+          и результат должны совпадать буквально. */}
+      <img className="r-install-icon" src="/icon-192.png" alt="" width={72} height={72} />
+      <div className="r-install-body">
+        <p className="r-kicker">Быстрый доступ</p>
+        <h2>Открывать одним нажатием</h2>
+        <p>Значок на экране телефона — как у обычного приложения. Без вкладок и адреса.</p>
+
+        {kind === 'android-menu' && (
+          <ol className="r-install-steps">
+            <li>
+              Меню браузера — <b>⋮</b> вверху справа
+            </li>
+            <li>
+              <b>«Установить приложение»</b> — или «На главный экран»
+            </li>
+          </ol>
+        )}
+
+        {kind === 'ios-share' && (
+          <ol className="r-install-steps">
+            <li>
+              Кнопка <b>«Поделиться»</b> внизу — квадрат со стрелкой
+            </li>
+            <li>
+              <b>«На экран „Домой“»</b> → «Добавить»
+            </li>
+            <li>Войди один раз при первом открытии: на iPhone у ярлыка своё хранилище</li>
+          </ol>
+        )}
+
+        <div className="r-install-actions">
+          {kind === 'one-tap' && (
+            <ShellButton className="primary" onClick={onInstall}>
+              Установить <Icon name="arrow" size={18} />
+            </ShellButton>
+          )}
+          <ShellButton className="ghost" onClick={onDismiss}>
+            {kind === 'one-tap' || kind === 'qr' ? 'Не сейчас' : 'Понятно'}
+          </ShellButton>
+        </div>
+
+        {kind === 'one-tap' && (
+          <small className="r-install-note">Телефон спросит подтверждение</small>
+        )}
+      </div>
+
+      {kind === 'qr' && (
+        <div className="r-install-qr">
+          <img src={qrUrl} alt="QR-код, ведущий на habitoff.ru" width={112} height={112} />
+          <small>Наведи камеру телефона</small>
+        </div>
+      )}
+    </section>
+  );
 }
 
 export function InstallPrompt({ always = false }: { always?: boolean }) {
-  const [event, setEvent] = useState<InstallEvent | null>(null);
   const [open, setOpen] = useState(false);
-  const [phone, setPhone] = useState(true);
-  const [steps, setSteps] = useState(false);
+  const [platform, setPlatform] = useState<Platform>('desktop');
+  const [hasEvent, setHasEvent] = useState(false);
 
   useEffect(() => {
     if (isStandalone()) return;
@@ -114,24 +230,26 @@ export function InstallPrompt({ always = false }: { always?: boolean }) {
     // иначе передумавшему человеку некуда вернуться.
     if (!always && recalled()) return;
     setOpen(true);
-    setPhone(isPhone());
-    if (justOnboarded()) setSteps(isIos());
-    const onPrompt = (e: Event) => {
-      e.preventDefault();
-      setEvent(e as InstallEvent);
-    };
-    window.addEventListener('beforeinstallprompt', onPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', onPrompt);
+    setPlatform(detectPlatform(window.navigator.userAgent, 'ontouchend' in document));
+    setHasEvent(deferred !== null);
+    return subscribe(() => {
+      if (installedNow) {
+        setOpen(false);
+        return;
+      }
+      setHasEvent(deferred !== null);
+    });
   }, [always]);
 
   if (!open) return null;
 
   async function install() {
-    if (!event) {
-      // Safari своего диалога не даёт — показываем, куда нажать.
-      setSteps(true);
-      return;
-    }
+    const event = deferred;
+    if (!event) return;
+    // Событие одноразовое: после `prompt()` его нельзя использовать снова, поэтому
+    // ссылка снимается до вызова, а не после.
+    deferred = null;
+    setHasEvent(false);
     await event.prompt();
     const choice = await event.userChoice;
     remember(choice.outcome === 'accepted' ? 'installed' : 'later');
@@ -144,52 +262,10 @@ export function InstallPrompt({ always = false }: { always?: boolean }) {
   }
 
   return (
-    <section className="r-install">
-      {/* Показываем ровно ту картинку, которая появится на экране телефона: обещание
-          и результат должны совпадать буквально. */}
-      <img className="r-install-icon" src="/icon-192.png" alt="" width={72} height={72} />
-      <div className="r-install-body">
-        <p className="r-kicker">Быстрый доступ</p>
-        <h2>Открывать одним нажатием, без поиска вкладки</h2>
-        <p>
-          Разбор нужен в момент тяги — тогда листать браузер труднее всего. С ярлыка продукт
-          открывается сразу и без адресной строки, как обычное приложение. Ты остаёшься в своём
-          аккаунте: заходить заново не нужно.
-        </p>
-
-        {steps && (
-          <ol className="r-install-steps">
-            <li>
-              Нажми <b>Поделиться</b> внизу экрана — квадрат со стрелкой вверх.
-            </li>
-            <li>
-              Выбери <b>На экран «Домой»</b>, подтверди <b>Добавить</b>.
-            </li>
-            <li>
-              Открой ярлык и войди один раз: на iPhone у приложения с домашнего экрана своё
-              хранилище, отдельное от Safari. Дальше вход не понадобится.
-            </li>
-          </ol>
-        )}
-
-        <div className="r-install-actions">
-          {phone && !steps && (
-            <ShellButton className="primary" onClick={install}>
-              {event ? 'Добавить на экран' : 'Показать как'} <Icon name="arrow" size={18} />
-            </ShellButton>
-          )}
-          <ShellButton className="ghost" onClick={dismiss}>
-            {steps ? 'Готово' : 'Не сейчас'}
-          </ShellButton>
-        </div>
-      </div>
-
-      {!phone && (
-        <div className="r-install-qr">
-          <img src={qrUrl} alt="QR-код, ведущий на habitoff.ru" width={112} height={112} />
-          <small>Наведи камеру телефона — и добавь ярлык уже там</small>
-        </div>
-      )}
-    </section>
+    <InstallCard
+      kind={planInstall(platform, hasEvent)}
+      onInstall={() => void install()}
+      onDismiss={dismiss}
+    />
   );
 }

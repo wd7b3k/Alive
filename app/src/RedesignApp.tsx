@@ -76,7 +76,7 @@ import {
 import { trackEvent } from './services/analytics';
 import { reportError } from './services/error-monitoring';
 import { navigateTo as go } from './services/navigation';
-import { InstallPrompt, isStandalone, markJustOnboarded } from './redesign/install';
+import { InstallPrompt } from './redesign/install';
 import { TogetherPage } from './redesign/together';
 import { HealthPage } from './redesign/health';
 
@@ -546,9 +546,6 @@ function Setup({
     setError('');
     try {
       await saveOnboarding(session, { goalText: goal, products });
-      // Ярлык предлагается сразу после настройки: это первый момент, когда понятно, что
-      // человек остаётся, и последний, когда он ещё настроен что-то настраивать.
-      markJustOnboarded();
       await done();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить настройки');
@@ -2615,17 +2612,9 @@ function Profile({
           Выйти из аккаунта
         </ShellButton>
       </section>
-      {!isStandalone() && (
-        <section className="r-section">
-          <div className="r-section-head">
-            <div>
-              <p className="r-kicker">Быстрый доступ</p>
-              <h2>Ярлык на домашнем экране</h2>
-            </div>
-          </div>
-          <InstallPrompt always />
-        </section>
-      )}
+      {/* Карточка несёт собственную рамку и заголовок; обёртка секции давала
+          «Быстрый доступ» дважды подряд. Скрытием управляет сам компонент. */}
+      <InstallPrompt always />
       <section className="r-section">
         <div className="r-section-head">
           <div>

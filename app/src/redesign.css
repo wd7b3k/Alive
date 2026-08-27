@@ -235,6 +235,7 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
 .r-install-body h2{margin:4px 0 8px;font-size:var(--r-fs-h3);line-height:1.2}
 .r-install-body>p{margin:0;color:var(--r-muted);font-size:var(--r-fs-sm);line-height:1.55;max-width:64ch}
 .r-install-steps{margin:12px 0 0;padding-left:20px;display:grid;gap:4px;font-size:var(--r-fs-sm);line-height:1.5;color:var(--r-muted)}
+.r-install-note{display:block;margin-top:8px;font-size:var(--r-fs-xs);line-height:1.4;color:var(--r-dim)}
 .r-install-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
 .r-install-qr{display:grid;gap:8px;justify-items:center;width:144px}
 .r-install-qr img{display:block;width:112px;height:112px;padding:8px;border-radius:var(--r-r-md);background:var(--r-text)}
