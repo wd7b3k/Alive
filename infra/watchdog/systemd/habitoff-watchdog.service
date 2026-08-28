@@ -1,0 +1,20 @@
+[Unit]
+Description=Habitoff: сторож — пульс, алерты и внешний зонд
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/habitoff-alerts.env
+ExecStart=/usr/bin/python3 /opt/habitoff-watchdog/watchdog.py
+Restart=always
+RestartSec=10
+User=habitoff-watchdog
+StateDirectory=habitoff-watchdog
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,9 @@
+[Unit]
+Description=Habitoff: пульс сторожу
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/habitoff-monitoring.env
+ExecStart=/srv/alive/repo/infra/monitoring/heartbeat.sh
+User=root

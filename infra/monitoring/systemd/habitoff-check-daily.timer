@@ -1,0 +1,10 @@
+[Unit]
+Description=Habitoff: сроки, бэкапы и свёртка истории раз в сутки
+
+[Timer]
+OnCalendar=*-*-* 06:20:00
+Persistent=true
+Unit=habitoff-check@daily.service
+
+[Install]
+WantedBy=timers.target
