@@ -21,8 +21,29 @@ const ATTRIBUTED_KEY = 'habitoff:visitor-attributed:v1';
 /** Пауза, после которой заход считается новым. Тридцать минут — общепринятая граница. */
 const SESSION_IDLE_MS = 30 * 60 * 1000;
 
-const SEARCH_HOSTS = ['yandex.', 'google.', 'bing.com', 'duckduckgo.com', 'mail.ru', 'rambler.ru', 'yahoo.'];
-const SOCIAL_HOSTS = ['vk.com', 't.me', 'telegram.', 'ok.ru', 'dzen.ru', 'youtube.', 'instagram.', 'facebook.', 'twitter.', 'x.com', 'pinterest.', 'reddit.'];
+const SEARCH_HOSTS = [
+  'yandex.',
+  'google.',
+  'bing.com',
+  'duckduckgo.com',
+  'mail.ru',
+  'rambler.ru',
+  'yahoo.',
+];
+const SOCIAL_HOSTS = [
+  'vk.com',
+  't.me',
+  'telegram.',
+  'ok.ru',
+  'dzen.ru',
+  'youtube.',
+  'instagram.',
+  'facebook.',
+  'twitter.',
+  'x.com',
+  'pinterest.',
+  'reddit.',
+];
 
 /** Любое хранилище может бросить: приватное окно, запрет на данные сайта, чужой домен. */
 function readStore(store: Storage | undefined, key: string): string | null {
@@ -90,7 +111,9 @@ export function platformLabel(): string {
 }
 
 export function appVersion(): string {
-  return buildInfo.commit ? `${buildInfo.version}+${buildInfo.commit.slice(0, 7)}` : buildInfo.version;
+  return buildInfo.commit
+    ? `${buildInfo.version}+${buildInfo.commit.slice(0, 7)}`
+    : buildInfo.version;
 }
 
 type Attribution = {

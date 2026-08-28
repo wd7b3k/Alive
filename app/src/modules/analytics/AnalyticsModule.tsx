@@ -21,9 +21,20 @@ const PERIODS = [
   { days: 90, weeks: 26, label: '90 дней' },
 ];
 
-type Row = { label: string; note?: string | null; value: string; hint?: string | null; muted?: boolean };
+type Row = {
+  label: string;
+  note?: string | null;
+  value: string;
+  hint?: string | null;
+  muted?: boolean;
+};
 
-function Block({ title, lead, rows, empty }: {
+function Block({
+  title,
+  lead,
+  rows,
+  empty,
+}: {
   title: string;
   lead: string;
   rows: Row[];
@@ -140,9 +151,9 @@ export function AnalyticsModule() {
         <p className="r-kicker">Служебное</p>
         <h1>Аналитика</h1>
         <p className="r-lead">
-          Считает база: шесть функций, каждая отказывает не-администратору. Разрезы меньше
-          трёх человек не показываются, идентификаторов участников нет ни в одном поле —
-          «посмотреть, как идёт продукт» не должно превращаться в «выгрузить, кто когда курил».
+          Считает база: шесть функций, каждая отказывает не-администратору. Разрезы меньше трёх
+          человек не показываются, идентификаторов участников нет ни в одном поле — «посмотреть, как
+          идёт продукт» не должно превращаться в «выгрузить, кто когда курил».
         </p>
 
         <div className="r-health-periods">
