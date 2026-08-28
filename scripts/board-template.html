@@ -1,0 +1,842 @@
+<title>Пульт Habitoff</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap&subset=cyrillic,latin">
+<style id="styles">
+:root{
+  --bg:#070f12; --panel:#0c171c; --panel2:#112127; --panel3:#162a31;
+  --line:#1b3038; --line2:#274550;
+  --tx:#e9f2f3; --tx2:#9db3ba; --tx3:#6a848d;
+  --teal:#3ec8b2; --observe:#f2ca69; --sand:#e0c9a6; --ok:#6fcf97; --red:#e5675f;
+  --t-feature:#3ec8b2; --t-bug:#e5675f; --t-tech:#e0c9a6; --t-infra:#7fa9c9; --t-docs:#a998d0; --t-research:#8fbf88;
+  --p0:#e5675f; --p1:#f2ca69; --p2:#7fa9c9; --p3:#5d757e;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 8px 24px -12px rgba(0,0,0,.8);
+  --r:10px; --r2:14px;
+  --f-d:"Inter Tight","Segoe UI",system-ui,sans-serif;
+  --f-b:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-m:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#eaf0ef; --panel:#ffffff; --panel2:#f3f7f6; --panel3:#e8efee;
+    --line:#d3dedb; --line2:#bccbc7;
+    --tx:#08181d; --tx2:#4a6069; --tx3:#6f858d;
+    --teal:#0d7f70; --observe:#a2731a; --sand:#856a3e; --ok:#3a8a5f; --red:#bd4a41;
+    --t-feature:#0d7f70; --t-bug:#bd4a41; --t-tech:#856a3e; --t-infra:#3f6f96; --t-docs:#6a58a0; --t-research:#4f8248;
+    --p0:#bd4a41; --p1:#a2731a; --p2:#3f6f96; --p3:#7b8c92;
+    --shadow:0 1px 2px rgba(16,40,48,.06), 0 10px 24px -16px rgba(16,40,48,.35);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#eaf0ef; --panel:#ffffff; --panel2:#f3f7f6; --panel3:#e8efee;
+  --line:#d3dedb; --line2:#bccbc7;
+  --tx:#08181d; --tx2:#4a6069; --tx3:#6f858d;
+  --teal:#0d7f70; --observe:#a2731a; --sand:#856a3e; --ok:#3a8a5f; --red:#bd4a41;
+  --t-feature:#0d7f70; --t-bug:#bd4a41; --t-tech:#856a3e; --t-infra:#3f6f96; --t-docs:#6a58a0; --t-research:#4f8248;
+  --p0:#bd4a41; --p1:#a2731a; --p2:#3f6f96; --p3:#7b8c92;
+  --shadow:0 1px 2px rgba(16,40,48,.06), 0 10px 24px -16px rgba(16,40,48,.35);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--f-b);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--f-d);margin:0;text-wrap:balance;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+.mono{font-family:var(--f-m);font-size:.86em}
+.dim{color:var(--tx3)}
+code{font-family:var(--f-m);font-size:.9em;background:var(--panel3);padding:.05em .35em;border-radius:4px}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+/* shell */
+.shell{display:grid;grid-template-rows:auto auto 1fr;height:100dvh;min-height:0}
+
+/* header */
+.top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand b{font-family:var(--f-d);font-weight:700;font-size:17px;letter-spacing:-.02em}
+.brand b i{font-style:normal;color:var(--observe)}
+.brand .ver{font-family:var(--f-m);font-size:11px;color:var(--tx3);border:1px solid var(--line2);border-radius:20px;padding:1px 8px}
+.stats{display:flex;gap:16px;font-family:var(--f-m);font-size:11.5px;color:var(--tx3);letter-spacing:.02em}
+.stats b{font-size:15px;color:var(--tx);font-weight:500;display:block;line-height:1.15;font-variant-numeric:tabular-nums}
+.stats b.warn{color:var(--observe)}
+.stats b.crit{color:var(--red)}
+.grow{flex:1}
+.tabs{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:2px;gap:2px}
+.tabs button{background:none;border:0;padding:6px 14px;border-radius:8px;color:var(--tx2);cursor:pointer;font-weight:500}
+.tabs button.on{background:var(--panel3);color:var(--tx);box-shadow:var(--shadow)}
+.tabs button:hover:not(.on){color:var(--tx)}
+.top .act{background:var(--panel2);border:1px solid var(--line2);border-radius:var(--r);padding:7px 13px;color:var(--tx2);cursor:pointer}
+.top .act:hover{color:var(--tx);border-color:var(--teal)}
+.savechip{font-family:var(--f-m);font-size:11px;color:var(--tx3);min-width:0}
+.savechip.ok{color:var(--ok)}
+.savechip.warn{color:var(--observe)}
+
+/* filters */
+.filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 20px;background:var(--panel2);border-bottom:1px solid var(--line)}
+.filters[hidden]{display:none}
+.filters input[type=search]{background:var(--panel);border:1px solid var(--line2);border-radius:var(--r);padding:6px 11px;min-width:min(320px,100%);flex:0 1 320px}
+.filters select{background:var(--panel);border:1px solid var(--line2);border-radius:var(--r);padding:6px 10px}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{background:transparent;border:1px solid var(--line2);border-radius:20px;padding:4px 11px;color:var(--tx3);cursor:pointer;font-size:12.5px}
+.chip:hover{color:var(--tx);border-color:var(--tx3)}
+.chip.on{color:var(--tx);border-color:var(--tc,var(--teal));background:color-mix(in srgb, var(--tc,var(--teal)) 14%, transparent)}
+.chip.pr.p0{--tc:var(--p0)} .chip.pr.p1{--tc:var(--p1)} .chip.pr.p2{--tc:var(--p2)} .chip.pr.p3{--tc:var(--p3)}
+
+/* views */
+.view{min-height:0;overflow:auto;padding:22px 20px 40px}
+.view.board{overflow:hidden;padding:16px 0 0 20px}
+
+/* roadmap */
+.road{max-width:1180px;margin:0 auto;width:100%}
+.road-lead{display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;padding-bottom:26px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.lead-block{flex:1 1 520px;max-width:70ch}
+.eyebrow{font-family:var(--f-m);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin:0 0 8px}
+.lead-block h2{font-size:26px;font-weight:600;line-height:1.25;margin-bottom:10px}
+.lede{color:var(--tx2);margin:0;max-width:66ch}
+.lead-side{display:flex;gap:22px}
+.gauge{display:flex;flex-direction:column;gap:2px}
+.gauge-n{font-family:var(--f-d);font-size:34px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.gauge-n.warn{color:var(--observe)}
+.gauge-l{font-family:var(--f-m);font-size:11px;color:var(--tx3);letter-spacing:.06em}
+
+.panelbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:18px;margin-bottom:18px}
+.panelbox.danger{border-color:color-mix(in srgb, var(--red) 45%, var(--line));background:color-mix(in srgb, var(--red) 6%, var(--panel))}
+.panelbox header{margin-bottom:14px}
+.panelbox h3{font-size:15px;font-weight:600}
+.panelbox header p{margin:3px 0 0;color:var(--tx3);font-size:13px}
+.minigrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.mini{display:flex;flex-direction:column;gap:6px;text-align:left;background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--p2);border-radius:var(--r);padding:10px 12px;cursor:pointer}
+.mini.p0{border-left-color:var(--p0)} .mini.p1{border-left-color:var(--p1)} .mini.p2{border-left-color:var(--p2)} .mini.p3{border-left-color:var(--p3)}
+.mini:hover{border-color:var(--line2);background:var(--panel3)}
+.mini-top{display:flex;align-items:center;gap:7px}
+.mini-epic{font-size:11.5px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini-t{font-family:var(--f-d);font-weight:500;font-size:14px;line-height:1.3}
+.mini-s{font-family:var(--f-m);font-size:10.5px;color:var(--tx3);letter-spacing:.04em}
+.tdot{width:7px;height:7px;border-radius:2px;flex:none}
+.empty{color:var(--tx3);margin:0;font-style:normal}
+.empty.small{font-size:12px;padding:8px 2px}
+
+.sec-title{font-family:var(--f-m);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:500;margin:28px 0 12px}
+.rels{display:grid;gap:10px}
+.rel{display:grid;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:16px 18px}
+.rel.doing{border-color:color-mix(in srgb, var(--teal) 45%, var(--line))}
+.rel-head{display:flex;align-items:center;gap:10px}
+.rel-head h4{font-size:15px;font-weight:600}
+.rel-dot{width:9px;height:9px;border-radius:50%;background:var(--line2);flex:none}
+.rel.done .rel-dot{background:var(--ok)}
+.rel.doing .rel-dot{background:var(--teal);box-shadow:0 0 0 4px color-mix(in srgb,var(--teal) 22%,transparent)}
+.rel-state{font-family:var(--f-m);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);margin-left:auto}
+.rel-goal{margin:0;color:var(--tx2);max-width:78ch}
+.rel-gate{margin:0;font-size:13px;color:var(--tx3);max-width:78ch;padding-left:12px;border-left:2px solid var(--line2)}
+.rel-gate span{font-family:var(--f-m);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-right:6px}
+
+.epics{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
+.epic{background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:15px 16px;cursor:pointer;display:grid;gap:9px;align-content:start}
+.epic:hover{border-color:var(--line2);background:var(--panel2)}
+.epic-top{display:flex;align-items:baseline;gap:8px}
+.epic-top h4{font-size:14.5px;font-weight:600}
+.epic-rel{margin-left:auto;font-family:var(--f-m);font-size:10.5px;color:var(--tx3)}
+.epic-d{margin:0;font-size:12.8px;color:var(--tx3);line-height:1.45}
+.bar{height:4px;border-radius:4px;background:var(--panel3);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--teal)}
+.epic-nums{display:flex;gap:12px;font-family:var(--f-m);font-size:11px;color:var(--tx3)}
+.epic-nums b{color:var(--tx2);font-weight:500}
+.epic-nums .op b{color:var(--observe)}
+.epic-nums .p0 b{color:var(--red)}
+
+/* board */
+.cols{display:flex;gap:12px;height:100%;overflow-x:auto;padding-bottom:14px;padding-right:20px}
+.col{flex:0 0 300px;display:flex;flex-direction:column;min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r2)}
+.col-h{padding:12px 13px 10px;border-bottom:1px solid var(--line)}
+.col-h h3{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.cnt{font-family:var(--f-m);font-size:11px;color:var(--tx3);background:var(--panel3);border-radius:20px;padding:1px 8px;font-variant-numeric:tabular-nums}
+.col-h p{margin:3px 0 0;font-size:11.5px;color:var(--tx3);line-height:1.35}
+.col-sort{margin-top:7px;background:none;border:0;padding:0;color:var(--tx3);font-family:var(--f-m);font-size:10.5px;cursor:pointer;letter-spacing:.03em}
+.col-sort:hover{color:var(--teal)}
+.col-body{flex:1;min-height:0;overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:8px}
+.col-body.over{background:color-mix(in srgb,var(--teal) 8%,transparent)}
+.card{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--p2);border-radius:var(--r);padding:10px 11px;cursor:pointer;display:grid;gap:7px}
+.card.p0{border-left-color:var(--p0)} .card.p1{border-left-color:var(--p1)} .card.p2{border-left-color:var(--p2)} .card.p3{border-left-color:var(--p3)}
+.card:hover{background:var(--panel3);border-color:var(--line2)}
+.card.dragging{opacity:.4}
+.card h4{font-size:13.5px;font-weight:500;line-height:1.32;font-family:var(--f-b)}
+.card-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.epic-chip{font-size:11px;color:var(--tx3);border:1px solid var(--line2);border-radius:20px;padding:0 7px;line-height:17px}
+.pbadge{font-family:var(--f-m);font-size:10px;font-weight:500;letter-spacing:.04em;border-radius:4px;padding:1px 5px;color:#06121500;color:var(--bg);background:var(--p2)}
+.pbadge.p0{background:var(--p0)} .pbadge.p1{background:var(--p1)} .pbadge.p2{background:var(--p2)} .pbadge.p3{background:var(--p3)}
+.type{font-size:11px;color:var(--tc);border:1px solid color-mix(in srgb,var(--tc) 40%,transparent);background:color-mix(in srgb,var(--tc) 11%,transparent);border-radius:20px;padding:0 7px;line-height:17px;white-space:nowrap}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:10.5px;color:var(--tc);border-bottom:1px dotted color-mix(in srgb,var(--tc) 60%,transparent);letter-spacing:.02em}
+.tags.inline{display:inline-flex;margin-left:6px}
+.note-mark{margin:0;font-family:var(--f-m);font-size:10px;color:var(--sand);letter-spacing:.05em}
+
+/* list */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r2);background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:900px}
+th{text-align:left;font-family:var(--f-m);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);font-weight:500;padding:11px 12px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;position:sticky;top:0;background:var(--panel)}
+th:hover{color:var(--tx)}
+th.sorted{color:var(--teal)}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--panel2)}
+.w1{width:98px}.w2{width:118px}.w3{width:170px}.w4{width:230px}
+.st{font-size:11.5px;color:var(--tx2)}
+.st-done{color:var(--ok)} .st-doing{color:var(--teal)} .st-verify{color:var(--observe)} .st-next{color:var(--tx)} .st-backlog{color:var(--tx3)}
+
+/* drawer */
+.drawer{position:fixed;inset:0 0 0 auto;width:min(460px,100%);background:var(--panel);border-left:1px solid var(--line2);box-shadow:-24px 0 60px -30px rgba(0,0,0,.7);padding:18px 20px 28px;overflow-y:auto;transform:translateX(101%);transition:transform .22s cubic-bezier(.22,1,.36,1);display:grid;gap:12px;align-content:start;z-index:20}
+.drawer.open{transform:none}
+@media (prefers-reduced-motion: reduce){.drawer{transition:none}}
+.dr-head{display:flex;align-items:center;gap:8px}
+.dr-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.icon{margin-left:auto;background:none;border:1px solid var(--line2);border-radius:8px;width:28px;height:28px;color:var(--tx3);cursor:pointer;line-height:1}
+.icon:hover{color:var(--tx);border-color:var(--tx3)}
+.drawer h3{font-size:19px;font-weight:600;line-height:1.3}
+.drawer h3[contenteditable]:focus{outline:none;background:var(--panel3);border-radius:6px;padding:2px 6px;margin:-2px -6px}
+.dr-d{margin:0;color:var(--tx2);max-width:62ch}
+.dr-dep,.dr-src{margin:0;font-size:12.5px;color:var(--tx3)}
+.dr-dep span,.dr-src span{font-family:var(--f-m);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-right:6px}
+.dr-controls{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.dr-controls label,.dr-notelabel{display:grid;gap:4px;font-family:var(--f-m);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3)}
+.dr-controls select,.drawer textarea{background:var(--panel2);border:1px solid var(--line2);border-radius:var(--r);padding:7px 9px;font-family:var(--f-b);font-size:13.5px;letter-spacing:normal;text-transform:none;color:var(--tx);width:100%}
+.drawer textarea{resize:vertical;line-height:1.5}
+.drawer textarea.dump{font-family:var(--f-m);font-size:11.5px}
+.dr-foot{display:flex;gap:8px;margin-top:4px}
+.ghost{background:none;border:1px solid var(--line2);border-radius:var(--r);padding:7px 12px;color:var(--tx3);cursor:pointer;font-size:12.5px}
+.ghost:hover{color:var(--tx);border-color:var(--tx3)}
+.ghost.danger:hover{color:var(--red);border-color:var(--red)}
+
+/* links & sync */
+.sync{font-family:var(--f-m);font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:6px}
+.sync a{color:var(--tx3);text-decoration:none;border-bottom:1px dotted var(--line2)}
+.sync a:hover{color:var(--teal);border-color:var(--teal)}
+.sync .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);flex:none}
+.sync .dot.manual{background:var(--observe)}
+.dr-links{display:grid;gap:5px;padding:12px 0;border-top:1px solid var(--line)}
+.dr-links h4{font-family:var(--f-m);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);font-weight:500;margin-bottom:2px}
+.lnk{display:flex;align-items:baseline;gap:8px;font-size:12.8px;text-decoration:none;color:var(--tx2);border:1px solid transparent;border-radius:8px;padding:3px 6px;margin:0 -6px}
+.lnk:hover{background:var(--panel2);border-color:var(--line);color:var(--tx)}
+.lnk .k{font-family:var(--f-m);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);flex:none;width:52px}
+.lnk.off{color:var(--tx3);cursor:default}
+.lnk.off:hover{background:none;border-color:transparent;color:var(--tx3)}
+.chatrow{display:flex;gap:6px;align-items:center;margin-top:4px}
+.chatrow input{flex:1;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:5px 8px;font-size:12px;font-family:var(--f-m)}
+.card-links{display:flex;gap:5px;align-items:center;font-family:var(--f-m);font-size:10px;color:var(--tx3)}
+.card-links span{border:1px solid var(--line2);border-radius:4px;padding:0 4px}
+.mono-sm{font-family:var(--f-m);font-size:11px}
+
+@media (max-width:760px){
+  .top{padding:10px 14px;gap:10px 14px}
+  .stats{gap:14px}
+  .stats div:nth-child(3),.stats div:nth-child(4){display:none}
+  .brand .ver{display:none}
+  .top .act{padding:6px 10px;font-size:13px}
+  .tabs button{padding:5px 11px}
+  .filters{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:8px 14px}
+  .filters::-webkit-scrollbar{display:none}
+  .filters>*{flex:none}
+  .filters input[type=search]{flex:0 0 190px;min-width:190px}
+  .chips{flex-wrap:nowrap}
+  .grow{display:none}
+  .view{padding:16px 14px 32px}
+  .view.board{padding:12px 0 0 14px}
+  .col{flex:0 0 82vw}
+  .cols{padding-right:14px}
+  .lead-block h2{font-size:21px}
+  .dr-controls{grid-template-columns:1fr}
+}
+</style>
+
+<div class="shell">
+  <header class="top">
+    <div class="brand"><b>Habit<i>off</i></b><span class="ver">3.2.0 · прод = main</span></div>
+    <div class="stats">
+      <div><b class="warn" id="stat-open">0</b>открыто</div>
+      <div><b class="crit" id="stat-p0">0</b>P0</div>
+      <div><b id="stat-done">0</b>сделано</div>
+      <div><b id="stat-total">0</b>всего</div>
+    </div>
+    <span class="grow"></span>
+    <span class="sync" id="sync"></span>
+    <span class="savechip" id="savechip"></span>
+    <div class="tabs">
+      <button data-view="road">Роадмэп</button>
+      <button data-view="board">Доска</button>
+      <button data-view="list">Список</button>
+    </div>
+    <button class="act" id="add">+ карточка</button>
+    <button class="act" id="export">Выгрузить</button>
+    <button class="act" id="dumpov" title="Ручные правки в JSON для docs/board/overrides.json">Правки</button>
+  </header>
+  <div class="filters" id="filters" hidden></div>
+  <main class="view" id="view"></main>
+</div>
+<aside class="drawer" id="drawer" aria-label="Карточка"></aside>
+
+<script id="board-data" type="application/json">__CARDS_JSON__</script>
+<script id="board-overrides" type="application/json">__OVERRIDES_JSON__</script>
+<script id="app">
+/* Пульт Habitoff. Данные приходят из docs/board/cards.json репозитория;
+   ручные правки живут поверх и переживают пересборку. Собирается
+   scripts/board.mjs build — руками этот файл не редактируется. */
+const BOARD = JSON.parse(document.getElementById("board-data").textContent);
+const REPO_OV = JSON.parse(document.getElementById("board-overrides").textContent || "{}");
+
+const COLS = BOARD.columns.map((c) => ({ id: c.id, n: c.name, h: c.hint }));
+const TYPE_COLOR = { feature: "--t-feature", bug: "--t-bug", tech: "--t-tech", infra: "--t-infra", docs: "--t-docs", research: "--t-research" };
+const TYPES = {};
+BOARD.types.forEach((t) => (TYPES[t.id] = { n: t.name, c: "var(" + (TYPE_COLOR[t.id] || "--tx3") + ")" }));
+const TAG_COLOR = { pilot: "--red", owner: "--observe", live: "--sand" };
+const TAGS = {};
+BOARD.tags.forEach((t) => (TAGS[t.id] = { n: t.name, c: "var(" + (TAG_COLOR[t.id] || "--tx3") + ")" }));
+const PRIO = ["P0", "P1", "P2", "P3"];
+
+const EPICS = BOARD.epics.map((e) => ({ id: e.id, n: e.name, d: e.about, rel: e.release }));
+const RELEASES = BOARD.releases.map((r) => ({ id: r.id, n: r.name, s: r.status, goal: r.goal, gate: r.gate }));
+const ITEMS = BOARD.cards.map((c) => ({
+  id: c.id, t: c.title, ty: c.type, e: c.epic, p: c.priority, s: c.status, d: c.body,
+  tag: c.tags || [], dep: c.deps || "", docs: c.docs || [], chats: c.chats || [],
+  commits: c.commits || [], updated: c.updated || BOARD.generated,
+}));
+const EPIC_BY_ID = Object.fromEntries(EPICS.map((e) => [e.id, e]));
+const SEED_INDEX = Object.fromEntries(ITEMS.map((it, i) => [it.id, i]));
+const REPO = BOARD.repo || "";
+const BRANCH = BOARD.branch || "main";
+const TODAY = BOARD.generated;
+
+/* ручные правки: слой репозитория (docs/board/overrides.json) + слой этой страницы */
+let store = { v: 2, o: {}, c: [] };
+let ui = { view: "road", epic: "", types: [], prios: [], q: "", openOnly: false, pilotOnly: false, hidden: false, sort: "p", sortDir: 1, sel: null };
+let cap = null, capTried = false, saveTimer = null;
+
+function today() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+/* Автоматика важнее устаревшей ручной правки: колонка и приоритет из
+   репозитория побеждают, если карточка в репозитории новее правки. */
+function effectiveOverride(it, o) {
+  if (!o) return {};
+  const fresh = !o.at || o.at >= (it.updated || "0000-00-00");
+  const out = {};
+  if (o.note != null) out.note = o.note;
+  if (o.chat != null) out.chat = o.chat;
+  if (o.ord != null) out.ord = o.ord;
+  if (o.del != null) out.del = o.del;
+  if (fresh) {
+    if (o.s != null) out.s = o.s;
+    if (o.p != null) out.p = o.p;
+    if (o.ty != null) out.ty = o.ty;
+    if (o.e != null) out.e = o.e;
+    if (o.t != null) out.t = o.t;
+  }
+  out._stale = !fresh && (o.s != null || o.p != null);
+  return out;
+}
+function mergedOverrides() {
+  const out = {};
+  Object.keys(REPO_OV.o || {}).forEach((k) => (out[k] = Object.assign({}, REPO_OV.o[k])));
+  Object.keys(store.o || {}).forEach((k) => {
+    const a = out[k], b = store.o[k];
+    out[k] = !a || !a.at || !b.at || b.at >= a.at ? Object.assign({}, a, b) : Object.assign({}, b, a);
+  });
+  return out;
+}
+function allItems() {
+  const ov = mergedOverrides();
+  const extra = (REPO_OV.c || []).concat(store.c || []);
+  return ITEMS.concat(extra)
+    .map((it) => {
+      const o = effectiveOverride(it, ov[it.id]);
+      return Object.assign({}, it, o, {
+        _ord: o.ord != null ? o.ord : (it.p || 0) * 1000 + (SEED_INDEX[it.id] != null ? SEED_INDEX[it.id] : 900),
+        _manual: !!ov[it.id],
+      });
+    })
+    .filter((it) => ui.hidden || !it.del);
+}
+function visible() {
+  const q = ui.q.trim().toLowerCase();
+  return allItems().filter((it) => {
+    if (ui.epic && it.e !== ui.epic) return false;
+    if (ui.types.length && ui.types.indexOf(it.ty) < 0) return false;
+    if (ui.prios.length && ui.prios.indexOf(it.p) < 0) return false;
+    if (ui.openOnly && it.s === "done") return false;
+    if (ui.pilotOnly && (it.tag || []).indexOf("pilot") < 0) return false;
+    if (q) {
+      const hay = (it.t + " " + (it.d || "") + " " + (it.note || "") + " " + (it.docs || []).map((d) => d.label).join(" ") + " " + (it.chats || []).map((c) => c.label).join(" ")).toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+}
+function patchQuiet(id, delta) {
+  store.o = store.o || {};
+  store.o[id] = Object.assign({}, store.o[id], delta, { at: today() });
+}
+function patch(id, delta) {
+  patchQuiet(id, delta);
+  scheduleSave();
+}
+
+/* ─ сохранение ────────────────────────────────────────────────────── */
+function setSave(s) {
+  const el = document.getElementById("savechip");
+  if (!el) return;
+  const map = { idle: ["", ""], saving: ["сохраняю…", ""], saved: ["сохранено", "ok"], local: ["только в этом браузере", "warn"], ro: ["только чтение", "warn"] };
+  const [txt, cls] = map[s] || ["", ""];
+  el.textContent = txt;
+  el.className = "savechip " + cls;
+}
+function scheduleSave() {
+  render();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(commit, 1200);
+}
+async function commit() {
+  const json = JSON.stringify(store);
+  try { localStorage.setItem("habitoff-board-v2", json); } catch (e) {}
+  if (!cap) { setSave(capTried ? "local" : "idle"); return; }
+  setSave("saving");
+  try {
+    await cap.publish({ "data/board.json": { content: json, contentType: "application/json" } });
+    setSave("saved");
+  } catch (e) {
+    const c = e && e.code;
+    if (c === "not_writer" || c === "not_granted" || c === "not_declared" || c === "consent_required") { cap = null; setSave("ro"); }
+    else setSave("local");
+  }
+}
+function adopt(saved) {
+  if (!saved || typeof saved !== "object" || typeof saved.o !== "object") return null;
+  return { v: 2, o: saved.o || {}, c: Array.isArray(saved.c) ? saved.c : [] };
+}
+async function boot() {
+  let remote = null, local = null;
+  try {
+    const r = await fetch("data/board.json", { cache: "no-store" });
+    if (r.ok) {
+      const txt = await r.text();
+      if (txt.trim().charAt(0) === "{") remote = adopt(JSON.parse(txt));
+    }
+  } catch (e) {}
+  try {
+    const s = localStorage.getItem("habitoff-board-v2");
+    if (s) local = adopt(JSON.parse(s));
+  } catch (e) {}
+  if (remote || local) {
+    const o = {};
+    [remote, local].forEach((src) => {
+      if (!src) return;
+      Object.keys(src.o).forEach((k) => {
+        const a = o[k], b = src.o[k];
+        o[k] = !a || !a.at || !b.at || b.at >= a.at ? Object.assign({}, a, b) : Object.assign({}, b, a);
+      });
+    });
+    const seen = new Set();
+    const c = [].concat(remote ? remote.c : [], local ? local.c : []).filter((x) => (seen.has(x.id) ? false : seen.add(x.id)));
+    store = { v: 2, o, c };
+  }
+  render();
+  try { if (window.claude && window.claude.use) cap = await window.claude.use("artifact"); } catch (e) {}
+  capTried = true;
+  if (!cap) setSave("local");
+}
+
+/* ─ вспомогательное ───────────────────────────────────────────────── */
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+}
+function counts(list) {
+  const c = { total: list.length, done: 0, open: 0, p0: 0 };
+  list.forEach((it) => { if (it.s === "done") c.done++; else { c.open++; if (it.p === 0) c.p0++; } });
+  return c;
+}
+function plural(n, a, b, c) {
+  const m = n % 100, k = n % 10;
+  if (m > 10 && m < 20) return c;
+  if (k === 1) return a;
+  if (k >= 2 && k <= 4) return b;
+  return c;
+}
+function blobUrl(p) { return REPO + "/blob/" + BRANCH + "/" + p; }
+function commitUrl(h) { return REPO + "/commit/" + h; }
+
+/* ─ шапка ─────────────────────────────────────────────────────────── */
+function renderHeader() {
+  const c = counts(allItems());
+  document.getElementById("stat-open").textContent = c.open;
+  document.getElementById("stat-p0").textContent = c.p0;
+  document.getElementById("stat-done").textContent = c.done;
+  document.getElementById("stat-total").textContent = c.total;
+  document.querySelectorAll("[data-view]").forEach((b) => b.classList.toggle("on", b.dataset.view === ui.view));
+  const manual = Object.keys(mergedOverrides()).length;
+  const sync = document.getElementById("sync");
+  const c7 = BOARD.appliedCommit ? BOARD.appliedCommit.slice(0, 7) : "";
+  const link = c7 ? `<a href="${commitUrl(BOARD.appliedCommit)}" target="_blank" rel="noopener" title="коммит, по которому собрана доска">${c7}</a>` : "—";
+  sync.innerHTML = `<span class="dot${manual ? " manual" : ""}"></span><span><a href="${REPO}" target="_blank" rel="noopener">репозиторий</a> · ${link} · ${esc((BOARD.generated || "").slice(5).replace("-", "."))}${manual ? ` · правок ${manual}` : ""}</span>`;
+}
+
+/* ─ роадмэп ───────────────────────────────────────────────────────── */
+function renderRoad() {
+  const items = allItems();
+  const blockers = items.filter((it) => (it.tag || []).indexOf("pilot") >= 0 && it.s !== "done");
+  const p0open = items.filter((it) => it.p === 0 && it.s !== "done" && (it.tag || []).indexOf("pilot") < 0);
+  const inflight = items.filter((it) => it.s === "doing" || it.s === "verify");
+  const c = counts(items);
+  let h = "";
+
+  h += `<section class="road-lead">
+    <div class="lead-block">
+      <p class="eyebrow">Где продукт сейчас</p>
+      <h2>${esc(BOARD.headline || "Habitoff")}</h2>
+      <p class="lede">${esc(BOARD.lede || "")} Между сегодняшним состоянием и первыми участниками стоит ${blockers.length} ${plural(blockers.length, "пункт", "пункта", "пунктов")}.</p>
+    </div>
+    <div class="lead-side">
+      <div class="gauge"><span class="gauge-n">${c.done}</span><span class="gauge-l">сделано</span></div>
+      <div class="gauge"><span class="gauge-n warn">${c.open}</span><span class="gauge-l">открыто</span></div>
+    </div>
+  </section>`;
+
+  h += `<section class="panelbox danger">
+    <header><h3>Держит пилот</h3><p>Пока хоть один пункт открыт, звать людей рано. Первая сессия дня — только отсюда.</p></header>
+    <div class="minigrid">${blockers.map(miniCard).join("") || '<p class="empty">Пусто — можно звать участников.</p>'}</div>
+  </section>`;
+
+  if (inflight.length)
+    h += `<section class="panelbox"><header><h3>В движении</h3><p>Начато или ждёт живой проверки в браузере и на телефоне.</p></header>
+      <div class="minigrid">${inflight.map(miniCard).join("")}</div></section>`;
+
+  if (p0open.length)
+    h += `<section class="panelbox"><header><h3>Остальное P0</h3><p>Высшая цена ошибки, но пилот напрямую не держит.</p></header>
+      <div class="minigrid">${p0open.map(miniCard).join("")}</div></section>`;
+
+  h += `<section class="rel-sec"><h3 class="sec-title">Релизы</h3><div class="rels">`;
+  RELEASES.forEach((r) => {
+    h += `<article class="rel ${r.s}">
+      <div class="rel-head"><span class="rel-dot"></span><h4>${esc(r.n)}</h4><span class="rel-state">${{ done: "пройден", doing: "идёт", planned: "впереди" }[r.s] || ""}</span></div>
+      <p class="rel-goal">${esc(r.goal)}</p>
+      ${r.gate && r.gate !== "—" ? `<p class="rel-gate"><span>Гейт</span> ${esc(r.gate)}</p>` : ""}
+    </article>`;
+  });
+  h += `</div></section>`;
+
+  h += `<section class="rel-sec"><h3 class="sec-title">Эпики</h3><div class="epics">`;
+  EPICS.forEach((e) => {
+    const list = items.filter((it) => it.e === e.id);
+    const cc = counts(list);
+    const pct = cc.total ? Math.round((cc.done / cc.total) * 100) : 0;
+    h += `<article class="epic" data-epic="${e.id}" tabindex="0" role="button">
+      <div class="epic-top"><h4>${esc(e.n)}</h4><span class="epic-rel">${esc(e.rel)}</span></div>
+      <p class="epic-d">${esc(e.d)}</p>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="epic-nums"><span><b>${cc.done}</b>/${cc.total} сделано</span>
+        ${cc.open ? `<span class="op"><b>${cc.open}</b> открыто</span>` : ""}
+        ${cc.p0 ? `<span class="p0"><b>${cc.p0}</b> × P0</span>` : ""}</div>
+    </article>`;
+  });
+  h += `</div></section>`;
+
+  const root = document.getElementById("view");
+  root.className = "view road";
+  root.innerHTML = h;
+  root.querySelectorAll(".epic").forEach((n) => {
+    const go = () => { ui.epic = n.dataset.epic; ui.view = "board"; render(); };
+    n.addEventListener("click", go);
+    n.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); } });
+  });
+  root.querySelectorAll("[data-open]").forEach((n) => n.addEventListener("click", () => openDrawer(n.dataset.open)));
+}
+function miniCard(it) {
+  const col = COLS.find((c) => c.id === it.s);
+  return `<button class="mini p${it.p}" data-open="${esc(it.id)}">
+    <span class="mini-top"><span class="pbadge p${it.p}">${PRIO[it.p]}</span><span class="tdot" style="background:${TYPES[it.ty] ? TYPES[it.ty].c : "var(--tx3)"}"></span><span class="mini-epic">${esc(EPIC_BY_ID[it.e] ? EPIC_BY_ID[it.e].n : it.e)}</span></span>
+    <span class="mini-t">${esc(it.t)}</span>
+    <span class="mini-s">${esc(col ? col.n : it.s)}</span></button>`;
+}
+
+/* ─ доска ─────────────────────────────────────────────────────────── */
+function renderBoard() {
+  const list = visible();
+  const root = document.getElementById("view");
+  root.className = "view board";
+  let h = `<div class="cols">`;
+  COLS.forEach((col) => {
+    const inCol = list.filter((it) => it.s === col.id).sort((a, b) => a._ord - b._ord);
+    h += `<section class="col" data-col="${col.id}">
+      <header class="col-h"><h3>${col.n}<span class="cnt">${inCol.length}</span></h3><p>${col.h}</p>
+        <button class="col-sort" data-sortcol="${col.id}">по приоритету</button></header>
+      <div class="col-body" data-drop="${col.id}">${inCol.map(card).join("") || '<p class="empty small">пусто</p>'}</div>
+    </section>`;
+  });
+  root.innerHTML = h + `</div>`;
+  wireBoard();
+}
+function card(it) {
+  const t = TYPES[it.ty] || { n: it.ty, c: "var(--tx3)" };
+  const tags = (it.tag || []).map((g) => `<span class="tag" style="--tc:${TAGS[g] ? TAGS[g].c : "var(--tx3)"}">${TAGS[g] ? TAGS[g].n : g}</span>`).join("");
+  const marks = [];
+  const nc = (it.commits || []).length;
+  if (nc) marks.push(`<span>${nc} ${plural(nc, "коммит", "коммита", "коммитов")}</span>`);
+  const nd = (it.docs || []).filter((d) => d.path).length;
+  if (nd) marks.push(`<span>${nd} ${plural(nd, "документ", "документа", "документов")}</span>`);
+  if (it.chat || (it.chats || []).some((c) => c.url || c.session)) marks.push(`<span>чат</span>`);
+  if (it.note) marks.push(`<span>заметка</span>`);
+  return `<article class="card p${it.p}" draggable="true" data-id="${esc(it.id)}" tabindex="0">
+    <div class="card-top"><span class="pbadge p${it.p}">${PRIO[it.p]}</span>
+      <span class="type" style="--tc:${t.c}">${t.n}</span>
+      <span class="epic-chip">${esc(EPIC_BY_ID[it.e] ? EPIC_BY_ID[it.e].n : it.e)}</span></div>
+    <h4>${esc(it.t)}</h4>
+    ${tags ? `<div class="tags">${tags}</div>` : ""}
+    ${marks.length ? `<div class="card-links">${marks.join("")}</div>` : ""}
+  </article>`;
+}
+let dragId = null;
+function wireBoard() {
+  const root = document.getElementById("view");
+  root.querySelectorAll(".card").forEach((n) => {
+    n.addEventListener("click", () => openDrawer(n.dataset.id));
+    n.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); openDrawer(n.dataset.id); } });
+    n.addEventListener("dragstart", (ev) => {
+      dragId = n.dataset.id; n.classList.add("dragging");
+      try { ev.dataTransfer.setData("text/plain", n.dataset.id); ev.dataTransfer.effectAllowed = "move"; } catch (e) {}
+    });
+    n.addEventListener("dragend", () => {
+      dragId = null; n.classList.remove("dragging");
+      root.querySelectorAll(".col-body").forEach((b) => b.classList.remove("over"));
+    });
+  });
+  root.querySelectorAll(".col-body").forEach((body) => {
+    body.addEventListener("dragover", (ev) => { ev.preventDefault(); body.classList.add("over"); });
+    body.addEventListener("dragleave", () => body.classList.remove("over"));
+    body.addEventListener("drop", (ev) => {
+      ev.preventDefault(); body.classList.remove("over");
+      const id = dragId || (ev.dataTransfer && ev.dataTransfer.getData("text/plain"));
+      if (!id) return;
+      const after = [...body.querySelectorAll(".card")].filter((c) => c.dataset.id !== id);
+      let idx = after.length;
+      for (let i = 0; i < after.length; i++) {
+        const r = after[i].getBoundingClientRect();
+        if (ev.clientY < r.top + r.height / 2) { idx = i; break; }
+      }
+      const order = after.map((c) => c.dataset.id);
+      order.splice(idx, 0, id);
+      order.forEach((oid, k) => patchQuiet(oid, { ord: k }));
+      patch(id, { s: body.dataset.drop });
+    });
+  });
+  root.querySelectorAll("[data-sortcol]").forEach((b) =>
+    b.addEventListener("click", () => {
+      visible().filter((it) => it.s === b.dataset.sortcol)
+        .sort((a, b2) => a.p - b2.p || (SEED_INDEX[a.id] || 0) - (SEED_INDEX[b2.id] || 0))
+        .forEach((it, k) => patchQuiet(it.id, { ord: k }));
+      scheduleSave();
+    })
+  );
+}
+
+/* ─ список ────────────────────────────────────────────────────────── */
+function renderList() {
+  const dir = ui.sortDir, key = ui.sort;
+  const list = visible().slice().sort((a, b) => {
+    let r = 0;
+    if (key === "p") r = a.p - b.p;
+    else if (key === "s") r = COLS.findIndex((c) => c.id === a.s) - COLS.findIndex((c) => c.id === b.s);
+    else if (key === "e") r = (EPIC_BY_ID[a.e] ? EPIC_BY_ID[a.e].n : "").localeCompare(EPIC_BY_ID[b.e] ? EPIC_BY_ID[b.e].n : "");
+    else if (key === "ty") r = (TYPES[a.ty] ? TYPES[a.ty].n : "").localeCompare(TYPES[b.ty] ? TYPES[b.ty].n : "");
+    else r = a.t.localeCompare(b.t);
+    if (r === 0) r = a.p - b.p || (SEED_INDEX[a.id] || 0) - (SEED_INDEX[b.id] || 0);
+    return r * dir;
+  });
+  const root = document.getElementById("view");
+  root.className = "view list";
+  root.innerHTML = `<div class="tablewrap"><table>
+    <thead><tr><th data-sk="p" class="w1">Приоритет</th><th data-sk="s" class="w2">Статус</th><th data-sk="ty" class="w2">Тип</th>
+      <th data-sk="e" class="w3">Эпик</th><th data-sk="t">Задача</th><th class="w4">Связки</th></tr></thead><tbody>
+    ${list.map((it) => {
+      const col = COLS.find((c) => c.id === it.s);
+      const refs = (it.docs || []).map((d) => d.label).concat((it.chats || []).map((c) => c.label)).join(" · ");
+      return `<tr data-id="${esc(it.id)}">
+        <td><span class="pbadge p${it.p}">${PRIO[it.p]}</span></td>
+        <td><span class="st st-${it.s}">${esc(col ? col.n : it.s)}</span></td>
+        <td><span class="type" style="--tc:${TYPES[it.ty] ? TYPES[it.ty].c : "var(--tx3)"}">${TYPES[it.ty] ? TYPES[it.ty].n : it.ty}</span></td>
+        <td class="dim">${esc(EPIC_BY_ID[it.e] ? EPIC_BY_ID[it.e].n : it.e)}</td>
+        <td><b>${esc(it.t)}</b>${(it.tag || []).length ? ` <span class="tags inline">${(it.tag || []).map((g) => `<span class="tag" style="--tc:${TAGS[g] ? TAGS[g].c : "var(--tx3)"}">${TAGS[g] ? TAGS[g].n : g}</span>`).join("")}</span>` : ""}</td>
+        <td class="mono dim">${esc(refs)}</td></tr>`;
+    }).join("")}
+    </tbody></table></div>`;
+  root.querySelectorAll("tbody tr").forEach((r) => r.addEventListener("click", () => openDrawer(r.dataset.id)));
+  root.querySelectorAll("th[data-sk]").forEach((th) => {
+    th.classList.toggle("sorted", th.dataset.sk === ui.sort);
+    th.addEventListener("click", () => {
+      if (ui.sort === th.dataset.sk) ui.sortDir *= -1;
+      else { ui.sort = th.dataset.sk; ui.sortDir = 1; }
+      render();
+    });
+  });
+}
+
+/* ─ карточка ──────────────────────────────────────────────────────── */
+function linkRow(kind, label, url) {
+  if (!url) return `<span class="lnk off"><span class="k">${kind}</span><span>${esc(label)}</span></span>`;
+  return `<a class="lnk" href="${esc(url)}" target="_blank" rel="noopener"><span class="k">${kind}</span><span>${esc(label)}</span></a>`;
+}
+function openDrawer(id) {
+  ui.sel = id;
+  const it = allItems().find((x) => x.id === id);
+  const d = document.getElementById("drawer");
+  if (!it) { d.classList.remove("open"); return; }
+  d.classList.add("open");
+  const links = []
+    .concat((it.docs || []).map((x) => linkRow("док", x.label, x.path ? blobUrl(x.path) : "")))
+    .concat((it.commits || []).map((h) => linkRow("коммит", typeof h === "string" ? h.slice(0, 9) : h.hash, commitUrl(typeof h === "string" ? h : h.hash))))
+    .concat((it.chats || []).map((c) => linkRow("чат", c.label, c.url || (c.session ? blobUrl(c.session) : ""))))
+    .concat(it.chat ? [linkRow("чат", "ссылка добавлена руками", it.chat)] : []);
+  d.innerHTML = `
+    <div class="dr-head">
+      <div class="dr-chips"><span class="pbadge p${it.p}">${PRIO[it.p]}</span>
+        <span class="type" style="--tc:${TYPES[it.ty] ? TYPES[it.ty].c : "var(--tx3)"}">${TYPES[it.ty] ? TYPES[it.ty].n : it.ty}</span>
+        <span class="epic-chip">${esc(EPIC_BY_ID[it.e] ? EPIC_BY_ID[it.e].n : it.e)}</span></div>
+      <button class="icon" id="dr-close" aria-label="Закрыть">✕</button>
+    </div>
+    <h3 contenteditable="true" id="dr-title" spellcheck="false">${esc(it.t)}</h3>
+    ${(it.tag || []).length ? `<div class="tags">${(it.tag || []).map((g) => `<span class="tag" style="--tc:${TAGS[g] ? TAGS[g].c : "var(--tx3)"}">${TAGS[g] ? TAGS[g].n : g}</span>`).join("")}</div>` : ""}
+    <p class="dr-d">${esc(it.d || "")}</p>
+    ${it.dep ? `<p class="dr-dep"><span>Зависит от</span> ${esc(it.dep)}</p>` : ""}
+    <div class="dr-links"><h4>Связки</h4>${links.join("") || '<span class="lnk off"><span class="k">—</span><span>ссылок нет</span></span>'}
+      <div class="chatrow"><input id="dr-chat" type="url" placeholder="ссылка на чат" value="${esc(it.chat || "")}"><button class="ghost" id="dr-chat-save">Привязать</button></div>
+    </div>
+    <div class="dr-controls">
+      <label>Колонка<select id="dr-status">${COLS.map((c) => `<option value="${c.id}"${c.id === it.s ? " selected" : ""}>${c.n}</option>`).join("")}</select></label>
+      <label>Приоритет<select id="dr-prio">${PRIO.map((p, i) => `<option value="${i}"${i === it.p ? " selected" : ""}>${p}</option>`).join("")}</select></label>
+      <label>Тип<select id="dr-type">${Object.keys(TYPES).map((k) => `<option value="${k}"${k === it.ty ? " selected" : ""}>${TYPES[k].n}</option>`).join("")}</select></label>
+      <label>Эпик<select id="dr-epic">${EPICS.map((e) => `<option value="${e.id}"${e.id === it.e ? " selected" : ""}>${e.n}</option>`).join("")}</select></label>
+    </div>
+    <label class="dr-notelabel">Заметка<textarea id="dr-note" rows="4" placeholder="Что решено, что мешает, что проверить">${esc(it.note || "")}</textarea></label>
+    <p class="dr-src mono-sm"><span>id</span> ${esc(it.id)} · в репозитории обновлена ${esc(it.updated || "—")}${it._manual ? " · есть ручная правка" : ""}</p>
+    <div class="dr-foot">
+      <button class="ghost" id="dr-reset">Сбросить правки</button>
+      <button class="ghost danger" id="dr-hide">${it.del ? "Вернуть" : "Убрать с доски"}</button>
+    </div>`;
+  const close = () => { d.classList.remove("open"); ui.sel = null; };
+  d.querySelector("#dr-close").addEventListener("click", close);
+  d.querySelector("#dr-status").addEventListener("change", (e) => patch(id, { s: e.target.value }));
+  d.querySelector("#dr-prio").addEventListener("change", (e) => patch(id, { p: +e.target.value }));
+  d.querySelector("#dr-type").addEventListener("change", (e) => patch(id, { ty: e.target.value }));
+  d.querySelector("#dr-epic").addEventListener("change", (e) => patch(id, { e: e.target.value }));
+  d.querySelector("#dr-chat-save").addEventListener("click", () => {
+    patch(id, { chat: d.querySelector("#dr-chat").value.trim() });
+    openDrawer(id);
+  });
+  const ttl = d.querySelector("#dr-title");
+  ttl.addEventListener("blur", () => { const v = ttl.textContent.trim(); if (v && v !== it.t) patch(id, { t: v }); });
+  const note = d.querySelector("#dr-note");
+  note.addEventListener("input", () => { patchQuiet(id, { note: note.value }); clearTimeout(saveTimer); saveTimer = setTimeout(commit, 1500); });
+  d.querySelector("#dr-reset").addEventListener("click", () => {
+    if (store.o) delete store.o[id];
+    scheduleSave(); openDrawer(id);
+  });
+  d.querySelector("#dr-hide").addEventListener("click", () => { patch(id, { del: !it.del }); close(); });
+}
+
+/* ─ фильтры ───────────────────────────────────────────────────────── */
+function renderFilters() {
+  const bar = document.getElementById("filters");
+  bar.hidden = ui.view === "road";
+  if (bar.dataset.built) {
+    bar.querySelectorAll("[data-ty]").forEach((b) => b.classList.toggle("on", ui.types.indexOf(b.dataset.ty) >= 0));
+    bar.querySelectorAll("[data-pr]").forEach((b) => b.classList.toggle("on", ui.prios.indexOf(+b.dataset.pr) >= 0));
+    bar.querySelector("#f-epic").value = ui.epic;
+    bar.querySelector("#f-open").classList.toggle("on", ui.openOnly);
+    bar.querySelector("#f-pilot").classList.toggle("on", ui.pilotOnly);
+    bar.querySelector("#f-count").textContent = visible().length + " / " + allItems().length;
+    return;
+  }
+  bar.dataset.built = "1";
+  bar.innerHTML = `
+    <input id="f-q" type="search" placeholder="Поиск по названию, описанию, связкам" value="${esc(ui.q)}">
+    <select id="f-epic"><option value="">все эпики</option>${EPICS.map((e) => `<option value="${e.id}">${e.n}</option>`).join("")}</select>
+    <div class="chips">${Object.keys(TYPES).map((k) => `<button class="chip" data-ty="${k}" style="--tc:${TYPES[k].c}">${TYPES[k].n}</button>`).join("")}</div>
+    <div class="chips">${PRIO.map((p, i) => `<button class="chip pr p${i}" data-pr="${i}">${p}</button>`).join("")}</div>
+    <button class="chip" id="f-open">только открытое</button>
+    <button class="chip" id="f-pilot">держит пилот</button>
+    <span class="grow"></span><span id="f-count" class="mono dim"></span>
+    <button class="chip" id="f-reset">сбросить</button>`;
+  bar.querySelector("#f-q").addEventListener("input", (e) => { ui.q = e.target.value; render(); });
+  bar.querySelector("#f-epic").addEventListener("change", (e) => { ui.epic = e.target.value; render(); });
+  bar.querySelectorAll("[data-ty]").forEach((b) => b.addEventListener("click", () => {
+    const i = ui.types.indexOf(b.dataset.ty); i >= 0 ? ui.types.splice(i, 1) : ui.types.push(b.dataset.ty); render();
+  }));
+  bar.querySelectorAll("[data-pr]").forEach((b) => b.addEventListener("click", () => {
+    const v = +b.dataset.pr, i = ui.prios.indexOf(v); i >= 0 ? ui.prios.splice(i, 1) : ui.prios.push(v); render();
+  }));
+  bar.querySelector("#f-open").addEventListener("click", () => { ui.openOnly = !ui.openOnly; render(); });
+  bar.querySelector("#f-pilot").addEventListener("click", () => { ui.pilotOnly = !ui.pilotOnly; render(); });
+  bar.querySelector("#f-reset").addEventListener("click", () => {
+    ui.q = ""; ui.epic = ""; ui.types = []; ui.prios = []; ui.openOnly = false; ui.pilotOnly = false;
+    bar.querySelector("#f-q").value = ""; render();
+  });
+}
+
+function render() {
+  renderHeader();
+  renderFilters();
+  if (ui.view === "road") renderRoad();
+  else if (ui.view === "board") renderBoard();
+  else renderList();
+  try { localStorage.setItem("habitoff-board-ui", JSON.stringify({ view: ui.view, epic: ui.epic, openOnly: ui.openOnly })); } catch (e) {}
+}
+
+/* ─ выгрузки ──────────────────────────────────────────────────────── */
+function showText(title, text, filename) {
+  const w = document.getElementById("drawer");
+  w.classList.add("open");
+  w.innerHTML = `<div class="dr-head"><div class="dr-chips"><span class="epic-chip">${esc(filename)}</span></div><button class="icon" id="dr-close" aria-label="Закрыть">✕</button></div>
+    <h3>${esc(title)}</h3><textarea rows="22" class="dump" spellcheck="false">${esc(text)}</textarea>`;
+  w.querySelector("#dr-close").addEventListener("click", () => w.classList.remove("open"));
+}
+async function offer(filename, text, title) {
+  let dl = null;
+  try { if (window.claude && window.claude.use) dl = await window.claude.use("downloads"); } catch (e) {}
+  if (dl) { try { await dl.save({ filename, data: text }); return; } catch (e) {} }
+  showText(title, text, filename);
+}
+document.getElementById("export").addEventListener("click", () => {
+  const lines = ["# Habitoff — состояние работ", "", `Собрано из репозитория ${BOARD.generated}.`, ""];
+  COLS.forEach((c) => {
+    const inCol = allItems().filter((i) => i.s === c.id).sort((a, b) => a.p - b.p);
+    if (!inCol.length) return;
+    lines.push(`## ${c.n} (${inCol.length})`, "");
+    inCol.forEach((i) => {
+      lines.push(`- **${PRIO[i.p]} · ${TYPES[i.ty] ? TYPES[i.ty].n : i.ty} · ${EPIC_BY_ID[i.e] ? EPIC_BY_ID[i.e].n : i.e}** — ${i.t}`);
+      if (i.d) lines.push("  " + i.d);
+      if (i.note) lines.push("  Заметка: " + i.note);
+    });
+    lines.push("");
+  });
+  offer("habitoff-board.md", lines.join("\n"), "Срез доски");
+});
+document.getElementById("dumpov").addEventListener("click", () => {
+  const payload = { schema: 2, note: "Ручные правки доски. Положить в docs/board/overrides.json и закоммитить.", o: mergedOverrides(), c: (REPO_OV.c || []).concat(store.c || []) };
+  offer("overrides.json", JSON.stringify(payload, null, 2), "Ручные правки");
+});
+document.getElementById("add").addEventListener("click", () => {
+  const id = "own-" + Date.now().toString(36);
+  store.c = store.c || [];
+  store.c.push({ id, t: "Новая карточка", ty: "tech", e: ui.epic || "process", p: 2, s: "backlog", d: "", docs: [], chats: [], commits: [], updated: today() });
+  ui.view = "board";
+  scheduleSave();
+  openDrawer(id);
+});
+document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => { ui.view = b.dataset.view; render(); }));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { document.getElementById("drawer").classList.remove("open"); ui.sel = null; } });
+try {
+  const u = JSON.parse(localStorage.getItem("habitoff-board-ui") || "{}");
+  if (u.view) ui.view = u.view;
+  if (u.epic) ui.epic = u.epic;
+  if (u.openOnly) ui.openOnly = u.openOnly;
+} catch (e) {}
+render();
+boot();
+
+</script>

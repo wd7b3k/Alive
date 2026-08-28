@@ -15,6 +15,7 @@ on:
       - 'supabase/migrations/**'
       - 'supabase/tests/**'
       - 'scripts/**'
+      - 'docs/board/**'
       - '.github/workflows/frontend-ci.yml'
 
 permissions:
@@ -92,6 +93,34 @@ jobs:
           else
             echo "OK: либо код не тронут, либо CURRENT_STATE.md обновлён вместе с ним."
           fi
+
+  board:
+    name: Доска работ знает о том, что сделано
+    runs-on: ubuntu-latest
+    steps:
+      # ADR-0012: состояние работ — данные репозитория, двигает карточку коммит
+      # строкой `Board: done <id>`. Проверка падает, если трейлеры написаны, а
+      # docs/board/cards.json их не знает (значит, забыт `board.mjs apply`), и
+      # предупреждает, если коммит трогал app/ или supabase/ вообще без трейлера
+      # — работа сделана, а доска о ней не узнает.
+      #
+      # Полная история нужна: скрипт читает диапазон от appliedCommit до HEAD.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+
+      # Зависимостей у скрипта нет намеренно — npm ci здесь не нужен.
+      - name: Проверить карточки и трейлеры
+        run: node scripts/board.mjs check
+
+      - name: Собрать страницу доски
+        run: node scripts/board.mjs build
 
   rls-isolation:
     name: RLS cross-tenant isolation (local Postgres, no live Supabase credentials)
