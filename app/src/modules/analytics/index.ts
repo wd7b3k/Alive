@@ -4,10 +4,10 @@
 export { AnalyticsModule } from './AnalyticsModule';
 
 /**
- * Адрес модуля. Единственное место, где он записан: владелец уточнит его позже, и смена
- * будет правкой этой строки, а не поиском по коду.
+ * Адрес модуля. Маршрут держит оболочка админки: пункт `analytics` в `ADMIN_SECTIONS`.
+ * Константа остаётся для ссылок со стороны — единственное место, где адрес записан.
  */
-export const ANALYTICS_ROUTE = '/analytics';
+export const ANALYTICS_ROUTE = '/admin/analytics';
 
 /** Показывать ли ссылку. Доступ решает база, здесь — только видимость. */
 export function canSeeAnalytics(role: string | undefined): boolean {

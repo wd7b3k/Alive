@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 import {
@@ -59,6 +59,18 @@ import { ShareWin } from './redesign/share';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
 import { Brand, Header, LoginPage, Modal, PublicHeader, ShellButton } from './redesign/shared';
 import { RELEASES } from './redesign/releases';
+
+/**
+ * Админка грузится отдельным куском.
+ *
+ * Она носит с собой доску целиком — `cards.json` это сотня килобайт, — а открывает её
+ * один человек. Статический импорт положил бы эти килобайты в общий бандл и раздавал бы
+ * их каждому анонимному гостю: замер показал 607 КБ против 717 КБ. Карточка про вес
+ * клиента в бэклоге стоит P0, и увеличивать его ради закрытого раздела нечестно.
+ */
+const AdminPage = lazy(() =>
+  import('./redesign/admin').then((module) => ({ default: module.AdminPage })),
+);
 import { buildInfo } from './env';
 import {
   fmt,
@@ -79,7 +91,6 @@ import { navigateTo as go } from './services/navigation';
 import { InstallPrompt } from './redesign/install';
 import { TogetherPage } from './redesign/together';
 import { HealthPage } from './redesign/health';
-import { ANALYTICS_ROUTE, AnalyticsModule, canSeeAnalytics } from './modules/analytics';
 
 /**
  * What a visitor sees before signing in: the real catalog, not a locked door.
@@ -2617,14 +2628,14 @@ function Profile({
           </div>
           <div className="r-section-head">
             <div>
-              <h2>Аналитика</h2>
+              <h2>Управление</h2>
               <p>
-                Воронка вовлечения, сценарий тяги по экранам, когорты, источники и отток с
-                вероятными причинами. Разрезы меньше трёх человек не показываются, имён участников
-                нет ни в одном поле.
+                Аналитика, доска работ и остальные служебные разделы под одним адресом. До
+                этой строки в оболочку админки можно было попасть только вручную набрав
+                адрес — то есть никак.
               </p>
             </div>
-            <ShellButton className="ghost small" onClick={() => go(ANALYTICS_ROUTE)}>
+            <ShellButton className="ghost small" onClick={() => go('/admin')}>
               Открыть
             </ShellButton>
           </div>
@@ -2896,10 +2907,21 @@ export default function RedesignApp() {
   else if (path === '/knowledge') page = <KnowledgePage data={data} />;
   else if (path === '/together') page = <TogetherPage data={data} />;
   else if (path === '/health') page = <HealthPage />;
-  // Модуль аналитики: одна строка подключения и ничего больше. Роль прячет экран,
-  // но защищают его функции в базе — каждая отказывает не-администратору.
-  else if (path === ANALYTICS_ROUTE)
-    page = canSeeAnalytics(data.profile.role) ? <AnalyticsModule /> : <HealthPage />;
+  // Все разделы управления живут под одним адресом: /admin/<раздел>. Реестр разделов —
+  // ADMIN_SECTIONS в redesign/admin.tsx, требования к блоку — docs/ADMIN.md.
+  else if (path === '/admin' || path.startsWith('/admin/'))
+    page = (
+      <Suspense
+        fallback={
+          <main className="r-loading">
+            <span />
+            <p>Открываю управление…</p>
+          </main>
+        }
+      >
+        <AdminPage data={data} path={path} />
+      </Suspense>
+    );
   else if (path === '/experiment') page = <Experiment />;
   else if (path === '/profile')
     page = <Profile session={session} data={data} editSetup={() => setSetup(true)} />;
