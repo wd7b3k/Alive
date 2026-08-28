@@ -1086,6 +1086,32 @@ export function Guided({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Шаг сценария и время, проведённое на предыдущем.
+  //
+  // Открытие и уход писались и раньше, но между ними была дыра: где именно человек
+  // остановился, знал только `flow_abandoned`, а сколько ему стоил каждый экран — никто.
+  // Аудит 26.08 выдвинул гипотезу, что четыре экрана выбора противоречат принципу P17
+  // (минимум действий в момент тяги). Спорить о ней без этих чисел можно бесконечно.
+  //
+  // `duration_ms` здесь — время на **предыдущем** шаге, а не на текущем: событие
+  // отправляется при входе на экран, потому что уход с последнего экрана событием
+  // не сопровождается вовсе.
+  const stepEnteredAt = useRef(Date.now());
+  useEffect(() => {
+    const enteredAt = Date.now();
+    const previous = stepEnteredAt.current;
+    stepEnteredAt.current = enteredAt;
+    trackEvent(session.user.id, {
+      event_type: 'flow_step_view',
+      funnel_stage: 'first_episode',
+      surface: 'guided_flow',
+      numeric_value: step,
+      duration_ms: enteredAt - previous,
+      product_type: product,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   // Выбор продукта и выбор контекста — единственные два места, откуда сценарий может
   // перепрыгнуть через экран. Логика перехода собрана здесь, а не в обработчиках
   // кнопок, чтобы «куда дальше» нельзя было починить в одном месте и забыть в другом.
