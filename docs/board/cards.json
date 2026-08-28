@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "generated": "2026-08-27",
-  "appliedCommit": "0957803796c66d8ae3b0542a9b2e38aea9bb32bf",
+  "generated": "2026-08-28",
+  "appliedCommit": "2ef46a9ff6497d546577c3cb080a54246e489064",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -2955,9 +2955,9 @@
       "type": "feature",
       "epic": "next",
       "priority": 3,
-      "status": "backlog",
+      "status": "doing",
       "body": "Роль и панель администратора, воронка продукта, интеллект замен, аналитика Связок и Смыслов, входящие UGC, здоровье системы, инциденты, письма-оповещения, недельная сводка. Гейт: администратор не читает личный текст по умолчанию, инциденты дедуплицированы, сводка отвечает «что улучшать».",
-      "updated": "2026-08-27",
+      "updated": "2026-08-28",
       "deps": "Гейт v3.1",
       "docs": [
         {
@@ -2965,7 +2965,9 @@
           "path": "docs/ROADMAP.md"
         }
       ],
-      "commits": []
+      "commits": [
+        "2ef46a9ff6497d546577c3cb080a54246e489064"
+      ]
     },
     {
       "id": "post-v32",
@@ -3035,30 +3037,6 @@
       "commits": []
     },
     {
-      "id": "board-publish-cron",
-      "title": "Публикация доски по расписанию",
-      "type": "infra",
-      "epic": "process",
-      "priority": 2,
-      "status": "doing",
-      "body": "Скрипт собирает dist/board.html, но публикует страницу сессия Claude: у скрипта доступа к артефакту нет. Ежедневный запуск клонирует репозиторий, пересобирает доску и публикует её по постоянному адресу. Не выполнилась сессия — отпечаток коммита в шапке страницы это покажет.",
-      "updated": "2026-08-27",
-      "docs": [
-        {
-          "label": "board/README.md",
-          "path": "docs/board/README.md"
-        }
-      ],
-      "chats": [
-        {
-          "label": "habitoff-board-2026-08-27",
-          "slug": "habitoff-board-2026-08-27",
-          "url": "https://claude.ai/code/session_01WkyC5doSqxb7NGEwLA87uK"
-        }
-      ],
-      "commits": []
-    },
-    {
       "id": "board-chat-links",
       "title": "У старых карточек нет ссылок на чаты",
       "type": "docs",
@@ -3074,6 +3052,19 @@
         }
       ],
       "commits": []
+    },
+    {
+      "id": "vetki-kotorye-zhivut-tolko",
+      "title": "Ветки, которые живут только локально, никто не ловит",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "check-deploy-drift.mjs сверяет прод с main, а локальные ветки с origin не сверяет никто. 28.08.2026 слой доски пролежал бандлом в папке с 01:13, пока ежедневная пересборка падала на его отсутствии.",
+      "updated": "2026-08-28",
+      "commits": [
+        "2ef46a9ff6497d546577c3cb080a54246e489064"
+      ]
     }
   ]
 }
