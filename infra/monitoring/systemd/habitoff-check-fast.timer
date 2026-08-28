@@ -1,0 +1,11 @@
+[Unit]
+Description=Habitoff: внешние точки раз в минуту
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Unit=habitoff-check@fast.service
+
+[Install]
+WantedBy=timers.target

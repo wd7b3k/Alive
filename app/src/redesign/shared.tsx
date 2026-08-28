@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import type { Bootstrap } from '../data';
 import { getSupabase } from '../supabase';
 import { GOOGLE, fetchProviders, overrideFromEnv, type AuthProvider } from '../auth-providers';
+import { trackAnonEvent } from '../services/analytics';
 import { navigateTo } from '../services/navigation';
 import { Icon, type IconName } from '../ui-icons';
 import { ProviderMark, providerTile } from './provider-marks';
@@ -291,12 +292,26 @@ export function LoginPage() {
     // Отметка ставится до ухода к провайдеру: обратно человек вернётся уже другой
     // загрузкой страницы, и состояние компонента до неё не доживёт.
     rememberConsent();
+    // Последнее событие, которое можно записать до входа: дальше человек уходит к
+    // провайдеру. Пара «нажал кнопку» и «профиль создан» показывает, сколько людей
+    // теряется на самом входе — до 28.08 этот отрезок не считался ничем.
+    trackAnonEvent({
+      event_type: 'auth_provider_click',
+      surface: 'login',
+      funnel_stage: 'landing',
+      metadata: { provider: provider.id },
+    });
     setBusy(provider.id);
     setError('');
     const message = await startSignIn(provider.id);
     if (message) {
       setError(message);
       setBusy('');
+      trackAnonEvent({
+        event_type: 'auth_provider_failed',
+        surface: 'login',
+        metadata: { provider: provider.id },
+      });
     }
   }
 

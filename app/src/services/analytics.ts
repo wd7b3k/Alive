@@ -1,5 +1,6 @@
 import type { ProductType } from '../data';
 import { getSupabase } from '../supabase';
+import { appVersion, getSessionId, getVisitorId, platformLabel } from './visitor';
 
 /**
  * Запись продуктовых событий.
@@ -46,6 +47,21 @@ export type AnalyticsEvent = {
   tobacco_event_id?: string;
 };
 
+/**
+ * Общий контекст: кто, в каком заходе, на какой сборке. Собирается здесь, а не на месте
+ * вызова — иначе половина событий приедет без версии, и «сломалось после релиза» снова
+ * станет ощущением вместо факта.
+ */
+function ambient() {
+  return {
+    visitor_id: getVisitorId(),
+    session_id: getSessionId(),
+    app_version: appVersion(),
+    platform: platformLabel(),
+    client_ts: new Date().toISOString(),
+  };
+}
+
 /** Длиннее этого строка в metadata считается текстом человека и выбрасывается. */
 const MAX_METADATA_STRING = 64;
 /** Больше этого числа ключей — почти наверняка кто-то сложил в событие целый объект. */
@@ -87,6 +103,7 @@ export function trackEvent(userId: string | null | undefined, event: AnalyticsEv
   if (!supabase) return;
 
   const row = {
+    ...ambient(),
     user_id: userId,
     event_type: event.event_type,
     funnel_stage: event.funnel_stage ?? null,
@@ -144,5 +161,39 @@ export function trackError(input: {
     })
     .then(undefined, () => {
       // Молча.
+    });
+}
+
+/**
+ * Событие от того, кто ещё не вошёл.
+ *
+ * Идёт через функцию в базе, а не прямой вставкой: политика на `analytics_events`
+ * требует `auth.uid() = user_id`, и обойти её вставкой невозможно — что правильно.
+ * Функция приписывает такому событию `user_id = null` независимо от того, что прислал
+ * клиент, поэтому открытая наружу точка записи не может назвать человека.
+ */
+export function trackAnonEvent(event: {
+  event_type: string;
+  surface?: string;
+  funnel_stage?: FunnelStage;
+  metadata?: Record<string, unknown>;
+}): void {
+  const supabase = getSupabase();
+  const context = ambient();
+  if (!supabase || !context.visitor_id) return;
+
+  void supabase
+    .rpc('alive_record_anon_event', {
+      p_visitor: context.visitor_id,
+      p_session: context.session_id,
+      p_event_type: event.event_type,
+      p_surface: event.surface ?? null,
+      p_funnel_stage: event.funnel_stage ?? null,
+      p_app_version: context.app_version,
+      p_platform: context.platform,
+      p_metadata: sanitizeMetadata(event.metadata),
+    })
+    .then(undefined, () => {
+      // Молча. См. правило 2 выше.
     });
 }

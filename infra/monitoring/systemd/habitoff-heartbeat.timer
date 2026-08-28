@@ -1,0 +1,11 @@
+[Unit]
+Description=Habitoff: пульс каждые пять минут
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=habitoff-heartbeat.service
+
+[Install]
+WantedBy=timers.target

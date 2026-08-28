@@ -52,7 +52,7 @@ const PAGES: Record<string, PageMeta> = {
   },
 };
 
-const PRIVATE_PAGES = ['/profile', '/health', '/path', '/together'];
+const PRIVATE_PAGES = ['/profile', '/health', '/path', '/together', '/analytics'];
 
 export function metaFor(path: string): PageMeta {
   const known = PAGES[path];

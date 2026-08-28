@@ -79,6 +79,7 @@ import { navigateTo as go } from './services/navigation';
 import { InstallPrompt } from './redesign/install';
 import { TogetherPage } from './redesign/together';
 import { HealthPage } from './redesign/health';
+import { ANALYTICS_ROUTE, AnalyticsModule, canSeeAnalytics } from './modules/analytics';
 
 /**
  * What a visitor sees before signing in: the real catalog, not a locked door.
@@ -1085,6 +1086,32 @@ export function Guided({
     // Намеренно один раз за открытие сценария: событие про открытие, а не про шаг.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Шаг сценария и время, проведённое на предыдущем.
+  //
+  // Открытие и уход писались и раньше, но между ними была дыра: где именно человек
+  // остановился, знал только `flow_abandoned`, а сколько ему стоил каждый экран — никто.
+  // Аудит 26.08 выдвинул гипотезу, что четыре экрана выбора противоречат принципу P17
+  // (минимум действий в момент тяги). Спорить о ней без этих чисел можно бесконечно.
+  //
+  // `duration_ms` здесь — время на **предыдущем** шаге, а не на текущем: событие
+  // отправляется при входе на экран, потому что уход с последнего экрана событием
+  // не сопровождается вовсе.
+  const stepEnteredAt = useRef(Date.now());
+  useEffect(() => {
+    const enteredAt = Date.now();
+    const previous = stepEnteredAt.current;
+    stepEnteredAt.current = enteredAt;
+    trackEvent(session.user.id, {
+      event_type: 'flow_step_view',
+      funnel_stage: 'first_episode',
+      surface: 'guided_flow',
+      numeric_value: step,
+      duration_ms: enteredAt - previous,
+      product_type: product,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   // Выбор продукта и выбор контекста — единственные два места, откуда сценарий может
   // перепрыгнуть через экран. Логика перехода собрана здесь, а не в обработчиках
@@ -2588,6 +2615,19 @@ function Profile({
               Открыть
             </ShellButton>
           </div>
+          <div className="r-section-head">
+            <div>
+              <h2>Аналитика</h2>
+              <p>
+                Воронка вовлечения, сценарий тяги по экранам, когорты, источники и отток с
+                вероятными причинами. Разрезы меньше трёх человек не показываются, имён участников
+                нет ни в одном поле.
+              </p>
+            </div>
+            <ShellButton className="ghost small" onClick={() => go(ANALYTICS_ROUTE)}>
+              Открыть
+            </ShellButton>
+          </div>
         </section>
       )}
       <section className="r-section">
@@ -2856,6 +2896,10 @@ export default function RedesignApp() {
   else if (path === '/knowledge') page = <KnowledgePage data={data} />;
   else if (path === '/together') page = <TogetherPage data={data} />;
   else if (path === '/health') page = <HealthPage />;
+  // Модуль аналитики: одна строка подключения и ничего больше. Роль прячет экран,
+  // но защищают его функции в базе — каждая отказывает не-администратору.
+  else if (path === ANALYTICS_ROUTE)
+    page = canSeeAnalytics(data.profile.role) ? <AnalyticsModule /> : <HealthPage />;
   else if (path === '/experiment') page = <Experiment />;
   else if (path === '/profile')
     page = <Profile session={session} data={data} editSetup={() => setSetup(true)} />;

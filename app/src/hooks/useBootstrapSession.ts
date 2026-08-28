@@ -4,6 +4,7 @@ import { loadBootstrap, type Bootstrap } from '../data';
 import { publicEnv } from '../env';
 import { recordConsent } from '../services/consent';
 import { reportError } from '../services/error-monitoring';
+import { claimVisitor } from '../services/visitor';
 import { getSupabase } from '../supabase';
 
 /**
@@ -86,8 +87,12 @@ export function useBootstrapSession() {
         if (!cancelled) setLoading(false);
       });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, current) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, current) => {
       setSession(current);
+      // Связать анонимного посетителя с человеком ровно в момент входа. Позже уже
+      // поздно: без этой строки источник трафика и регистрация остаются двумя
+      // несвязанными фактами, и вопрос «откуда приходят те, кто остаётся» без ответа.
+      if (current && event === 'SIGNED_IN') claimVisitor();
       if (!current) {
         setData(null);
         setError('');
