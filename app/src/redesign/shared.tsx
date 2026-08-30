@@ -3,6 +3,7 @@ import type { Bootstrap } from '../data';
 import { getSupabase } from '../supabase';
 import { GOOGLE, fetchProviders, overrideFromEnv, type AuthProvider } from '../auth-providers';
 import { trackAnonEvent } from '../services/analytics';
+import { trackGoal } from '../services/counters';
 import { navigateTo } from '../services/navigation';
 import { Icon, type IconName } from '../ui-icons';
 import { ProviderMark, providerTile } from './provider-marks';
@@ -301,6 +302,7 @@ export function LoginPage() {
       funnel_stage: 'landing',
       metadata: { provider: provider.id },
     });
+    trackGoal('auth_started');
     setBusy(provider.id);
     setError('');
     const message = await startSignIn(provider.id);
@@ -335,7 +337,9 @@ export function LoginPage() {
               onChange={(event) => setConsented(event.target.checked)}
             />
             <span id="consent-note">
-              Я понимаю, что это исследование, и даю согласие на участие.{' '}
+              Я понимаю, что это исследование, и даю согласие на участие. Сайт считает посещения
+              Яндекс Метрикой и Google Analytics — без записи экрана и без содержимого личных
+              записей; Google обрабатывает эти данные за пределами России.{' '}
               <button
                 type="button"
                 className="r-linklike"
