@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "ac224381228813aea2db6fedd4df75e8be701cbf",
+  "appliedCommit": "883fe73a953440481113ac0777de7b0254cbce27",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3360,6 +3360,19 @@
       "updated": "2026-08-30",
       "commits": [
         "ac224381228813aea2db6fedd4df75e8be701cbf"
+      ]
+    },
+    {
+      "id": "vykladka-prodolzhila-rabotu-posle",
+      "title": "Выкладка продолжила работу после падения git",
+      "type": "bug",
+      "epic": "release",
+      "priority": 0,
+      "status": "done",
+      "body": "гейт грязного дерева проверял пустоту вывода git status, а не код возврата, и пропускал случай, когда о дереве не известно ничего",
+      "updated": "2026-08-30",
+      "commits": [
+        "883fe73a953440481113ac0777de7b0254cbce27"
       ]
     }
   ]
