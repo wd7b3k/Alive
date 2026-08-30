@@ -255,35 +255,8 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
 .r-admin-empty h2{margin:0;font-size:24px}
 .r-admin-empty p{margin:0;color:var(--r-muted);font-size:15px;line-height:1.6}
 .r-admin-empty-note{color:var(--r-dim)!important;font-size:13px!important}
-.r-board{display:grid;gap:12px}
-.r-board-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.r-board-count{margin:0;margin-right:auto;color:var(--r-muted);font-size:13px}
-.r-board-head input,.r-board-head select{min-height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--r-line);background:rgba(255,255,255,.03);color:var(--r-text);font-size:13px}
-.r-board-note{display:flex;align-items:center;gap:8px;margin:0;color:var(--r-dim);font-size:11px;line-height:1.5}
-.r-board-note svg{flex:0 0 auto;color:var(--r-sand)}
-.r-board-note a{color:#83aaa5}
-.r-board-columns{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:start}
-.r-board-column{display:grid;gap:8px;align-content:start;border:1px solid var(--r-line);border-radius:16px;padding:12px;background:rgba(255,255,255,.015);min-width:0}
-.r-board-column>header{display:flex;align-items:center;gap:8px}
-.r-board-column h3{margin:0;font-size:13px;letter-spacing:-.01em}
-.r-board-column>header span{margin-left:auto;color:var(--r-dim);font-size:11px;border:1px solid var(--r-line);border-radius:999px;padding:4px 8px}
-.r-board-hint{margin:0;color:var(--r-dim);font-size:10px;line-height:1.4}
-.r-board-card{--g:var(--r-teal);display:grid;gap:8px;border:1px solid var(--r-line);border-left:2px solid var(--g);border-radius:12px;padding:12px;background:rgba(255,255,255,.025);min-width:0}
-.r-board-card.p0{--g:var(--r-red,#e2725b)}
-.r-board-card.p1{--g:var(--r-sand)}
-.r-board-card.p2{--g:var(--r-teal)}
-.r-board-card.p3{--g:var(--r-line)}
-.r-board-card>header{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.r-board-card em{font-style:normal;font-size:10px;font-weight:850;color:var(--g)}
-.r-board-card>header span{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--r-dim)}
-.r-board-card b{font-size:10px;font-weight:700;color:var(--r-sand);border:1px solid rgba(224,201,166,.28);border-radius:999px;padding:0 8px}
-.r-board-card h4{margin:0;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
-.r-board-epic{margin:0;color:var(--r-dim);font-size:10px}
-.r-board-body{margin:0;color:var(--r-muted);font-size:11px;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;cursor:pointer;overflow-wrap:anywhere}
-.r-board-body.open{-webkit-line-clamp:unset;display:block}
-.r-board-dep{margin:0;color:var(--r-dim);font-size:10px;line-height:1.4}
-.r-board-card footer{display:flex;flex-wrap:wrap;gap:8px}
-.r-board-card footer a{font-size:10px;color:#83aaa5;text-decoration:none;border-bottom:1px dotted rgba(131,170,165,.5)}
-.r-board-card footer a.sha{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--r-dim)}
-@media(max-width:1100px){.r-board-columns{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:620px){.r-board-columns{grid-template-columns:1fr}}
+/* Доска перенесена страницей целиком: у неё свои стили, приложению остаётся дать ей
+   место. Высота — экран минус шапка и навигация раздела, чтобы прокручивалась сама
+   доска, а не документ вокруг неё. */
+.r-board-frame{width:100%;height:calc(100vh - 260px);min-height:520px;border:1px solid var(--r-line);border-radius:16px;background:#0b1512;display:block}
+@media(max-width:720px){.r-board-frame{height:calc(100vh - 220px)}}
