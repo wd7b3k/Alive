@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "c3f7812552fbcbc68824482e423d17ab792c08fd",
+  "appliedCommit": "ac224381228813aea2db6fedd4df75e8be701cbf",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3197,10 +3197,11 @@
       "epic": "infra",
       "priority": 1,
       "status": "backlog",
-      "body": "Она определяет подстановку index.html на неизвестный путь, коды ответов, тип манифеста и редирект www — и живёт только на сервере. Правило репозитория как источника истины требует версионируемого отражения.",
+      "body": "Она определяет подстановку index.html на неизвестный путь, коды ответов, тип манифеста и редирект www — и живёт только на сервере. Правило репозитория как источника истины требует версионируемого отражения. ждёт доступа по ssh: сервер молчит на banner exchange",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "ac224381228813aea2db6fedd4df75e8be701cbf"
       ]
     },
     {
@@ -3333,6 +3334,32 @@
       "updated": "2026-08-30",
       "commits": [
         "0b6583073a6edb7c327e11a260cf36e54d78606f"
+      ]
+    },
+    {
+      "id": "assety-s-heshem-v",
+      "title": "Ассеты с хэшем в имени отдаются с no-cache",
+      "type": "tech",
+      "epic": "perf",
+      "priority": 2,
+      "status": "backlog",
+      "body": "INFRASTRUCTURE_STATE обещает immutable, сервер отдаёт no-cache — браузер переспрашивает каждый файл на каждом заходе",
+      "updated": "2026-08-30",
+      "commits": [
+        "ac224381228813aea2db6fedd4df75e8be701cbf"
+      ]
+    },
+    {
+      "id": "u-manifesta-net-zagolovka",
+      "title": "У манифеста нет заголовка Content-Type вовсе",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 3,
+      "status": "backlog",
+      "body": "не text/plain, как записано в аудите, а пусто: Caddy не знает расширения webmanifest, text/plain домысливает браузер",
+      "updated": "2026-08-30",
+      "commits": [
+        "ac224381228813aea2db6fedd4df75e8be701cbf"
       ]
     }
   ]
