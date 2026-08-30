@@ -21,6 +21,8 @@ done
 if [[ "${1}" == "daily" ]]; then
   source "$here/lib/common.sh"
   psql_run -c "select ops.roll_up_and_prune(90);" >/dev/null || status=1
+  # Накопленные за сутки предупреждения уходят одним сообщением, а не двадцатью.
+  flush_digest || status=1
 fi
 
 exit "$status"
