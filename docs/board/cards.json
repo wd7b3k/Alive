@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5",
+  "appliedCommit": "8f512301d87a4dddcc45450da4f9824235ae50ca",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3319,11 +3319,12 @@
       "type": "bug",
       "epic": "infra",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "rls-isolation красный на самом main с 30.08, 04_admin_views_test.sql: admin_core_metrics доступна только администраторам приложения",
       "updated": "2026-08-30",
       "commits": [
-        "0b6583073a6edb7c327e11a260cf36e54d78606f"
+        "0b6583073a6edb7c327e11a260cf36e54d78606f",
+        "8f512301d87a4dddcc45450da4f9824235ae50ca"
       ]
     },
     {
@@ -3432,6 +3433,19 @@
       "updated": "2026-08-30",
       "commits": [
         "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5"
+      ]
+    },
+    {
+      "id": "test-vitrin-adminki-hodit",
+      "title": "Тест витрин админки ходит суперпользователем",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "set role authenticated в 04_admin_views_test.sql нет, витрины зовутся из-под суперпользователя; гранты execute им розданы в миграции 20260828170000, но тест их не проверяет — потеряй витрина грант, прод отдал бы отказ, а прогон остался бы зелёным",
+      "updated": "2026-08-30",
+      "commits": [
+        "8f512301d87a4dddcc45450da4f9824235ae50ca"
       ]
     }
   ]
