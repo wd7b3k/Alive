@@ -1,6 +1,6 @@
 import type { ProductType } from '../data';
 import { getSupabase } from '../supabase';
-import { appVersion, getSessionId, getVisitorId, platformLabel } from './visitor';
+import { CLIENT_ID, appVersion, getSessionId, getVisitorId, platformLabel } from './visitor';
 
 /**
  * Запись продуктовых событий.
@@ -153,6 +153,10 @@ export function trackError(input: {
     .from('system_errors')
     .insert({
       user_id: input.userId ?? null,
+      // `client` — чей это фронт, `surface` — где внутри него сломалось. Пока фронт один,
+      // это один и тот же вопрос; с появлением бота они разойдутся, и без метки всплеск
+      // ошибок будет невозможно отнести к виновнику.
+      client: CLIENT_ID,
       surface: input.surface.slice(0, 64),
       error_type: input.errorType.slice(0, 64),
       error_code: input.errorCode ? input.errorCode.slice(0, 64) : null,

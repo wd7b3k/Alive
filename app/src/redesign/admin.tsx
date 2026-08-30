@@ -3,6 +3,7 @@ import type { Bootstrap } from '../data';
 import { navigateTo } from '../services/navigation';
 import { Icon, type IconName } from '../ui-icons';
 import { AnalyticsModule } from '../modules/analytics';
+import { MonitoringModule } from '../modules/monitoring';
 import { AdminBoard } from './admin-board';
 
 /**
@@ -49,11 +50,14 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   {
     id: 'monitoring',
     title: 'Мониторинг',
-    hint: 'Живёт ли продукт: приходят, остаются, доходят до сценария.',
+    hint: 'Техническое состояние: фронты, бэкенд, платформа — что живо, что молчит, что медленно.',
     icon: 'eye',
-    status: 'wip',
-    // Пока раздел пишется, работает прежний экран /health — он уже ходит в
-    // admin_product_health. Ветка мониторинга въезжает сюда, заменив render.
+    status: 'live',
+    // Раздел про машины, а не про людей. «Живёт ли продукт» — приходят, остаются,
+    // доходят до сценария — осталось там, где и было: экран /health и раздел
+    // «Аналитика». Смешивать их в одном пункте значит отвечать на вопрос «почему не
+    // работает» числом пришедших за неделю.
+    render: () => <MonitoringModule />,
   },
   {
     id: 'analytics',

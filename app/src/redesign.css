@@ -283,3 +283,61 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
 .r-viz-heat i{display:grid;place-items:center;height:28px;border-radius:8px;font-style:normal;font-size:11px;color:var(--r-text)}
 .r-viz-stack{display:flex;height:16px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.05);margin-top:12px}
 .r-viz-stack i{display:block;height:100%}
+
+/* Мониторинг: техническое состояние сервиса.
+
+   Цвет наблюдения здесь не используется намеренно. Янтарь означает «заметь автоматизм»
+   и по ADR-0005 перестал означать статус — ровно потому, что до этого им покрасили
+   действие, успех, цель и миф. Предупреждение носит песочный, тот же, которым набрана
+   сама админка; неизвестность — серый, и это не компромисс, а точное слово: «молчит»
+   не тревожнее, чем непонятнее. Тревожный цвет остаётся один и достаётся только отказу. */
+.r-monitoring{display:grid;gap:var(--r-sp-6)}
+.r-monitoring-head{display:grid;gap:var(--r-sp-1)}
+.r-monitoring-head h2{margin:0;font-size:var(--r-fs-h2);letter-spacing:-.02em}
+.r-monitoring-dot{flex:none;width:10px;height:10px;border-radius:var(--r-r-full);background:var(--r-dim);display:inline-block;margin-right:8px}
+.r-monitoring-dot.ok{background:var(--r-ok)}
+.r-monitoring-dot.warn{background:var(--r-sand)}
+.r-monitoring-dot.fail{background:var(--r-red)}
+.r-monitoring-dot.unknown{background:var(--r-muted)}
+.r-monitoring-dot.planned{background:var(--r-dim)}
+.r-monitoring-verdict{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:var(--r-sp-3);border:1px solid var(--r-line);border-radius:var(--r-r-xl);padding:var(--r-sp-5);background:rgba(255,255,255,.022)}
+.r-monitoring-verdict>.r-monitoring-dot{width:14px;height:14px;margin:8px 0 0}
+.r-monitoring-verdict strong{display:block;font-size:var(--r-fs-h3);letter-spacing:-.02em}
+.r-monitoring-verdict p{margin:8px 0 0;color:var(--r-muted);font-size:var(--r-fs-sm);line-height:1.6}
+.r-monitoring-verdict small{display:block;margin-top:8px;color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.5}
+.r-monitoring-verdict.ok{border-color:rgba(111,207,151,.32)}
+.r-monitoring-verdict.warn{border-color:rgba(224,201,166,.34)}
+.r-monitoring-verdict.fail{border-color:rgba(240,154,154,.42)}
+.r-monitoring-verdict.unknown{border-color:rgba(164,182,181,.3)}
+.r-monitoring-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:var(--r-sp-3);margin-top:var(--r-sp-3)}
+.r-monitoring-card{border:1px solid var(--r-line);border-radius:var(--r-r-lg);padding:var(--r-sp-4);background:rgba(255,255,255,.02);display:grid;align-content:start;gap:var(--r-sp-2)}
+.r-monitoring-card.fail{border-color:rgba(240,154,154,.42)}
+.r-monitoring-card.warn{border-color:rgba(224,201,166,.32)}
+.r-monitoring-card.unknown{border-color:rgba(164,182,181,.28)}
+.r-monitoring-card.planned{opacity:.72}
+.r-monitoring-card header{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--r-sp-2)}
+.r-monitoring-card header strong{font-size:var(--r-fs-sm);font-weight:750}
+.r-monitoring-card header em{margin-left:auto;font-style:normal;font-size:var(--r-fs-xs);text-transform:uppercase;letter-spacing:.05em;color:var(--r-dim)}
+.r-monitoring-card>p{margin:0;color:var(--r-muted);font-size:var(--r-fs-xs);line-height:1.55}
+.r-monitoring-facts{margin:0;padding:0;list-style:none;display:grid;gap:var(--r-sp-1)}
+.r-monitoring-facts li{color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.5;font-variant-numeric:tabular-nums}
+.r-monitoring-checks{display:grid;gap:var(--r-sp-5);margin-top:var(--r-sp-3)}
+.r-monitoring-group{margin:0 0 8px;font-size:var(--r-fs-xs);font-weight:750;text-transform:uppercase;letter-spacing:.06em;color:var(--r-muted)}
+.r-monitoring-check{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--r-sp-4);align-items:start;padding:var(--r-sp-3) 0 var(--r-sp-3) var(--r-sp-3);border-left:2px solid var(--r-line);border-bottom:1px solid var(--r-line)}
+.r-monitoring-check:last-child{border-bottom:0}
+.r-monitoring-check.ok{border-left-color:rgba(111,207,151,.45)}
+.r-monitoring-check.warn{border-left-color:var(--r-sand)}
+.r-monitoring-check.unknown{border-left-color:var(--r-muted)}
+.r-monitoring-check.fail{border-left-color:var(--r-red)}
+.r-monitoring-check strong{display:block;font-size:var(--r-fs-sm);font-weight:700}
+.r-monitoring-check code{display:inline-block;margin-top:4px;font-size:var(--r-fs-xs);color:var(--r-dim);word-break:break-all}
+.r-monitoring-check small{display:block;margin-top:4px;font-size:var(--r-fs-xs);line-height:1.5;color:var(--r-dim)}
+.r-monitoring-meta{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.r-monitoring-meta b{font-size:var(--r-fs-sm);font-weight:750}
+.r-monitoring-note{color:var(--r-sand)!important}
+.r-monitoring-incidents{display:grid;gap:var(--r-sp-2);margin-top:var(--r-sp-3)}
+.r-monitoring-incidents>div{border:1px solid var(--r-line);border-radius:var(--r-r-md);padding:var(--r-sp-3);background:rgba(255,255,255,.018)}
+.r-monitoring-incidents>div.fail{border-color:rgba(240,154,154,.34)}
+.r-monitoring-incidents strong{font-size:var(--r-fs-sm);font-weight:700}
+.r-monitoring-incidents small{display:block;margin-top:4px;font-size:var(--r-fs-xs);color:var(--r-dim);line-height:1.5}
+@media(max-width:600px){.r-monitoring-grid{grid-template-columns:1fr}.r-monitoring-check{grid-template-columns:1fr;gap:var(--r-sp-2)}.r-monitoring-meta{text-align:left;white-space:normal}}
