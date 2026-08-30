@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "76584e570d636cca1840bfe658972973637b4068",
+  "appliedCommit": "51732c6124dc86eb31d718a2852972d014ba7b69",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3097,11 +3097,18 @@
       "type": "feature",
       "epic": "flow",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "карточка «Моей ситуации тут нет» на шаге 1, поле на месте, текст только в эпизод",
       "updated": "2026-08-30",
       "commits": [
-        "76584e570d636cca1840bfe658972973637b4068"
+        "76584e570d636cca1840bfe658972973637b4068",
+        "51732c6124dc86eb31d718a2852972d014ba7b69"
+      ],
+      "docs": [
+        {
+          "label": "ADR-0017-participant-feedback.md",
+          "path": "docs/decisions/ADR-0017-participant-feedback.md"
+        }
       ]
     }
   ]
