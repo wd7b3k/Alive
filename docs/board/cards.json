@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "5ddc6c0a5bbcc2571c84ed21eed2c978f42f14cf",
+  "appliedCommit": "c3f7812552fbcbc68824482e423d17ab792c08fd",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3182,11 +3182,12 @@
       "type": "feature",
       "epic": "seo",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "navigator.share получает только title и text, адрес вклеен в строку — часть приложений теряет превью. Метки у ссылки нет, отличить приход по совету друга нечем.",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "c3f7812552fbcbc68824482e423d17ab792c08fd"
       ]
     },
     {
@@ -3248,11 +3249,12 @@
       "type": "tech",
       "epic": "brand",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "Картинка 1200x630 несёт знак и слово Habitoff и ни одного слова о том, что это такое. Для незнакомого имени это дорогая пустота в карточке мессенджера.",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "c3f7812552fbcbc68824482e423d17ab792c08fd"
       ]
     },
     {
