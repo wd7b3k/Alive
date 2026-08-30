@@ -69,7 +69,8 @@ function Block({
 export function AnalyticsModule() {
   const [periodIndex, setPeriodIndex] = useState(1);
   const [snapshot, setSnapshot] = useState<AnalyticsSnapshot | null>(null);
-  const [state, setState] = useState<'loading' | 'ready' | 'denied'>('loading');
+  const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [reason, setReason] = useState('');
 
   const period = PERIODS[periodIndex];
 
@@ -82,11 +83,17 @@ export function AnalyticsModule() {
         setSnapshot(result);
         setState('ready');
       })
-      .catch((reason: unknown) => {
-        reportError(reason, { surface: 'analytics' });
-        // Отказ базы здесь почти всегда означает «роль не администратор». Сказать об
-        // этом прямо честнее, чем показать пустой экран и оставить гадать.
-        if (!cancelled) setState('denied');
+      .catch((error: unknown) => {
+        reportError(error, { surface: 'analytics' });
+        // Показывать надо то, что ответила база, а не то, что мы про неё думаем.
+        // Первая редакция превращала любую ошибку в рассказ про роль admin — уверенный,
+        // конкретный и неверный. По такому сообщению чинят не то: роль была на месте,
+        // а не работало другое. Экран, который говорит «не знаю», лучше экрана, который
+        // уверенно называет неправильную причину.
+        if (!cancelled) {
+          setReason(error instanceof Error ? error.message : String(error));
+          setState('failed');
+        }
       });
     return () => {
       cancelled = true;
@@ -170,12 +177,28 @@ export function AnalyticsModule() {
         </div>
 
         {state === 'loading' && <p className="r-muted">Считаю…</p>}
-        {state === 'denied' && (
-          <p className="r-muted">
-            База отказала в доступе. Аналитику видит только роль <code>admin</code>: строка в{' '}
-            <code>private.alive_admin_allowlist</code> и{' '}
-            <code>update public.profiles set role = &apos;admin&apos; where id = …</code>
-          </p>
+        {state === 'failed' && (
+          <>
+            <p className="r-muted">Метрики не загрузились. База ответила так:</p>
+            <p className="r-muted">
+              <code>{reason || 'без сообщения'}</code>
+            </p>
+            {/* Про роль говорим только тогда, когда база действительно сказала про роль. */}
+            {reason.includes('только администраторам') ? (
+              <p className="r-muted">
+                Это отказ по роли. Аналитику видит только <code>admin</code>: строка в{' '}
+                <code>private.alive_admin_allowlist</code> и{' '}
+                <code>update public.profiles set role = &apos;admin&apos; where id = …</code>
+              </p>
+            ) : (
+              <p className="r-muted">
+                Это не отказ по роли. Если сообщение про отсутствующую функцию — PostgREST не
+                перечитал схему после миграции: <code>notify pgrst, &apos;reload schema&apos;</code>
+                . Остальное смотреть в журнале <code>rest</code> и в{' '}
+                <code>docs/RUNBOOK_ALERTS.md</code>.
+              </p>
+            )}
+          </>
         )}
 
         {state === 'ready' && snapshot && (
