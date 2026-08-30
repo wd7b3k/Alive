@@ -19,10 +19,19 @@ create table auth.users (
   created_at timestamptz not null default now()
 );
 
+-- Реальная auth.uid() читает два имени настройки, а не одно: старое `request.jwt.claim.sub`
+-- и то, что кладёт нынешний PostgREST, — весь набор claims одним JSON в `request.jwt.claims`.
+-- Шим знал только первое, и тест, написанный против настоящего контракта, молча получал
+-- NULL вместо пользователя: 04_admin_views_test.sql делал тестового пользователя
+-- администратором и всё равно получал отказ витрины, потому что для is_alive_admin()
+-- пользователя не было вовсе. Ошибка выглядела как сломанная витрина, а сломан был шим.
 create or replace function auth.uid() returns uuid
 language sql stable
 as $$
-  select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
+  select coalesce(
+    nullif(current_setting('request.jwt.claim.sub', true), ''),
+    nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+  )::uuid
 $$;
 
 do $$
