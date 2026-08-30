@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+  "appliedCommit": "9b08b97570d25a093379946d4448904fa75b9e3a",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3274,6 +3274,32 @@
       "updated": "2026-08-30",
       "commits": [
         "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "pokazy-sayta-robotami-modeley",
+      "title": "Показы сайта роботами моделей в статистике",
+      "type": "feature",
+      "epic": "seo",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Ни один счётчик их не видит: роботы не выполняют JavaScript. Единственный источник — журнал веб-сервера. Нужна проверка, раскладывающая обращения по агентам (GPTBot, ClaudeBot, PerplexityBot, Googlebot, YandexBot, Meta-ExternalAgent, Bingbot, Applebot), по адресам и по кодам ответов, суточная свёртка в схеме ops и разрез в админке. Без внешних сервисов.",
+      "updated": "2026-08-30",
+      "commits": [
+        "9b08b97570d25a093379946d4448904fa75b9e3a"
+      ]
+    },
+    {
+      "id": "prihody-iz-otvetov-modeley",
+      "title": "Приходы из ответов моделей отдельным источником",
+      "type": "feature",
+      "epic": "seo",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Поле source_kind ограничено списком direct, search, social, referral, campaign, поэтому переход из ответа модели попадает в referral и растворяется. Нужен отдельный вид для chatgpt.com, perplexity.ai, gemini.google.com, copilot.microsoft.com и подобных: миграция на ограничение, классификатор в visitor.ts, разрез в admin_sources.",
+      "updated": "2026-08-30",
+      "commits": [
+        "9b08b97570d25a093379946d4448904fa75b9e3a"
       ]
     }
   ]
