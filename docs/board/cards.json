@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "0b6583073a6edb7c327e11a260cf36e54d78606f",
+  "appliedCommit": "5ddc6c0a5bbcc2571c84ed21eed2c978f42f14cf",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3141,11 +3141,12 @@
       "type": "bug",
       "epic": "infra",
       "priority": 0,
-      "status": "backlog",
+      "status": "done",
       "body": "http.sh берёт commit из живого version.json и сравнивает с version.json в каталоге current — это один и тот же файл. Упасть проверка способна только если файл вообще не отдаётся. Критерий приёмки: подменить сборку без выкладки, проверка обязана упасть.",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "5ddc6c0a5bbcc2571c84ed21eed2c978f42f14cf"
       ]
     },
     {
