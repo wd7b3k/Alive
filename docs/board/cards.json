@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "bded70c7be6e0bc578f92a4f3b65f241eca12888",
+  "appliedCommit": "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -2364,7 +2364,7 @@
       "priority": 2,
       "status": "backlog",
       "body": "Код включается сам, как только в окружении появятся идентификаторы. Заводить сразу на habitoff.ru, иначе двойная работа. Для Вебмастера и Search Console нужны TXT-записи в зоне.",
-      "updated": "2026-08-27",
+      "updated": "2026-08-30",
       "tags": [
         "owner"
       ],
@@ -2375,7 +2375,15 @@
           "url": ""
         }
       ],
-      "commits": []
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ],
+      "docs": [
+        {
+          "label": "SEO_VISIBILITY_AUDIT.md",
+          "path": "docs/SEO_VISIBILITY_AUDIT.md"
+        }
+      ]
     },
     {
       "id": "analytics-no-ga",
@@ -2436,10 +2444,10 @@
       "title": "Страница «Что нового» рисуется на клиенте",
       "type": "tech",
       "epic": "seo",
-      "priority": 3,
+      "priority": 1,
       "status": "backlog",
-      "body": "Краулер без JS видит статический слепок главной. То же свойство, что у остальных внутренних страниц; закроется вместе с предрендером.",
-      "updated": "2026-08-27",
+      "body": "Краулер без JS видит статический слепок главной. То же свойство, что у остальных внутренних страниц; закроется вместе с предрендером. содержимое страницы — константа RELEASES, известная на сборке: предрендер не требует ни запросов к базе, ни инфраструктуры",
+      "updated": "2026-08-30",
       "deps": "perf-prerender",
       "chats": [
         {
@@ -2448,7 +2456,15 @@
           "url": ""
         }
       ],
-      "commits": []
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ],
+      "docs": [
+        {
+          "label": "SEO_VISIBILITY_AUDIT.md",
+          "path": "docs/SEO_VISIBILITY_AUDIT.md"
+        }
+      ]
     },
     {
       "id": "proc-merge-main",
@@ -3089,6 +3105,175 @@
       "updated": "2026-08-28",
       "commits": [
         "2ef46a9ff6497d546577c3cb080a54246e489064"
+      ]
+    },
+    {
+      "id": "canonical-na-vseh-adresah",
+      "title": "Canonical на всех адресах ведёт на главную",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 0,
+      "status": "backlog",
+      "body": "В статике жёстко записан canonical и og:url главной, а seo.ts переписывает их только в браузере. Робот без JavaScript получает на всех пяти адресах карты сайта указание, что каноническая версия — главная. Таблица хэшей в docs/SEO_VISIBILITY_AUDIT.md",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "zakazat-pereobhod-posle-rebrenda",
+      "title": "Заказать переобход после ребренда",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 0,
+      "status": "backlog",
+      "body": "В Google одна страница со старым именем ALIVE, снимок четырёхдневной давности. В Яндексе домена нет ни по site, ни по брендовому запросу. Заказывается после подтверждения прав в консолях.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "proverka-otpechatka-sborki-sravnivaet",
+      "title": "Проверка отпечатка сборки сравнивает файл сам с собой",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 0,
+      "status": "backlog",
+      "body": "http.sh берёт commit из живого version.json и сравнивает с version.json в каталоге current — это один и тот же файл. Упасть проверка способна только если файл вообще не отдаётся. Критерий приёмки: подменить сборку без выкладки, проверка обязана упасть.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "nesuschestvuyuschiy-put-otdaet-dvesti",
+      "title": "Несуществующий путь отдаёт двести",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "/what-new возвращает 200 и статический слепок главной. Опечатка в присланной ссылке выглядит как рабочая страница, а поисковик получает приглашение индексировать бесконечное число адресов.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "gruppy-robotov-v-robots",
+      "title": "Группы роботов в robots txt не наследуют запреты",
+      "type": "bug",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "У GPTBot, ClaudeBot, PerplexityBot и YandexBot отдельные группы без единого Disallow, поэтому запрет личных экранов на них не действует, а мета-тег noindex ставится тем самым JavaScript, который они не выполняют. Директива Host устарела с 2018 года.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "podelitsya-ssylkoy-bez-polya",
+      "title": "Поделиться ссылкой без поля url и без метки",
+      "type": "feature",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "navigator.share получает только title и text, адрес вклеен в строку — часть приложений теряет превью. Метки у ссылки нет, отличить приход по совету друга нечем.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "konfiguraciya-veb-servera-ne",
+      "title": "Конфигурация веб-сервера не отражена в репозитории",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 1,
+      "status": "backlog",
+      "body": "Она определяет подстановку index.html на неизвестный путь, коды ответов, тип манифеста и редирект www — и живёт только на сервере. Правило репозитория как источника истины требует версионируемого отражения.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "imya-zanyato-v-etoy",
+      "title": "Имя занято в этой же нише",
+      "type": "research",
+      "epic": "brand",
+      "priority": 1,
+      "status": "backlog",
+      "body": "Брендовый запрос возвращает приложение в App Store, приложение в Google Play про курение, репозиторий HabitOff-Android-App и занятый адрес сообщества vk.ru/habitoff. Рассчитывать на брендовый запрос нельзя, имя сообщества выбирать сейчас.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "karta-sayta-bez-stranicy",
+      "title": "Карта сайта без страницы релизов и без lastmod",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Адрес /releases отсутствует в sitemap.xml, хотя заголовок и описание для него заведены. Ни у одного адреса нет lastmod — единственного поля карты, которое поисковики сегодня читают.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "manifest-otdaetsya-kak-tekstovyy",
+      "title": "Манифест отдаётся как текстовый файл",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "GET /site.webmanifest возвращает тип text/plain вместо application/manifest+json. Правило отдачи задаётся веб-сервером, а не сборкой.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "prevyu-ssylki-pokazyvaet-tolko",
+      "title": "Превью ссылки показывает только логотип",
+      "type": "tech",
+      "epic": "brand",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Картинка 1200x630 несёт знак и слово Habitoff и ни одного слова о том, что это такое. Для незнакомого имени это дорогая пустота в карточке мессенджера.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "chisla-v-llms-txt",
+      "title": "Числа в llms txt и цитаты в разметке расходятся с базой",
+      "type": "tech",
+      "epic": "content",
+      "priority": 2,
+      "status": "backlog",
+      "body": "Файл называет 19 фактов, 19 мифов и 28 моментов, а FAQPage цитирует пять мифов. Это статические копии каталога, который правится миграциями — тот самый механизм, который для index.html был отвергнут.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+      ]
+    },
+    {
+      "id": "utverzhdeniya-v-razmetke-faq",
+      "title": "Утверждения в разметке FAQ идут без источника",
+      "type": "docs",
+      "epic": "content",
+      "priority": 2,
+      "status": "backlog",
+      "body": "В базе уровень доказательности, границы и источник обязательны, а в JSON-LD, то есть ровно там, откуда утверждение попадёт в сниппет и в пересказ модели, их нет.",
+      "updated": "2026-08-30",
+      "commits": [
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
       ]
     }
   ]
