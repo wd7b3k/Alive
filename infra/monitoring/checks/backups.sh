@@ -53,7 +53,10 @@ else
 fi
 
 # Пакеты, застрявшие в outbox: отправка не удалась и файл ждёт следующего раза.
-stuck="$(ls -1 "$BACKUP_DIR"/outbox/*.gpg 2>/dev/null | wc -l)"
+# `|| true` обязателен: пустой outbox — это успех, но глоб не находит ничего, ls
+# отдаёт 2, pipefail пробрасывает код наружу, и присваивание под set -e убивает
+# проверку ровно в тот момент, когда с бэкапами всё хорошо.
+stuck="$(ls -1 "$BACKUP_DIR"/outbox/*.gpg 2>/dev/null | wc -l || true)"
 if [[ "$stuck" -gt 1 ]]; then
   emit backups_outbox - warn - "$stuck" '{"note":"пакеты копятся — отправка не проходит"}'
 else
