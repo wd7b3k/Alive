@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "8f512301d87a4dddcc45450da4f9824235ae50ca",
+  "appliedCommit": "0b8e01004a9453286f8b6bdaea8152d899e71d2e",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -2363,7 +2363,7 @@
       "epic": "seo",
       "priority": 2,
       "status": "backlog",
-      "body": "Код включается сам, как только в окружении появятся идентификаторы. Заводить сразу на habitoff.ru, иначе двойная работа. Для Вебмастера и Search Console нужны TXT-записи в зоне.",
+      "body": "Код включается сам, как только в окружении появятся идентификаторы. Заводить сразу на habitoff.ru, иначе двойная работа. Для Вебмастера и Search Console нужны TXT-записи в зоне. Счётчики заведены и работают на habitoff.ru: Метрика 111983810, GA4 G-YB35G45MFW. Осталось только подтверждение прав: 30.08.2026 TXT-записей в зоне нет, мета-тега нет, файла подтверждения нет — ни Вебмастер, ни Search Console права не подтвердили. Это действие владельца.",
       "updated": "2026-08-30",
       "tags": [
         "owner"
@@ -2376,7 +2376,8 @@
         }
       ],
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "b2f0659d2a2de0a88d3055d1f49ae72bf20ee51c"
       ],
       "docs": [
         {
@@ -2384,42 +2385,6 @@
           "path": "docs/SEO_VISIBILITY_AUDIT.md"
         }
       ]
-    },
-    {
-      "id": "analytics-no-ga",
-      "title": "Google Analytics не включаем",
-      "type": "infra",
-      "epic": "seo",
-      "priority": 1,
-      "status": "done",
-      "body": "Внешний сервис в рантайме у каждого посетителя — прямое нарушение первого инварианта продукта.",
-      "updated": "2026-08-27",
-      "chats": [
-        {
-          "label": "habitoff-vps-state-2026-08-26",
-          "slug": "habitoff-vps-state-2026-08-26",
-          "url": ""
-        }
-      ],
-      "commits": []
-    },
-    {
-      "id": "analytics-metrika",
-      "title": "Метрика выключена, решение о включении не принято",
-      "type": "infra",
-      "epic": "seo",
-      "priority": 1,
-      "status": "doing",
-      "body": "В коде вебвизор выключен явно с комментарием. Сниппет из кабинета содержит вебвизор включённым — вставлять его нельзя. Настройка «Записывать все поля: Откл» вебвизор не выключает: она касается полей ввода, запись экрана продолжается, включая личные записи.",
-      "updated": "2026-08-27",
-      "chats": [
-        {
-          "label": "habitoff-vps-state-2026-08-26",
-          "slug": "habitoff-vps-state-2026-08-26",
-          "url": ""
-        }
-      ],
-      "commits": []
     },
     {
       "id": "bug-lame-delegation",
@@ -3446,6 +3411,25 @@
       "updated": "2026-08-30",
       "commits": [
         "8f512301d87a4dddcc45450da4f9824235ae50ca"
+      ]
+    },
+    {
+      "id": "schetchiki-metriki-i-ga",
+      "title": "Счётчики Метрики и GA работают на всех страницах",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "done",
+      "body": "Метрика 111983810 и GA4 G-YB35G45MFW на всех страницах, включая личные, с 28.08.2026 по ADR-0015; вебвизор выключен строкой в коде, идентификаторы записей и почта наружу не уходят",
+      "updated": "2026-08-30",
+      "commits": [
+        "b2f0659d2a2de0a88d3055d1f49ae72bf20ee51c"
+      ],
+      "docs": [
+        {
+          "label": "ADR-0015-counters.md",
+          "path": "docs/decisions/ADR-0015-counters.md"
+        }
       ]
     }
   ]
