@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "9b08b97570d25a093379946d4448904fa75b9e3a",
+  "appliedCommit": "0b6583073a6edb7c327e11a260cf36e54d78606f",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -2445,7 +2445,7 @@
       "type": "tech",
       "epic": "seo",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "Краулер без JS видит статический слепок главной. То же свойство, что у остальных внутренних страниц; закроется вместе с предрендером. содержимое страницы — константа RELEASES, известная на сборке: предрендер не требует ни запросов к базе, ни инфраструктуры",
       "updated": "2026-08-30",
       "deps": "perf-prerender",
@@ -2457,7 +2457,8 @@
         }
       ],
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "0b6583073a6edb7c327e11a260cf36e54d78606f"
       ],
       "docs": [
         {
@@ -3113,11 +3114,12 @@
       "type": "tech",
       "epic": "seo",
       "priority": 0,
-      "status": "backlog",
+      "status": "done",
       "body": "В статике жёстко записан canonical и og:url главной, а seo.ts переписывает их только в браузере. Робот без JavaScript получает на всех пяти адресах карты сайта указание, что каноническая версия — главная. Таблица хэшей в docs/SEO_VISIBILITY_AUDIT.md",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "0b6583073a6edb7c327e11a260cf36e54d78606f"
       ]
     },
     {
@@ -3165,11 +3167,12 @@
       "type": "bug",
       "epic": "seo",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "У GPTBot, ClaudeBot, PerplexityBot и YandexBot отдельные группы без единого Disallow, поэтому запрет личных экранов на них не действует, а мета-тег noindex ставится тем самым JavaScript, который они не выполняют. Директива Host устарела с 2018 года.",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "0b6583073a6edb7c327e11a260cf36e54d78606f"
       ]
     },
     {
@@ -3217,11 +3220,12 @@
       "type": "tech",
       "epic": "seo",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "Адрес /releases отсутствует в sitemap.xml, хотя заголовок и описание для него заведены. Ни у одного адреса нет lastmod — единственного поля карты, которое поисковики сегодня читают.",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "0b6583073a6edb7c327e11a260cf36e54d78606f"
       ]
     },
     {
@@ -3300,6 +3304,32 @@
       "updated": "2026-08-30",
       "commits": [
         "9b08b97570d25a093379946d4448904fa75b9e3a"
+      ]
+    },
+    {
+      "id": "test-vitrin-adminki-padaet",
+      "title": "Тест витрин админки падает на main",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 1,
+      "status": "backlog",
+      "body": "rls-isolation красный на самом main с 30.08, 04_admin_views_test.sql: admin_core_metrics доступна только администраторам приложения",
+      "updated": "2026-08-30",
+      "commits": [
+        "0b6583073a6edb7c327e11a260cf36e54d78606f"
+      ]
+    },
+    {
+      "id": "cloudflare-pages-vse-esche",
+      "title": "Cloudflare Pages всё ещё проверяет каждый PR",
+      "type": "tech",
+      "epic": "process",
+      "priority": 3,
+      "status": "backlog",
+      "body": "продукт ушёл с Cloudflare 27.08.2026, интеграция в репозитории осталась и рисует лишнюю зелёную галочку",
+      "updated": "2026-08-30",
+      "commits": [
+        "0b6583073a6edb7c327e11a260cf36e54d78606f"
       ]
     }
   ]

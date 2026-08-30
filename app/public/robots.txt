@@ -1,6 +1,16 @@
 # Habitoff — https://habitoff.ru
 # Открыт весь редакционный каталог. Закрыты только личные экраны: там нет ничего
 # полезного для индекса и не должно быть ничего доступного без входа.
+#
+# Запреты повторены в каждой группе намеренно, а не по недосмотру. Группы в robots.txt
+# не складываются: робот подчиняется только своей группе, если она есть. До 30.08.2026
+# у GPTBot, ClaudeBot, PerplexityBot и YandexBot были собственные группы без единого
+# Disallow — то есть ровно для главного поисковика рынка и трёх краулеров языковых
+# моделей личные экраны были открыты. Мета-тег noindex их не закрывает: он ставится тем
+# самым JavaScript, который эти роботы не выполняют.
+#
+# Список запретов сверяется с `src/services/seo.ts` тестом `services/robots.test.ts`.
+# Руками две копии одного списка расходятся — это уже случилось один раз.
 
 User-agent: *
 Allow: /
@@ -8,20 +18,31 @@ Disallow: /profile
 Disallow: /health
 Disallow: /path
 Disallow: /together
+Disallow: /admin
+Disallow: /login
 
 # Краулеры языковых моделей пускаем сознательно: продукт про то, чтобы у человека был
 # доступ к проверенным утверждениям с границами, а не к пересказу без источника.
 User-agent: GPTBot
-Allow: /
-
 User-agent: ClaudeBot
-Allow: /
-
 User-agent: PerplexityBot
 Allow: /
+Disallow: /profile
+Disallow: /health
+Disallow: /path
+Disallow: /together
+Disallow: /admin
+Disallow: /login
 
 User-agent: YandexBot
 Allow: /
+Disallow: /profile
+Disallow: /health
+Disallow: /path
+Disallow: /together
+Disallow: /admin
+Disallow: /login
 
+# Директивы Host здесь больше нет: Яндекс перестал её учитывать в 2018 году, а зеркало
+# задаёт редирект www → apex, и он работает.
 Sitemap: https://habitoff.ru/sitemap.xml
-Host: habitoff.ru
