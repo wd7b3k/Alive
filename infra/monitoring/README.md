@@ -12,8 +12,11 @@
 - **на втором сервере** — `infra/watchdog/`: приём пульса, реле алертов в Telegram и
   независимый зонд снаружи.
 
-Токен Telegram живёт только на втором сервере. Боевой знает общий секрет и адрес — этого
-достаточно, чтобы отправить алерт, и недостаточно, чтобы угнать бота вместе с сервером.
+Сообщения с боевого сервера уходят через `/usr/local/bin/habitoff-notify` — то же
+единственное место, откуда пишет о себе бэкап. Отдельный канал заводить нельзя: два
+канала расходятся через месяц, и половина алертов начинает приходить не туда, где их
+читают. Сторожу на втором сервере нужен свой токен — он сообщает как раз тогда, когда
+боевой молчит.
 
 ## Что проверяется
 
@@ -32,7 +35,9 @@ sudo install -m 600 -o root -g root \
   /srv/alive/repo/infra/monitoring/systemd/habitoff-monitoring.env.example \
   /etc/habitoff-monitoring.env
 sudo nano /etc/habitoff-monitoring.env            # ключ anon, адрес сторожа, общий секрет
-sudo cp /srv/alive/repo/infra/monitoring/systemd/habitoff-*.{service,timer} /etc/systemd/system/
+sudo cp /srv/alive/repo/infra/monitoring/systemd/habitoff-check@.service \
+        /srv/alive/repo/infra/monitoring/systemd/habitoff-heartbeat.service \
+        /srv/alive/repo/infra/monitoring/systemd/habitoff-*.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now habitoff-check-fast.timer habitoff-check-slow.timer \
                             habitoff-check-daily.timer habitoff-heartbeat.timer

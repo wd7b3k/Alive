@@ -14,6 +14,12 @@
 #
 # 3. Секреты берутся из окружения и никогда не печатаются. Токен пульса не появляется
 #    ни в логе, ни в сообщении об ошибке.
+#
+# Сообщения уходят через `/usr/local/bin/habitoff-notify` — то же единственное место,
+# откуда пишет о себе бэкап. Свой канал я сначала завёл отдельно и был неправ: два
+# канала оповещения расходятся через месяц, и половина алертов начинает приходить не
+# туда, где их читают. Сторож на втором сервере остаётся только для того, чего изнутри
+# сделать нельзя, — мёртвой руки и взгляда снаружи.
 set -euo pipefail
 
 CONFIG_FILE="${HABITOFF_MONITORING_ENV:-/etc/habitoff-monitoring.env}"
@@ -25,10 +31,11 @@ fi
 : "${HABITOFF_ORIGIN:=https://habitoff.ru}"
 : "${SUPABASE_DIR:=/srv/supabase}"
 : "${APP_DIR:=/srv/alive}"
-: "${BACKUP_DIR:=/srv/backups}"
+: "${BACKUP_DIR:=/srv/alive/backups}"
 : "${DB_CONTAINER:=supabase-db}"
 : "${STATE_DIR:=/var/lib/habitoff-monitoring}"
 : "${CURL_TIMEOUT:=10}"
+: "${NOTIFY_BIN:=/usr/local/bin/habitoff-notify}"
 
 BUFFER_FILE="$STATE_DIR/buffer.jsonl"
 ALERT_QUEUE="$STATE_DIR/alerts.jsonl"
@@ -107,17 +114,37 @@ queue_alert() {
     "$level" "$check" "$detail" "$(now_iso)" >> "$ALERT_QUEUE"
 }
 
-# Отправить очередь алертов сторожу на втором сервере. Токен уходит заголовком и нигде
-# не печатается. Не доставили — очередь остаётся, следующий запуск попробует снова.
+# Разослать очередь алертов.
+#
+# Сначала — через `habitoff-notify`: он уже стоит на сервере, знает токен и чат и
+# никогда не возвращает ошибку. Если его нет (проверка запущена не там), остаётся
+# запасной путь через сторожа. Не доставили ни так, ни так — очередь остаётся,
+# следующий запуск попробует снова.
 flush_alerts() {
   [[ -s "$ALERT_QUEUE" ]] || return 0
-  [[ -n "${WATCHDOG_URL:-}" && -n "${HEARTBEAT_TOKEN:-}" ]] || return 0
   local tmp; tmp="$(mktemp)"; mv "$ALERT_QUEUE" "$tmp"
   local failed=0
   while IFS= read -r line; do
-    if ! curl -sS --max-time "$CURL_TIMEOUT" -X POST "$WATCHDOG_URL/alert" \
-         -H "X-Habitoff-Token: $HEARTBEAT_TOKEN" -H 'Content-Type: application/json' \
-         -d "$line" -o /dev/null; then
+    local level check detail text
+    level="$(sed -n 's/.*"level":"\([^"]*\)".*/\1/p' <<<"$line")"
+    check="$(sed -n 's/.*"check":"\([^"]*\)".*/\1/p' <<<"$line")"
+    detail="$(sed -n 's/.*"detail":\(.*\),"at".*/\1/p' <<<"$line")"
+    case "$level" in
+      critical) text="Habitoff: АВАРИЯ — $check
+$detail
+Что делать: docs/RUNBOOK_ALERTS.md" ;;
+      resolved) text="Habitoff: восстановлено — $check" ;;
+      *)        text="Habitoff: предупреждение — $check
+$detail" ;;
+    esac
+
+    if [[ -x "$NOTIFY_BIN" ]]; then
+      "$NOTIFY_BIN" "$text" || true
+    elif [[ -n "${WATCHDOG_URL:-}" && -n "${HEARTBEAT_TOKEN:-}" ]]; then
+      curl -sS --max-time "$CURL_TIMEOUT" -X POST "$WATCHDOG_URL/alert" \
+        -H "X-Habitoff-Token: $HEARTBEAT_TOKEN" -H 'Content-Type: application/json' \
+        -d "$line" -o /dev/null || { echo "$line" >> "$ALERT_QUEUE"; failed=1; }
+    else
       echo "$line" >> "$ALERT_QUEUE"; failed=1
     fi
   done < "$tmp"

@@ -80,7 +80,7 @@ Branch: `feat/observability-and-analytics` (от `main` `65a9fc4`), рабоче
 
 1. Какой коммит собран на проде (`/srv/alive/current/version.json`), совпадает ли с
    `origin/main`. `node scripts/check-deploy-drift.mjs`.
-2. Настроены ли бэкапы: есть ли таймер, есть ли дампы в `/srv/backups`, когда последний.
+2. Настроены ли бэкапы: есть ли таймер, есть ли дампы в `/srv/alive/backups`, когда последний.
    Если нет — это блокирующий пункт перед пилотом, и он важнее остального в этом промте.
 3. Точные имена контейнеров (`docker compose ps`) — в скриптах предполагается
    `supabase-db`, проверь и поправь `DB_CONTAINER`.
