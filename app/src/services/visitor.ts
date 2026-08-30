@@ -101,6 +101,14 @@ export function getSessionId(): string | null {
   return id;
 }
 
+/**
+ * Какой это фронт. Не «на чём открыт» — это `platformLabel` — а «чей это клиент вообще».
+ * Пока фронт один, разница незаметна; с появлением телеграм-бота и мобильного приложения
+ * ошибки всех трёх сложатся в одну кучу, если их нечем различать. Значение совпадает с
+ * `id` строки в `ops.components`, и по нему раздел мониторинга относит сигнал к фронту.
+ */
+export const CLIENT_ID = 'web';
+
 export function platformLabel(): string {
   if (typeof window === 'undefined') return 'unknown';
   const standalone =
