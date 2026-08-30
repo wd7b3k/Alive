@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "cdd29b61c8ad9ada9e48e6b68056b4da8d6ec765",
+  "appliedCommit": "2e68025e130049ddbdfa016d00141433b84f4ac5",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3391,6 +3391,32 @@
       "updated": "2026-08-30",
       "commits": [
         "4cc06fbbdbf5f93b89d7f0cce1549eaa6f133277"
+      ]
+    },
+    {
+      "id": "zapret-vhoda-po-parolyu",
+      "title": "Запрет входа по паролю перебивался файлом провайдера",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 1,
+      "status": "done",
+      "body": "sshd_config.d читается лексически и первое значение выигрывает; 50-cloud-init.conf с yes перебивал 99-alive.conf с no четыре дня, 3692 неудачных попытки в журнале",
+      "updated": "2026-08-30",
+      "commits": [
+        "2e68025e130049ddbdfa016d00141433b84f4ac5"
+      ]
+    },
+    {
+      "id": "pravka-sshd-na-diske",
+      "title": "Правка sshd на диске без reload ничего не меняет",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "00-no-password.conf лежал с 18:16, служба не перечитывала конфиг с 26.08 — проверять надо sshd -T, а не файл",
+      "updated": "2026-08-30",
+      "commits": [
+        "2e68025e130049ddbdfa016d00141433b84f4ac5"
       ]
     }
   ]
