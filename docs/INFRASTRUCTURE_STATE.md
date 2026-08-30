@@ -114,8 +114,40 @@ Caddy (репозиторий Cloudsmith, не Ubuntu — в Ubuntu лежит �
 
 - `/rest/v1/*`, `/auth/v1/*`, `/functions/v1/*` → `127.0.0.1:8000` (шлюз Supabase);
 - всё остальное — статика из `/srv/alive/current`, `try_files` на `index.html`;
-- `/assets/*` отдаётся с `Cache-Control: immutable`, остальное с `no-cache`;
 - `/functions/v1/yandex/*` получает подставленный заголовок `apikey`.
+
+**Самого файла в репозитории нет, и это открытая задача** — карточка
+`konfiguraciya-veb-servera-ne`. `AGENTS.md` требует, чтобы внешняя конфигурация,
+влияющая на работу продукта, имела версионируемое отражение в репозитории; сейчас
+`Caddyfile` живёт только на сервере, и починить из репозитория ни мягкий 404, ни
+content-type манифеста нельзя.
+
+### Что сервер отдаёт на самом деле, 30.08.2026
+
+Снято снаружи, `curl` к боевому домену. Это не пересказ конфига, а измерение.
+
+| Запрос | Код | Content-Type | Cache-Control |
+|---|---|---|---|
+| `/` | 200 | `text/html; charset=utf-8` | `no-cache` |
+| `/knowledge`, `/links`, `/releases` | 200 | `text/html; charset=utf-8` | `no-cache` |
+| `/what-new` (не существует) | 200 | `text/html; charset=utf-8` | `no-cache` |
+| `/site.webmanifest` | 200 | **заголовка нет вовсе** | `no-cache` |
+| `/sitemap.xml` | 200 | `text/xml; charset=utf-8` | `no-cache` |
+| `/version.json` | 200 | `application/json` | `no-cache` |
+| `/assets/index-*.js` | 200 | `text/javascript; charset=utf-8` | **`no-cache`** |
+| `https://www.habitoff.ru/` | 301 → `https://habitoff.ru/` | — | — |
+
+Два расхождения с тем, что написано выше по тексту, и оба найдены измерением, а не
+чтением конфига:
+
+1. **`/assets/*` отдаётся с `no-cache`, а не с `immutable`.** Имя чанка содержит хэш
+   содержимого — такие файлы можно кэшировать год. Сейчас браузер ходит за
+   подтверждением на каждый файл при каждом заходе. Заведено карточкой.
+2. **У `/site.webmanifest` заголовка `Content-Type` нет вообще.** Caddy не знает
+   расширения `.webmanifest`, браузер в этом случае считает файл текстом — отсюда
+   `text/plain` в аудите. Ожидается `application/manifest+json`.
+
+Сжатие работает: с `Accept-Encoding: gzip` тот же чанк приезжает сжатым.
 
 Последний пункт неочевиден и важен. Шлюз требует `apikey` на всех путях, а браузер при
 переходе по ссылке заголовков не шлёт — и Яндекс, возвращая человека на `callback`, тем
