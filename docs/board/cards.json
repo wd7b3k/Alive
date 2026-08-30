@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "c3f7812552fbcbc68824482e423d17ab792c08fd",
+  "appliedCommit": "82a323ba4b2e8411518a2cacaaa97a3b1d623769",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3333,6 +3333,26 @@
       "updated": "2026-08-30",
       "commits": [
         "0b6583073a6edb7c327e11a260cf36e54d78606f"
+      ]
+    },
+    {
+      "id": "kontekst-vne-kataloga-v",
+      "title": "Контекст вне каталога в потоке тяги",
+      "type": "feature",
+      "epic": "flow",
+      "priority": 1,
+      "status": "done",
+      "body": "карточка «Моей ситуации тут нет» на шаге 1, поле на месте, текст только в эпизод",
+      "updated": "2026-08-30",
+      "commits": [
+        "76584e570d636cca1840bfe658972973637b4068",
+        "51732c6124dc86eb31d718a2852972d014ba7b69"
+      ],
+      "docs": [
+        {
+          "label": "ADR-0017-participant-feedback.md",
+          "path": "docs/decisions/ADR-0017-participant-feedback.md"
+        }
       ]
     }
   ]
