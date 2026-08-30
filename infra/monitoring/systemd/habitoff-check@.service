@@ -4,7 +4,8 @@ After=docker.service network-online.target
 Wants=network-online.target
 # Упавший сам по себе скрипт проверки — тоже событие. Без этой строки мониторинг
 # умеет молчать о собственной смерти, а это худший из его отказов.
-OnFailure=habitoff-alert@%n.service
+# Юнит уже есть на сервере — им пользуется бэкап; своего заводить незачем.
+OnFailure=habitoff-failure@%n.service
 
 [Service]
 Type=oneshot
