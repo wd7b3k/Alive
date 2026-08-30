@@ -54,6 +54,31 @@ const PAGES: Record<string, PageMeta> = {
 
 const PRIVATE_PAGES = ['/profile', '/health', '/path', '/together', '/admin'];
 
+/**
+ * Адреса, которым сборка раскладывает собственный `index.html`.
+ *
+ * Список не пишется руками второй раз: он выводится из `PAGES`, поэтому новый
+ * публичный раздел получает предрендер тем же движением, каким получает заголовок.
+ * Главная сюда не входит — её `index.html` и есть исходник, из которого остальные
+ * получаются заменой тегов.
+ */
+export const PRERENDER_PATHS = Object.keys(PAGES).filter(
+  (path) => path !== '/' && !PAGES[path].noindex,
+);
+
+/**
+ * Всё, что не должно попасть в индекс, — одним списком.
+ *
+ * Из него растут два разных запрета: мета-тег `noindex` в браузере и `Disallow` в
+ * `robots.txt`. До 30.08.2026 второй список жил отдельной копией в самом файле и
+ * разошёлся с первым: у четырёх роботов были собственные группы без единого запрета.
+ * `robots.test.ts` сверяет файл с этим списком, чтобы копия больше не разъезжалась.
+ */
+export const NOINDEX_PATHS = [
+  ...PRIVATE_PAGES,
+  ...Object.keys(PAGES).filter((path) => PAGES[path].noindex),
+];
+
 export function metaFor(path: string): PageMeta {
   const known = PAGES[path];
   if (known) return known;
