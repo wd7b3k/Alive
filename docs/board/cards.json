@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "2e68025e130049ddbdfa016d00141433b84f4ac5",
+  "appliedCommit": "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3386,11 +3386,12 @@
       "type": "bug",
       "epic": "infra",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "30.08 прод получил version.json с commit пустой строкой; deploy.sh обязан отказываться публиковать сборку без коммита, а не выяснять это проверкой постфактум",
       "updated": "2026-08-30",
       "commits": [
-        "4cc06fbbdbf5f93b89d7f0cce1549eaa6f133277"
+        "4cc06fbbdbf5f93b89d7f0cce1549eaa6f133277",
+        "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5"
       ]
     },
     {
@@ -3412,11 +3413,25 @@
       "type": "tech",
       "epic": "infra",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "00-no-password.conf лежал с 18:16, служба не перечитывала конфиг с 26.08 — проверять надо sshd -T, а не файл",
       "updated": "2026-08-30",
       "commits": [
-        "2e68025e130049ddbdfa016d00141433b84f4ac5"
+        "2e68025e130049ddbdfa016d00141433b84f4ac5",
+        "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5"
+      ]
+    },
+    {
+      "id": "claude-md-ne-v",
+      "title": "CLAUDE.md не в git",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "файл лежит в рабочей копии владельца untracked, при этом он и есть точка входа для Claude — решение, которого нет в git, не считается принятым состоянием",
+      "updated": "2026-08-30",
+      "commits": [
+        "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5"
       ]
     }
   ]
