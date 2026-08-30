@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "25418073dc57214fd3f9779fa469a8ffa05a32b8",
+  "appliedCommit": "bded70c7be6e0bc578f92a4f3b65f241eca12888",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -437,8 +437,8 @@
       "type": "infra",
       "epic": "infra",
       "priority": 1,
-      "status": "doing",
-      "body": "alive-health.sh раз в пять минут: /auth/v1/health, публичная страница, заполненность диска. OnFailure в юните цепляет уведомление. Без этого первым мониторингом будет владелец, открывший сайт с телефона.",
+      "status": "done",
+      "body": "alive-health.sh раз в пять минут: /auth/v1/health, публичная страница, заполненность диска. OnFailure в юните цепляет уведомление. Без этого первым мониторингом будет владелец, открывший сайт с телефона. таймеры лежали выключенными два дня: enable --now пропустили при установке; включены 30.08",
       "updated": "2026-08-30",
       "tags": [
         "pilot",
@@ -448,6 +448,10 @@
         {
           "label": "ROLLOUT §5 п.4",
           "path": "docs/ROLLOUT.md"
+        },
+        {
+          "label": "ADR-0016-service-health-section.md",
+          "path": "docs/decisions/ADR-0016-service-health-section.md"
         }
       ],
       "chats": [
@@ -459,7 +463,11 @@
       ],
       "commits": [
         "0645c5a49723d0ddb85c172289db8da704a6c9e0",
-        "1180f5c9e6f4d2dc18f1d7b6115f22be74946efb"
+        "1180f5c9e6f4d2dc18f1d7b6115f22be74946efb",
+        "b3bc0591be472b281e017c67b6bbdcf5de425f5f",
+        "9817a70de235e831c6f4e113eb31d8bbff8ce42e",
+        "7a8ea7aebf6f3c1bae792d421b0b8cc9815ff4e5",
+        "bded70c7be6e0bc578f92a4f3b65f241eca12888"
       ]
     },
     {
@@ -1876,7 +1884,7 @@
       "priority": 1,
       "status": "doing",
       "body": "Формул метрик не было нигде — ни view, ни функции, ни скрипта. Появилась функция admin_hypothesis_metrics(days) и раздел на служебной странице.",
-      "updated": "2026-08-28",
+      "updated": "2026-08-30",
       "chats": [
         {
           "label": "habitoff-pilot-readiness-2026-08-27",
@@ -1886,7 +1894,10 @@
       ],
       "commits": [
         "02803ea80fbc14937fecaf1781aec14852da4e60",
-        "5f6f91709410848d141d5ce0ce6305d48d49fe6c"
+        "5f6f91709410848d141d5ce0ce6305d48d49fe6c",
+        "60fc0dc6b25acaa8066554917827bd6cb6efd995",
+        "82cae05ca8107648b6e97384af973f2d349d8e51",
+        "522a85f9ba5c580d580b88b93a5bc08251fe783d"
       ]
     },
     {
@@ -2979,7 +2990,8 @@
       ],
       "commits": [
         "2ef46a9ff6497d546577c3cb080a54246e489064",
-        "25418073dc57214fd3f9779fa469a8ffa05a32b8"
+        "25418073dc57214fd3f9779fa469a8ffa05a32b8",
+        "bded70c7be6e0bc578f92a4f3b65f241eca12888"
       ]
     },
     {
