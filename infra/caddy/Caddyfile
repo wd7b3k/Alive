@@ -1,0 +1,81 @@
+# Веб-сервер Habitoff. Канонический источник — этот файл, а не /etc/caddy/Caddyfile.
+#
+# До 30.08.2026 конфигурация жила только на сервере, и это определяло всё, что аудит
+# видимости нашёл снаружи: подстановку index.html на неизвестный путь, отсутствие
+# content-type у манифеста, заголовки кэширования. Починить их «из репозитория» было
+# нельзя — только руками по ssh, ровно тем способом, от которого проект ушёл.
+#
+# Порядок установки и проверка — infra/caddy/README.md.
+
+habitoff.ru {
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 720h
+		}
+		format json
+	}
+	encode zstd gzip
+
+	# Шлюз Supabase. Заголовок apikey подставляется потому, что шлюз требует его на всех
+	# путях, а браузер при переходе по ссылке заголовков не шлёт — и Яндекс, возвращая
+	# человека на callback, тем более. Без подстановки вход упирался бы в 401.
+	#
+	# Ключ публикуемый — тот же, что уезжает в браузер, — но в репозитории его нет:
+	# при ротации значение меняется в одном месте на сервере, а не коммитом. Значение
+	# приходит из EnvironmentFile, см. caddy.service.d/habitoff-env.conf.
+	handle /functions/v1/yandex/* {
+		reverse_proxy 127.0.0.1:8000 {
+			header_up apikey "{env.HABITOFF_SUPABASE_PUBLISHABLE_KEY}"
+		}
+	}
+	handle /rest/v1/* {
+		reverse_proxy 127.0.0.1:8000
+	}
+	handle /auth/v1/* {
+		reverse_proxy 127.0.0.1:8000
+	}
+	handle /functions/v1/* {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	handle {
+		root * /srv/alive/current
+
+		# Имя чанка содержит хэш содержимого: такой файл можно кэшировать год, он не
+		# меняется никогда. Матчер на втором заголовке обязателен — без него `header`
+		# без матчера перезаписывает Cache-Control всем, включая /assets/*, и год
+		# превращается в no-cache. Именно это и происходило: документ обещал immutable,
+		# сервер отдавал no-cache, и заметили это только замером снаружи.
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@not-assets not path /assets/*
+		header @not-assets Cache-Control "no-cache"
+
+		# Расширения .webmanifest Caddy не знает и заголовок не ставит вовсе; браузер в
+		# этом случае считает файл текстом.
+		header /site.webmanifest Content-Type "application/manifest+json"
+
+		route {
+			# Экраны, которые рисует клиент: своего файла у них нет и быть не может.
+			# Список сверяется с src/services/seo.ts тестом services/caddy-routes.test.ts —
+			# забытый здесь новый раздел начал бы отдавать 404 при обновлении страницы,
+			# и это хуже мягкого 404, ради которого всё затевалось.
+			@app path / /profile /health /path /together /login /admin /admin/*
+			rewrite @app /index.html
+
+			# Всё остальное — только то, что действительно лежит на диске. Публичные
+			# разделы лежат: сборка раскладывает knowledge/index.html и остальные четыре.
+			# Не нашлось ничего — 404, а не подставленная главная: мягкий 404 приглашает
+			# поисковик индексировать бесконечное число адресов, а человеку, ошибшемуся в
+			# ссылке, молча подсовывает другую страницу.
+			try_files {path} {path}/index.html
+			file_server
+		}
+	}
+}
+
+www.habitoff.ru {
+	redir https://habitoff.ru{uri} permanent
+}

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "82a323ba4b2e8411518a2cacaaa97a3b1d623769",
+  "appliedCommit": "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3155,11 +3155,12 @@
       "type": "tech",
       "epic": "seo",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "/what-new возвращает 200 и статический слепок главной. Опечатка в присланной ссылке выглядит как рабочая страница, а поисковик получает приглашение индексировать бесконечное число адресов.",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "d50269c8b0e26384451d9d759b1153da8f4fbcc4"
       ]
     },
     {
@@ -3196,11 +3197,13 @@
       "type": "tech",
       "epic": "infra",
       "priority": 1,
-      "status": "backlog",
-      "body": "Она определяет подстановку index.html на неизвестный путь, коды ответов, тип манифеста и редирект www — и живёт только на сервере. Правило репозитория как источника истины требует версионируемого отражения.",
+      "status": "done",
+      "body": "Она определяет подстановку index.html на неизвестный путь, коды ответов, тип манифеста и редирект www — и живёт только на сервере. Правило репозитория как источника истины требует версионируемого отражения. ждёт доступа по ssh: сервер молчит на banner exchange",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "ac224381228813aea2db6fedd4df75e8be701cbf",
+        "d50269c8b0e26384451d9d759b1153da8f4fbcc4"
       ]
     },
     {
@@ -3236,11 +3239,12 @@
       "type": "tech",
       "epic": "infra",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "GET /site.webmanifest возвращает тип text/plain вместо application/manifest+json. Правило отдачи задаётся веб-сервером, а не сборкой.",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "d50269c8b0e26384451d9d759b1153da8f4fbcc4"
       ]
     },
     {
@@ -3336,23 +3340,98 @@
       ]
     },
     {
-      "id": "kontekst-vne-kataloga-v",
-      "title": "Контекст вне каталога в потоке тяги",
-      "type": "feature",
-      "epic": "flow",
-      "priority": 1,
+      "id": "assety-s-heshem-v",
+      "title": "Ассеты с хэшем в имени отдаются с no-cache",
+      "type": "tech",
+      "epic": "perf",
+      "priority": 2,
       "status": "done",
-      "body": "карточка «Моей ситуации тут нет» на шаге 1, поле на месте, текст только в эпизод",
+      "body": "INFRASTRUCTURE_STATE обещает immutable, сервер отдаёт no-cache — браузер переспрашивает каждый файл на каждом заходе",
       "updated": "2026-08-30",
       "commits": [
-        "76584e570d636cca1840bfe658972973637b4068",
-        "51732c6124dc86eb31d718a2852972d014ba7b69"
-      ],
-      "docs": [
-        {
-          "label": "ADR-0017-participant-feedback.md",
-          "path": "docs/decisions/ADR-0017-participant-feedback.md"
-        }
+        "ac224381228813aea2db6fedd4df75e8be701cbf",
+        "d50269c8b0e26384451d9d759b1153da8f4fbcc4"
+      ]
+    },
+    {
+      "id": "u-manifesta-net-zagolovka",
+      "title": "У манифеста нет заголовка Content-Type вовсе",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 3,
+      "status": "done",
+      "body": "не text/plain, как записано в аудите, а пусто: Caddy не знает расширения webmanifest, text/plain домысливает браузер",
+      "updated": "2026-08-30",
+      "commits": [
+        "ac224381228813aea2db6fedd4df75e8be701cbf",
+        "d50269c8b0e26384451d9d759b1153da8f4fbcc4"
+      ]
+    },
+    {
+      "id": "vykladka-prodolzhila-rabotu-posle",
+      "title": "Выкладка продолжила работу после падения git",
+      "type": "bug",
+      "epic": "release",
+      "priority": 0,
+      "status": "done",
+      "body": "гейт грязного дерева проверял пустоту вывода git status, а не код возврата, и пропускал случай, когда о дереве не известно ничего",
+      "updated": "2026-08-30",
+      "commits": [
+        "883fe73a953440481113ac0777de7b0254cbce27"
+      ]
+    },
+    {
+      "id": "vykladka-publikuet-sborku-s",
+      "title": "Выкладка публикует сборку с пустым отпечатком",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 1,
+      "status": "done",
+      "body": "30.08 прод получил version.json с commit пустой строкой; deploy.sh обязан отказываться публиковать сборку без коммита, а не выяснять это проверкой постфактум",
+      "updated": "2026-08-30",
+      "commits": [
+        "4cc06fbbdbf5f93b89d7f0cce1549eaa6f133277",
+        "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5"
+      ]
+    },
+    {
+      "id": "zapret-vhoda-po-parolyu",
+      "title": "Запрет входа по паролю перебивался файлом провайдера",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 1,
+      "status": "done",
+      "body": "sshd_config.d читается лексически и первое значение выигрывает; 50-cloud-init.conf с yes перебивал 99-alive.conf с no четыре дня, 3692 неудачных попытки в журнале",
+      "updated": "2026-08-30",
+      "commits": [
+        "2e68025e130049ddbdfa016d00141433b84f4ac5"
+      ]
+    },
+    {
+      "id": "pravka-sshd-na-diske",
+      "title": "Правка sshd на диске без reload ничего не меняет",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 2,
+      "status": "done",
+      "body": "00-no-password.conf лежал с 18:16, служба не перечитывала конфиг с 26.08 — проверять надо sshd -T, а не файл",
+      "updated": "2026-08-30",
+      "commits": [
+        "2e68025e130049ddbdfa016d00141433b84f4ac5",
+        "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5"
+      ]
+    },
+    {
+      "id": "claude-md-ne-v",
+      "title": "CLAUDE.md не в git",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "файл лежит в рабочей копии владельца untracked, при этом он и есть точка входа для Claude — решение, которого нет в git, не считается принятым состоянием",
+      "updated": "2026-08-30",
+      "commits": [
+        "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5"
       ]
     }
   ]
