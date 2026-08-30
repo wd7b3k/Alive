@@ -47,7 +47,10 @@ $PSQL -d "$DB_NAME" -f 02_seed_private_data.sql
 echo "==> Running RLS cross-tenant isolation assertions"
 $PSQL -d "$DB_NAME" -f 03_rls_isolation_test.sql
 
+echo "==> Проверка витрин админки: вызываются ли они вообще"
+$PSQL -d "$DB_NAME" -f 04_admin_views_test.sql
+
 echo "==> Cleaning up disposable test database"
 $PSQL -c "DROP DATABASE IF EXISTS ${DB_NAME};"
 
-echo "==> RLS isolation test: ALL PASS"
+echo "==> RLS isolation + admin views: ALL PASS"
