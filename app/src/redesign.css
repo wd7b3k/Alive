@@ -260,3 +260,26 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
    доска, а не документ вокруг неё. */
 .r-board-frame{width:100%;height:calc(100vh - 260px);min-height:520px;border:1px solid var(--r-line);border-radius:16px;background:#0b1512;display:block}
 @media(max-width:720px){.r-board-frame{height:calc(100vh - 220px)}}
+
+/* Аналитика админки: формы вместо строк — полосы, столбики, тепловая сетка. */
+.r-viz{display:grid;gap:12px;margin-top:12px}
+.r-viz-row{display:grid;grid-template-columns:minmax(0,9rem) minmax(0,1fr) auto;gap:12px;align-items:center}
+.r-viz-row>span{min-width:0;color:var(--r-muted);font-size:13px;overflow-wrap:anywhere}
+.r-viz-row>b{color:var(--r-text);font-size:13px;white-space:nowrap}
+.r-viz-bar{position:relative;height:10px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden}
+.r-viz-bar>i{display:block;height:100%;border-radius:999px;background:var(--r-teal)}
+.r-viz-bar.sand>i{background:var(--r-sand)}
+.r-viz-note{margin:0;color:var(--r-dim);font-size:11px;line-height:1.45}
+.r-viz-legend{display:flex;flex-wrap:wrap;gap:12px;margin:0;color:var(--r-dim);font-size:11px}
+.r-viz-legend em{display:inline-block;width:8px;height:8px;border-radius:999px;margin-right:4px;font-style:normal}
+.r-viz-weeks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;align-items:end;height:140px;margin-top:12px}
+.r-viz-weeks>div{display:grid;align-content:end;gap:4px;min-width:0}
+.r-viz-weeks b{display:block;min-height:4px;border-radius:8px;background:var(--r-teal)}
+.r-viz-weeks b.pale{background:rgba(81,221,208,.22)}
+.r-viz-weeks small{color:var(--r-dim);font-size:10px;text-align:center;overflow:hidden}
+.r-viz-heat{display:grid;grid-template-columns:minmax(0,7rem) repeat(5,minmax(0,1fr));gap:4px;margin-top:12px;align-items:center}
+.r-viz-heat span{color:var(--r-dim);font-size:10px;text-align:center}
+.r-viz-heat span.row{text-align:left;font-size:11px}
+.r-viz-heat i{display:grid;place-items:center;height:28px;border-radius:8px;font-style:normal;font-size:11px;color:var(--r-text)}
+.r-viz-stack{display:flex;height:16px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.05);margin-top:12px}
+.r-viz-stack i{display:block;height:100%}
