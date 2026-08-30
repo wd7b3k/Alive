@@ -83,6 +83,7 @@ Frontend не может доверенно задавать чужой `user_id
 - NRT usage;
 - food replacement history;
 - детальные triggers/needs;
+- текст контекста вне каталога (`episodes.custom_trigger_text`);
 - индивидуальные settings;
 - персональная recommendation history.
 
@@ -128,6 +129,14 @@ Privileged access к private content, если когда-либо потреб�
 
 Analytics events не должны содержать raw sensitive text. Хранить: event type,
 IDs/categories, timestamps, latency/error metadata, coarse product context.
+
+Правило действует и там, где текст человека стоит прямо рядом с событием. Контекст вне
+каталога (ADR-0017, Р1) пишет в `analytics_events` событие `trigger_other_used` с кодом
+причины `no_trigger_match` и флагом `text_given`; сам текст остаётся в эпизоде.
+Проверяется это не договорённостью и не фильтром `sanitizeMetadata` — он выбрасывает
+строки длиннее 64 знаков и от текста короче не спасает, — а тестом
+`app/src/flow-other-trigger.test.tsx`, который ищет саму введённую строку во всех
+ушедших событиях.
 
 **Google Analytics на своей инфраструктуре не включается.** Он тянет
 `googletagmanager.com` в браузере каждого посетителя, то есть внешний сервис в рантайме —

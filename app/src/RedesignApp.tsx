@@ -27,6 +27,7 @@ import {
   type Trigger,
   type UserMeaning,
   EMPTY_KNOWLEDGE,
+  OTHER_TRIGGER_CODE,
 } from './data';
 import { deleteMyAccount, exportMyData, saveQuickUse } from './actions';
 import { dailyUnits, replacementStats, statsForDays, triggerStats } from './domain/metrics';
@@ -1023,6 +1024,12 @@ export function Guided({
   const [qty, setQty] = useState(1);
   const [puffs, setPuffs] = useState(10);
   const [busy, setBusy] = useState(false);
+  // Контекст вне каталога. Поле раскрывается на месте карточки и не добавляет шага:
+  // человек, чьей ситуации в каталоге не нашлось, не должен получить за это лишний
+  // экран (P17). До этого выбора у него не было — и `trigger_code` эпизода становился
+  // ложью, а починить её задним числом нечем. См. ADR-0006 и ADR-0017.
+  const [otherOpen, setOtherOpen] = useState(false);
+  const [customTrigger, setCustomTrigger] = useState('');
   const candidates = useMemo(
     () => (triggerCode && needCode ? pickReplacements(data, product, triggerCode, needCode) : []),
     [data, product, triggerCode, needCode],
@@ -1147,6 +1154,35 @@ export function Guided({
     );
   }
 
+  /**
+   * Контекст вне каталога.
+   *
+   * Идёт мимо `chooseTrigger` намеренно: подставлять потребность по истории здесь
+   * нечем — эпизоды с контекстом вне каталога пишутся с пустым `trigger_code`, и
+   * `needGuess` по коду `other` не найдёт ничего никогда. Переход всегда на выбор
+   * потребности, и это утверждение, а не следствие устройства соседней функции.
+   *
+   * Пустой ввод разрешён и не блокирует переход: человек в тяге, и цена «сначала
+   * опиши» выше пользы от текста. `saveGuidedEpisode` подставит «Другое».
+   */
+  function chooseOther() {
+    const text = customTrigger.trim();
+    trackEvent(session.user.id, {
+      event_type: 'trigger_other_used',
+      funnel_stage: 'first_episode',
+      surface: 'guided_flow',
+      product_type: product,
+      reason_code: 'no_trigger_match',
+      // Только факт, что текст был. Сам текст живёт в эпизоде и никогда в событии:
+      // `trigger_code` события к тому же ссылается на каталог, и кода `other` там нет.
+      metadata: { text_given: text.length > 0 },
+    });
+    setTrigger(OTHER_TRIGGER_CODE);
+    setNeedFromHistory(null);
+    setNeed('');
+    setStep(2);
+  }
+
   function chooseProduct(next: ProductType) {
     setProduct(next);
     if (triggerCode) chooseTrigger(triggerCode, next);
@@ -1168,6 +1204,7 @@ export function Guided({
       await saveGuidedEpisode(session, {
         product,
         triggerCode,
+        customTriggerText: customTrigger.trim() || undefined,
         needCode,
         cravingBefore: before,
         cravingAfter: after,
@@ -1253,7 +1290,33 @@ export function Guided({
               <p className="r-flow-hint">Остальные контексты</p>
             </>
           )}
-          <div className="r-choice-grid">{restTriggers.map((t) => triggerCard(t))}</div>
+          <div className="r-choice-grid">
+            {restTriggers.map((t) => triggerCard(t))}
+            {/* Последней в сетке и без иконки контекста: это выход из каталога, а не
+                ещё один его пункт. */}
+            {!otherOpen && (
+              <button type="button" className="r-choice-none" onClick={() => setOtherOpen(true)}>
+                <strong>Моей ситуации тут нет</strong>
+                <small>Можно описать своими словами</small>
+              </button>
+            )}
+          </div>
+          {otherOpen && (
+            <div className="r-other-trigger">
+              <label htmlFor="r-other-trigger">В двух словах — что это был за момент?</label>
+              <input
+                id="r-other-trigger"
+                type="text"
+                maxLength={120}
+                autoComplete="off"
+                value={customTrigger}
+                onChange={(e) => setCustomTrigger(e.target.value)}
+              />
+              <button type="button" className="r-button primary" onClick={chooseOther}>
+                Дальше
+              </button>
+            </div>
+          )}
         </section>
       )}
       {step === 2 && (

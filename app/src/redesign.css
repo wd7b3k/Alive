@@ -341,3 +341,15 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
 .r-monitoring-incidents strong{font-size:var(--r-fs-sm);font-weight:700}
 .r-monitoring-incidents small{display:block;margin-top:4px;font-size:var(--r-fs-xs);color:var(--r-dim);line-height:1.5}
 @media(max-width:600px){.r-monitoring-grid{grid-template-columns:1fr}.r-monitoring-check{grid-template-columns:1fr;gap:var(--r-sp-2)}.r-monitoring-meta{text-align:left;white-space:normal}}
+
+/* Контекст вне каталога (Р1). Карточка намеренно не похожа на каталожную: без иконки
+   контекста, пунктиром и приглушённая — это выход из каталога, а не ещё один его пункт.
+   Поле раскрывается на месте карточки и не уводит с экрана. */
+.r-choice-grid>.r-choice-none{border-style:dashed;background:transparent;align-content:center}
+.r-choice-grid>.r-choice-none strong{color:var(--r-muted);font-weight:750}
+.r-choice-grid>.r-choice-none:hover{border-color:rgba(145,211,203,.22);background:rgba(255,255,255,.02);transform:none}
+.r-other-trigger{display:grid;gap:var(--r-sp-3);padding:var(--r-sp-4);border-radius:var(--r-r-lg);border:1px solid rgba(145,211,203,.12);background:rgba(255,255,255,.025)}
+.r-other-trigger label{color:var(--r-muted);font-size:var(--r-fs-sm)}
+.r-other-trigger input{width:100%;min-height:50px;border:1px solid rgba(145,211,203,.12);border-radius:var(--r-r-md);background:rgba(1,9,11,.55);color:#edf3f1;padding:var(--r-sp-3);outline:none}
+.r-other-trigger input:focus{border-color:rgba(81,221,208,.4);box-shadow:0 0 0 3px rgba(81,221,208,.055)}
+.r-other-trigger>.r-button{justify-self:start;margin-top:0}
