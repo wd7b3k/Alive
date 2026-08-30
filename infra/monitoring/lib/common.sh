@@ -31,6 +31,9 @@ fi
 : "${HABITOFF_ORIGIN:=https://habitoff.ru}"
 : "${SUPABASE_DIR:=/srv/supabase}"
 : "${APP_DIR:=/srv/alive}"
+# Клон репозитория, из которого собирается прод. Нужен отпечатку сборки: он сверяет
+# коммит живой страницы с origin/main, а не с самим собой.
+: "${REPO_DIR:=/srv/alive/repo}"
 : "${BACKUP_DIR:=/srv/alive/backups}"
 : "${DB_CONTAINER:=supabase-db}"
 : "${STATE_DIR:=/var/lib/habitoff-monitoring}"

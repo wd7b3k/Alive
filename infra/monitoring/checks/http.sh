@@ -19,20 +19,15 @@ else
   emit www_redirect "$www/" fail - - "{\"code\":\"$wcode\"}"
 fi
 
-# Отпечаток живой сборки. Расхождение с симлинком current означает, что выкладка
-# оборвалась на середине: файлы новые, отдаётся старое (или наоборот).
-live_commit="$(curl -sS --max-time "$CURL_TIMEOUT" "$HABITOFF_ORIGIN/version.json" 2>/dev/null \
-  | sed -n 's/.*"commit"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
-disk_commit="$(sed -n 's/.*"commit"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
-  "$APP_DIR/current/version.json" 2>/dev/null || true)"
-if [[ -z "$live_commit" ]]; then
-  emit build_fingerprint version.json fail - - '{"note":"version.json не отдаётся"}'
-elif [[ -n "$disk_commit" && "$live_commit" != "$disk_commit" ]]; then
-  emit build_fingerprint version.json fail - - \
-    "{\"live\":\"$live_commit\",\"disk\":\"$disk_commit\"}"
-else
-  emit build_fingerprint version.json ok - - "{\"commit\":\"$live_commit\"}"
-fi
+# Отпечаток живой сборки: та ли это версия и целая ли она.
+#
+# До 30.08.2026 здесь сравнивались два прочтения одного и того же файла: `version.json`
+# лежит внутри бандла в каталоге `current`, который отдаёт веб-сервер. Проверка не могла
+# не совпасть и три дня рапортовала `ok`, пока прод отставал от `main` на три коммита.
+# Что она делает теперь и почему именно так — в `lib/fingerprint.sh`.
+source "$(dirname "$0")/../lib/fingerprint.sh"
+IFS=$'\t' read -r fp_status fp_detail <<< "$(build_fingerprint_probe)"
+emit build_fingerprint "$HABITOFF_ORIGIN/version.json" "$fp_status" - - "$fp_detail"
 
 flush_buffer || true
 flush_alerts || true
