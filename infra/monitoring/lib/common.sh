@@ -39,6 +39,7 @@ fi
 
 BUFFER_FILE="$STATE_DIR/buffer.jsonl"
 ALERT_QUEUE="$STATE_DIR/alerts.jsonl"
+DIGEST_FILE="$STATE_DIR/digest.jsonl"
 mkdir -p "$STATE_DIR/streak"
 
 # Выполнить SQL в боевой базе. Только чтение и вставка в ops — схема продукта не трогается.
@@ -64,27 +65,42 @@ emit() {
     "$( [[ "$value" == "-" ]] && echo null || echo "$value" )" \
     "$detail" \
     "$(now_iso)" >> "$BUFFER_FILE"
-  track_streak "$check" "$status" "$detail"
+  track_streak "$check" "$status" "$detail" || true
 }
 
-# Слить буфер в базу. Успех — файл очищается; неуспех — остаётся до следующего раза.
+# Слить буфер в базу.
+#
+# Через stdin, а не `\copy`: psql выполняется внутри контейнера и файла, лежащего на
+# хосте, не видит. Первая редакция копировала именно так и упала бы на первом же
+# запуске — с сообщением про отсутствующий файл, которое ничего не объясняет.
+#
+# Успех — файл очищается; неуспех — строки возвращаются в буфер до следующего раза.
 flush_buffer() {
   [[ -s "$BUFFER_FILE" ]] || return 0
   local tmp; tmp="$(mktemp)"
   mv "$BUFFER_FILE" "$tmp"
-  if psql_run <<SQL
-begin;
-create temporary table _incoming (doc jsonb) on commit drop;
-\copy _incoming (doc) from '$tmp'
-insert into ops.check_results (check_name, target, status, latency_ms, value, detail, observed_at)
-select doc->>'check_name', doc->>'target', doc->>'status',
-       (doc->>'latency_ms')::integer, (doc->>'value')::numeric,
-       coalesce(doc->'detail', '{}'::jsonb), (doc->>'observed_at')::timestamptz
-from _incoming;
-commit;
-SQL
-  then rm -f "$tmp"
-  else cat "$tmp" >> "$BUFFER_FILE"; rm -f "$tmp"; return 1
+
+  local sql; sql="$(mktemp)"
+  {
+    echo 'begin;'
+    while IFS= read -r line; do
+      [[ -z "$line" ]] && continue
+      # Одинарные кавычки внутри JSON удваиваются: иначе строка порвёт литерал.
+      printf "insert into ops.check_results (check_name, target, status, latency_ms, value, detail, observed_at)\n"
+      printf "select doc->>'check_name', doc->>'target', doc->>'status',\n"
+      printf "       (doc->>'latency_ms')::integer, (doc->>'value')::numeric,\n"
+      printf "       coalesce(doc->'detail', '{}'::jsonb), (doc->>'observed_at')::timestamptz\n"
+      printf "from (select '%s'::jsonb as doc) as t;\n" "${line//\'/\'\'}"
+    done < "$tmp"
+    echo 'commit;'
+  } > "$sql"
+
+  if psql_run -f - < "$sql"; then
+    rm -f "$tmp" "$sql"
+  else
+    cat "$tmp" >> "$BUFFER_FILE"
+    rm -f "$tmp" "$sql"
+    return 1
   fi
 }
 
@@ -98,7 +114,7 @@ track_streak() {
   if [[ "$status" == "fail" ]]; then
     local next=$(( prev + 1 ))
     echo "$next" > "$file"
-    [[ "$next" -eq 2 ]] && queue_alert critical "$check" "$detail"
+    if [[ "$next" -eq 2 ]]; then queue_alert critical "$check" "$detail"; fi
   elif [[ "$status" == "warn" ]]; then
     echo "0" > "$file"
     queue_alert warning "$check" "$detail"
@@ -106,6 +122,10 @@ track_streak() {
     if [[ "$prev" -ge 2 ]]; then queue_alert resolved "$check" '{"note":"проверка снова проходит"}'; fi
     echo "0" > "$file"
   fi
+  # Явный успех обязателен: при `set -e` функция, закончившаяся неистинным условием,
+  # роняет вызывающий скрипт. Проверка, падающая оттого, что всё хорошо, — это ровно
+  # тот сорт ошибки, который обнаруживается на проде в три часа ночи.
+  return 0
 }
 
 queue_alert() {
@@ -138,7 +158,11 @@ $detail
 $detail" ;;
     esac
 
-    if [[ -x "$NOTIFY_BIN" ]]; then
+    # Предупреждение не будит человека: оно копится и уходит одной сводкой раз в сутки.
+    # Разделение существует ради единственной вещи — чтобы алерты продолжали читать.
+    if [[ "$level" != "critical" && "$level" != "resolved" ]]; then
+      printf '%s\t%s\n' "$check" "$detail" >> "$DIGEST_FILE"
+    elif [[ -x "$NOTIFY_BIN" ]]; then
       "$NOTIFY_BIN" "$text" || true
     elif [[ -n "${WATCHDOG_URL:-}" && -n "${HEARTBEAT_TOKEN:-}" ]]; then
       curl -sS --max-time "$CURL_TIMEOUT" -X POST "$WATCHDOG_URL/alert" \
@@ -150,6 +174,22 @@ $detail" ;;
   done < "$tmp"
   rm -f "$tmp"
   return "$failed"
+}
+
+# Отправить накопленные предупреждения одной сводкой. Зовётся суточной группой проверок.
+flush_digest() {
+  [[ -s "$DIGEST_FILE" ]] || return 0
+  local body
+  body="$(cut -f1 "$DIGEST_FILE" | sort | uniq -c | sort -rn \
+          | awk '{ printf "%s — %s\n", $2, $1 }')"
+  local total; total="$(wc -l < "$DIGEST_FILE")"
+  if [[ -x "$NOTIFY_BIN" ]]; then
+    "$NOTIFY_BIN" "Habitoff: сводка за сутки — предупреждений $total
+
+$body" || return 1
+  fi
+  : > "$DIGEST_FILE"
+  return 0
 }
 
 # Замер: печатает код ответа и время до первого байта в миллисекундах.
