@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-30",
-  "appliedCommit": "883fe73a953440481113ac0777de7b0254cbce27",
+  "appliedCommit": "cdd29b61c8ad9ada9e48e6b68056b4da8d6ec765",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3155,11 +3155,12 @@
       "type": "tech",
       "epic": "seo",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "/what-new возвращает 200 и статический слепок главной. Опечатка в присланной ссылке выглядит как рабочая страница, а поисковик получает приглашение индексировать бесконечное число адресов.",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "d50269c8b0e26384451d9d759b1153da8f4fbcc4"
       ]
     },
     {
@@ -3196,12 +3197,13 @@
       "type": "tech",
       "epic": "infra",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "Она определяет подстановку index.html на неизвестный путь, коды ответов, тип манифеста и редирект www — и живёт только на сервере. Правило репозитория как источника истины требует версионируемого отражения. ждёт доступа по ssh: сервер молчит на banner exchange",
       "updated": "2026-08-30",
       "commits": [
         "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
-        "ac224381228813aea2db6fedd4df75e8be701cbf"
+        "ac224381228813aea2db6fedd4df75e8be701cbf",
+        "d50269c8b0e26384451d9d759b1153da8f4fbcc4"
       ]
     },
     {
@@ -3237,11 +3239,12 @@
       "type": "tech",
       "epic": "infra",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "GET /site.webmanifest возвращает тип text/plain вместо application/manifest+json. Правило отдачи задаётся веб-сервером, а не сборкой.",
       "updated": "2026-08-30",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "d50269c8b0e26384451d9d759b1153da8f4fbcc4"
       ]
     },
     {
@@ -3342,11 +3345,12 @@
       "type": "tech",
       "epic": "perf",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "INFRASTRUCTURE_STATE обещает immutable, сервер отдаёт no-cache — браузер переспрашивает каждый файл на каждом заходе",
       "updated": "2026-08-30",
       "commits": [
-        "ac224381228813aea2db6fedd4df75e8be701cbf"
+        "ac224381228813aea2db6fedd4df75e8be701cbf",
+        "d50269c8b0e26384451d9d759b1153da8f4fbcc4"
       ]
     },
     {
@@ -3355,11 +3359,12 @@
       "type": "bug",
       "epic": "infra",
       "priority": 3,
-      "status": "backlog",
+      "status": "done",
       "body": "не text/plain, как записано в аудите, а пусто: Caddy не знает расширения webmanifest, text/plain домысливает браузер",
       "updated": "2026-08-30",
       "commits": [
-        "ac224381228813aea2db6fedd4df75e8be701cbf"
+        "ac224381228813aea2db6fedd4df75e8be701cbf",
+        "d50269c8b0e26384451d9d759b1153da8f4fbcc4"
       ]
     },
     {
@@ -3373,6 +3378,19 @@
       "updated": "2026-08-30",
       "commits": [
         "883fe73a953440481113ac0777de7b0254cbce27"
+      ]
+    },
+    {
+      "id": "vykladka-publikuet-sborku-s",
+      "title": "Выкладка публикует сборку с пустым отпечатком",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 1,
+      "status": "backlog",
+      "body": "30.08 прод получил version.json с commit пустой строкой; deploy.sh обязан отказываться публиковать сборку без коммита, а не выяснять это проверкой постфактум",
+      "updated": "2026-08-30",
+      "commits": [
+        "4cc06fbbdbf5f93b89d7f0cce1549eaa6f133277"
       ]
     }
   ]
