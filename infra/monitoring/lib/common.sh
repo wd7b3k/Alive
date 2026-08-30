@@ -25,7 +25,7 @@ fi
 : "${HABITOFF_ORIGIN:=https://habitoff.ru}"
 : "${SUPABASE_DIR:=/srv/supabase}"
 : "${APP_DIR:=/srv/alive}"
-: "${BACKUP_DIR:=/srv/backups}"
+: "${BACKUP_DIR:=/srv/alive/backups}"
 : "${DB_CONTAINER:=supabase-db}"
 : "${STATE_DIR:=/var/lib/habitoff-monitoring}"
 : "${CURL_TIMEOUT:=10}"
