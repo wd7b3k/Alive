@@ -45,6 +45,11 @@ sudo systemctl enable --now habitoff-check-fast.timer habitoff-check-slow.timer 
 
 Разовый прогон без таймера — `sudo /srv/alive/repo/infra/monitoring/run-check.sh fast`.
 
+Если он отвечает `command not found`, значит у файлов слетел бит исполнения — так бывает,
+когда ветка приезжала через рабочее дерево на Windows. Лечится
+`chmod +x /srv/alive/repo/infra/monitoring/{run-check.sh,heartbeat.sh,checks/*.sh}`,
+но правильное место — сам репозиторий: бит хранится в git.
+
 ## Установка сторожа на втором сервере
 
 ```bash
