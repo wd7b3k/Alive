@@ -52,12 +52,14 @@ const PAGES: Record<string, PageMeta> = {
   },
 };
 
-const PRIVATE_PAGES = ['/profile', '/health', '/path', '/together', '/analytics'];
+const PRIVATE_PAGES = ['/profile', '/health', '/path', '/together', '/admin'];
 
 export function metaFor(path: string): PageMeta {
   const known = PAGES[path];
   if (known) return known;
-  if (PRIVATE_PAGES.includes(path)) {
+  // Точное совпадение не годится для админки: её разделы живут на /admin/<раздел>,
+  // и без префикса /admin/analytics ушёл бы в индекс с описанием главной.
+  if (PRIVATE_PAGES.some((page) => path === page || path.startsWith(`${page}/`))) {
     return { title: 'Habitoff', description: 'Личный раздел Habitoff.', noindex: true };
   }
   return PAGES['/'];
