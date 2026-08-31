@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-31",
-  "appliedCommit": "ac498ba0ccd8135f76219926e8b2fe5888174909",
+  "appliedCommit": "329a948c668aecf4b45d3308c4625a1f8d24687c",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -2984,12 +2984,12 @@
         }
       ],
       "commits": [
-        "2ef46a9ff6497d546577c3cb080a54246e489064",
-        "25418073dc57214fd3f9779fa469a8ffa05a32b8",
         "bded70c7be6e0bc578f92a4f3b65f241eca12888",
         "23033bf80a12bdf5550eea6ff65e4e80cd8ce85e",
         "d577a44965f9b2caa57c8b8a4191bcbe958b230d",
-        "0f6225901e90c57701bc776259f03bf5d1a22ae7"
+        "9279276554d700e30401227e49e8ed0163187eb8",
+        "0f6225901e90c57701bc776259f03bf5d1a22ae7",
+        "a34abdfb35e37768bb2574e8b06a124ecf62c68f"
       ]
     },
     {
@@ -3644,58 +3644,6 @@
       "updated": "2026-08-31",
       "commits": [
         "ff72ef6a0156da410a0a03ec136585004781bb99"
-      ]
-    },
-    {
-      "id": "doska-v-adminke-razvorachivaetsya",
-      "title": "Доска в админке разворачивается",
-      "type": "feature",
-      "epic": "process",
-      "priority": 1,
-      "status": "done",
-      "body": "рамка ограничена шириной .r-page и высотой экрана минус 260px, канбан из пяти колонок в неё не помещается",
-      "updated": "2026-08-31",
-      "commits": [
-        "1e83a65876cfed987666cfebed29a9da78f77d23"
-      ]
-    },
-    {
-      "id": "appliedcommit-ne-perezhivaet-peresborku",
-      "title": "appliedCommit не переживает пересборку ветки",
-      "type": "tech",
-      "epic": "process",
-      "priority": 1,
-      "status": "backlog",
-      "body": "check видит расхождение, но не отличает забытый apply от rebase. Если записанного хеша нет среди предков HEAD — это пересборка, и сообщение должно быть другим, с готовой командой замены",
-      "updated": "2026-08-31",
-      "commits": [
-        "1e83a65876cfed987666cfebed29a9da78f77d23"
-      ]
-    },
-    {
-      "id": "treylery-teryayutsya-kogda-kommit",
-      "title": "Трейлеры теряются, когда коммит стал предком ветки",
-      "type": "tech",
-      "epic": "process",
-      "priority": 1,
-      "status": "backlog",
-      "body": "после rebase коммиты уходят из диапазона appliedCommit..HEAD, и их движения не применяются никогда. Поймали случайно на PR #29 — четыре карточки остались в старых колонках",
-      "updated": "2026-08-31",
-      "commits": [
-        "1e83a65876cfed987666cfebed29a9da78f77d23"
-      ]
-    },
-    {
-      "id": "doska-tyanet-shrifty-iz",
-      "title": "Доска тянет шрифты из Google на проде",
-      "type": "tech",
-      "epic": "infra",
-      "priority": 1,
-      "status": "backlog",
-      "body": "scripts/board-template.html грузит fonts.googleapis.com, и раздел админки делает это уже с habitoff.ru — против инварианта «никаких внешних сервисов в рантайме прода»",
-      "updated": "2026-08-31",
-      "commits": [
-        "1e83a65876cfed987666cfebed29a9da78f77d23"
       ]
     }
   ]
