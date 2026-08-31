@@ -59,6 +59,30 @@ export type StateRow = {
   note: string | null;
 };
 
+export type SourceFunnelRow = {
+  source_kind: string;
+  detail: string;
+  visitors: number;
+  signed_up: number;
+  onboarded: number;
+  first_episode: number;
+  with_result: number;
+  retained_week2: number;
+};
+
+export type HeadlineRow = {
+  metric: string;
+  title: string;
+  hint: string;
+  value: number | null;
+  unit: string;
+  previous: number | null;
+  /** Куда двигаться хорошо: у затихших это `down`, у остальных `up`. Решает база. */
+  better_when: 'up' | 'down';
+  computable: boolean;
+  note: string | null;
+};
+
 export type AnalyticsSnapshot = {
   core: CoreMetricRow[];
   funnel: FunnelRow[];
@@ -66,6 +90,8 @@ export type AnalyticsSnapshot = {
   retention: RetentionRow[];
   sources: SourceRow[];
   states: StateRow[];
+  sourceFunnel: SourceFunnelRow[];
+  headline: HeadlineRow[];
 };
 
 async function call<T>(name: string, args: Record<string, unknown>): Promise<T[]> {
@@ -77,17 +103,20 @@ async function call<T>(name: string, args: Record<string, unknown>): Promise<T[]
 }
 
 /**
- * Шесть запросов уходят разом. Последовательно это шесть кругов ожидания на экране,
+ * Восемь запросов уходят разом. Последовательно это восемь кругов ожидания на экране,
  * который открывают, чтобы посмотреть числа, а не посидеть.
  */
 export async function loadAnalytics(days: number, weeks: number): Promise<AnalyticsSnapshot> {
-  const [core, funnel, flow, retention, sources, states] = await Promise.all([
-    call<CoreMetricRow>('admin_core_metrics', { weeks }),
-    call<FunnelRow>('admin_funnel', { days }),
-    call<FlowStepRow>('admin_flow_steps', { days }),
-    call<RetentionRow>('admin_retention', { weeks }),
-    call<SourceRow>('admin_sources', { days }),
-    call<StateRow>('admin_user_states', {}),
-  ]);
-  return { core, funnel, flow, retention, sources, states };
+  const [core, funnel, flow, retention, sources, states, sourceFunnel, headline] =
+    await Promise.all([
+      call<CoreMetricRow>('admin_core_metrics', { weeks }),
+      call<FunnelRow>('admin_funnel', { days }),
+      call<FlowStepRow>('admin_flow_steps', { days }),
+      call<RetentionRow>('admin_retention', { weeks }),
+      call<SourceRow>('admin_sources', { days }),
+      call<StateRow>('admin_user_states', {}),
+      call<SourceFunnelRow>('admin_source_funnel', { days }),
+      call<HeadlineRow>('admin_headline', { days }),
+    ]);
+  return { core, funnel, flow, retention, sources, states, sourceFunnel, headline };
 }
