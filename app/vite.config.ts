@@ -118,6 +118,17 @@ function prerenderPublicRoutes(): Plugin {
 
 export default defineConfig({
   plugins: [react(), buildStamp(), prerenderPublicRoutes()],
+  server: {
+    fs: {
+      /**
+       * Раздел «Доска» импортирует `scripts/board-template.html` и `docs/board/*.json` —
+       * файлы репозитория за пределами `app/`. Сборка их видит по обычному разрешению
+       * импорта, а dev-сервер и vitest отдают файлы только из разрешённых каталогов и
+       * иначе отвечают `Denied ID`. Разрешён корень репозитория, а не диск.
+       */
+      allow: [fileURLToPath(new URL('..', import.meta.url))],
+    },
+  },
   define: {
     'import.meta.env.VITE_COMMIT_SHA': JSON.stringify(commitSha()),
     'import.meta.env.VITE_BUILD_VERSION': JSON.stringify(version),

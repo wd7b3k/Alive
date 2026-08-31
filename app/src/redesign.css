@@ -258,7 +258,24 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
 /* Доска перенесена страницей целиком: у неё свои стили, приложению остаётся дать ей
    место. Высота — экран минус шапка и навигация раздела, чтобы прокручивалась сама
    доска, а не документ вокруг неё. */
+.r-board{display:grid;gap:8px;min-width:0}
+.r-board-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.r-board-bar button{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border-radius:999px;border:1px solid var(--r-line);background:rgba(255,255,255,.02);color:var(--r-muted);font-size:13px;font-weight:700}
+.r-board-bar button:hover{color:var(--r-text);border-color:rgba(224,201,166,.32)}
+.r-board-bar button[aria-pressed="true"]{color:var(--r-sand);border-color:rgba(224,201,166,.42);background:rgba(224,201,166,.12)}
 .r-board-frame{width:100%;height:calc(100vh - 260px);min-height:520px;border:1px solid var(--r-line);border-radius:16px;background:#0b1512;display:block}
+/* Развёрнутая доска. Рамка занимает окно целиком, поэтому кнопка «Свернуть» —
+   единственное, что остаётся снаружи: она поднимается над рамкой и садится в правый
+   нижний угол, подальше от собственной шапки доски с её кнопками. z-index выше шапки
+   приложения (70) и нижнего меню (80), но ниже модального окна (100). Класс меняется на
+   том же узле: пересозданный `<iframe>` перезагрузил бы доску и потерял её правки. */
+.r-board-frame-full{position:fixed;z-index:90;inset:0;width:100%;height:100%;min-height:0;border:0;border-radius:0}
+.r-board-bar-float{position:fixed;z-index:91;right:calc(16px + var(--r-safe-right));bottom:calc(16px + var(--r-safe-bottom));margin:0}
+.r-board-bar-float button{background:rgba(4,12,14,.92);backdrop-filter:blur(22px);box-shadow:0 10px 34px rgba(0,0,0,.45)}
+/* Раздел «Доска» шире остальных: пять колонок канбана в 1160px не встают. Ширину даёт
+   оболочка по флагу `wide` в ADMIN_SECTIONS, а не сам блок. */
+.r-admin-wide{width:calc(100% - 40px)}
+@media(max-width:760px){.r-admin-wide{width:calc(100% - 24px)}}
 @media(max-width:720px){.r-board-frame{height:calc(100vh - 220px)}}
 
 /* Аналитика админки: формы вместо строк — полосы, столбики, тепловая сетка. */

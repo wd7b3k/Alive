@@ -259,6 +259,25 @@ describe('redesign.css инварианты', () => {
     expect(css).not.toContain('.r-section.plain>.r-strip{margin');
   });
 
+  /**
+   * Развёрнутая доска. Раздел `board` показывает чужую страницу в `<iframe>`, и на всё
+   * окно её выводит один класс: если правило потеряется или перестанет вырывать рамку из
+   * потока, кнопка «Развернуть» будет нажиматься и ничего не менять. Класс живёт в
+   * `admin-board.tsx`, правило — здесь, и связать их может только тест.
+   */
+  it('вырывает развёрнутую доску из потока', () => {
+    const full = find('.r-board-frame-full');
+    expect(full.length, '.r-board-frame-full должен быть объявлен один раз').toBe(1);
+    expect(full[0].body, 'без position:fixed рамка останется в колонке раздела').toContain(
+      'position:fixed',
+    );
+    expect(full[0].body).toContain('inset:0');
+    // Выше шапки (70) и нижнего меню (80), ниже модального окна (100).
+    const layer = Number(/z-index:(\d+)/.exec(full[0].body)?.[1]);
+    expect(layer).toBeGreaterThan(80);
+    expect(layer).toBeLessThan(100);
+  });
+
   it('держит варианты кнопок в одном месте', () => {
     for (const selector of ['.r-button', '.r-button.primary', '.r-button.ghost']) {
       expect(find(selector).length, `${selector} должен быть объявлен один раз`).toBe(1);
