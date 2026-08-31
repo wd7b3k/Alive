@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-31",
-  "appliedCommit": "4ed9ca53de65c95086a820566815d4fb062f16f7",
+  "appliedCommit": "bf657e9ab60c14d779cbea11cc7ee68fb699803f",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3625,10 +3625,11 @@
       "epic": "infra",
       "priority": 2,
       "status": "backlog",
-      "body": "пункт 2 раздела «Что осталось до полноценного прода» против ADR-0013 и ADR-0016",
+      "body": "пункт 2 раздела «Что осталось до полноценного прода» против ADR-0013 и ADR-0016 то же в ROLLOUT.md §5, пункты 3 и 4",
       "updated": "2026-08-31",
       "commits": [
-        "4ed9ca53de65c95086a820566815d4fb062f16f7"
+        "4ed9ca53de65c95086a820566815d4fb062f16f7",
+        "bf657e9ab60c14d779cbea11cc7ee68fb699803f"
       ]
     }
   ]
