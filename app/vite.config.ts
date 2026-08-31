@@ -5,7 +5,12 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
-import { renderRoute, renderSitemap, type SitemapEntry } from './src/services/prerender';
+import {
+  renderNotFound,
+  renderRoute,
+  renderSitemap,
+  type SitemapEntry,
+} from './src/services/prerender';
 import { PRERENDER_PATHS } from './src/services/seo';
 
 const version: string = JSON.parse(
@@ -99,11 +104,21 @@ function prerenderPublicRoutes(): Plugin {
       if (!outDir) throw new Error('Предрендер: у сборки нет каталога вывода.');
       const source = String(index.source);
 
+      // Главная переписывается через тот же путь, что и разделы: ей дописывается
+      // навигация. Без неё робот доходит до главной и упирается в тупик — уйти с неё
+      // по ссылке было некуда, ноль внутренних ссылок в сыром HTML на всех адресах.
+      writeFileSync(join(outDir, 'index.html'), renderRoute(source, '/'), 'utf8');
+
       for (const path of PRERENDER_PATHS) {
         const file = join(outDir, path.slice(1), 'index.html');
         mkdirSync(dirname(file), { recursive: true });
         writeFileSync(file, renderRoute(source, path), 'utf8');
       }
+
+      // Страница для несуществующего адреса. Её отдаёт Caddy через handle_errors,
+      // сохраняя код 404: до 31.08.2026 код был правильный, а тело — нулевой длины,
+      // и человек видел белый экран. В карту сайта она не попадает и несёт noindex.
+      writeFileSync(join(outDir, '404.html'), renderNotFound(source), 'utf8');
 
       const entries: SitemapEntry[] = ['/', ...PRERENDER_PATHS].map((path) => ({
         path,

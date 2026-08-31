@@ -3,7 +3,8 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { renderRoute, renderSitemap } from './prerender';
+import { NAV_PATHS, renderNotFound, renderRoute, renderSitemap } from './prerender';
+import { PUBLIC_NAV } from '../redesign/shared';
 import { RELEASES } from '../redesign/releases';
 import { PRERENDER_PATHS, metaFor } from './seo';
 
@@ -65,12 +66,54 @@ describe('предрендер публичных адресов', () => {
     }
   });
 
-  it('разделы, живущие данными из базы, копии этих данных не получают', () => {
-    // Копия каталога в статике расходится с базой на первой же миграции —
-    // docs/SEO_AND_ANALYTICS.md отказался от неё сознательно. Меняется только голова.
-    const knowledge = renderRoute(template, '/knowledge');
-    const body = (html: string) => html.slice(html.indexOf('<main class="r-prerender">'));
-    expect(body(knowledge)).toBe(body(template));
+  it('у каждого раздела своё тело, а не оболочка главной', () => {
+    // Ровно эта проверка отсутствовала 30.08: голова подменялась, тело бралось от
+    // главной, и пять адресов из карты сайта отдавали 2240 знаков одного текста при
+    // разных canonical. Все тесты вокруг пререндера были при этом зелёными.
+    const body = (html: string) =>
+      html.match(/<main class="r-prerender">([\s\S]*?)<\/main>/)?.[1] ?? '';
+    const home = body(template);
+    for (const path of PRERENDER_PATHS) {
+      const own = body(renderRoute(template, path));
+      expect(own, path).not.toBe(home);
+      expect(own.length, `${path}: пустое тело`).toBeGreaterThan(300);
+    }
+  });
+
+  it('каждый раздел ссылается на соседние — не меньше четырёх ссылок', () => {
+    for (const path of ['/', ...PRERENDER_PATHS]) {
+      const links = [...renderRoute(template, path).matchAll(/<a[^>]*href="(\/[^"]*)"/g)].map(
+        (m) => m[1],
+      );
+      expect(links.length, path).toBeGreaterThanOrEqual(4);
+      expect(links, `${path} ссылается сам на себя`).not.toContain(path);
+    }
+  });
+
+  it('копий каталога в статику не приезжает', () => {
+    // Факты, мифы, связки и смыслы правятся миграциями, и копия разошлась бы с базой
+    // на первой же — docs/SEO_AND_ANALYTICS.md отказался от неё сознательно. Проверить
+    // это содержимым нельзя: базы здесь нет. Зато можно проверить единственный способ,
+    // которым каталог мог бы сюда попасть, — импорт.
+    const source = readFileSync(fileURLToPath(new URL('./prerender.ts', import.meta.url)), 'utf8');
+    const imports = [...source.matchAll(/^import[^;]*from '([^']+)';/gm)].map((m) => m[1]);
+    expect(imports.sort()).toEqual(['../redesign/releases', './seo']);
+  });
+
+  it('несуществующий адрес получает своё тело, ссылки и noindex', () => {
+    const html = renderNotFound(template);
+    expect(html).toContain('<h1>Такой страницы нет</h1>');
+    expect(html).toContain('content="noindex, follow"');
+    expect(html).toContain('<a href="/knowledge">');
+    expect(html).toContain('<link rel="canonical" href="https://habitoff.ru/" />');
+  });
+
+  it('навигация для краулера ведёт туда же, куда меню продукта', () => {
+    // Два списка живут в разных мирах: один в сборке, другой в рантайме. Разъезжаются
+    // они молча — новый публичный раздел появится в меню и не появится у робота.
+    for (const [href] of PUBLIC_NAV) {
+      expect(NAV_PATHS, `${href} есть в меню, но не в навигации для краулера`).toContain(href);
+    }
   });
 
   it('падает, а не молчит, если разметка index.html разошлась с шаблоном', () => {
