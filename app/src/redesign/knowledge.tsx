@@ -1,6 +1,7 @@
 import type { AwarenessCard, EvidenceSource, Knowledge, KnowledgeCard, Replacement } from '../data';
 import { evidenceForReplacement, levelOf, sourcesForCard } from '../domain/knowledge';
 import { Icon } from '../ui-icons';
+import registry from '../../../content/knowledge/clusters.json';
 
 /**
  * Rendering for the evidence layer and «Факты и Мифы».
@@ -235,5 +236,51 @@ export function AwarenessCardView({ card }: { card: AwarenessCard }) {
         </div>
       </details>
     </article>
+  );
+}
+
+/**
+ * Ссылки на разборы базы знаний под карточками раздела.
+ *
+ * Карточка отвечает одной строкой; человеку, который пришёл с вопросом «сколько это
+ * длится» и «что с этим делать», строки мало. Разборы живут на своих адресах и
+ * раскладываются сборкой как статика — см. ADR-0017.
+ *
+ * Ссылки здесь **обычные `<a>`, а не `AppLink`**, и это не оплошность. Страница статьи —
+ * отдельный документ без React: перехватив клик, роутер увёл бы человека в приложение,
+ * у которого такого экрана нет. Переход должен быть полной загрузкой.
+ *
+ * Из реестра берутся только названия и описания — это репозиторный текст, а не каталог,
+ * и правило «карточки из базы в статику не копируются» его не касается.
+ */
+export function KnowledgeClusters() {
+  if (!registry.clusters.length) return null;
+  return (
+    <section className="r-section">
+      <div className="r-section-head">
+        <div>
+          <p className="r-kicker">Разборы</p>
+          <h2>Подробнее — по темам</h2>
+          <p>
+            Карточки отвечают коротко. Разборы — длиннее: механизм, границы, чего до сих пор не
+            знают, и своя библиография у каждого.
+          </p>
+        </div>
+      </div>
+      <ul className="r-cluster-links">
+        {registry.clusters.map((cluster) => (
+          <li key={cluster.slug}>
+            <a href={`/knowledge/${cluster.slug}`}>{cluster.title}</a>
+            <small>{cluster.description}</small>
+          </li>
+        ))}
+        <li>
+          <a href="/knowledge/method">Как отбираются источники и что означают уровни</a>
+          <small>
+            Метод, по которому собран раздел: рецензента у него нет, и это сказано прямо.
+          </small>
+        </li>
+      </ul>
+    </section>
   );
 }

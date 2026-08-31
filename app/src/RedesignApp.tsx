@@ -52,6 +52,7 @@ import {
   EvidenceBadge,
   EvidenceDetail,
   KnowledgeCardView,
+  KnowledgeClusters,
   KnowledgeCollapsed,
 } from './redesign/knowledge';
 import { GoalCard, GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
@@ -499,6 +500,7 @@ function PublicKnowledge({
           </div>
         </section>
       )}
+      <KnowledgeClusters />
     </>
   );
 }
@@ -2476,6 +2478,8 @@ function KnowledgePage({ data }: { data: Bootstrap }) {
           <p>Карточки не пришли из базы. Это не значит, что их нет — попробуй обновить страницу.</p>
         </section>
       )}
+
+      <KnowledgeClusters />
     </main>
   );
 }

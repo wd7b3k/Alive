@@ -131,29 +131,39 @@ export const LATIN_ALLOWED = [
   'Freedom Fund',
 ];
 
-/** Запрещённые протоколом конструкции. Форма, а не тема: писать о препаратах можно. */
+/**
+ * Запрещённые протоколом конструкции. Форма, а не тема: писать о препаратах можно.
+ *
+ * Здесь нет ни одного ``, и это не небрежность. В JavaScript граница слова
+ * определяется через `[A-Za-z0-9_]`, поэтому между пробелом и русской буквой её просто
+ * не существует: `/дозировк/` не находит «дозировка» никогда. Первая версия этих
+ * правил была написана с `` и молча пропускала шесть запретов из десяти — поймал это
+ * тест, который специально ломает каждое правило. Где нужен «конец слова», стоит
+ * отрицательный просмотр вперёд по кириллице.
+ */
 const FORBIDDEN: { rule: string; pattern: RegExp; why: string }[] = [
   {
     rule: 'дозировка',
-    pattern: /\b\d+(?:[.,]\d+)?\s*(?:мг|мкг|г)\b|\bпо\s+\d+\s+таблет|\d+\s*раз[а]?\s+в\s+(?:день|сутки)|\bдозировк|\bдоз[ауы]\s+препарат|\bпринимать\s+по\b/i,
+    pattern:
+      /\d+(?:[.,]\d+)?\s*(?:мг|мкг)(?![а-яё])|по\s+\d+\s+таблет|\d+\s*раз[а]?\s+в\s+(?:день|сутки)|дозировк|доз[ауы]\s+препарат|принимать\s+по\s/i,
     why: 'дозировку не назначает ни продукт, ни LLM — AGENTS.md',
   },
   {
     rule: 'сравнение препаратов',
     pattern:
-      /(?:препарат|варениклин|бупропион|цитизин|НЗТ|терапи[яю])[^.]{0,60}\b(?:лучше|эффективнее|действеннее)\b|\b(?:самый|наиболее)\s+(?:эффективн|действенн)\w*\s+(?:препарат|способ|метод)/i,
+      /(?:препарат|варениклин|бупропион|цитизин|НЗТ|терапи[яю])[^.]{0,60}(?:лучше|эффективнее|действеннее)(?![а-яё])|(?:самый|наиболее)\s+(?:эффективн|действенн)[а-яё]*\s+(?:препарат|способ|метод)/i,
     why: 'ранжировать лечение без данных о человеке — работа врача',
   },
   {
     rule: 'рекомендация',
     pattern:
-      /\b(?:принимайте|пропейте|начните\s+принимать|советуем\s+препарат|рекомендуем\s+препарат|вам\s+нужно\s+прин)/i,
+      /(?:принимайте|пропейте|начните\s+принимать|советуем\s+препарат|рекомендуем\s+препарат|вам\s+нужно\s+прин)/i,
     why: 'Habitoff описывает, что известно, и не назначает',
   },
   {
     rule: 'обещание',
     pattern:
-      /\b(?:вылечит|вылечива|гарантированно|гарантиру|обязательно\s+поможет|навсегда\s+избав|заменяет\s+врача|продлит\s+жизнь\s+на)/i,
+      /(?:вылечит|вылечива|гарантированно|гарантиру|обязательно\s+поможет|навсегда\s+избав|заменяет\s+врача|продлит\s+жизнь\s+на)/i,
     why: 'прямой запрет AGENTS.md «никаких медицинских обещаний»',
   },
   {
@@ -179,8 +189,7 @@ const FORBIDDEN: { rule: string; pattern: RegExp; why: string }[] = [
 ];
 
 /** Слова, при которых статья обязана сказать, что решение о препарате принимает врач. */
-const MEDICATION_WORDS =
-  /\b(?:НЗТ|никотинзаместительн|варениклин|бупропион|цитизин|препарат)/i;
+const MEDICATION_WORDS = /(?:НЗТ|никотинзаместительн|варениклин|бупропион|цитизин|препарат)/i;
 
 function fail(file: string, message: string): never {
   throw new Error(`База знаний, ${file}: ${message}`);
@@ -317,7 +326,10 @@ export function parseArticle(raw: string, file: string): Article {
       if (!row[field]) fail(file, `у источника №${index + 1} нет поля «${field}»`);
     }
     if (!SOURCE_DATE.test(String(row.date))) {
-      fail(file, `у источника №${index + 1} дата «${row.date}» не в виде ГГГГ, ГГГГ-ММ или ГГГГ-ММ-ДД`);
+      fail(
+        file,
+        `у источника №${index + 1} дата «${row.date}» не в виде ГГГГ, ГГГГ-ММ или ГГГГ-ММ-ДД`,
+      );
     }
     return row as unknown as ArticleSource;
   });
@@ -329,7 +341,10 @@ export function parseArticle(raw: string, file: string): Article {
     return { date: row.date, what: row.what };
   });
   if (!changelog.length) fail(file, 'нет ни одной записи в «changelog»');
-  const newest = changelog.map((entry) => entry.date).sort().at(-1);
+  const newest = changelog
+    .map((entry) => entry.date)
+    .sort()
+    .at(-1);
   if (newest !== updated) {
     fail(
       file,
@@ -475,7 +490,9 @@ export function checkClaimsAgainstLock(
   }
   // Обещанное во фронтматтере и процитированное в тексте — один список. Иначе
   // «claims» превращается в декорацию, по которой ничего нельзя найти.
-  const inBody = new Set([...article.body.matchAll(/\{\{claim:([a-z0-9_]+)\}\}/g)].map((m) => m[1]));
+  const inBody = new Set(
+    [...article.body.matchAll(/\{\{claim:([a-z0-9_]+)\}\}/g)].map((m) => m[1]),
+  );
   for (const code of article.claims) {
     if (!inBody.has(code)) {
       fail(article.file, `«${code}» обещан во фронтматтере, но в тексте не процитирован`);
@@ -484,7 +501,10 @@ export function checkClaimsAgainstLock(
 }
 
 /** Читает реестр кластеров и все статьи, сверяя одно с другим. */
-export function readContent(contentDir: string): { registry: ClusterRegistry; articles: Article[] } {
+export function readContent(contentDir: string): {
+  registry: ClusterRegistry;
+  articles: Article[];
+} {
   const registryFile = join(contentDir, 'clusters.json');
   const registry = JSON.parse(readFileSync(registryFile, 'utf8')) as ClusterRegistry;
   const articles: Article[] = [];
@@ -510,7 +530,10 @@ export function readContent(contentDir: string): { registry: ClusterRegistry; ar
       const file = `content/knowledge/${cluster.slug}/${slug}.md`;
       const full = join(dir, `${slug}.md`);
       if (!statSync(full, { throwIfNoEntry: false })?.isFile()) {
-        fail('content/knowledge/clusters.json', `в кластере «${cluster.slug}» назван ${slug}.md, которого нет`);
+        fail(
+          'content/knowledge/clusters.json',
+          `в кластере «${cluster.slug}» назван ${slug}.md, которого нет`,
+        );
       }
       const article = parseArticle(readFileSync(full, 'utf8'), file);
       if (article.slug !== slug) fail(file, `слаг «${article.slug}» не совпадает с именем файла`);

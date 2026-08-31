@@ -120,10 +120,39 @@ function inline(raw: string, article: Article): string {
 
 /** Устойчивый якорь заголовка: русский текст в латиницу, чтобы ссылка читалась. */
 const TRANSLIT: Record<string, string> = {
-  а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i',
-  й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't',
-  у: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '',
-  э: 'e', ю: 'yu', я: 'ya',
+  а: 'a',
+  б: 'b',
+  в: 'v',
+  г: 'g',
+  д: 'd',
+  е: 'e',
+  ё: 'e',
+  ж: 'zh',
+  з: 'z',
+  и: 'i',
+  й: 'y',
+  к: 'k',
+  л: 'l',
+  м: 'm',
+  н: 'n',
+  о: 'o',
+  п: 'p',
+  р: 'r',
+  с: 's',
+  т: 't',
+  у: 'u',
+  ф: 'f',
+  х: 'h',
+  ц: 'c',
+  ч: 'ch',
+  ш: 'sh',
+  щ: 'sch',
+  ъ: '',
+  ы: 'y',
+  ь: '',
+  э: 'e',
+  ю: 'yu',
+  я: 'ya',
 };
 
 export function anchor(text: string): string {
@@ -724,9 +753,7 @@ export function renderUpdatesFeed(articles: Article[]): string {
   const items = entries
     .map((article) => {
       const url = ORIGIN + articlePath(article);
-      const last = article.changelog
-        .slice()
-        .sort((a, b) => b.date.localeCompare(a.date))[0];
+      const last = article.changelog.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
       return [
         '    <item>',
         `      <title>${escapeHtml(article.h1)}</title>`,

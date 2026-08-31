@@ -87,17 +87,21 @@ const SHARED_SOURCES = [
   'vite.config.ts',
 ];
 
+const FAQ_LD = /<script type="application\/ld\+json" id="faq-ld">[\s\S]*?<\/script>/;
+const PRERENDER_FAQ = /<section class="r-prerender-faq">[\s\S]*?<\/section>/;
+
 /**
- * Отдельный `index.html` на каждый публичный адрес плюс карта сайта.
+ * Отдельный `index.html` на каждый публичный адрес, страницы базы знаний и карта сайта.
  *
  * Плагин работает на `writeBundle`: к этому моменту `index.html` уже прошёл все
  * преобразования Vite и содержит финальные имена чанков, поэтому копии отличаются от
  * оригинала ровно тем, чем должны, — заголовком, описанием, canonical и og:url. Своей
  * сборки на каждый адрес не заводится: это те же байты бандла, а не пять приложений.
+ *
+ * Страницы базы знаний собираются здесь же, но своим путём: у них нет ни React, ни
+ * гидрации — только те же стили. Разложатся они или нет, решает доступ к каталогу; всё
+ * про эти два состояния — в `src/services/knowledge-build.ts` и в ADR-0017.
  */
-const FAQ_LD = /<script type="application\/ld\+json" id="faq-ld">[\s\S]*?<\/script>/;
-const PRERENDER_FAQ = /<section class="r-prerender-faq">[\s\S]*?<\/section>/;
-
 function prerenderPublicRoutes(): Plugin {
   const root = fileURLToPath(new URL('.', import.meta.url));
   return {
@@ -203,6 +207,12 @@ export default defineConfig({
   define: {
     'import.meta.env.VITE_COMMIT_SHA': JSON.stringify(commitSha()),
     'import.meta.env.VITE_BUILD_VERSION': JSON.stringify(version),
+  },
+  server: {
+    // Содержание базы знаний лежит в `content/` в корне репозитория, а не внутри `app/`:
+    // его правит редактор, а не разработчик. Реестр кластеров и замок утверждений
+    // импортируются оттуда, и dev-серверу надо разрешить читать выше своего корня.
+    fs: { allow: ['..'] },
   },
   build: {
     // Карты исходников в прод не уезжают: это 2,8 МБ исходного кода продукта в открытом

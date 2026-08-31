@@ -77,7 +77,7 @@ const SHARED = [
  * целиком, а не совпадение слов: разбирать утверждение своими словами статья обязана,
  * иначе ей нечего сказать.
  */
-function checkNoVerbatimCopy(article: Article, claims: Map<string, CatalogClaim>): void {
+export function checkNoVerbatimCopy(article: Article, claims: Map<string, CatalogClaim>): void {
   const prose = article.body.replace(/\{\{claim:[a-z0-9_]+\}\}/g, ' ').replace(/\s+/g, ' ');
   for (const claim of claims.values()) {
     for (const [field, value] of Object.entries({
@@ -98,6 +98,36 @@ function checkNoVerbatimCopy(article: Article, claims: Map<string, CatalogClaim>
           );
         }
       }
+    }
+  }
+}
+
+/**
+ * Сверка процитированных утверждений с живым каталогом.
+ *
+ * Ловит обратный случай к «кода нет в замке»: код на месте, а карточку правили
+ * миграцией, и статью вокруг неё никто не перечитывал. Границы поменялись, текст
+ * остался — худшее из возможного для раздела, который существует ради границ.
+ */
+export function checkAgainstCatalog(
+  article: Article,
+  lock: { claims: Record<string, { hash: string }> },
+  catalog: Map<string, CatalogClaim>,
+): void {
+  for (const code of citedClaims(article)) {
+    const claim = catalog.get(code);
+    if (!claim) {
+      throw new Error(
+        `База знаний, ${article.file}: утверждение «${code}» есть в замке, но каталог ` +
+          'его не отдаёт. Карточка снята с публикации — статью надо перечитать.',
+      );
+    }
+    if (lock.claims[code]?.hash !== claimHash(claim)) {
+      throw new Error(
+        `База знаний, ${article.file}: утверждение «${code}» изменилось с момента, ` +
+          'когда статья писалась (хэш не совпал с замком). Перечитай статью вокруг ' +
+          'него и пересобери замок: node scripts/knowledge-lock.mjs',
+      );
     }
   }
 }
@@ -144,28 +174,8 @@ export async function buildKnowledge(root: string, assets: Assets): Promise<Know
 
   const catalog = await fetchClaims(env);
 
-  // Хэш ловит обратный случай к «код исчез»: карточку правили миграцией, а статью
-  // вокруг неё никто не перечитывал. Границы поменялись, текст остался — худшее из
-  // возможного для раздела, который существует ради границ.
   for (const article of articles) {
-    for (const code of citedClaims(article)) {
-      const claim = catalog.get(code);
-      if (!claim) {
-        throw new Error(
-          `База знаний, ${article.file}: утверждение «${code}» есть в замке, но каталог ` +
-            'его не отдаёт. Карточка снята с публикации — статью надо перечитать.',
-        );
-      }
-      const expected = lock.claims[code]?.hash;
-      const actual = claimHash(claim);
-      if (expected !== actual) {
-        throw new Error(
-          `База знаний, ${article.file}: утверждение «${code}» изменилось с момента, ` +
-            'когда статья писалась (хэш не совпал с замком). Перечитай статью вокруг ' +
-            'него и пересобери замок: node scripts/knowledge-lock.mjs',
-        );
-      }
-    }
+    checkAgainstCatalog(article, lock, catalog);
     checkNoVerbatimCopy(article, catalog);
   }
 
@@ -268,9 +278,8 @@ export function fillCounts(
   html: string,
   counts: { facts: number; myths: number; triggers: number; replacements: number },
 ): string {
-  const rendered = html.replace(
-    /\{\{(FACTS|MYTHS|TRIGGERS|REPLACEMENTS)\}\}/g,
-    (_, key: string) => String(counts[key.toLowerCase() as keyof typeof counts]),
+  const rendered = html.replace(/\{\{(FACTS|MYTHS|TRIGGERS|REPLACEMENTS)\}\}/g, (_, key: string) =>
+    String(counts[key.toLowerCase() as keyof typeof counts]),
   );
   if (/\{\{[A-Z_]+\}\}/.test(rendered)) {
     throw new Error('index.html: осталась неподставленная метка — сверь список ключей');

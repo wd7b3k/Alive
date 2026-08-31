@@ -450,3 +450,11 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
   .r-article{padding-top:var(--r-sp-5)}
   .r-article-claim{padding:var(--r-sp-4)}
 }
+
+/* Ссылки на разборы под карточками раздела «Факты и мифы». Обычные ссылки, а не
+   кнопки: страница статьи — отдельный документ без React, и переход туда должен быть
+   полной загрузкой. */
+.r-cluster-links{list-style:none;margin:0;padding:0;display:grid;gap:var(--r-sp-3)}
+.r-cluster-links li{padding:var(--r-sp-4) var(--r-sp-5);border:1px solid var(--r-line);border-radius:var(--r-r-lg);background:rgba(255,255,255,.02)}
+.r-cluster-links a{color:var(--r-teal);font-size:var(--r-fs-body);font-weight:700}
+.r-cluster-links small{display:block;margin-top:var(--r-sp-1);color:var(--r-muted);font-size:var(--r-fs-sm);line-height:1.5}
