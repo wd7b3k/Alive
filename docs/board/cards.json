@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-31",
-  "appliedCommit": "b2fcfcee22b11a1e7d2a7bfa099feb24bf4efd2b",
+  "appliedCommit": "582c3b82fac2db117895c69d49b0562f602572fe",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3552,6 +3552,20 @@
       "updated": "2026-08-31",
       "commits": [
         "b2fcfcee22b11a1e7d2a7bfa099feb24bf4efd2b"
+      ]
+    },
+    {
+      "id": "ustanovlennyy-deploy-sh-molcha",
+      "title": "Установленный deploy.sh молча устаревает",
+      "type": "bug",
+      "epic": "release",
+      "priority": 1,
+      "status": "done",
+      "body": "канонический файл в репозитории, рабочий — копия на сервере; 31.08 копия была без шага выгрузки каталога, и разметка собралась без источников",
+      "updated": "2026-08-31",
+      "commits": [
+        "40d1fb9f63f51a7da0fd24972aa8cc60eb83393c",
+        "582c3b82fac2db117895c69d49b0562f602572fe"
       ]
     }
   ]
