@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-31",
-  "appliedCommit": "bf657e9ab60c14d779cbea11cc7ee68fb699803f",
+  "appliedCommit": "ff72ef6a0156da410a0a03ec136585004781bb99",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3630,6 +3630,19 @@
       "commits": [
         "4ed9ca53de65c95086a820566815d4fb062f16f7",
         "bf657e9ab60c14d779cbea11cc7ee68fb699803f"
+      ]
+    },
+    {
+      "id": "sverka-lokalnoe-origin-ni",
+      "title": "Сверка локальное ⇄ origin ни разу не сказала правду",
+      "type": "bug",
+      "epic": "process",
+      "priority": 1,
+      "status": "done",
+      "body": "на Windows табуляция в --format рвала команду, скрипт объявлял все 75 веток локальными",
+      "updated": "2026-08-31",
+      "commits": [
+        "ff72ef6a0156da410a0a03ec136585004781bb99"
       ]
     }
   ]
