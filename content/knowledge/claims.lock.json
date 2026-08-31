@@ -1,0 +1,197 @@
+{
+  "note": "Коды и хэши утверждений каталога. Текстов здесь нет намеренно: второй копии текста в репозитории не существует. Пересобирается scripts/knowledge-lock.mjs.",
+  "generated": "2026-08-31",
+  "algorithm": "sha256-32",
+  "claims": {
+    "calms_me": {
+      "kind": "myth",
+      "level": "B",
+      "hash": "9d0e5d6ac279db6d9cad73f06a45d45c"
+    },
+    "can_quit_anytime": {
+      "kind": "myth",
+      "level": "C",
+      "hash": "ea56a610e10c57feeddeecef86c3900c"
+    },
+    "coffee_needs_smoke": {
+      "kind": "myth",
+      "level": "B",
+      "hash": "f58b391be25523f37e7f5b31727ec395"
+    },
+    "craving_is_signal": {
+      "kind": "fact",
+      "level": "B",
+      "hash": "d099e1349e5a93cd5b837fcfb09d33d7"
+    },
+    "cues_matter": {
+      "kind": "fact",
+      "level": "B",
+      "hash": "c9396a937eef826868cb23c61e8ce5bb"
+    },
+    "digital_support": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "b792577781f9c2f04b0b3aa13c976beb"
+    },
+    "expectancies_predict_lapse": {
+      "kind": "fact",
+      "level": "B",
+      "hash": "38b0f6edb3229ce0c68bec942a52e57e"
+    },
+    "focus_better": {
+      "kind": "myth",
+      "level": "B",
+      "hash": "48557bbe22edcb222f06464d3504abce"
+    },
+    "heavy_smoker_cvd_5y": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "6b9b4435bdd93dbfd43121ec71fc8b69"
+    },
+    "hookah_is_mild": {
+      "kind": "myth",
+      "level": "A",
+      "hash": "c0741c2e04df0bb052c71e63e7c016f5"
+    },
+    "hookah_not_safe": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "6c946093623818b2f6b8b8a81fe33fb7"
+    },
+    "lapse_is_data": {
+      "kind": "fact",
+      "level": "B",
+      "hash": "604716546612ab18410b8d4c181f6eee"
+    },
+    "lapse_resets_all": {
+      "kind": "myth",
+      "level": "B",
+      "hash": "c5ee1da0bcd8dcdd415cc92544a7e59e"
+    },
+    "light_is_safer": {
+      "kind": "myth",
+      "level": "A",
+      "hash": "6978e2f6fd1f46fe1c08eb4473199dad"
+    },
+    "light_not_safe": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "dfa488f016ca49d3a47c535a08d53957"
+    },
+    "low_intensity_cvd": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "9b40d74784af122a3d2eae2f742452bc"
+    },
+    "meal_needs_smoke": {
+      "kind": "myth",
+      "level": "C",
+      "hash": "a59856880d061da4e5672f48f1f6e1a9"
+    },
+    "mental_health_after_quit": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "6b9dbb5016f8a02eb288ea2ab1434d9b"
+    },
+    "mortality_decade": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "4ccb68dc66c27b7b43583a23789b7a9e"
+    },
+    "nrt_safer": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "693377b3003ffdd941c0ad167dd8fba3"
+    },
+    "nrt_same_as_smoking": {
+      "kind": "myth",
+      "level": "A",
+      "hash": "2e4665c779de2b407cbf05ade9590afe"
+    },
+    "one_does_not_count": {
+      "kind": "myth",
+      "level": "A",
+      "hash": "c0bb0370fa585afed95fe1b20c47a24a"
+    },
+    "one_of_few_pleasures": {
+      "kind": "myth",
+      "level": "B",
+      "hash": "35f246407fb528623fcbab280847abaa"
+    },
+    "only_real_pause": {
+      "kind": "myth",
+      "level": "C",
+      "hash": "32048261a14455a8e9cc5c5d2259ded8"
+    },
+    "oral_health": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "cf0d3b1cb961b6a2f519d73256f390bc"
+    },
+    "quit_before_40": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "922d4cbd61e917e2c9810c2b37439f6f"
+    },
+    "rewards_work": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "c647b578db28a379c731026988b3315b"
+    },
+    "secondhand_no_safe": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "062e97648182ed02eb5f839c24b84527"
+    },
+    "smoking_is_style": {
+      "kind": "myth",
+      "level": "C",
+      "hash": "6c9ec0b951347c3746c06401fb33bd84"
+    },
+    "social_helper": {
+      "kind": "myth",
+      "level": "B",
+      "hash": "2fdd9361e848f6a64be7ed4b9413f521"
+    },
+    "too_late_to_quit": {
+      "kind": "myth",
+      "level": "A",
+      "hash": "fa0fb525a9584bbca37207a0eb9d1474"
+    },
+    "too_stressed_to_quit": {
+      "kind": "myth",
+      "level": "B",
+      "hash": "8523b7aa69f8e0cc240bfd40ee190657"
+    },
+    "treatment_plus_support": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "db9dcb2cf36a252ee069d5fc95f4df20"
+    },
+    "vape_is_harmless": {
+      "kind": "myth",
+      "level": "A",
+      "hash": "958df9da7f0c90538e1e33acea54abef"
+    },
+    "weight_is_inevitable": {
+      "kind": "myth",
+      "level": "A",
+      "hash": "4643c9b2acbd42ec80a5c8893a09c204"
+    },
+    "weight_varies": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "2faeed406701a40ed0f20c3ce2b28aa5"
+    },
+    "who_medications": {
+      "kind": "fact",
+      "level": "A",
+      "hash": "e012dff17d05dcccb130670531f71771"
+    },
+    "without_smoking_more_anxious": {
+      "kind": "myth",
+      "level": "A",
+      "hash": "478b188bad9a3b49b43dadf4f1b3c4b5"
+    }
+  }
+}
