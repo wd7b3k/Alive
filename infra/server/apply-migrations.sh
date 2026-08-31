@@ -63,7 +63,6 @@ for file in "${pending[@]}"; do
   version="$(basename "$file" | cut -d_ -f1)"
   name="$(basename "$file" .sql | cut -d_ -f2-)"
   echo "==> $version $name"
-  psql_run < "$file"
 
   # Регистрация. `version` есть всегда; `name` и `statements` — как повезёт с версией.
   fields="version"
@@ -76,9 +75,27 @@ for file in "${pending[@]}"; do
     fields="$fields, statements"
     values="$values, array[\$mig\$$(cat "$file")\$mig\$]"
   fi
-  psql_run -c "insert into supabase_migrations.schema_migrations ($fields) values ($values)
-               on conflict (version) do nothing;"
-  echo "    записано в журнал"
+  register="insert into supabase_migrations.schema_migrations ($fields) values ($values) on conflict (version) do nothing;"
+
+  # Применение и регистрация — ОДНА транзакция, и в этом весь смысл скрипта.
+  #
+  # Первая редакция делала два вызова подряд: сначала прогоняла файл, потом вставляла
+  # строку в журнал. Между ними помещается ровно та авария, ради которой скрипт и
+  # написан: схема изменилась, записи нет, гейт выкладки честно отказывает, а причина
+  # выглядит как «что-то с миграциями». Два вызова вместо одного — тот же разрыв, просто
+  # короче. Здесь его нет: не применилось — не записано, не записалось — не применилось.
+  #
+  # Обратная сторона: миграция не может содержать собственных `begin`/`commit` и не
+  # должна использовать метку `$mig$` для долларового цитирования. Ни того, ни другого
+  # в репозитории нет, и появиться не должно — DDL в Postgres транзакционен целиком.
+  {
+    echo 'begin;'
+    cat "$file"
+    echo ';'
+    echo "$register"
+    echo 'commit;'
+  } | psql_run
+  echo "    применено и записано в журнал"
 done
 
 echo
