@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 
 import { Guided } from './RedesignApp';
 import { EMPTY_KNOWLEDGE, OTHER_TRIGGER_CODE, saveGuidedEpisode, type Bootstrap } from './data';
+import { trackGoal, trackPageView } from './services/counters';
 
 /**
  * Контекст вне каталога (Р1).
@@ -50,6 +51,37 @@ function client() {
 }
 
 vi.mock('./supabase', () => ({ getSupabase: () => client() }));
+
+/**
+ * Счётчики включены, как на проде после ADR-0015.
+ *
+ * Без этого `counters.ts` при пустых идентификаторах не делает ничего, и проверка
+ * «в счётчик не ушло лишнего» проходила бы просто потому, что счётчиков нет.
+ */
+vi.mock('./env', () => ({
+  publicEnv: {
+    supabaseUrl: 'https://example.test',
+    supabasePublishableKey: 'test-key',
+    appOrigin: 'https://habitoff.test',
+    isConfigured: true,
+    yandexMetrikaId: '111983810',
+    googleAnalyticsId: 'G-YB35G45MFW',
+  },
+  buildInfo: { version: '0.0.0-test', commit: 'testsha' },
+}));
+
+type CounterCall = { counter: 'ym' | 'gtag'; args: unknown[] };
+const counterCalls: CounterCall[] = [];
+
+/** Оба счётчика — функции на `window`; перехватываем ровно там, где их зовёт продукт. */
+function stubCounters() {
+  window.ym = (...args: unknown[]) => {
+    counterCalls.push({ counter: 'ym', args });
+  };
+  window.gtag = (...args: unknown[]) => {
+    counterCalls.push({ counter: 'gtag', args });
+  };
+}
 
 const base: Bootstrap = {
   profile: {
@@ -112,6 +144,8 @@ let root: Root;
 beforeEach(() => {
   (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
   inserts.length = 0;
+  counterCalls.length = 0;
+  stubCounters();
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
@@ -245,5 +279,76 @@ describe('saveGuidedEpisode — контекст вне каталога', () =>
     await saveGuidedEpisode(session, { ...draft, triggerCode: 'coffee' });
     expect(episode().trigger_code).toBe('coffee');
     expect(episode().custom_trigger_text).toBeNull();
+  });
+});
+
+/**
+ * Внешние счётчики.
+ *
+ * `PRIVACY_AND_DATA.md` §10 после ADR-0015 обещает больше, чем проверяли тесты выше.
+ * Метрика и GA4 стоят на всех страницах, включая личные, и обещание звучит как «без
+ * содержимого личных записей». До сих пор это держалось устройством `counters.ts` —
+ * наружу уходят маршрут и имя цели из закрытого списка `FunnelGoal` — но ничем
+ * не проверялось. Один вызов `trackGoal` с параметрами, и обещание перестанет быть
+ * правдой, а заметить это будет негде: запрос уходит на чужой хост.
+ *
+ * Поле контекста вне каталога — первое место в продукте, где человек пишет текст прямо
+ * в потоке тяги, поэтому граница проверяется на нём.
+ */
+describe('Внешние счётчики — контекст вне каталога', () => {
+  const written = 'ссора на кухне после ужина';
+
+  /** Всё, что ушло бы в Метрику и GA, одной строкой — искать в аргументах, а не в полях. */
+  const sent = () => counterCalls.map((call) => JSON.stringify(call.args)).join('\n');
+
+  it('перехват работает, и продукт зовёт счётчики именно через него', () => {
+    // Контроль на пустоту: без него все проверки ниже проходили бы и со сломанной
+    // заглушкой, ничего не доказывая.
+    trackPageView('/today');
+    trackGoal('first_episode');
+    expect(counterCalls.map((call) => call.counter)).toEqual(['ym', 'gtag', 'ym', 'gtag']);
+    expect(sent()).toContain('/today');
+    expect(sent()).toContain('first_episode');
+  });
+
+  it('написанный текст не уходит ни в Метрику, ни в GA', () => {
+    mount();
+    click(byText('.r-choice-none', 'Моей ситуации тут нет'));
+    type(field(), written);
+    click(byText('.r-other-trigger button', 'Дальше'));
+
+    for (const call of counterCalls) {
+      expect(JSON.stringify(call.args), `${call.counter} получил текст человека`).not.toContain(
+        written,
+      );
+      expect(JSON.stringify(call.args)).not.toContain('ссора');
+      expect(JSON.stringify(call.args)).not.toContain('кухне');
+    }
+  });
+
+  it('запись эпизода тоже ничего не уносит в счётчики', async () => {
+    await saveGuidedEpisode({ user: { id: 'u1' } } as never, {
+      product: 'cigarette',
+      triggerCode: OTHER_TRIGGER_CODE,
+      customTriggerText: written,
+      needCode: 'pause',
+      cravingBefore: null,
+      cravingAfter: null,
+      helpfulness: null,
+      replacementCode: null,
+      outcome: 'successful_response',
+    });
+    expect(sent()).not.toContain(written);
+    expect(sent()).not.toContain('ссора');
+  });
+
+  /**
+   * Отдельная проверка на подмену: если текст однажды поедет наружу не строкой, а
+   * внутри объекта параметров цели, поиск по строке его всё равно найдёт — аргументы
+   * сериализуются целиком, на любой глубине.
+   */
+  it('нашёл бы текст и внутри вложенного параметра', () => {
+    window.gtag?.('event', 'first_episode', { context: { note: written } });
+    expect(sent()).toContain(written);
   });
 });
