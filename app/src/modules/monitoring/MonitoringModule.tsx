@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
 import { reportError } from '../../services/error-monitoring';
-import { STATUS_LABEL, VERDICT, ago, measurement, percent, period, statusTone } from './format';
+import {
+  STATUS_LABEL,
+  VERDICT,
+  ago,
+  measurement,
+  percent,
+  period,
+  statusTone,
+  uptime,
+} from './format';
 import { incidentDays, loadServiceHealth } from './port';
 import type { Check, Component, Incident, Layer, ServiceSnapshot, Surface } from './port';
 
@@ -71,7 +80,7 @@ function Dot({ tone }: { tone: string }) {
 
 function ComponentCard({ item }: { item: Component }) {
   const tone = statusTone(item.status);
-  const uptime = percent(item.uptime_pct);
+  const availability = uptime(item.uptime_pct, item.uptime_samples);
   return (
     <article className={`r-monitoring-card ${tone}`}>
       <header>
@@ -91,7 +100,7 @@ function ComponentCard({ item }: { item: Component }) {
         ) : (
           <li>Часть заведена заранее и пока не отчитывается</li>
         )}
-        {uptime && <li>Доступность за период — {uptime}</li>}
+        {availability && <li>Доступность за период — {availability}</li>}
         {item.latency_p95_ms !== null && (
           <li>Отклик, 95-й перцентиль — {item.latency_p95_ms} мс</li>
         )}
@@ -141,7 +150,7 @@ function SurfaceCard({ item }: { item: Surface }) {
 function CheckRow({ item }: { item: Check }) {
   const tone = statusTone(item.status);
   const shown = measurement(item);
-  const uptime = percent(item.uptime_pct);
+  const availability = uptime(item.uptime_pct, item.samples);
   return (
     <div className={`r-monitoring-check ${tone}`}>
       <div>
@@ -157,7 +166,7 @@ function CheckRow({ item }: { item: Check }) {
         <b>{shown ?? STATUS_LABEL[item.status]}</b>
         <small>{shown ? STATUS_LABEL[item.status] : period(item.period_seconds)}</small>
         <small>{ago(item.age_seconds)}</small>
-        {uptime && <small>доступность {uptime}</small>}
+        {availability && <small>доступность {availability}</small>}
       </div>
     </div>
   );
@@ -230,6 +239,11 @@ export function MonitoringModule() {
 
   const summary = snapshot?.summary ?? null;
   const verdict = summary ? VERDICT[summary.status] : null;
+  // Запланированные части не занимают сетку. Треть первого экрана, сообщающая, что двух
+  // третей системы не существует, — это не наблюдаемость, а напоминание о планах: их
+  // просто нет, и ломаться в них нечему. Одна строка внизу говорит ровно столько же.
+  const planned = (snapshot?.components ?? []).filter((row) => row.lifecycle === 'planned');
+  const liveSurfaces = (snapshot?.surfaces ?? []).filter((row) => row.lifecycle === 'live');
   const checksByComponent = (snapshot?.checks ?? []).reduce<Map<string, Check[]>>((acc, row) => {
     const key = row.component_title ?? 'Не описанные проверки';
     const list = acc.get(key);
@@ -249,6 +263,14 @@ export function MonitoringModule() {
           людях: этот экран о машинах.
         </p>
       </div>
+
+      {summary && (
+        <p className="r-monitoring-since">
+          Наблюдения ведутся с {stamp(summary.observations_since)}. Всё, что снято раньше, осталось
+          в базе, но в счёт не идёт: до этого момента две проверки давали ложный отказ, и считать их
+          наравне со свежими значит показывать аварию, которой нет.
+        </p>
+      )}
 
       <div className="r-health-periods">
         {PERIODS.map((item, index) => (
@@ -297,8 +319,11 @@ export function MonitoringModule() {
                 {summary.components_failing > 0 && `, в отказе ${summary.components_failing}`}
                 {summary.components_silent > 0 && `, молчит ${summary.components_silent}`}
                 {summary.worst_component && ` · хуже всего: ${summary.worst_component}`}
-                {percent(summary.uptime_pct) &&
-                  ` · доступность критичных частей за период ${percent(summary.uptime_pct)}`}
+                {uptime(summary.uptime_pct, summary.uptime_samples) &&
+                  ` · доступность критичных частей за период ${uptime(
+                    summary.uptime_pct,
+                    summary.uptime_samples,
+                  )}`}
                 {' · '}
                 снято {stamp(summary.generated_at)}
               </small>
@@ -312,7 +337,9 @@ export function MonitoringModule() {
           </div>
 
           {LAYERS.map((layer) => {
-            const items = (snapshot?.components ?? []).filter((row) => row.layer === layer.id);
+            const items = (snapshot?.components ?? []).filter(
+              (row) => row.layer === layer.id && row.lifecycle === 'live',
+            );
             if (items.length === 0) return null;
             return (
               <section key={layer.id}>
@@ -327,7 +354,14 @@ export function MonitoringModule() {
             );
           })}
 
-          {(snapshot?.surfaces ?? []).length > 0 && (
+          {planned.length > 0 && (
+            <p className="r-monitoring-planned">
+              В плане: {planned.map((row) => row.title.toLowerCase()).join(', ')}. Этих частей ещё
+              нет — места на экране они не занимают.
+            </p>
+          )}
+
+          {liveSurfaces.length > 0 && (
             <section>
               <p className="r-kicker">Что говорят сами фронты</p>
               <p className="r-lead">
@@ -337,7 +371,7 @@ export function MonitoringModule() {
                 между собой, а не для абсолютного вывода.
               </p>
               <div className="r-monitoring-grid">
-                {(snapshot?.surfaces ?? []).map((item) => (
+                {liveSurfaces.map((item) => (
                   <SurfaceCard key={item.component_id} item={item} />
                 ))}
               </div>

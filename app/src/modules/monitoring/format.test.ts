@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STATUS_LABEL, ago, measurement, percent, period, statusTone } from './format';
+import { STATUS_LABEL, ago, measurement, percent, period, statusTone, uptime } from './format';
 
 describe('возраст отчёта', () => {
   it('не округляет молчание до «только что»', () => {
@@ -80,5 +80,23 @@ describe('проценты', () => {
     expect(percent(null)).toBeNull();
     expect(percent(0)).toBe('0%');
     expect(percent(94.12)).toBe('94.12%');
+  });
+});
+
+describe('доступность', () => {
+  it('называет причину, а не рисует прочерк молча', () => {
+    // База не отдаёт процент, посчитанный меньше чем по тридцати точкам. Экран обязан
+    // сказать почему: прочерк читается как поломка витрины, а не как «мало данных».
+    expect(uptime(null, 4)).toBe('мало наблюдений');
+  });
+
+  it('показывает процент, когда он посчитан', () => {
+    expect(uptime(94.12, 3855)).toBe('94.12%');
+    expect(uptime(100, 552)).toBe('100%');
+  });
+
+  it('молчит там, где наблюдений не было вовсе', () => {
+    // Ноль наблюдений — это не «мало», это «нечего показывать». Строки быть не должно.
+    expect(uptime(null, 0)).toBeNull();
   });
 });
