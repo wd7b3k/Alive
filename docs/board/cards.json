@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-31",
-  "appliedCommit": "12f96d791187cf183a47aa391189459617d10f0a",
+  "appliedCommit": "7624ab7eb10e7c5fb8deca80fdbdc7aaf4cf2fe2",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3625,7 +3625,15 @@
       "body": "dump-knowledge-for-schema.mjs ходит через psql на сервере, knowledge-lock.mjs — через PostgREST под публикуемым ключом. Один каталог, два читателя с разными требованиями к окружению: первый работает только на сервере, второй везде.",
       "updated": "2026-08-31",
       "commits": [
-        "4dc2381165ec1396713f82b518d0dbea7b9a0a94"
+        "4dc2381165ec1396713f82b518d0dbea7b9a0a94",
+        "7624ab7eb10e7c5fb8deca80fdbdc7aaf4cf2fe2"
+      ],
+      "chats": [
+        {
+          "label": "чат 2026-08-31",
+          "slug": "",
+          "url": "https://claude.ai/code/session_01KeDhckSxJXNTKY2PZ4fzDg"
+        }
       ]
     }
   ]
