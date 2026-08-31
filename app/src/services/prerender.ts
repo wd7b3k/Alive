@@ -22,6 +22,7 @@
  */
 import { RELEASES } from '../redesign/releases';
 import { ORIGIN, metaFor } from './seo';
+import { notFoundGraph, routeGraph, scriptTag, type KnowledgeEntry } from './schema';
 
 export function escapeHtml(value: string): string {
   return value
@@ -58,6 +59,7 @@ function replaceOne(
 const TITLE = /<title>[\s\S]*?<\/title>/;
 const CANONICAL = /<link[^>]*rel="canonical"[^>]*>/;
 const PRERENDER_BODY = /<main class="r-prerender">[\s\S]*?<\/main>/;
+const LD_JSON = /<script type="application\/ld\+json">[\s\S]*?<\/script>/;
 
 function metaByName(name: string): RegExp {
   return new RegExp(`<meta[^>]*name="${name}"[^>]*>`);
@@ -216,7 +218,11 @@ export function notFoundBody(): string {
 /**
  * Документ для одного адреса: тот же бандл, свои заголовок, описание и содержание.
  */
-export function renderRoute(indexHtml: string, path: string): string {
+export function renderRoute(
+  indexHtml: string,
+  path: string,
+  knowledge: KnowledgeEntry[] = [],
+): string {
   const meta = metaFor(path);
   const url = ORIGIN + path;
   const title = escapeHtml(meta.title);
@@ -255,6 +261,19 @@ export function renderRoute(indexHtml: string, path: string): string {
     `<meta property="og:description" content="${description}" />`,
   );
 
+  // Разметка по месту. На главной остаётся та, что написана в `index.html`, — там
+  // живёт `FAQPage`, и он обязан встречаться ровно на одном адресе. Остальные получают
+  // свою: до 31.08.2026 пререндер копировал главную целиком, и шесть страниц несли
+  // один и тот же набор вопросов.
+  if (path !== '/') {
+    html = replaceOne(
+      html,
+      'блок application/ld+json',
+      LD_JSON,
+      scriptTag(routeGraph(path, knowledge)),
+    );
+  }
+
   const body = path === '/releases' ? releasesBody() : routeBody(path);
   if (body) {
     html = replaceOne(html, 'статический слепок в <body>', PRERENDER_BODY, body);
@@ -291,6 +310,7 @@ export function renderNotFound(indexHtml: string): string {
     metaByName('robots'),
     '<meta name="robots" content="noindex, follow" />',
   );
+  html = replaceOne(html, 'блок application/ld+json', LD_JSON, scriptTag(notFoundGraph()));
   html = replaceOne(html, 'статический слепок в <body>', PRERENDER_BODY, notFoundBody());
   return html;
 }

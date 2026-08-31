@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-31",
-  "appliedCommit": "3ec54e4c0541639760b1a6e684c86519f5e62c13",
+  "appliedCommit": "b2fcfcee22b11a1e7d2a7bfa099feb24bf4efd2b",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3250,10 +3250,11 @@
       "epic": "content",
       "priority": 2,
       "status": "backlog",
-      "body": "В базе уровень доказательности, границы и источник обязательны, а в JSON-LD, то есть ровно там, откуда утверждение попадёт в сниппет и в пересказ модели, их нет.",
-      "updated": "2026-08-30",
+      "body": "В базе уровень доказательности, границы и источник обязательны, а в JSON-LD, то есть ровно там, откуда утверждение попадёт в сниппет и в пересказ модели, их нет. citation появился у ItemList на /knowledge; пять ответов FAQPage на главной по-прежнему без источников",
+      "updated": "2026-08-31",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "b2fcfcee22b11a1e7d2a7bfa099feb24bf4efd2b"
       ]
     },
     {
@@ -3538,6 +3539,19 @@
       "updated": "2026-08-31",
       "commits": [
         "3ec54e4c0541639760b1a6e684c86519f5e62c13"
+      ]
+    },
+    {
+      "id": "razmetka-byla-odna-na",
+      "title": "Разметка была одна на шесть адресов",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "done",
+      "body": "WebSite, WebApplication и FAQPage с пятью вопросами копировались на все страницы; FAQPage описывает главную, а стоял везде",
+      "updated": "2026-08-31",
+      "commits": [
+        "b2fcfcee22b11a1e7d2a7bfa099feb24bf4efd2b"
       ]
     }
   ]
