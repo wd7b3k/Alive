@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "generated": "2026-08-30",
-  "appliedCommit": "838ac2995d084fbb2fc5ede7ab042b1acf95cce4",
+  "generated": "2026-08-31",
+  "appliedCommit": "02ae08430625719f98fe66c3a5746d0cddc51d89",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -1471,9 +1471,9 @@
       "type": "feature",
       "epic": "flow",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "Схема и запись эпизода его поддерживают, карточки в интерфейсе нет. Участник с контекстом вне 28 карточек вынужден выбрать неправильный. Осознанно не сделано перед пилотом.",
-      "updated": "2026-08-27",
+      "updated": "2026-08-30",
       "chats": [
         {
           "label": "habitoff-pilot-readiness-2026-08-27",
@@ -1481,7 +1481,9 @@
           "url": ""
         }
       ],
-      "commits": []
+      "commits": [
+        "0ca235930696229abae5cb1208d3347535c23851"
+      ]
     },
     {
       "id": "content-layer",
@@ -3432,6 +3434,78 @@
           "label": "ADR-0015-counters.md",
           "path": "docs/decisions/ADR-0015-counters.md"
         }
+      ]
+    },
+    {
+      "id": "kontekst-vne-kataloga-v",
+      "title": "Контекст вне каталога в потоке тяги",
+      "type": "feature",
+      "epic": "flow",
+      "priority": 1,
+      "status": "done",
+      "body": "карточка «Моей ситуации тут нет» на шаге 1, поле на месте, текст только в эпизод",
+      "updated": "2026-08-30",
+      "commits": [
+        "76584e570d636cca1840bfe658972973637b4068",
+        "51732c6124dc86eb31d718a2852972d014ba7b69"
+      ],
+      "docs": [
+        {
+          "label": "ADR-0017-participant-feedback.md",
+          "path": "docs/decisions/ADR-0017-participant-feedback.md"
+        }
+      ]
+    },
+    {
+      "id": "monitoring-pokazyvaet-avariyu-pri",
+      "title": "Мониторинг показывает аварию при работающем сервисе",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "агрегаты считают записи до починки проверок, процент по четырём точкам, две карточки из трёх про несуществующее",
+      "updated": "2026-08-31",
+      "commits": [
+        "9653eba50ef1ebed01c2a8a779d159b1ddbf9125"
+      ]
+    },
+    {
+      "id": "voronka-po-istochnikam-i",
+      "title": "Воронка по источникам и этапам",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "admin_source_funnel плюс экран, доля считается от своего источника",
+      "updated": "2026-08-31",
+      "commits": [
+        "9653eba50ef1ebed01c2a8a779d159b1ddbf9125"
+      ]
+    },
+    {
+      "id": "navigaciya-knopkami-vmesto-ssylok",
+      "title": "Навигация кнопками вместо ссылок: у сайта нулевая ссылочная связность",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "ноль a href в HTML, робот не может уйти с главной",
+      "updated": "2026-08-31",
+      "commits": [
+        "893655fba54238e10820c7af05912b1b697bb59e"
+      ]
+    },
+    {
+      "id": "prerender-otdaet-glavnuyu-pod",
+      "title": "Пререндер отдаёт главную под пятью адресами",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "одинаковый h1 и 2240 знаков одного текста, дубли в индексе",
+      "updated": "2026-08-31",
+      "commits": [
+        "893655fba54238e10820c7af05912b1b697bb59e"
       ]
     }
   ]
