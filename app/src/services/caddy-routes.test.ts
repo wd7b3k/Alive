@@ -57,6 +57,34 @@ describe('маршруты в Caddyfile', () => {
     );
   });
 
+  /**
+   * `handle_errors` — не упорядоченный обработчик, и вложенным в `handle` Caddy его
+   * разбирать отказывается. 31.08.2026 конфиг уехал на сервер именно таким и упал на
+   * `caddy validate` — то есть до `reload`, прод не пострадал. Но поймал это сервер, а
+   * не репозиторий: файл лежит в git и до этого дня ничем не проверялся.
+   *
+   * Полноценной проверки без самого Caddy не сделать, а тащить его в CI ради одного
+   * файла — перебор. Эта проверка ловит ровно ту ошибку, которая уже случилась.
+   */
+  it('handle_errors стоит на уровне сайта, а не внутри handle', () => {
+    const insideHandle = /handle\s*\{[^}]*handle_errors/s.test(caddyfile);
+    expect(insideHandle, 'handle_errors вложен в handle — Caddy откажется разбирать').toBe(false);
+    // Один таб отступа — это уровень сайта. Записан escape-последовательностью, а не
+    // символом: голый таб в регулярном выражении eslint запрещает, и правильно делает —
+    // его не отличить от пробелов при чтении.
+    expect(caddyfile).toMatch(/^\thandle_errors \{/m);
+  });
+
+  it('страница 404 отдаётся со своим кодом, а не с двумястами', () => {
+    // Без явного status file_server отдал бы 404.html с кодом 200 — мягкий 404
+    // вернулся бы через заднюю дверь, но выглядел бы починенным.
+    expect(caddyfile).toMatch(/file_server \{\s*status 404/);
+    expect(caddyfile).toContain('rewrite * /404.html');
+    // handle_errors живёт вне блока со статикой, значит root ему нужен свой.
+    const errors = caddyfile.slice(caddyfile.indexOf('handle_errors {'));
+    expect(errors).toContain('root * /srv/alive/current');
+  });
+
   it('сохраняет редирект www на apex', () => {
     expect(caddyfile).toMatch(/www\.habitoff\.ru\s*\{[\s\S]*redir https:\/\/habitoff\.ru/);
   });
