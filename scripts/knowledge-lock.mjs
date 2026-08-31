@@ -91,13 +91,22 @@ function source(row) {
  * разница между фактом и мифом — одно поле `kind`. Расхождение между тем, что видит
  * читатель статьи, и тем, что видит человек в разделе, было бы худшим из возможных.
  */
-export async function fetchClaims({ url, key }) {
+export async function fetchCounts({ url, key }) {
+  const client = restClient({ url, key });
+  const [triggers, replacements] = await Promise.all([
+    client('triggers_catalog?select=code&published=eq.true'),
+    client('replacements_catalog?select=code&published=eq.true'),
+  ]);
+  return { triggers: triggers.length, replacements: replacements.length };
+}
+
+function restClient({ url, key }) {
   if (!url || !key) {
     throw new Error(
       'Нет доступа к каталогу: не заданы VITE_SUPABASE_URL и VITE_SUPABASE_PUBLISHABLE_KEY.',
     );
   }
-  async function query(path) {
+  return async function query(path) {
     const response = await fetch(`${url}/rest/v1/${path}`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
     });
@@ -105,7 +114,11 @@ export async function fetchClaims({ url, key }) {
       throw new Error(`Каталог не ответил (${path}): ${response.status} ${await response.text()}`);
     }
     return response.json();
-  }
+  };
+}
+
+export async function fetchClaims({ url, key }) {
+  const query = restClient({ url, key });
   const [facts, myths] = await Promise.all([
     query(
       `facts_catalog?select=code,title,short_text,full_text,changes_ru,evidence_level,product_types,surfaces,sort_order,${SOURCE_COLUMNS}&published=eq.true&order=sort_order`,
@@ -178,7 +191,7 @@ export function claimHash(claim) {
   return createHash('sha256').update(canonical, 'utf8').digest('hex').slice(0, 32);
 }
 
-export function buildLock(claims, generated) {
+export function buildLock(claims, generated, counts) {
   const entries = [...claims.values()].sort((a, b) => a.code.localeCompare(b.code));
   return {
     note:
@@ -186,6 +199,15 @@ export function buildLock(claims, generated) {
       'текста в репозитории не существует. Пересобирается scripts/knowledge-lock.mjs.',
     generated,
     algorithm: 'sha256-32',
+    // Числа, которые до 31.08.2026 лежали в llms.txt руками написанной строкой
+    // (карточка доски chisla-v-llms-txt). Здесь они машинные и приезжают из базы;
+    // сборка подставляет их в файл, а не переписывает его глазами.
+    counts: {
+      facts: entries.filter((claim) => claim.kind === 'fact').length,
+      myths: entries.filter((claim) => claim.kind === 'myth').length,
+      triggers: counts.triggers,
+      replacements: counts.replacements,
+    },
     claims: Object.fromEntries(
       entries.map((claim) => [
         claim.code,
@@ -258,12 +280,25 @@ if (runDirectly) {
     process.exit(0);
   }
 
+  let counts;
+  try {
+    counts = await fetchCounts(env);
+  } catch (error) {
+    console.error(String(error.message ?? error));
+    process.exit(1);
+  }
   const previous = existsSync(LOCK_PATH) ? readLock() : null;
-  const next = buildLock(claims, previous?.generated ?? new Date().toISOString().slice(0, 10));
+  const next = buildLock(
+    claims,
+    previous?.generated ?? new Date().toISOString().slice(0, 10),
+    counts,
+  );
 
   if (check) {
     const same =
-      previous && JSON.stringify(previous.claims) === JSON.stringify(next.claims);
+      previous &&
+      JSON.stringify(previous.claims) === JSON.stringify(next.claims) &&
+      JSON.stringify(previous.counts) === JSON.stringify(next.counts);
     if (same) {
       console.log(`Замок совпадает с каталогом: ${claims.size} утверждений.`);
       process.exit(0);

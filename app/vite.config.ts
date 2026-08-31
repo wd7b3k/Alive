@@ -5,10 +5,14 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
+import { CATALOG_COUNTS } from './src/services/catalog-counts';
+import { buildKnowledge, fillCounts, renderLlmsTxt } from './src/services/knowledge-build';
+import { clusterLinks, homeFaqBlock, homeFaqLd } from './src/services/knowledge-pages';
 import {
   renderNotFound,
   renderRoute,
   renderSitemap,
+  replaceOne,
   type SitemapEntry,
 } from './src/services/prerender';
 import { PRERENDER_PATHS } from './src/services/seo';
@@ -91,11 +95,15 @@ const SHARED_SOURCES = [
  * оригинала ровно тем, чем должны, — заголовком, описанием, canonical и og:url. Своей
  * сборки на каждый адрес не заводится: это те же байты бандла, а не пять приложений.
  */
+const FAQ_LD = /<script type="application\/ld\+json" id="faq-ld">[\s\S]*?<\/script>/;
+const PRERENDER_FAQ = /<section class="r-prerender-faq">[\s\S]*?<\/section>/;
+
 function prerenderPublicRoutes(): Plugin {
+  const root = fileURLToPath(new URL('.', import.meta.url));
   return {
     name: 'habitoff-prerender-routes',
     enforce: 'post',
-    writeBundle(options, bundle) {
+    async writeBundle(options, bundle) {
       const index = bundle['index.html'];
       if (!index || index.type !== 'asset') {
         throw new Error('Предрендер: в сборке нет index.html — из чего собирать разделы?');
@@ -104,28 +112,87 @@ function prerenderPublicRoutes(): Plugin {
       if (!outDir) throw new Error('Предрендер: у сборки нет каталога вывода.');
       const source = String(index.source);
 
+      // Стили страниц базы знаний — те же, что у приложения: вторая дизайн-система не
+      // заводится. Имена берутся из уже собранного index.html, а не угадываются.
+      const css = [...source.matchAll(/<link rel="stylesheet"[^>]*href="([^"]+)"/g)].map(
+        (match) => match[1],
+      );
+      const knowledge = await buildKnowledge(root, { css });
+      if (knowledge.skipped) {
+        // Громко и не в конце лога: неполную сборку легко принять за целую.
+        this.warn(`База знаний не разложена — ${knowledge.skipped}`);
+      }
+
+      /** Общая доводка любой страницы приложения: числа каталога и разметка вопросов. */
+      const finish = (html: string, path: string): string => {
+        const filled = fillCounts(html, CATALOG_COUNTS);
+        if (path !== '/') {
+          // Вопросы с главной на разделе означали бы FAQPage не про эту страницу.
+          return replaceOne(filled, 'разметка faq-ld', FAQ_LD, '');
+        }
+        const withLd = replaceOne(
+          filled,
+          'разметка faq-ld',
+          FAQ_LD,
+          homeFaqLd(knowledge.registry, knowledge.articles),
+        );
+        return replaceOne(
+          withLd,
+          'блок частых вопросов',
+          PRERENDER_FAQ,
+          homeFaqBlock(knowledge.registry, knowledge.articles),
+        );
+      };
+
       // Главная переписывается через тот же путь, что и разделы: ей дописывается
       // навигация. Без неё робот доходит до главной и упирается в тупик — уйти с неё
       // по ссылке было некуда, ноль внутренних ссылок в сыром HTML на всех адресах.
-      writeFileSync(join(outDir, 'index.html'), renderRoute(source, '/'), 'utf8');
+      writeFileSync(join(outDir, 'index.html'), finish(renderRoute(source, '/'), '/'), 'utf8');
 
       for (const path of PRERENDER_PATHS) {
         const file = join(outDir, path.slice(1), 'index.html');
         mkdirSync(dirname(file), { recursive: true });
-        writeFileSync(file, renderRoute(source, path), 'utf8');
+        // У раздела «Факты и мифы» под текстом появляется список кластеров базы знаний.
+        const extra = path === '/knowledge' ? clusterLinks(knowledge.registry) : undefined;
+        writeFileSync(file, finish(renderRoute(source, path, extra), path), 'utf8');
       }
 
       // Страница для несуществующего адреса. Её отдаёт Caddy через handle_errors,
       // сохраняя код 404: до 31.08.2026 код был правильный, а тело — нулевой длины,
       // и человек видел белый экран. В карту сайта она не попадает и несёт noindex.
-      writeFileSync(join(outDir, '404.html'), renderNotFound(source), 'utf8');
+      writeFileSync(join(outDir, '404.html'), finish(renderNotFound(source), '/404'), 'utf8');
 
-      const entries: SitemapEntry[] = ['/', ...PRERENDER_PATHS].map((path) => ({
-        path,
-        lastmod: lastModified(
-          path === '/releases' ? [...SHARED_SOURCES, 'src/redesign/releases.ts'] : SHARED_SOURCES,
+      for (const file of knowledge.files) {
+        const target = join(outDir, file.path);
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, file.contents, 'utf8');
+      }
+
+      // Числа в llms.txt собираются из замка, а не пишутся руками: до 31.08.2026 файл
+      // называл 28 пусковых моментов, которых в базе уже 25 (карточка chisla-v-llms-txt).
+      writeFileSync(
+        join(outDir, 'llms.txt'),
+        renderLlmsTxt(
+          readFileSync(join(root, 'llms.template.txt'), 'utf8'),
+          CATALOG_COUNTS,
+          knowledge.registry,
+          knowledge.articles,
         ),
-      }));
+        'utf8',
+      );
+
+      const entries: SitemapEntry[] = [
+        ...['/', ...PRERENDER_PATHS].map((path) => ({
+          path,
+          lastmod: lastModified(
+            path === '/releases' ? [...SHARED_SOURCES, 'src/redesign/releases.ts'] : SHARED_SOURCES,
+          ),
+        })),
+        ...knowledge.routes.map((route) => ({
+          path: route.path,
+          lastmod: lastModified([...SHARED_SOURCES, ...route.sources]),
+        })),
+      ];
       writeFileSync(join(outDir, 'sitemap.xml'), renderSitemap(entries), 'utf8');
     },
   };

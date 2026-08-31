@@ -2,6 +2,12 @@
   "note": "Коды и хэши утверждений каталога. Текстов здесь нет намеренно: второй копии текста в репозитории не существует. Пересобирается scripts/knowledge-lock.mjs.",
   "generated": "2026-08-31",
   "algorithm": "sha256-32",
+  "counts": {
+    "facts": 19,
+    "myths": 19,
+    "triggers": 25,
+    "replacements": 74
+  },
   "claims": {
     "calms_me": {
       "kind": "myth",

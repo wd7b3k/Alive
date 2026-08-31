@@ -38,7 +38,7 @@ export function escapeHtml(value: string): string {
  * ту ошибку, ради которой всё это написано, — и обнаружился бы он через месяц в
  * выдаче. Сборка обязана упасть на месте.
  */
-function replaceOne(
+export function replaceOne(
   html: string,
   label: string,
   pattern: RegExp,
@@ -179,8 +179,15 @@ export function releasesBody(): string {
   ].join('\n      ');
 }
 
-/** Тело раздела: свой заголовок, свой текст и ссылки на соседние разделы. */
-export function routeBody(path: string): string | null {
+/**
+ * Тело раздела: свой заголовок, свой текст и ссылки на соседние разделы.
+ *
+ * `extra` — готовая разметка, собранная кем-то другим: сейчас это список кластеров базы
+ * знаний для `/knowledge`. Она приходит параметром, а не импортом, потому что этот
+ * модуль сознательно ничего не знает про содержание разделов, и `prerender.test.ts`
+ * следит за списком его импортов.
+ */
+export function routeBody(path: string, extra?: string): string | null {
   const body = BODIES[path];
   if (!body) return null;
   const paragraphs = body.paragraphs.map((text) => `        <p>${escapeHtml(text)}</p>`).join('\n');
@@ -188,6 +195,7 @@ export function routeBody(path: string): string | null {
     '<main class="r-prerender">',
     `        <h1>${escapeHtml(body.h1)}</h1>`,
     paragraphs,
+    ...(extra ? [extra] : []),
     navBlock(path),
     '      </main>',
   ].join('\n      ');
@@ -216,7 +224,7 @@ export function notFoundBody(): string {
 /**
  * Документ для одного адреса: тот же бандл, свои заголовок, описание и содержание.
  */
-export function renderRoute(indexHtml: string, path: string): string {
+export function renderRoute(indexHtml: string, path: string, extra?: string): string {
   const meta = metaFor(path);
   const url = ORIGIN + path;
   const title = escapeHtml(meta.title);
@@ -255,7 +263,7 @@ export function renderRoute(indexHtml: string, path: string): string {
     `<meta property="og:description" content="${description}" />`,
   );
 
-  const body = path === '/releases' ? releasesBody() : routeBody(path);
+  const body = path === '/releases' ? releasesBody() : routeBody(path, extra);
   if (body) {
     html = replaceOne(html, 'статический слепок в <body>', PRERENDER_BODY, body);
   } else if (path === '/') {
