@@ -136,7 +136,7 @@
   редакционный черновик.
 
 Сверка: снимок метаданных каталога до работы и после обязан совпасть
-(`docs/ai_sessions/2026-08-31/005-knowledge-catalog-baseline.json`).
+(`docs/ai_sessions/2026-08-31/006-knowledge-catalog-baseline.json`).
 
 ## Что это меняет в правилах
 
