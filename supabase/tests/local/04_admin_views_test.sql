@@ -33,7 +33,12 @@ begin
     'select count(*) from public.admin_flow_steps(30)',
     'select count(*) from public.admin_retention(8)',
     'select count(*) from public.admin_sources(30)',
-    'select count(*) from public.admin_user_states()'
+    'select count(*) from public.admin_user_states()',
+    -- Воронка по источникам и три опорных числа. Оба вызова обязаны отработать на пустой
+    -- базе: витрина, падающая до первого участника, обнаружится ровно тогда, когда
+    -- участники появятся, — то есть в худший момент.
+    'select count(*) from public.admin_source_funnel(30)',
+    'select count(*) from public.admin_headline(30)'
   ]
   loop
     execute statement into rows_out;

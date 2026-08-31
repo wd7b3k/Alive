@@ -357,3 +357,34 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:600px){.r-monitoring-grid{grid-template-columns:1fr}.r-monitoring-check{grid-template-columns:1fr;gap:var(--r-sp-2)}.r-monitoring-meta{text-align:left;white-space:normal}}
 .r-monitoring-since{margin:0;color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.55;max-width:72ch}
 .r-monitoring-planned{margin:0;color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.5;padding:var(--r-sp-3);border:1px dashed var(--r-line);border-radius:var(--r-r-md)}
+
+/* Аналитика: плитки, объединённый график недель, воронка по источникам, кабинеты.
+   Цвет наблюдения здесь не используется — он закреплён за местами наблюдения (ADR-0005).
+   Рост и падение красятся зелёным и красным из палитры, и только они. */
+.r-viz-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:var(--r-sp-3)}
+.r-viz-tile{border:1px solid var(--r-line);border-radius:var(--r-r-lg);padding:var(--r-sp-4);background:rgba(255,255,255,.022);display:grid;align-content:start;gap:var(--r-sp-1)}
+.r-viz-tile>span{color:var(--r-muted);font-size:var(--r-fs-xs);font-weight:750;text-transform:uppercase;letter-spacing:.06em}
+.r-viz-tile strong{font-size:var(--r-fs-h1);letter-spacing:-.04em;line-height:1.05;font-variant-numeric:tabular-nums}
+.r-viz-tile strong em{font-style:normal;font-size:var(--r-fs-sm);color:var(--r-muted);letter-spacing:0}
+.r-viz-tile>b{font-size:var(--r-fs-xs);font-weight:700;color:var(--r-muted);font-variant-numeric:tabular-nums}
+.r-viz-tile>b.better{color:var(--r-ok)}
+.r-viz-tile>b.worse{color:var(--r-red)}
+.r-viz-tile>b.pale{color:var(--r-dim);font-weight:600}
+.r-viz-tile small{color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.5;margin-top:var(--r-sp-1)}
+.r-viz-chart{display:block;width:100%;height:auto;max-height:200px;margin-top:var(--r-sp-3)}
+.r-viz-funnel{display:grid;gap:var(--r-sp-4);margin-top:var(--r-sp-3)}
+.r-viz-funnel>div{display:grid;gap:var(--r-sp-2)}
+.r-viz-funnel p{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--r-sp-2)}
+.r-viz-funnel p b{font-size:var(--r-fs-sm);font-weight:750}
+.r-viz-funnel p span{color:var(--r-dim);font-size:var(--r-fs-xs);min-width:0;overflow-wrap:anywhere}
+.r-viz-funnel p em{margin-left:auto;font-style:normal;font-size:var(--r-fs-sm);font-weight:750;color:var(--r-teal);font-variant-numeric:tabular-nums}
+.r-viz-funnel-bars{display:grid;gap:var(--r-sp-1)}
+.r-viz-funnel-bars i{display:block;height:8px;border-radius:var(--r-r-sm);background:rgba(255,255,255,.04)}
+.r-viz-funnel-bars i span{display:block;height:100%;border-radius:var(--r-r-sm);background:var(--r-teal)}
+.r-viz-funnel small{color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.5}
+.r-viz-cabinets{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:var(--r-sp-2);margin-top:var(--r-sp-3)}
+.r-viz-cabinets a{display:grid;gap:var(--r-sp-1);padding:var(--r-sp-3);border:1px solid var(--r-line);border-radius:var(--r-r-md);background:rgba(255,255,255,.018);text-decoration:none}
+.r-viz-cabinets a:hover{border-color:rgba(224,201,166,.32)}
+.r-viz-cabinets b{font-size:var(--r-fs-sm);color:var(--r-text)}
+.r-viz-cabinets small{font-size:var(--r-fs-xs);line-height:1.5;color:var(--r-dim)}
+@media(max-width:600px){.r-viz-tiles,.r-viz-cabinets{grid-template-columns:1fr}.r-viz-funnel p em{margin-left:0}}
