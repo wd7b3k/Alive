@@ -22,6 +22,7 @@
  */
 import { RELEASES } from '../redesign/releases';
 import { ORIGIN, metaFor } from './seo';
+import { notFoundGraph, routeGraph, scriptTag, type KnowledgeEntry } from './schema';
 
 export function escapeHtml(value: string): string {
   return value
@@ -58,6 +59,28 @@ export function replaceOne(
 const TITLE = /<title>[\s\S]*?<\/title>/;
 const CANONICAL = /<link[^>]*rel="canonical"[^>]*>/;
 const PRERENDER_BODY = /<main class="r-prerender">[\s\S]*?<\/main>/;
+const LD_JSON = /<script type="application\/ld\+json">[\s\S]*?<\/script>/;
+
+/**
+ * Частые вопросы главной: отдельный блок разметки и отдельный блок текста.
+ *
+ * Оба собираются на сборке из статей базы знаний — с адресом разбора и его
+ * библиографией у каждого ответа (ADR-0017). В `index.html` на их месте стоят заглушки,
+ * и правило `FAQPage` живёт ровно на одном адресе продолжает действовать: на всех
+ * адресах, кроме главной, заглушка вырезается здесь же.
+ */
+const FAQ_LD = /<script type="application\/ld\+json" id="faq-ld">[\s\S]*?<\/script>/;
+const PRERENDER_FAQ = /<section class="r-prerender-faq">[\s\S]*?<\/section>/;
+
+/** Что подставляется в страницу помимо мета-тегов: собрано вне этого модуля. */
+export type PageParts = {
+  /** Дополнительная разметка в тело раздела — сейчас список кластеров базы знаний. */
+  extra?: string;
+  /** Готовый `FAQPage` для главной. Не передан — остаётся заглушка из `index.html`. */
+  faqLd?: string;
+  /** Видимые вопросы и ответы для статического слепка главной. */
+  faqBlock?: string;
+};
 
 function metaByName(name: string): RegExp {
   return new RegExp(`<meta[^>]*name="${name}"[^>]*>`);
@@ -224,7 +247,12 @@ export function notFoundBody(): string {
 /**
  * Документ для одного адреса: тот же бандл, свои заголовок, описание и содержание.
  */
-export function renderRoute(indexHtml: string, path: string, extra?: string): string {
+export function renderRoute(
+  indexHtml: string,
+  path: string,
+  knowledge: KnowledgeEntry[] = [],
+  parts: PageParts = {},
+): string {
   const meta = metaFor(path);
   const url = ORIGIN + path;
   const title = escapeHtml(meta.title);
@@ -263,7 +291,31 @@ export function renderRoute(indexHtml: string, path: string, extra?: string): st
     `<meta property="og:description" content="${description}" />`,
   );
 
-  const body = path === '/releases' ? releasesBody() : routeBody(path, extra);
+  // Разметка по месту. На главной остаётся та, что написана в `index.html`, — там
+  // живёт `FAQPage`, и он обязан встречаться ровно на одном адресе. Остальные получают
+  // свою: до 31.08.2026 пререндер копировал главную целиком, и шесть страниц несли
+  // один и тот же набор вопросов.
+  if (path !== '/') {
+    html = replaceOne(
+      html,
+      'блок application/ld+json',
+      LD_JSON,
+      scriptTag(routeGraph(path, knowledge)),
+    );
+  }
+
+  // Частые вопросы — только на главной, по тому же правилу, что и остальная разметка
+  // по месту. На прочих адресах заглушка вырезается, а не наполняется.
+  if (path === '/') {
+    if (parts.faqLd) html = replaceOne(html, 'разметка faq-ld', FAQ_LD, parts.faqLd);
+    if (parts.faqBlock) {
+      html = replaceOne(html, 'блок частых вопросов', PRERENDER_FAQ, parts.faqBlock);
+    }
+  } else {
+    html = replaceOne(html, 'разметка faq-ld', FAQ_LD, '');
+  }
+
+  const body = path === '/releases' ? releasesBody() : routeBody(path, parts.extra);
   if (body) {
     html = replaceOne(html, 'статический слепок в <body>', PRERENDER_BODY, body);
   } else if (path === '/') {
@@ -286,6 +338,8 @@ export function renderRoute(indexHtml: string, path: string, extra?: string): st
  */
 export function renderNotFound(indexHtml: string): string {
   let html = renderRoute(indexHtml, '/');
+  // Страница ошибки — не главная: вопросы с главной ей не принадлежат.
+  html = replaceOne(html, 'разметка faq-ld', FAQ_LD, '');
   html = replaceOne(html, 'тег <title>', TITLE, '<title>Страница не найдена — Habitoff</title>');
   html = replaceOne(
     html,
@@ -299,6 +353,7 @@ export function renderNotFound(indexHtml: string): string {
     metaByName('robots'),
     '<meta name="robots" content="noindex, follow" />',
   );
+  html = replaceOne(html, 'блок application/ld+json', LD_JSON, scriptTag(notFoundGraph()));
   html = replaceOne(html, 'статический слепок в <body>', PRERENDER_BODY, notFoundBody());
   return html;
 }

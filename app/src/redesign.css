@@ -458,3 +458,5 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
 .r-cluster-links li{padding:var(--r-sp-4) var(--r-sp-5);border:1px solid var(--r-line);border-radius:var(--r-r-lg);background:rgba(255,255,255,.02)}
 .r-cluster-links a{color:var(--r-teal);font-size:var(--r-fs-body);font-weight:700}
 .r-cluster-links small{display:block;margin-top:var(--r-sp-1);color:var(--r-muted);font-size:var(--r-fs-sm);line-height:1.5}
+.r-monitoring-since{margin:0;color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.55;max-width:72ch}
+.r-monitoring-planned{margin:0;color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.5;padding:var(--r-sp-3);border:1px dashed var(--r-line);border-radius:var(--r-r-md)}

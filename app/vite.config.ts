@@ -12,9 +12,9 @@ import {
   renderNotFound,
   renderRoute,
   renderSitemap,
-  replaceOne,
   type SitemapEntry,
 } from './src/services/prerender';
+import type { KnowledgeEntry } from './src/services/schema';
 import { PRERENDER_PATHS } from './src/services/seo';
 
 const version: string = JSON.parse(
@@ -87,9 +87,6 @@ const SHARED_SOURCES = [
   'vite.config.ts',
 ];
 
-const FAQ_LD = /<script type="application\/ld\+json" id="faq-ld">[\s\S]*?<\/script>/;
-const PRERENDER_FAQ = /<section class="r-prerender-faq">[\s\S]*?<\/section>/;
-
 /**
  * Отдельный `index.html` на каждый публичный адрес, страницы базы знаний и карта сайта.
  *
@@ -102,6 +99,17 @@ const PRERENDER_FAQ = /<section class="r-prerender-faq">[\s\S]*?<\/section>/;
  * гидрации — только те же стили. Разложатся они или нет, решает доступ к каталогу; всё
  * про эти два состояния — в `src/services/knowledge-build.ts` и в ADR-0017.
  */
+/** Выгрузка каталога, если она есть. Нет файла — нет ItemList, и это рабочий случай. */
+function readKnowledge(): KnowledgeEntry[] {
+  try {
+    return JSON.parse(
+      readFileSync(fileURLToPath(new URL('./knowledge-schema.json', import.meta.url)), 'utf8'),
+    ) as KnowledgeEntry[];
+  } catch {
+    return [];
+  }
+}
+
 function prerenderPublicRoutes(): Plugin {
   const root = fileURLToPath(new URL('.', import.meta.url));
   return {
@@ -116,57 +124,62 @@ function prerenderPublicRoutes(): Plugin {
       if (!outDir) throw new Error('Предрендер: у сборки нет каталога вывода.');
       const source = String(index.source);
 
+      // Утверждения каталога с источниками — для разметки `/knowledge`. Файл кладёт
+      // выкладка (`scripts/dump-knowledge-for-schema.mjs`), в git его нет: тексты живут
+      // в базе, и копия в репозитории разошлась бы с ней на следующей миграции. Нет
+      // файла — нет ItemList, остальная разметка от него не зависит.
+      const schemaEntries = readKnowledge();
+
       // Стили страниц базы знаний — те же, что у приложения: вторая дизайн-система не
       // заводится. Имена берутся из уже собранного index.html, а не угадываются.
       const css = [...source.matchAll(/<link rel="stylesheet"[^>]*href="([^"]+)"/g)].map(
         (match) => match[1],
       );
-      const knowledge = await buildKnowledge(root, { css });
-      if (knowledge.skipped) {
+      const kb = await buildKnowledge(root, { css });
+      if (kb.skipped) {
         // Громко и не в конце лога: неполную сборку легко принять за целую.
-        this.warn(`База знаний не разложена — ${knowledge.skipped}`);
+        this.warn(`База знаний не разложена — ${kb.skipped}`);
       }
 
-      /** Общая доводка любой страницы приложения: числа каталога и разметка вопросов. */
-      const finish = (html: string, path: string): string => {
-        const filled = fillCounts(html, CATALOG_COUNTS);
-        if (path !== '/') {
-          // Вопросы с главной на разделе означали бы FAQPage не про эту страницу.
-          return replaceOne(filled, 'разметка faq-ld', FAQ_LD, '');
-        }
-        const withLd = replaceOne(
-          filled,
-          'разметка faq-ld',
-          FAQ_LD,
-          homeFaqLd(knowledge.registry, knowledge.articles),
-        );
-        return replaceOne(
-          withLd,
-          'блок частых вопросов',
-          PRERENDER_FAQ,
-          homeFaqBlock(knowledge.registry, knowledge.articles),
-        );
+      // Частые вопросы главной собираются из статей: у каждого ответа есть адрес
+      // разбора и его библиография. Куда их ставить и откуда убирать — решает
+      // пререндер, там же, где живёт правило «FAQPage ровно на одном адресе».
+      const home = {
+        faqLd: homeFaqLd(kb.registry, kb.articles),
+        faqBlock: homeFaqBlock(kb.registry, kb.articles),
       };
 
       // Главная переписывается через тот же путь, что и разделы: ей дописывается
       // навигация. Без неё робот доходит до главной и упирается в тупик — уйти с неё
       // по ссылке было некуда, ноль внутренних ссылок в сыром HTML на всех адресах.
-      writeFileSync(join(outDir, 'index.html'), finish(renderRoute(source, '/'), '/'), 'utf8');
+      writeFileSync(
+        join(outDir, 'index.html'),
+        fillCounts(renderRoute(source, '/', schemaEntries, home), CATALOG_COUNTS),
+        'utf8',
+      );
 
       for (const path of PRERENDER_PATHS) {
         const file = join(outDir, path.slice(1), 'index.html');
         mkdirSync(dirname(file), { recursive: true });
         // У раздела «Факты и мифы» под текстом появляется список кластеров базы знаний.
-        const extra = path === '/knowledge' ? clusterLinks(knowledge.registry) : undefined;
-        writeFileSync(file, finish(renderRoute(source, path, extra), path), 'utf8');
+        const extra = path === '/knowledge' ? clusterLinks(kb.registry) : undefined;
+        writeFileSync(
+          file,
+          fillCounts(renderRoute(source, path, schemaEntries, { extra }), CATALOG_COUNTS),
+          'utf8',
+        );
       }
 
       // Страница для несуществующего адреса. Её отдаёт Caddy через handle_errors,
       // сохраняя код 404: до 31.08.2026 код был правильный, а тело — нулевой длины,
       // и человек видел белый экран. В карту сайта она не попадает и несёт noindex.
-      writeFileSync(join(outDir, '404.html'), finish(renderNotFound(source), '/404'), 'utf8');
+      writeFileSync(
+        join(outDir, '404.html'),
+        fillCounts(renderNotFound(source), CATALOG_COUNTS),
+        'utf8',
+      );
 
-      for (const file of knowledge.files) {
+      for (const file of kb.files) {
         const target = join(outDir, file.path);
         mkdirSync(dirname(target), { recursive: true });
         writeFileSync(target, file.contents, 'utf8');
@@ -179,8 +192,8 @@ function prerenderPublicRoutes(): Plugin {
         renderLlmsTxt(
           readFileSync(join(root, 'llms.template.txt'), 'utf8'),
           CATALOG_COUNTS,
-          knowledge.registry,
-          knowledge.articles,
+          kb.registry,
+          kb.articles,
         ),
         'utf8',
       );
@@ -192,7 +205,7 @@ function prerenderPublicRoutes(): Plugin {
             path === '/releases' ? [...SHARED_SOURCES, 'src/redesign/releases.ts'] : SHARED_SOURCES,
           ),
         })),
-        ...knowledge.routes.map((route) => ({
+        ...kb.routes.map((route) => ({
           path: route.path,
           lastmod: lastModified([...SHARED_SOURCES, ...route.sources]),
         })),
