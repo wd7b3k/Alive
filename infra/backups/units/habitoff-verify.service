@@ -1,0 +1,10 @@
+[Unit]
+Description=Проверка восстановления из копии Habitoff
+After=docker.service
+Requires=docker.service
+OnFailure=habitoff-failure@%n.service
+
+[Service]
+Type=oneshot
+TimeoutStartSec=900
+ExecStart=/usr/local/bin/habitoff-verify

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Единственное место, откуда уходят сообщения. Никогда не возвращает ошибку:
+# упавшее уведомление не должно ронять задание, которое оно обслуживает.
+set -uo pipefail
+[ -r /etc/habitoff/backup.env ] && . /etc/habitoff/backup.env
+
+MSG="${1:-}"
+[ -z "$MSG" ] && exit 0
+
+logger -t habitoff "$(printf '%s' "$MSG" | tr '\n' ' ')"
+
+if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
+  exit 0
+fi
+
+curl -s -m 20 -o /dev/null \
+  -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+  --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+  --data-urlencode "text=${MSG}" \
+  || logger -t habitoff "уведомление отправить не удалось"
+
+exit 0

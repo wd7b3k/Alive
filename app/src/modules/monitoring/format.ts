@@ -112,3 +112,18 @@ export function percent(value: number | null): string | null {
   const number = Number(value);
   return `${Number.isInteger(number) ? number : number.toFixed(2)}%`;
 }
+
+/**
+ * Доступность словами.
+ *
+ * Процент, посчитанный по горстке точек, — не измерение, а анекдот в форме измерения:
+ * «69.81%» при четырёх проверках означает «одна из четырёх не прошла», и стоять рядом
+ * со словом «доступность» такое число не должно. Порог ставит база
+ * (`ops.min_observations`), сюда приходит уже пустое значение — экран только называет
+ * причину, вместо того чтобы молча показать прочерк.
+ */
+export function uptime(pct: number | null, samples: number): string | null {
+  const shown = percent(pct);
+  if (shown) return shown;
+  return samples > 0 ? 'мало наблюдений' : null;
+}

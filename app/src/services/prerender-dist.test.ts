@@ -169,6 +169,35 @@ describe('собранный dist, запрошенный по HTTP', () => {
     expect(page.html).toContain('content="noindex, follow"');
   });
 
+  it('FAQPage встречается ровно на одном адресе', () => {
+    // До 31.08.2026 разметка копировалась целиком: шесть страниц несли один и тот же
+    // набор из пяти вопросов, описывающих главную.
+    const withFaq = PUBLIC_ROUTES.filter((route) => pages.get(route)!.html.includes('"FAQPage"'));
+    expect(withFaq).toEqual(['/']);
+    expect(pages.get('/такой-страницы-нет')!.html).not.toContain('"FAQPage"');
+  });
+
+  it('на внутренних адресах есть хлебные крошки и своя страница', () => {
+    for (const route of PUBLIC_ROUTES.slice(1)) {
+      const html = pages.get(route)!.html;
+      expect(html, route).toContain('"BreadcrumbList"');
+      expect(html, route).toContain(`"url": "https://habitoff.ru${route}"`);
+    }
+  });
+
+  it('в разметке нет утверждения без источника', () => {
+    // Каталог приезжает из базы только на выкладке, поэтому в собранном здесь dist
+    // ItemList может отсутствовать. Но если он есть — citation обязан быть у каждого.
+    const html = pages.get('/knowledge')!.html;
+    const block = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    const graph = JSON.parse(block![1].replace(/\u003c/g, '<'))['@graph'];
+    const list = graph.find((node: Record<string, unknown>) => node['@type'] === 'ItemList');
+    if (!list) return;
+    for (const element of list.itemListElement) {
+      expect(element.item.acceptedAnswer.citation?.url).toMatch(/^https:\/\//);
+    }
+  });
+
   it('canonical у каждого адреса указывает на себя', () => {
     for (const route of PUBLIC_ROUTES) {
       const canonical = pages.get(route)!.html.match(/<link rel="canonical" href="([^"]*)"/)?.[1];

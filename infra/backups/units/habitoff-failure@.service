@@ -1,0 +1,6 @@
+[Unit]
+Description=Сообщить о падении %i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/habitoff-notify "Habitoff: задание %i ЗАВЕРШИЛОСЬ ОШИБКОЙ. Смотреть: journalctl -u %i -n 50"
