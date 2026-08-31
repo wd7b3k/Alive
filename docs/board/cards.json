@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-31",
-  "appliedCommit": "9f9ac5ba9f931ea412982b4d7efc30a4f106df17",
+  "appliedCommit": "6d51b68c9ac6295cc8822a5c626da8f9ed5c73af",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3596,6 +3596,19 @@
       "updated": "2026-08-31",
       "commits": [
         "82c038cd2758c63da6bb92264c6809bede6db21e"
+      ]
+    },
+    {
+      "id": "dzhob-doski-padaet-posle",
+      "title": "Джоб доски падает после каждого слияния",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "apply не идёт в одном коммите с трейлерами, отметка отстаёт; тело мердж-коммита читается как трейлер",
+      "updated": "2026-08-31",
+      "commits": [
+        "6d51b68c9ac6295cc8822a5c626da8f9ed5c73af"
       ]
     }
   ]
