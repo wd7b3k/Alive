@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-31",
-  "appliedCommit": "6d51b68c9ac6295cc8822a5c626da8f9ed5c73af",
+  "appliedCommit": "4ed9ca53de65c95086a820566815d4fb062f16f7",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -370,9 +370,9 @@
       "type": "infra",
       "epic": "infra",
       "priority": 0,
-      "status": "doing",
+      "status": "done",
       "body": "Три таймера: ежедневный дамп с шифрованием и отправкой, воскресная проверка восстановления, недельная сводка. Локально 7 дней, на Яндекс.Диске 14. Первый прогон сошёлся: пользователи 3/3, таблицы 45/45, миграции 51/51.",
-      "updated": "2026-08-30",
+      "updated": "2026-08-31",
       "chats": [
         {
           "label": "habitoff-backups-2026-08-27",
@@ -381,7 +381,14 @@
         }
       ],
       "commits": [
-        "a8a382a4a38e72d1d0175fe5e4ce1c70ea7d1738"
+        "a8a382a4a38e72d1d0175fe5e4ce1c70ea7d1738",
+        "4ed9ca53de65c95086a820566815d4fb062f16f7"
+      ],
+      "docs": [
+        {
+          "label": "INFRASTRUCTURE_STATE.md",
+          "path": "docs/INFRASTRUCTURE_STATE.md"
+        }
       ]
     },
     {
@@ -3609,6 +3616,19 @@
       "updated": "2026-08-31",
       "commits": [
         "6d51b68c9ac6295cc8822a5c626da8f9ed5c73af"
+      ]
+    },
+    {
+      "id": "current-state-otricaet-rabotayuschuyu",
+      "title": "CURRENT_STATE отрицает работающую наблюдаемость",
+      "type": "docs",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "пункт 2 раздела «Что осталось до полноценного прода» против ADR-0013 и ADR-0016",
+      "updated": "2026-08-31",
+      "commits": [
+        "4ed9ca53de65c95086a820566815d4fb062f16f7"
       ]
     }
   ]
