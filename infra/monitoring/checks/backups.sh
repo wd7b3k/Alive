@@ -64,14 +64,32 @@ else
 fi
 
 # --- 4. Давность проверки восстановления ---
-# Метку ставит скрипт проверки восстановления, а не человек и не эта проверка.
-marker="$BACKUP_STATE_DIR/last-restore-test"
-if [[ -r "$marker" ]]; then
+#
+# Метку ставит скрипт проверки восстановления, а не человек и не эта проверка. Меток
+# две, и это не запас: `last-verify` пишет еженедельный `habitoff-verify`, который
+# разворачивает дамп в отдельную базу и сверяет число записей; `last-restore-test` —
+# имя из runbook, под которым метку ставят руками после внеплановой проверки.
+#
+# Первая редакция знала только про вторую и потому каждый день сообщала «восстановление
+# не проверялось ни разу» — при том что оно проверялось еженедельно и проходило. Ложная
+# тревога прожила двое суток; это ровно тот случай, после которого проверки перестают
+# читать.
+marker=''
+for candidate in "$BACKUP_STATE_DIR/last-verify" "$BACKUP_STATE_DIR/last-restore-test"; do
+  [[ -r "$candidate" ]] || continue
+  if [[ -z "$marker" || "$candidate" -nt "$marker" ]]; then marker="$candidate"; fi
+done
+
+if [[ -z "$marker" ]]; then
+  emit backups_restore_test - fail - - '{"note":"восстановление не проверялось ни разу"}'
+elif grep -q '^FAIL' "$marker" 2>/dev/null; then
+  # Свежая метка о неудаче хуже старой метки об успехе: возраст здесь уже не важен.
+  reason="$(head -c 200 "$marker" | json_escape)"
+  emit backups_restore_test "$(basename "$marker")" fail - 0 "{\"note\":$reason}"
+else
   days=$(( ( $(date +%s) - $(stat -c %Y "$marker") ) / 86400 ))
   st=ok; [[ "$days" -ge 30 ]] && st=warn; [[ "$days" -ge 60 ]] && st=fail
-  emit backups_restore_test - "$st" - "$days" '{}'
-else
-  emit backups_restore_test - fail - - '{"note":"восстановление не проверялось ни разу"}'
+  emit backups_restore_test "$(basename "$marker")" "$st" - "$days" '{}'
 fi
 
 flush_buffer || true
