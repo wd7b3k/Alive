@@ -5,16 +5,41 @@ import { Icon } from '../ui-icons';
 /**
  * Текст, который человек отправляет другу.
  *
- * Собирается из двух публичных вещей: названия замены (это редакционный каталог, а не
- * его данные) и адреса продукта. Ни тяги, ни контекста, ни заметок здесь нет и быть не
- * может — момент тяги приватен, и «поделиться» не должно превращаться в утечку того,
- * что человек только что о себе записал.
+ * Собирается из одной публичной вещи — названия замены: это редакционный каталог, а не
+ * данные человека. Ни тяги, ни контекста, ни заметок здесь нет и быть не может — момент
+ * тяги приватен, и «поделиться» не должно превращаться в утечку того, что человек
+ * только что о себе записал.
+ *
+ * Адреса в тексте больше нет: он уезжает отдельным полем `url`. Приложение-получатель,
+ * которому ссылка приходит внутри строки, обрабатывает её как часть текста — часть
+ * целей теряет превью, часть обрезает. Отдельное поле — это ровно то, из чего Telegram,
+ * ВКонтакте и системный лист iOS собирают карточку.
  */
-export function shareText(replacementTitle: string | null, origin: string): string {
+export function shareText(replacementTitle: string | null): string {
   const what = replacementTitle
     ? `Сработало: ${replacementTitle.toLowerCase()}.`
-    : 'Просто заметил момент — и этого хватило.';
-  return `Только что поймал автоматизм и выбрал другой ответ. ${what} Я разбираю такие моменты в Habitoff: ${origin}`;
+    : 'Хватило того, что момент вообще замечен.';
+  return `Автоматизм включился — и ответ на него был другой. ${what} Я разбираю такие моменты в Habitoff.`;
+}
+
+/**
+ * Адрес с меткой источника.
+ *
+ * Совет друга — единственный органический канал, который у продукта уже написан в коде,
+ * и до 30.08.2026 отличить приход по нему от прочих заходов было нечем: отправлялся
+ * голый `origin`.
+ *
+ * Метка — обычные utm-поля, и это не выбор из вкусовых соображений. Их уже читает
+ * `services/visitor.ts` при первом визите и кладёт в `analytics_visitors`, откуда их
+ * показывает витрина `admin_sources` (`utm_source` приезжает туда полем `detail`).
+ * Те же поля понимают счётчики. То есть метка читается тем, что уже стоит, и не требует
+ * ни нового внешнего сервиса, ни миграции.
+ */
+export const SHARE_SOURCE = 'friend';
+
+export function shareUrl(origin: string): string {
+  const base = origin || 'https://habitoff.ru';
+  return `${base}/?utm_source=${SHARE_SOURCE}&utm_medium=share`;
 }
 
 /**
@@ -29,13 +54,15 @@ export function ShareWin({ replacementTitle }: { replacementTitle: string | null
 
   async function share() {
     const origin = typeof window === 'undefined' ? '' : window.location.origin;
-    const text = shareText(replacementTitle, origin);
+    const text = shareText(replacementTitle);
+    const url = shareUrl(origin);
     try {
       if (typeof navigator !== 'undefined' && navigator.share) {
-        await navigator.share({ title: 'Habitoff', text });
+        await navigator.share({ title: 'Habitoff', text, url });
         return;
       }
-      await navigator.clipboard.writeText(text);
+      // В буфер — одной строкой: там поля `url` нет, и человек вставляет то, что видит.
+      await navigator.clipboard.writeText(`${text} ${url}`);
       setState('copied');
     } catch {
       // Отмена в системном окне — это тоже исход, и он не ошибка. Отличить её от
@@ -53,7 +80,7 @@ export function ShareWin({ replacementTitle }: { replacementTitle: string | null
           ? 'Текст скопирован — вставь его туда, где общаешься с этим человеком.'
           : state === 'failed'
             ? 'Не получилось открыть окно «Поделиться». Скопируй текст вручную или попробуй ещё раз.'
-            : 'Кто-то рядом сейчас в том же месте, где был ты. Одного примера бывает достаточно.'}
+            : 'Кто-то рядом сейчас в той же точке. Одного живого примера бывает достаточно.'}
       </span>
       <button type="button" onClick={share}>
         Поделиться с другом

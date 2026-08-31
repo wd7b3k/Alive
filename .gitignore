@@ -7,6 +7,8 @@ node_modules/
 /package.json
 /package-lock.json
 app/dist/
+# собранная страница доски: артефакт сборки, не исходник
+dist/
 app/.env.local
 app/.env.*.local
 .DS_Store
@@ -20,3 +22,7 @@ supabase/.temp/
 .env
 .env.local
 .env.*.local
+
+# Выгрузка каталога для структурированных данных: производный файл, его кладёт
+# выкладка перед сборкой. Тексты живут в базе, копии в репозитории нет намеренно.
+app/knowledge-schema.json

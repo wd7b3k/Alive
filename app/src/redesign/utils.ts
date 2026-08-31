@@ -68,7 +68,10 @@ const TRIGGER_ICONS: Readonly<Record<string, IconName>> = {
   task_start: 'target',
   task_transition: 'pause',
   task_reward: 'check',
-  after_task: 'chart',
+  // after_task вобрал в себя task_reward, significant_action и thought_complete
+  // (миграция 20260827210000). Значок «галочка» описывает слитый смысл — «сделано» —
+  // точнее прежнего графика. Значки снятых контекстов остаются: по ним рисуется история.
+  after_task: 'check',
   important_decision: 'path',
   significant_action: 'flag',
   after_sex: 'heart',
@@ -138,6 +141,37 @@ export function replacementKind(item: Replacement) {
   if (item.category === 'physical') return 'Тело';
   if (item.category === 'sensory') return 'Внимание и ощущения';
   return 'Другой ответ';
+}
+
+/**
+ * `mechanism` в каталоге замен — машинный ключ: по нему группируются ответы в разделе
+ * «Вместе». До 27.08.2026 он показывался человеку как есть, и на экране стояло
+ * `context_change`. Русские подписи живут здесь, а не в базе: ключ должен оставаться
+ * ключом, иначе группировка развалится от первой же редакторской правки.
+ */
+const MECHANISM_LABEL: Record<string, string> = {
+  attention: 'Внимание',
+  breathing: 'Дыхание',
+  context_change: 'Смена обстановки',
+  drink: 'Напиток',
+  evidence_treatment: 'Доказательное средство',
+  focus: 'Фокус',
+  food: 'Еда',
+  grounding: 'Опора в теле',
+  manual: 'Занять руки',
+  meaning: 'Смысл',
+  movement: 'Движение',
+  oral: 'Занять рот',
+  pause: 'Пауза',
+  reflection: 'Размышление',
+  reward: 'Награда',
+  ritual: 'Ритуал',
+  sensory: 'Ощущения',
+  social: 'Контакт с человеком',
+};
+
+export function mechanismLabel(code: string) {
+  return MECHANISM_LABEL[code] ?? 'Другой механизм';
 }
 
 export function tobaccoSummary(event: Bootstrap['tobaccoEvents'][number] | undefined) {

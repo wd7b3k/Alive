@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { triggerIcon } from './utils';
+import { mechanismLabel, triggerIcon } from './utils';
 
 /**
  * The trigger codes the catalog actually publishes, read from the migrations rather
@@ -12,15 +12,24 @@ const migrations = fileURLToPath(new URL('../../../supabase/migrations/', import
 const sql = [
   '20260815215100_v3_product_depth_catalog_a.sql',
   '20260821140000_v3_sync_production_catalog_content.sql',
+  '20260827210000_v3_merge_after_action_triggers.sql',
 ]
   .map((name) => readFileSync(`${migrations}/${name}`, 'utf8'))
   .join('\n');
 
-const dropped = new Set(
-  [...sql.matchAll(/delete from public\.triggers_catalog[\s\S]*?code in \(([^)]*)\)/g)]
+/**
+ * Контекст уходит с экрана двумя способами: его удаляют или снимают с публикации при
+ * слиянии (20260827210000). Во втором случае строка остаётся в базе ради истории
+ * эпизодов, но в сетке выбора её нет — и значок она делит с тем, в кого влилась.
+ */
+const dropped = new Set([
+  ...[...sql.matchAll(/delete from public\.triggers_catalog[\s\S]*?code in \(([^)]*)\)/g)]
     .flatMap((match) => [...match[1]!.matchAll(/'([a-z_]+)'/g)])
     .map((match) => match[1]!),
-);
+  ...[...sql.matchAll(/retired\s+text\[\]\s*:=\s*array\[([^\]]*)\]/g)]
+    .flatMap((match) => [...match[1]!.matchAll(/'([a-z_]+)'/g)])
+    .map((match) => match[1]!),
+]);
 
 const triggerCodes = [
   ...new Set([
@@ -61,5 +70,32 @@ describe('triggerIcon', () => {
       (code) => code !== 'spontaneous' && triggerIcon({ code, title: '' }) === 'spark',
     );
     expect(unmapped, `no icon assigned: ${unmapped.join(', ')}`).toEqual([]);
+  });
+});
+
+/**
+ * Механизмы замен показываются человеку в разделе «Вместе». В базе это машинные ключи,
+ * подписи живут в коде — значит, новый ключ в каталоге обязан получить подпись, иначе на
+ * экране снова появится `context_change`. Список читается из миграций, а не дублируется
+ * руками.
+ */
+const mechanismCodes = [
+  ...new Set([...sql.matchAll(/"mechanism":\s*"([a-z_]+)"/g)].map((match) => match[1]!)),
+];
+
+describe('mechanismLabel', () => {
+  it('finds the mechanisms the catalog actually seeds', () => {
+    expect(mechanismCodes.length).toBeGreaterThanOrEqual(15);
+  });
+
+  it('gives every seeded mechanism a Russian label', () => {
+    const unlabelled = mechanismCodes.filter((code) => mechanismLabel(code) === 'Другой механизм');
+    expect(unlabelled, `без подписи: ${unlabelled.join(', ')}`).toEqual([]);
+  });
+
+  it('never shows a latin code to the person', () => {
+    for (const code of mechanismCodes) {
+      expect(mechanismLabel(code)).not.toMatch(/[A-Za-z]/);
+    }
   });
 });

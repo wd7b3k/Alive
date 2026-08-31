@@ -13,6 +13,17 @@
     <link rel="canonical" href="https://habitoff.ru/" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 
+    <!-- Подтверждение прав в Яндекс Вебмастере и Google Search Console.
+         **Не удалять никогда.** Оба сервиса перепроверяют права периодически, и
+         исчезновение строки снимает подтверждение — молча, без письма.
+
+         Способы «Google Аналитика» и «Менеджер тегов» на этом сайте не работают в
+         принципе: счётчики подключает `services/counters.ts` уже в браузере, а обе
+         проверки читают исходный HTML, где ни `G-YB35G45MFW`, ни номера Метрики нет.
+         Остаётся мета-тег в этом файле. Значения — публичные, секрета в них нет. -->
+    <meta name="yandex-verification" content="d4c644098475e4ca" />
+    <meta name="google-site-verification" content="mebhgzWDhNmP3fvswCrJ-SzWwrVVw_KnNVidRFDQIvM" />
+
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/icon-32.png" type="image/png" sizes="32x32" />
@@ -38,7 +49,16 @@
       property="og:description"
       content="Не запрещать себе, а вернуть себе выбор: разобрать момент, в котором включается автоматизм, и подобрать другой ответ. Факты с источниками, разбор мифов, 74 замены под конкретную ситуацию."
     />
-    <meta property="og:image" content="https://habitoff.ru/brand-logo-full.png" />
+    <!-- Карточка ссылки, а не логотип на тёмном фоне: имя продукта незнакомо и занято в
+         этой же нише другими приложениями, поэтому половина площади превью, занятая
+         знаком, была дорогой пустотой. Исходник — src/assets/og-card.svg. -->
+    <meta property="og:image" content="https://habitoff.ru/og-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Habitoff: почему тянет курить именно в этот момент. Связка «момент → состояние → сигарета»."
+    />
     <meta name="twitter:card" content="summary_large_image" />
 
     <script type="application/ld+json">

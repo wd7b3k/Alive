@@ -1,12 +1,87 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
 import type { Bootstrap } from '../data';
 import { getSupabase } from '../supabase';
 import { GOOGLE, fetchProviders, overrideFromEnv, type AuthProvider } from '../auth-providers';
+import { trackAnonEvent } from '../services/analytics';
+import { trackGoal } from '../services/counters';
 import { navigateTo } from '../services/navigation';
 import { Icon, type IconName } from '../ui-icons';
 import { ProviderMark, providerTile } from './provider-marks';
 import { rememberConsent } from '../services/consent';
 import logoUrl from '../assets/brand-logo-full.svg';
+
+/**
+ * Внутренний переход — ссылкой, а не кнопкой.
+ *
+ * До 31.08.2026 вся навигация продукта была кнопками с `onClick={() => navigateTo(...)}`.
+ * Человеку с мышью разницы нет, всему остальному — принципиальная:
+ *
+ * - **робот не может уйти с главной.** В сыром HTML не было ни одного `<a href="/...">`,
+ *   и обход держался на одной карте сайта: ссылочной связности у домена не было вовсе;
+ * - **нельзя открыть в новой вкладке**, скопировать адрес, вернуться средней кнопкой;
+ * - **скринридер не объявляет переход.** Кнопка без роли ссылки — это «кнопка», а не
+ *   «ссылка на раздел Факты», и человек не знает, что сейчас сменится страница.
+ *
+ * Одностраничность при этом сохраняется: обычный левый клик перехватывается и уходит в
+ * роутер, полной перезагрузки нет. А вот клик с Ctrl, Cmd, Shift или средней кнопкой
+ * не перехватывается сознательно — это ровно те жесты, ради которых ссылка и нужна.
+ *
+ * Кнопкой остаётся всё, что не меняет адрес: «Записать», «Выйти», открыть модальное окно.
+ */
+function isPlainLeftClick(event: MouseEvent<HTMLAnchorElement>): boolean {
+  return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+}
+
+export function AppLink({
+  href,
+  children,
+  className = '',
+  label,
+  title,
+  current = false,
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+  label?: string;
+  title?: string;
+  /** Текущий раздел: `aria-current` объявляет его скринридеру, класс красит. */
+  current?: boolean;
+}) {
+  return (
+    <a
+      href={href}
+      className={`${className}${current ? ' active' : ''}`.trim()}
+      aria-label={label}
+      aria-current={current ? 'page' : undefined}
+      title={title}
+      onClick={(event) => {
+        if (!isPlainLeftClick(event)) return;
+        event.preventDefault();
+        navigateTo(href);
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
+/** То же самое, но с видом основной кнопки: переход, оформленный как действие. */
+export function ShellLink({
+  href,
+  children,
+  className = '',
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <AppLink href={href} className={`r-button ${className}`.trim()}>
+      {children}
+    </AppLink>
+  );
+}
 
 export function ShellButton({
   children,
@@ -82,14 +157,13 @@ export function AvatarMark({ name }: { name: string | null }) {
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <button
-      type="button"
-      className={`r-brand ${compact ? 'compact' : ''}`}
-      onClick={() => navigateTo('/')}
-      aria-label="Habitoff — на главную"
+    <AppLink
+      href="/"
+      className={`r-brand ${compact ? 'compact' : ''}`.trim()}
+      label="Habitoff — на главную"
     >
       <img src={logoUrl} alt="Habitoff" />
-    </button>
+    </AppLink>
   );
 }
 
@@ -97,9 +171,12 @@ export function Brand({ compact = false }: { compact?: boolean }) {
 // «Сегодня» раздел превращается в баннер, а не в раздел.
 //
 // Шесть — это на один больше, чем обычно советуют для нижней панели, и цена честная:
-// на 360px каждая ячейка становится 60px. Проверено на реальной ширине, а не на глаз;
-// сетка в redesign.css расширена до шести колонок — панель, оставшаяся пятиколоночной,
-// молча срезала бы последний пункт.
+// на 360px каждая ячейка становится 60px. Проверено на реальной ширине, а не на глаз.
+//
+// Число колонок в redesign.css не записано: панель раскладывается по числу пришедших
+// кнопок (`grid-auto-flow:column`). Записанное число ошибалось дважды в обе стороны —
+// пятиколоночная сетка срезала шестой пункт, шестиколоночная оставляла до входа пустую
+// колонку справа, и панель прижималась к левому краю.
 const MAIN_NAV: ReadonlyArray<[string, string, IconName]> = [
   ['/', 'Сегодня', 'spark'],
   ['/links', 'Связки', 'chain'],
@@ -120,7 +197,7 @@ const MAIN_NAV: ReadonlyArray<[string, string, IconName]> = [
  * для всех. Прятать его за входом значит требовать аккаунт за право посмотреть, о чём
  * вообще речь.
  */
-const PUBLIC_NAV: ReadonlyArray<[string, string, IconName]> = [
+export const PUBLIC_NAV: ReadonlyArray<[string, string, IconName]> = [
   ['/', 'Главная', 'spark'],
   ['/links', 'Связки', 'chain'],
   ['/meanings', 'Смыслы', 'meaning'],
@@ -135,34 +212,24 @@ export function PublicHeader({ path }: { path: string }) {
         <Brand />
         <nav className="r-desktop-nav">
           {PUBLIC_NAV.map(([href, label, icon]) => (
-            <button
-              key={href}
-              type="button"
-              className={path === href ? 'active' : ''}
-              onClick={() => navigateTo(href)}
-            >
+            <AppLink key={href} href={href} current={path === href}>
               <Icon name={icon} size={18} />
               <span>{label}</span>
-            </button>
+            </AppLink>
           ))}
         </nav>
         <div className="r-header-tools">
-          <ShellButton className="primary small" onClick={() => navigateTo('/login')}>
+          <ShellLink href="/login" className="primary small">
             Войти
-          </ShellButton>
+          </ShellLink>
         </div>
       </header>
       <nav className="r-mobile-nav">
         {PUBLIC_NAV.map(([href, label, icon]) => (
-          <button
-            key={href}
-            type="button"
-            className={path === href ? 'active' : ''}
-            onClick={() => navigateTo(href)}
-          >
+          <AppLink key={href} href={href} current={path === href}>
             <Icon name={icon} size={21} />
             <span>{label}</span>
-          </button>
+          </AppLink>
         ))}
       </nav>
     </>
@@ -176,42 +243,27 @@ export function Header({ data, path }: { data: Bootstrap; path: string }) {
         <Brand />
         <nav className="r-desktop-nav">
           {MAIN_NAV.map(([href, label, icon]) => (
-            <button
-              key={href}
-              type="button"
-              className={path === href ? 'active' : ''}
-              onClick={() => navigateTo(href)}
-            >
+            <AppLink key={href} href={href} current={path === href}>
               <Icon name={icon} size={18} />
               <span>{label}</span>
-            </button>
+            </AppLink>
           ))}
         </nav>
         <div className="r-header-tools">
-          <button type="button" className="r-method-link" onClick={() => navigateTo('/experiment')}>
+          <AppLink href="/experiment" className="r-method-link">
             О методе
-          </button>
-          <button
-            type="button"
-            className="r-avatar"
-            onClick={() => navigateTo('/profile')}
-            title="Профиль"
-          >
+          </AppLink>
+          <AppLink href="/profile" className="r-avatar" title="Профиль" label="Профиль">
             <AvatarMark name={data.profile.display_name} />
-          </button>
+          </AppLink>
         </div>
       </header>
       <nav className="r-mobile-nav">
         {MAIN_NAV.map(([href, label, icon]) => (
-          <button
-            key={href}
-            type="button"
-            className={path === href ? 'active' : ''}
-            onClick={() => navigateTo(href)}
-          >
+          <AppLink key={href} href={href} current={path === href}>
             <Icon name={icon} size={21} />
             <span>{label}</span>
-          </button>
+          </AppLink>
         ))}
       </nav>
     </>
@@ -264,9 +316,6 @@ export async function startSignIn(provider = 'google'): Promise<string | null> {
   return result.error ? result.error.message : null;
 }
 
-/** Прежнее имя: вызовов много, и переименовывать их все ради одного смысла незачем. */
-export const startGoogleSignIn = () => startSignIn('google');
-
 export function LoginPage() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
@@ -291,12 +340,27 @@ export function LoginPage() {
     // Отметка ставится до ухода к провайдеру: обратно человек вернётся уже другой
     // загрузкой страницы, и состояние компонента до неё не доживёт.
     rememberConsent();
+    // Последнее событие, которое можно записать до входа: дальше человек уходит к
+    // провайдеру. Пара «нажал кнопку» и «профиль создан» показывает, сколько людей
+    // теряется на самом входе — до 28.08 этот отрезок не считался ничем.
+    trackAnonEvent({
+      event_type: 'auth_provider_click',
+      surface: 'login',
+      funnel_stage: 'landing',
+      metadata: { provider: provider.id },
+    });
+    trackGoal('auth_started');
     setBusy(provider.id);
     setError('');
     const message = await startSignIn(provider.id);
     if (message) {
       setError(message);
       setBusy('');
+      trackAnonEvent({
+        event_type: 'auth_provider_failed',
+        surface: 'login',
+        metadata: { provider: provider.id },
+      });
     }
   }
 
@@ -320,14 +384,12 @@ export function LoginPage() {
               onChange={(event) => setConsented(event.target.checked)}
             />
             <span id="consent-note">
-              Я понимаю, что это исследование, и согласен участвовать.{' '}
-              <button
-                type="button"
-                className="r-linklike"
-                onClick={() => navigateTo('/experiment')}
-              >
+              Я понимаю, что это исследование, и даю согласие на участие. Сайт считает посещения
+              Яндекс Метрикой и Google Analytics — без записи экрана и без содержимого личных
+              записей; Google обрабатывает эти данные за пределами России.{' '}
+              <AppLink href="/experiment" className="r-linklike">
                 Как устроен эксперимент
-              </button>
+              </AppLink>
             </span>
           </label>
           <div className="r-login-actions">
@@ -360,9 +422,9 @@ export function LoginPage() {
               </button>
             ))}
             <div className="r-login-alt">
-              <ShellButton className="ghost" onClick={() => navigateTo('/knowledge')}>
+              <ShellLink href="/knowledge" className="ghost">
                 Сначала почитать Факты
-              </ShellButton>
+              </ShellLink>
             </div>
           </div>
           {error && <p className="r-error">{error}</p>}

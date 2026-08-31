@@ -1,0 +1,16 @@
+[Unit]
+Description=Habitoff: проверки группы %i
+After=docker.service network-online.target
+Wants=network-online.target
+# Упавший сам по себе скрипт проверки — тоже событие. Без этой строки мониторинг
+# умеет молчать о собственной смерти, а это худший из его отказов.
+# Юнит уже есть на сервере — им пользуется бэкап; своего заводить незачем.
+OnFailure=habitoff-failure@%n.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/habitoff-monitoring.env
+ExecStart=/srv/alive/repo/infra/monitoring/run-check.sh %i
+User=root
+Nice=10
+TimeoutStartSec=120

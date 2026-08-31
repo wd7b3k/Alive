@@ -88,12 +88,14 @@ Habitoff должен постепенно увеличивать простра
 19. [`docs/V3_VISUAL_UX_BASELINE.md`](docs/V3_VISUAL_UX_BASELINE.md) — blocking acceptance criterion: визуальный/UX-baseline, mobile safe zones, бренд-continuity.
 20. [`docs/V3_REDESIGN.md`](docs/V3_REDESIGN.md) — активная спецификация текущего UI.
 21. [`docs/BRANDBOOK.md`](docs/BRANDBOOK.md) — имя, знак, палитра, цвет наблюдения, голос, применение.
-22. [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) — токены, шкалы, компоненты и их состояния.
-23. [`docs/SCREENS.md`](docs/SCREENS.md) — документация по каждому экрану.
-24. [`docs/ROLLOUT.md`](docs/ROLLOUT.md) — как довести работу из ветки до прода и что проверить после.
-25. [`docs/decisions/`](docs/decisions/) — ADR: смена имени (0003), дизайн-система (0004),
+22. [`docs/TONE_OF_VOICE.md`](docs/TONE_OF_VOICE.md) — голос продукта: аудитория, её ценности, правила текста, словарь.
+23. [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) — токены, шкалы, компоненты и их состояния.
+24. [`docs/SCREENS.md`](docs/SCREENS.md) — документация по каждому экрану.
+25. [`docs/ROLLOUT.md`](docs/ROLLOUT.md) — как довести работу из ветки до прода и что проверить после.
+26. [`docs/decisions/`](docs/decisions/) — ADR: смена имени (0003), дизайн-система (0004),
     цвет наблюдения и вход (0005), готовность к пилоту (0006), свой контур в РФ (0007),
-    ярлык на домашнем экране (0008), обнаружение расхождения main и прода (0009).
+    ярлык на домашнем экране (0008), обнаружение расхождения main и прода (0009),
+    голос продукта (0010).
 
 ## Домены и инфраструктура
 

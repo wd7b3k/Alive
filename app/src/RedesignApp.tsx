@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { getSupabase } from './supabase';
 import {
@@ -54,11 +54,32 @@ import {
   KnowledgeCardView,
   KnowledgeCollapsed,
 } from './redesign/knowledge';
-import { GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
+import { GoalCard, GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
 import { ShareWin } from './redesign/share';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
-import { Brand, Header, LoginPage, Modal, PublicHeader, ShellButton } from './redesign/shared';
+import {
+  AppLink,
+  Brand,
+  Header,
+  LoginPage,
+  Modal,
+  PublicHeader,
+  ShellButton,
+  ShellLink,
+} from './redesign/shared';
 import { RELEASES } from './redesign/releases';
+
+/**
+ * Админка грузится отдельным куском.
+ *
+ * Она носит с собой доску целиком — `cards.json` это сотня килобайт, — а открывает её
+ * один человек. Статический импорт положил бы эти килобайты в общий бандл и раздавал бы
+ * их каждому анонимному гостю: замер показал 607 КБ против 717 КБ. Карточка про вес
+ * клиента в бэклоге стоит P0, и увеличивать его ради закрытого раздела нечестно.
+ */
+const AdminPage = lazy(() =>
+  import('./redesign/admin').then((module) => ({ default: module.AdminPage })),
+);
 import { buildInfo } from './env';
 import {
   fmt,
@@ -117,19 +138,18 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
         {path === '/knowledge' && <PublicKnowledge facts={facts} myths={myths} catalog={catalog} />}
         {path !== '/links' && path !== '/meanings' && path !== '/knowledge' && (
           <>
+            {/* Первый экран несёт только имя, обещание и одно действие. Всё остальное —
+                вторичные действия, оговорка о приватности, приглашение вглубь — стоит
+                ниже: до перестройки они делили первый экран с главным действием, и
+                главное действие переставало быть главным. */}
             <section className="r-now">
               <div className="r-now-copy">
-                <p className="r-kicker">Некоммерческий эксперимент · метод Habitoff v1</p>
                 <h1>Не запрещать себе — вернуть себе выбор</h1>
                 <p className="r-lead">
                   Habitoff помогает заметить, что именно запускает автоматический ритуал, понять,
                   какое состояние ты на самом деле ищешь, и подобрать другой ответ — под конкретный
                   момент.
                 </p>
-                <blockquote>
-                  Ниже — настоящая система, а не витрина: те же Связки и Смыслы, которые работают
-                  внутри. Аккаунт нужен только для того, чтобы сохранять твои личные записи.
-                </blockquote>
               </div>
               <div className="r-now-actions">
                 <button
@@ -154,28 +174,35 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                 <p className="r-cta-note" id="cta-vape-note-public">
                   <span aria-hidden="true">*</span> для вэйперов, конечно же, — парить
                 </p>
-                <div className="r-secondary-actions">
-                  <button type="button" onClick={signIn} disabled={busy}>
-                    <Icon name="smoke" size={22} />
-                    <span>
-                      <strong>Никотин уже был</strong>
-                      <small>Просто записать факт</small>
-                    </span>
-                  </button>
-                  <button type="button" onClick={() => go('/experiment')}>
-                    <Icon name="shield" size={22} />
-                    <span>
-                      <strong>Как это работает</strong>
-                      <small>Методология и приватность</small>
-                    </span>
-                  </button>
-                </div>
                 {error && <p className="r-error">{error}</p>}
-                <p className="r-privacy">
-                  Вход нужен только чтобы узнать тебя при следующем заходе. Личные записи хранятся
-                  отдельно и защищаются правилами доступа PostgreSQL: их не видит никто, кроме тебя.
-                </p>
               </div>
+            </section>
+
+            {/* Тихая секция: без рамки и фона. Чередование рамка / не рамка само рисует
+                границы разделов — до этого шесть одинаковых карточек подряд читались как
+                одно бесконечное полотно. */}
+            <section className="r-section plain">
+              <div className="r-secondary-actions">
+                <button type="button" onClick={signIn} disabled={busy}>
+                  <Icon name="smoke" size={22} />
+                  <span>
+                    <strong>Никотин уже был</strong>
+                    <small>Просто записать факт</small>
+                  </span>
+                </button>
+                <AppLink href="/experiment">
+                  <Icon name="shield" size={22} />
+                  <span>
+                    <strong>Как это работает</strong>
+                    <small>Методология и приватность</small>
+                  </span>
+                </AppLink>
+              </div>
+              <p className="r-privacy">
+                Вход нужен только для того, чтобы узнать тебя при следующем заходе. Личные записи
+                хранятся отдельно и защищаются правилами доступа PostgreSQL: их не видит никто,
+                кроме тебя.
+              </p>
             </section>
 
             {!catalog && (
@@ -184,21 +211,30 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
               </section>
             )}
 
+            {/* Ниже каталоги показаны превью, а не целиком: каждый из них — отдельный
+                экран, до которого уже ведёт нижнее меню. Полный каталог на главной
+                означал, что главная дублирует четыре других экрана и растягивается на
+                шесть с половиной экранов прокрутки. */}
             {catalog && catalog.triggers.length > 0 && (
               <section className="r-section">
                 <div className="r-section-head">
                   <div>
                     <p className="r-kicker observe">Карта контекстов</p>
                     <h2>Что система уже умеет замечать</h2>
-                    <p>
-                      Это реальные пусковые моменты из базы Habitoff. Выбери любой — и увидишь,
-                      какие ответы система подбирает под него.
-                    </p>
                   </div>
+                  <AppLink href="/links">
+                    Вся карта · {catalog.triggers.length} <Icon name="arrow" size={16} />
+                  </AppLink>
                 </div>
-                <div className="r-trigger-grid">
-                  {catalog.triggers.map((trigger) => (
-                    <button key={trigger.code} type="button" onClick={signIn} disabled={busy}>
+                <div className="r-strip">
+                  {catalog.triggers.slice(0, 6).map((trigger) => (
+                    <button
+                      key={trigger.code}
+                      type="button"
+                      className="r-trigger-card"
+                      onClick={signIn}
+                      disabled={busy}
+                    >
                       <span className="r-choice-icon">
                         <Icon name={triggerIcon(trigger)} size={23} />
                       </span>
@@ -214,19 +250,23 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
             )}
 
             {catalog && catalog.goals.length > 0 && (
-              <section className="r-section">
+              <section className="r-section plain">
                 <div className="r-section-head">
                   <div>
                     <p className="r-kicker">Смыслы</p>
                     <h2>Ради чего становится интереснее жить иначе</h2>
-                    <p>
-                      Habitoff не работает запретами. Он начинается со смысла, ради которого стоит
-                      менять привычку, — и возвращает тебя к нему в тот момент, когда это труднее
-                      всего.
-                    </p>
                   </div>
+                  <AppLink href="/meanings">
+                    Все смыслы · {catalog.goals.length} <Icon name="arrow" size={16} />
+                  </AppLink>
                 </div>
-                <GoalLibrary goals={catalog.goals.slice(0, 6)} />
+                {/* Фильтр по типу здесь не нужен: это превью из трёх карточек, а не
+                    библиотека. Библиотека — на своём экране. */}
+                <div className="r-strip">
+                  {catalog.goals.slice(0, 3).map((goal) => (
+                    <GoalCard key={goal.code} goal={goal} preview />
+                  ))}
+                </div>
               </section>
             )}
 
@@ -236,39 +276,39 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                   <div>
                     <p className="r-kicker">Факты</p>
                     <h2>Что известно — и где это заканчивается</h2>
-                    <p>
-                      Ни одного утверждения без источника и без границ. Если исследования нет — так
-                      и написано.
-                    </p>
                   </div>
+                  <AppLink href="/knowledge">
+                    Все факты · {allCards.length} <Icon name="arrow" size={16} />
+                  </AppLink>
                 </div>
-                <div className="r-knowledge-grid">
-                  {publicCards.map((card) => (
-                    <KnowledgeCardView
-                      key={card.code}
-                      knowledge={catalog?.knowledge ?? EMPTY_KNOWLEDGE}
-                      card={card}
-                    />
-                  ))}
-                </div>
+                {/* Одна карточка, а не весь слой: раздел на главной обязан быть
+                    приглашением, иначе экран «Факты» нечего открывать. */}
+                <KnowledgeCardView
+                  knowledge={catalog?.knowledge ?? EMPTY_KNOWLEDGE}
+                  card={publicCards[0]}
+                />
               </section>
             )}
 
-            {catalog && catalog.replacements.length > 0 && (
-              <section className="r-section">
-                <div className="r-section-head">
-                  <div>
-                    <p className="r-kicker">Ответы вместо запрета</p>
-                    <h2>{catalog.replacements.length} замен, подобранных под ситуацию</h2>
-                    <p>
-                      В момент тяги Habitoff предлагает три варианта под конкретный контекст и
-                      потребность, а не общий список полезных привычек.
-                    </p>
-                  </div>
+            {/* Замены и закрывающее действие — один блок. Действие повторяется внизу:
+                до перестройки «Хочу курить» стояло на 600px и больше не возвращалось на
+                оставшихся 4800, то есть доскроллив, человек не мог начать, не вернувшись
+                наверх. */}
+            <section className="r-section">
+              <div className="r-section-head">
+                <div>
+                  <p className="r-kicker">Ответы вместо запрета</p>
+                  <h2>
+                    {catalog && catalog.replacements.length > 0
+                      ? `${catalog.replacements.length} замен, подобранных под ситуацию`
+                      : 'Здесь настоящая система, а не витрина'}
+                  </h2>
                 </div>
-                <div className="r-meaning-grid">
-                  {catalog.replacements.slice(0, 6).map((replacement) => (
-                    <article key={replacement.code}>
+              </div>
+              {catalog && catalog.replacements.length > 0 && (
+                <div className="r-strip">
+                  {catalog.replacements.slice(0, 3).map((replacement) => (
+                    <article key={replacement.code} className="r-meaning-card">
                       <span className="r-meaning-symbol">
                         <Icon name={replacementIcon(replacement)} size={25} />
                       </span>
@@ -277,13 +317,15 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                     </article>
                   ))}
                 </div>
-                <div className="r-actions">
-                  <ShellButton className="primary" onClick={signIn} disabled={busy}>
-                    Войти и начать <Icon name="arrow" size={18} />
-                  </ShellButton>
-                </div>
-              </section>
-            )}
+              )}
+              <p className="r-closing-note">
+                Те же Связки и Смыслы, которые работают внутри. Аккаунт нужен только для того, чтобы
+                сохранять твои личные записи.
+              </p>
+              <ShellButton className="primary" onClick={signIn} disabled={busy}>
+                Войти и начать <Icon name="arrow" size={18} />
+              </ShellButton>
+            </section>
           </>
         )}
       </main>
@@ -539,7 +581,7 @@ function Setup({
         },
       });
     if (!products.length) {
-      setError('Выбери хотя бы один никотиновый продукт.');
+      setError('Отметь хотя бы один продукт — иначе не с чем будет сравнивать динамику.');
       return;
     }
     setBusy(true);
@@ -561,8 +603,7 @@ function Setup({
             <p className="r-kicker">Настройка личной карты</p>
             <h1>С чего ты начинаешь</h1>
             <p>
-              Это не норматив и не оценка. Исходный уровень нужен только для сравнения тебя с самим
-              собой.
+              Исходный уровень нужен для одного: сравнивать тебя с тобой прежним, а не с кем-то ещё.
             </p>
           </div>
           {cancel ? (
@@ -574,9 +615,9 @@ function Setup({
             // заполнять форму, упирался в тупик — ни «Отмена», ни «Назад». Теперь есть
             // выход в открытую часть продукта; настройка спросит снова при следующем
             // заходе, ничего не теряется. См. ADR-0006.
-            <button className="r-button ghost small" onClick={() => go('/knowledge')}>
+            <AppLink href="/knowledge" className="r-button ghost small">
               Пока просто посмотреть
-            </button>
+            </AppLink>
           )}
         </div>
         <label className="r-field">
@@ -661,8 +702,9 @@ function Setup({
         <div className="r-note">
           <Icon name="shield" />
           <p>
-            Единицы Habitoff — только внутренняя шкала поведения: сигарета = 1, кальянная сессия =
-            10, 10 затяжек электронной сигареты = 1. Это не медицинское сравнение вреда.
+            Единицы Habitoff — внутренняя шкала поведения: сигарета = 1, кальянная сессия = 10, 10
+            затяжек электронной сигареты = 1. Это рабочая модель продукта, а не медицинское
+            сравнение вреда.
           </p>
         </div>
         {error && <p className="r-error">{error}</p>}
@@ -704,12 +746,12 @@ function EpisodeCard({
   const status = success ? 'Выбор остался твоим' : used ? 'Никотин использован' : 'Эпизод закрыт';
   const motivational = success
     ? delta && delta > 0
-      ? `Тяга снизилась на ${delta}. Новый ответ уже сработал как реальная альтернатива.`
-      : 'Автоматический никотиновый ответ не последовал. Это один повтор нового сценария.'
+      ? `Тяга снизилась на ${delta}. Этот ответ сработал — у тебя есть рабочая альтернатива.`
+      : 'Никотиновый ответ не сработал автоматически. Это один повтор нового сценария.'
     : used
       ? replacement
-        ? `Ты попробовал «${replacement.title}», а затем использовал никотин. Это не обнуление — теперь видно, где ответ нужно усилить или заменить.`
-        : `${tobaccoSummary(event)} — это итог эпизода, а не «замена». Здесь уже есть полезные данные о контексте.`
+        ? `Сначала «${replacement.title}», потом никотин. Эпизод всё равно записан: теперь видно, где этот ответ не удержал момент.`
+        : `${tobaccoSummary(event)} — итог эпизода. Контекст записан, и это уже данные.`
       : 'Даже незавершённый эпизод помогает замечать момент, в котором включается автоматизм.';
   return (
     <article className={`r-episode-card ${success ? 'success' : used ? 'used' : 'neutral'}`}>
@@ -759,7 +801,7 @@ function EpisodeCard({
             <Icon name={replacementIcon(replacement)} size={22} />
           </span>
           <div>
-            <small>Что ты попробовал вместо автоматизма</small>
+            <small>Ответ вместо автоматизма</small>
             <strong>{replacement.title}</strong>
             <span>{replacement.duration || replacementKind(replacement)}</span>
           </div>
@@ -842,7 +884,7 @@ function QuickUse({
           <p className="r-kicker">Просто факт · без оценки</p>
           <h2>Никотин уже был</h2>
           <p>
-            Здесь нет «замены». Мы отдельно записываем употребление, чтобы история оставалась
+            Здесь нет «замены»: употребление записывается отдельно, чтобы история оставалась
             честной.
           </p>
         </div>
@@ -1065,6 +1107,32 @@ export function Guided({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Шаг сценария и время, проведённое на предыдущем.
+  //
+  // Открытие и уход писались и раньше, но между ними была дыра: где именно человек
+  // остановился, знал только `flow_abandoned`, а сколько ему стоил каждый экран — никто.
+  // Аудит 26.08 выдвинул гипотезу, что четыре экрана выбора противоречат принципу P17
+  // (минимум действий в момент тяги). Спорить о ней без этих чисел можно бесконечно.
+  //
+  // `duration_ms` здесь — время на **предыдущем** шаге, а не на текущем: событие
+  // отправляется при входе на экран, потому что уход с последнего экрана событием
+  // не сопровождается вовсе.
+  const stepEnteredAt = useRef(Date.now());
+  useEffect(() => {
+    const enteredAt = Date.now();
+    const previous = stepEnteredAt.current;
+    stepEnteredAt.current = enteredAt;
+    trackEvent(session.user.id, {
+      event_type: 'flow_step_view',
+      funnel_stage: 'first_episode',
+      surface: 'guided_flow',
+      numeric_value: step,
+      duration_ms: enteredAt - previous,
+      product_type: product,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   // Выбор продукта и выбор контекста — единственные два места, откуда сценарий может
   // перепрыгнуть через экран. Логика перехода собрана здесь, а не в обработчиках
   // кнопок, чтобы «куда дальше» нельзя было починить в одном месте и забыть в другом.
@@ -1166,7 +1234,7 @@ export function Guided({
             </span>
             <div>
               <h3>В каком контексте включилась тяга?</h3>
-              <p>Не ищем виноватого. Ищем повторяющийся пусковой момент.</p>
+              <p>Ищем момент, который повторяется.</p>
             </div>
           </div>
           {data.products.length > 1 && (
@@ -1206,8 +1274,8 @@ export function Guided({
             <div>
               <h3>Что ты на самом деле сейчас ищешь?</h3>
               <p>
-                Сигарета может обещать паузу, разрядку, завершение, стимуляцию или контакт. Нам
-                нужна функция, а не форма ритуала.
+                Сигарета обещает паузу, разрядку, завершение, стимуляцию или контакт. Что из этого
+                сейчас?
               </p>
             </div>
           </div>
@@ -1241,8 +1309,8 @@ export function Guided({
             <div>
               <h3>Три варианта под этот момент</h3>
               <p>
-                Не список «полезных привычек». Эти ответы подобраны под ситуацию и потребность; со
-                временем порядок будет меняться по твоим результатам.
+                Подобраны под твой контекст и потребность. Порядок будет меняться по твоим
+                результатам.
               </p>
             </div>
           </div>
@@ -1257,8 +1325,7 @@ export function Guided({
               <small>
                 {`Так было в ${needFromHistory.episodes} из ${needFromHistory.total} ` +
                   `${plural(needFromHistory.total, 'разбора', 'разборов', 'разборов')} ` +
-                  'этого контекста. Шаг с потребностью свёрнут в эту строку, а не пропущен: ' +
-                  'в эпизод она запишется так же.'}
+                  'этого контекста. В эпизод запишется так же.'}
               </small>
               <div className="r-flow-prefill-actions">
                 <button type="button" onClick={() => setStep(1)}>
@@ -1326,7 +1393,7 @@ export function Guided({
                   <Icon name={replacementIcon(selected)} size={30} />
                 </span>
                 <div>
-                  <small>Ты выбрал</small>
+                  <small>Твой ответ</small>
                   <h3>{selected.title}</h3>
                   <p>{selected.instruction}</p>
                   {/* The full evidence lives here rather than on the choice cards:
@@ -1342,7 +1409,7 @@ export function Guided({
                 </span>
                 <div>
                   <small>Без замены</small>
-                  <h3>Просто наблюдаем результат</h3>
+                  <h3>Только наблюдение</h3>
                 </div>
               </>
             )}
@@ -1394,8 +1461,8 @@ export function Guided({
             >
               <Icon name={productIcon(product)} size={22} />
               <div>
-                <strong>Никотин всё же был</strong>
-                <small>Это итог, а не «провал» и не замена</small>
+                <strong>Никотин был</strong>
+                <small>Это данные. Никотин не считается заменой</small>
               </div>
             </button>
             <button
@@ -1415,7 +1482,7 @@ export function Guided({
           {outcome === 'nicotine_used' && (
             <div className="r-nicotine-detail">
               <p>
-                <b>Отдельно фиксируем сам продукт.</b> Он не попадёт в поле «Замена».
+                <b>Продукт записывается отдельно.</b> В «Замену» он не попадёт.
               </p>
               {product === 'cigarette' && (
                 <label className="r-field">
@@ -1497,7 +1564,7 @@ function Evening({
       <div className="r-modal-head">
         <div>
           <p className="r-kicker">Итоги дня · 3 минуты</p>
-          <h2>Не оценка дня, а карта обучения</h2>
+          <h2>Карта дня, а не его оценка</h2>
         </div>
         <button className="r-icon-button" onClick={close}>
           <Icon name="close" />
@@ -1602,11 +1669,11 @@ function Today({
           <h1>
             {today.successfulResponses > 0
               ? `Сегодня выбор уже ${today.successfulResponses === 1 ? 'один раз' : 'несколько раз'} остался твоим`
-              : 'Тебе не нужно победить день целиком'}
+              : 'Достаточно одного замеченного момента'}
           </h1>
           <p>
             {data.settings.goal_text ||
-              'Нужен только следующий момент, в котором ты заметишь автоматизм чуть раньше обычного'}
+              'Следующий момент, в котором автоматизм замечен чуть раньше обычного, — уже результат'}
           </p>
           {phrase && <blockquote>{phrase}</blockquote>}
         </div>
@@ -1658,7 +1725,7 @@ function Today({
             <strong>{today.successfulResponses}</strong>
             <p>
               {today.successfulResponses
-                ? 'Это не серия запретов. Это моменты, где старый сценарий не решил за тебя.'
+                ? 'Моменты, где старый сценарий не решил за тебя.'
                 : 'Первая запись появится после реального эпизода — ничего специально создавать не нужно.'}
             </p>
           </div>
@@ -1670,7 +1737,7 @@ function Today({
             {delta !== null && delta < 0
               ? 'Никотиновая интенсивность ниже исходной'
               : delta !== null && delta > 0
-                ? 'Пока выше исходной — наблюдаем, без оценки'
+                ? 'Пока выше исходной — это наблюдение, а не оценка'
                 : 'Нужно больше данных'}
           </span>
         </div>
@@ -1681,19 +1748,19 @@ function Today({
         </div>
       </section>
       {todayCard && (
-        <section className="r-section">
+        <section className="r-section plain">
           <div className="r-section-head">
             <div>
               <p className="r-kicker">Факты</p>
               <h2>Одна опора на сегодня</h2>
               <p>
-                Не мотивация, а то, что известно. Карточка меняется раз в сутки и не подстраивается
-                под твои результаты.
+                Только то, что известно. Карточка меняется раз в сутки и не подстраивается под твои
+                результаты — она не реагирует на твой день.
               </p>
             </div>
-            <button onClick={() => go('/knowledge')}>
+            <AppLink href="/knowledge">
               Весь раздел <Icon name="arrow" size={16} />
-            </button>
+            </AppLink>
           </div>
           <KnowledgeCardView knowledge={data.knowledge} card={todayCard} />
         </section>
@@ -1703,14 +1770,11 @@ function Today({
           <div>
             <p className="r-kicker observe">Карта внимания</p>
             <h2>Где автоматизм сейчас сильнее всего</h2>
-            <p>
-              Это не рейтинг «слабостей». Это места, где следующий эксперимент даст больше всего
-              информации.
-            </p>
+            <p>Места, где следующий эксперимент даст больше всего информации.</p>
           </div>
-          <button onClick={() => go('/links')}>
+          <AppLink href="/links">
             Все Связки <Icon name="arrow" size={16} />
-          </button>
+          </AppLink>
         </div>
         <div className="r-attention-grid">
           {attention.map((t) => {
@@ -1735,7 +1799,7 @@ function Today({
           })}
         </div>
       </section>
-      <section className="r-section">
+      <section className="r-section plain">
         <div className="r-section-head">
           <div>
             <p className="r-kicker">История обучения</p>
@@ -1745,10 +1809,15 @@ function Today({
               электронка никогда не называются заменой.
             </p>
           </div>
+          {data.episodes.length > 2 && (
+            <AppLink href="/path">
+              Весь путь · {data.episodes.length} <Icon name="arrow" size={16} />
+            </AppLink>
+          )}
         </div>
         {data.episodes.length ? (
           <div className="r-episode-list">
-            {data.episodes.slice(0, 8).map((e) => (
+            {data.episodes.slice(0, 2).map((e) => (
               <EpisodeCard key={e.id} data={data} episode={e} remove={remove} />
             ))}
           </div>
@@ -1814,8 +1883,8 @@ function Links({
         <p className="r-kicker">Связки</p>
         <h1>Ситуация → потребность → привычный ответ</h1>
         <p>
-          Ценность не в том, чтобы помнить все триггеры. Ценность — увидеть несколько повторяющихся
-          сценариев и научиться возвращать нужное состояние напрямую.
+          Помнить все триггеры не нужно. Достаточно увидеть несколько повторяющихся сценариев и
+          научиться возвращать нужное состояние напрямую.
         </p>
         <ShellButton className="ghost" onClick={() => setShow(!show)}>
           <Icon name="plus" size={18} /> Моя Связка
@@ -1964,7 +2033,7 @@ function PathPage({ data }: { data: Bootstrap }) {
     <main className="r-page">
       <section className="r-title">
         <p className="r-kicker">Путь</p>
-        <h1>Не «сколько дней я идеален», а как меняется система</h1>
+        <h1>Не счётчик дней, а изменения в системе</h1>
         <p>
           Главные сигналы: интенсивность относительно твоего исходного уровня, прерванные Связки и
           ответы, которые реально помогают.
@@ -2129,10 +2198,16 @@ function FlowMeaning({ data }: { data: Bootstrap }) {
   }
   const goal = goalOfTheDay(data.goals, today);
   if (!goal) return null;
+  // Здесь стоит название смысла, а не вопрос из его карточки. Вопрос
+  // (`reflection_prompt_ru`) написан для библиотеки, где на него садятся и отвечают;
+  // в потоке тяги он просит работы там, где человек выбирает действие, и вдобавок
+  // приходит из смысла дня, а не из разобранного момента — поэтому читается как
+  // случайный. Личные формулировки показываются здесь заголовком, каталожные теперь
+  // тоже: один жанр в одном месте.
   return (
     <p className="r-flow-meaning">
       <Icon name="meaning" size={15} />
-      <span>{goal.reflection_prompt_ru ?? goal.title_ru}</span>
+      <span>{goal.title_ru}</span>
     </p>
   );
 }
@@ -2188,9 +2263,8 @@ function Meanings({
         <p className="r-kicker">Смыслы</p>
         <h1>Ради чего становится интереснее жить иначе</h1>
         <p className="r-lead">
-          Это раздел про твои цели, а не про запреты. Здесь ты формулируешь, какая жизнь тебе нужна
-          — и в момент, когда мозг предлагает старый автоматический сценарий, тебе есть что
-          противопоставить ему по существу, а не силой воли.
+          Здесь ты формулируешь, какая жизнь тебе нужна. И когда мозг предложит старый сценарий, у
+          тебя будет что ответить по существу, а не силой воли.
         </p>
         <div className="r-meaning-stats">
           <span>
@@ -2279,7 +2353,7 @@ function Meanings({
         <div className="r-section-head">
           <div>
             <p className="r-kicker">Перепись сценария</p>
-            <h2>От старого паттерна к новому выбору</h2>
+            <h2>От автоматизма к своему выбору</h2>
           </div>
         </div>
         <div className="r-scripts">
@@ -2463,9 +2537,9 @@ function Experiment() {
           правилам.
         </p>
         <div className="r-actions">
-          <ShellButton className="primary" onClick={() => go('/')}>
+          <ShellLink href="/" className="primary">
             Вернуться в Habitoff
-          </ShellButton>
+          </ShellLink>
         </div>
       </article>
     </main>
@@ -2557,9 +2631,22 @@ function Profile({
                 разбора эпизода. Ни одной записи о конкретном человеке.
               </p>
             </div>
-            <ShellButton className="ghost small" onClick={() => go('/health')}>
+            <ShellLink href="/health" className="ghost small">
               Открыть
-            </ShellButton>
+            </ShellLink>
+          </div>
+          <div className="r-section-head">
+            <div>
+              <h2>Управление</h2>
+              <p>
+                Аналитика, доска работ и остальные служебные разделы под одним адресом. До этой
+                строки в оболочку админки можно было попасть только вручную набрав адрес — то есть
+                никак.
+              </p>
+            </div>
+            <ShellLink href="/admin" className="ghost small">
+              Открыть
+            </ShellLink>
           </div>
         </section>
       )}
@@ -2591,22 +2678,22 @@ function Profile({
       </section>
       <section className="r-section">
         <div className="r-profile-links">
-          <button onClick={() => go('/experiment')}>
+          <AppLink href="/experiment">
             <Icon name="shield" />
             <span>
               <strong>Как работает эксперимент</strong>
               <small>Методология, ограничения и приватность</small>
             </span>
             <Icon name="arrow" />
-          </button>
-          <button onClick={() => go('/releases')}>
+          </AppLink>
+          <AppLink href="/releases">
             <Icon name="path" />
             <span>
               <strong>История версий</strong>
               <small>Что меняется в Habitoff</small>
             </span>
             <Icon name="arrow" />
-          </button>
+          </AppLink>
         </div>
         <ShellButton className="danger" onClick={logout}>
           Выйти из аккаунта
@@ -2635,7 +2722,7 @@ function Profile({
             <div className="r-confirm-delete">
               <p>
                 <b>Удалить аккаунт?</b> Пропадут все эпизоды, Связки, Смыслы и заметки. Отменить
-                будет нельзя, и восстановить нам будет неоткуда.
+                будет нельзя, и восстановить будет неоткуда.
               </p>
               <div>
                 <ShellButton
@@ -2661,8 +2748,8 @@ function Profile({
           )}
         </div>
         <p className="r-footnote">
-          Перед удалением имеет смысл сначала выгрузить файл: после удаления данных не останется ни
-          у тебя, ни у нас.
+          Перед удалением имеет смысл выгрузить файл: после удаления данных не останется нигде — ни
+          у тебя, ни на сервере.
         </p>
       </section>
     </main>
@@ -2682,21 +2769,14 @@ function Releases() {
             <div>
               <h2>{release.title}</h2>
               <p>{release.summary}</p>
-              {release.changes && (
-                <ul className="r-release-changes">
-                  {release.changes.map((change) => (
-                    <li key={change}>{change}</li>
-                  ))}
-                </ul>
-              )}
             </div>
           </div>
         ))}
         <BuildStamp />
         <div className="r-actions">
-          <ShellButton className="primary" onClick={() => go('/')}>
+          <ShellLink href="/" className="primary">
             Назад в Habitoff
-          </ShellButton>
+          </ShellLink>
         </div>
       </article>
     </main>
@@ -2836,6 +2916,21 @@ export default function RedesignApp() {
   else if (path === '/knowledge') page = <KnowledgePage data={data} />;
   else if (path === '/together') page = <TogetherPage data={data} />;
   else if (path === '/health') page = <HealthPage />;
+  // Все разделы управления живут под одним адресом: /admin/<раздел>. Реестр разделов —
+  // ADMIN_SECTIONS в redesign/admin.tsx, требования к блоку — docs/ADMIN.md.
+  else if (path === '/admin' || path.startsWith('/admin/'))
+    page = (
+      <Suspense
+        fallback={
+          <main className="r-loading">
+            <span />
+            <p>Открываю управление…</p>
+          </main>
+        }
+      >
+        <AdminPage data={data} path={path} />
+      </Suspense>
+    );
   else if (path === '/experiment') page = <Experiment />;
   else if (path === '/profile')
     page = <Profile session={session} data={data} editSetup={() => setSetup(true)} />;

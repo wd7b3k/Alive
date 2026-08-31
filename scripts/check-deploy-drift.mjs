@@ -35,10 +35,16 @@ function fail(message) {
 }
 
 let head;
-try {
-  git('fetch', '--quiet', 'origin', 'main');
-} catch {
-  console.warn('Не удалось обновить origin/main — сравниваю с тем, что уже есть локально.');
+// DRIFT_NO_FETCH — для мониторинга. Проверка на сервере идёт от root, а клон
+// принадлежит пользователю выкладки: `git fetch` от root оставил бы в `.git` файлы с
+// чужим владельцем и уронил бы следующую выкладку на `git pull`. Ссылки там обновляет
+// сам владелец каталога, до вызова этого скрипта — см. infra/monitoring/lib/fingerprint.sh.
+if (!process.env.DRIFT_NO_FETCH) {
+  try {
+    git('fetch', '--quiet', 'origin', 'main');
+  } catch {
+    console.warn('Не удалось обновить origin/main — сравниваю с тем, что уже есть локально.');
+  }
 }
 try {
   head = git('rev-parse', REF);

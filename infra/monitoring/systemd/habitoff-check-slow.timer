@@ -1,0 +1,11 @@
+[Unit]
+Description=Habitoff: база, контейнеры и хост раз в пять минут
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=habitoff-check@slow.service
+
+[Install]
+WantedBy=timers.target
