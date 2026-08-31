@@ -42,6 +42,14 @@ echo
 echo "=== ДОСКА ==="
 node scripts/board.mjs check 2>&1 || true
 
+
 echo
-echo "=== ДОСТУПЫ (заполнить руками в промпте) ==="
-echo "push — ? · gh — ? · ssh VPS — ? · браузер — ?"
+echo "=== ЛОКАЛЬНОЕ ⇄ ORIGIN ==="
+node scripts/check-local-drift.mjs 2>&1 || true
+
+echo
+echo "=== ДОСТУПЫ ==="
+if GIT_TERMINAL_PROMPT=0 timeout 15 git push --dry-run origin HEAD >/dev/null 2>&1; then echo "push: есть"; else echo "push: НЕТ — задачу, требующую доставки в origin, не брать"; fi
+if command -v gh >/dev/null 2>&1; then echo "gh: есть"; else echo "gh: нет"; fi
+if curl -fsS -m 5 -o /dev/null https://habitoff.ru/version.json 2>/dev/null; then echo "прод из этого контура: доступен"; else echo "прод из этого контура: НЕТ — вывод о состоянии прода делать нельзя"; fi
+if [ -n "${HABITOFF_SSH:-}" ] && timeout 8 ssh -o BatchMode=yes -o ConnectTimeout=5 "$HABITOFF_SSH" true 2>/dev/null; then echo "ssh VPS: есть"; else echo "ssh VPS: нет или HABITOFF_SSH не задан"; fi
