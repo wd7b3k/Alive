@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-31",
-  "appliedCommit": "62864f43692c00d394dc4b04868e5af7180efd60",
+  "appliedCommit": "3ec54e4c0541639760b1a6e684c86519f5e62c13",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3525,6 +3525,19 @@
       "updated": "2026-08-31",
       "commits": [
         "b4e014c5f6868b7bd4930a6432f2dc9006b93e6e"
+      ]
+    },
+    {
+      "id": "caddyfile-v-repozitorii-ne",
+      "title": "Caddyfile в репозитории не проверялся ничем",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 1,
+      "status": "done",
+      "body": "конфиг с вложенным handle_errors пролежал в git с 30.08 и упал только при установке на сервер; тест теперь ловит именно эту ошибку",
+      "updated": "2026-08-31",
+      "commits": [
+        "3ec54e4c0541639760b1a6e684c86519f5e62c13"
       ]
     }
   ]
