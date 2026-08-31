@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# Еженедельная проверка восстановления.
+#
+# Смысл: непроверенный дамп — это файл, про который вы верите, что он дамп.
+# Скрипт поднимает одноразовый Postgres, разворачивает в него последнюю копию
+# и сверяет содержимое с живой базой. Контейнер удаляется в любом случае.
+#
+# Восстанавливаем в СВЕЖЕСОЗДАННУЮ пустую базу, а не в `postgres`. Образ
+# supabase/postgres при первом старте сам наполняет `postgres`: заводит схему
+# `auth`, роли и свои таблицы. Восстановление в непустую базу молча не
+# доносит данные — первая же проверка 27.08.2026 показала ноль пользователей
+# при трёх в живой базе именно поэтому.
+
+set -uo pipefail
+. /etc/habitoff/backup.env
+
+DIR=/srv/alive/backups
+STATE=/var/lib/habitoff
+LOG="$STATE/verify.log"
+IMAGE=$(grep -m1 'image: supabase/postgres:' /srv/supabase/docker-compose.yml | awk '{print $2}')
+NAME=habitoff-verify
+TARGET=restore_check
+mkdir -p "$STATE"
+
+cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+
+report() { # текст, строка-состояние, код выхода
+  printf '%s\n' "$2" > "$STATE/last-verify"
+  /usr/local/bin/habitoff-notify "$1"
+  exit "${3:-0}"
+}
+
+DUMP=$(ls -1t "$DIR"/db-*.dump 2>/dev/null | head -1)
+[ -n "$DUMP" ] || report "Habitoff: проверка бэкапа ПРОВАЛЕНА
+Ни одного дампа не найдено." "FAIL нет дампов" 1
+
+: > "$LOG"
+cleanup
+docker run --rm -d --name "$NAME" \
+  -e POSTGRES_PASSWORD=verify -e POSTGRES_HOST_AUTH_METHOD=trust \
+  "$IMAGE" >>"$LOG" 2>&1 \
+  || report "Habitoff: проверка бэкапа ПРОВАЛЕНА
+Не удалось запустить контейнер $IMAGE." "FAIL контейнер" 1
+
+for _ in $(seq 1 90); do
+  docker exec "$NAME" pg_isready -U postgres >/dev/null 2>&1 && break
+  sleep 2
+done
+docker exec "$NAME" pg_isready -U postgres >/dev/null 2>&1 \
+  || report "Habitoff: проверка бэкапа ПРОВАЛЕНА
+Postgres в контейнере не поднялся за три минуты." "FAIL старт" 1
+
+docker exec "$NAME" createdb -U postgres "$TARGET" >>"$LOG" 2>&1 \
+  || report "Habitoff: проверка бэкапа ПРОВАЛЕНА
+Не удалось создать пустую базу для разворачивания." "FAIL createdb" 1
+
+# Ошибки на ролях ожидаемы: в одноразовом контейнере нет supabase_auth_admin и
+# соседей. Поэтому судим не по коду возврата pg_restore, а по тому, что в базе.
+docker exec -i "$NAME" pg_restore -U postgres -d "$TARGET" \
+  --no-owner --no-privileges < "$DUMP" >>"$LOG" 2>&1 || true
+
+q() { docker exec "$NAME" psql -U postgres -d "$TARGET" -tAc "$1" 2>/dev/null | tr -d ' '; }
+
+FILES=$(ls -1 /srv/alive/repo/supabase/migrations/*.sql 2>/dev/null | wc -l)
+MIGR=$(q "select count(*) from supabase_migrations.schema_migrations")
+USERS=$(q "select count(*) from auth.users")
+FACTS=$(q "select count(*) from public.facts_catalog")
+TABLES=$(q "select count(*) from pg_tables where schemaname='public'")
+
+export PGPASSWORD="$(grep -m1 '^POSTGRES_PASSWORD=' /srv/supabase/.env | cut -d= -f2-)"
+live() { psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -tAc "$1" 2>/dev/null | tr -d ' '; }
+LIVE_USERS=$(live "select count(*) from auth.users")
+LIVE_TABLES=$(live "select count(*) from pg_tables where schemaname='public'")
+
+num() { [ -n "${1:-}" ] && [ "$1" -eq "$1" ] 2>/dev/null && echo "$1" || echo 0; }
+MIGR=$(num "$MIGR"); USERS=$(num "$USERS"); FACTS=$(num "$FACTS")
+TABLES=$(num "$TABLES"); LIVE_USERS=$(num "$LIVE_USERS"); LIVE_TABLES=$(num "$LIVE_TABLES")
+
+P=""
+[ "$MIGR" = "$FILES" ]        || P="$P
+· миграций в копии $MIGR, файлов в репозитории $FILES"
+[ "$FACTS" -gt 0 ]            || P="$P
+· каталог фактов в копии пуст"
+[ "$TABLES" = "$LIVE_TABLES" ] || P="$P
+· таблиц в копии $TABLES, в живой базе $LIVE_TABLES"
+[ "$USERS" = "$LIVE_USERS" ]  || P="$P
+· пользователей в копии $USERS, в живой базе $LIVE_USERS"
+
+WHEN=$(basename "$DUMP" | sed 's/db-//; s/\.dump//')
+SUMMARY="копия $WHEN · пользователей $USERS/$LIVE_USERS · таблиц $TABLES/$LIVE_TABLES · миграций $MIGR/$FILES · фактов $FACTS"
+
+if [ -z "$P" ]; then
+  report "Habitoff: восстановление проверено, всё сошлось
+$SUMMARY" "PASS $SUMMARY" 0
+else
+  report "Habitoff: проверка бэкапа ПРОВАЛЕНА
+$SUMMARY$P
+
+Подробности разворачивания: $LOG" "FAIL $SUMMARY" 1
+fi

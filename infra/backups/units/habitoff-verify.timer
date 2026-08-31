@@ -1,0 +1,11 @@
+[Unit]
+Description=Проверка восстановления — еженедельно
+
+[Timer]
+# Воскресенье, 01:30 UTC = 04:30 по Москве, через час после бэкапа.
+OnCalendar=Sun *-*-* 01:30:00
+RandomizedDelaySec=600
+Persistent=true
+
+[Install]
+WantedBy=timers.target

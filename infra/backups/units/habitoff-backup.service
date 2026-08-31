@@ -1,0 +1,9 @@
+[Unit]
+Description=Резервная копия Habitoff
+After=docker.service
+Requires=docker.service
+OnFailure=habitoff-failure@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/habitoff-backup

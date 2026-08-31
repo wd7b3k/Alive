@@ -1,0 +1,10 @@
+[Unit]
+Description=Недельная сводка — по понедельникам
+
+[Timer]
+# Понедельник, 06:00 UTC = 09:00 по Москве.
+OnCalendar=Mon *-*-* 06:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

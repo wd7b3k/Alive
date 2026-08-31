@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# Ежедневная резервная копия Habitoff.
+#
+# Локальная копия — открытая: она лежит на сервере с правами 600 и нужна для
+# быстрого восстановления. Уезжающая — зашифрованная: её держит Яндекс, и в ней
+# личные записи людей о зависимости плюс .env с JWT-ключами.
+#
+# Конфиги едут вместе с базой не для полноты: без .env база не поднимется —
+# там ключи подписи, и без них все выданные сессии мертвы. Дамп без него —
+# половина бэкапа.
+
+set -uo pipefail
+. /etc/habitoff/backup.env
+
+DIR=/srv/alive/backups
+OUT="$DIR/outbox"
+STATE=/var/lib/habitoff
+TS=$(date -u +%Y%m%d-%H%M)
+KEEP_LOCAL="${KEEP_LOCAL_DAYS:-7}"
+KEEP_REMOTE="${KEEP_REMOTE_DAYS:-14}"
+
+mkdir -p "$DIR" "$OUT" "$STATE"
+chmod 700 "$DIR" "$OUT"
+
+fail() {
+  /usr/local/bin/habitoff-notify "Habitoff: бэкап НЕ СОЗДАН ($TS)
+$1"
+  exit 1
+}
+
+# --- 1. Дамп базы ---
+# pg_dump через docker exec: на хосте psql 16, а сервер 17 — хостовый pg_dump
+# откажется по несовпадению версий.
+DUMP="$DIR/db-$TS.dump"
+if ! docker exec supabase-db pg_dump -U postgres -Fc postgres > "$DUMP" 2>"$DIR/.err"; then
+  fail "pg_dump: $(tail -3 "$DIR/.err")"
+fi
+[ -s "$DUMP" ] || fail "дамп получился пустым"
+chmod 600 "$DUMP"
+
+# --- 2. Конфигурация ---
+CONF="$DIR/conf-$TS.tgz"
+tar czf "$CONF" \
+    -C /srv/supabase .env docker-compose.yml docker-compose.override.yml \
+    -C /etc/caddy Caddyfile \
+    2>/dev/null || fail "не удалось собрать архив конфигурации"
+chmod 600 "$CONF"
+
+# --- 3. Шифрованный пакет для отправки ---
+BUNDLE="$OUT/habitoff-$TS.tgz.gpg"
+if [ -z "${BACKUP_PASSPHRASE:-}" ]; then
+  fail "BACKUP_PASSPHRASE пуст — шифровать нечем, наружу ничего не отправляю"
+fi
+if ! tar cz -C "$DIR" "db-$TS.dump" "conf-$TS.tgz" \
+     | gpg --batch --yes --symmetric --cipher-algo AES256 \
+           --passphrase-fd 3 -o "$BUNDLE" 3<<<"$BACKUP_PASSPHRASE"; then
+  fail "шифрование не удалось"
+fi
+chmod 600 "$BUNDLE"
+
+SIZE=$(du -h "$BUNDLE" | cut -f1)
+
+# --- 4. Отправка ---
+UPLOAD_OK=нет
+if /usr/local/bin/habitoff-yadisk upload "$BUNDLE" >>"$STATE/upload.log" 2>&1; then
+  UPLOAD_OK=да
+  date -u +%s > "$STATE/last-upload"
+  rm -f "$BUNDLE"
+  /usr/local/bin/habitoff-yadisk prune "$KEEP_REMOTE" >>"$STATE/upload.log" 2>&1
+else
+  # Файл остаётся в outbox: следующий запуск попробует его снова.
+  /usr/local/bin/habitoff-notify "Habitoff: копия создана, но НЕ УЕХАЛА на Диск ($TS)
+Локальная копия на месте. Файл ждёт в outbox, попробую снова завтра.
+Причина в $STATE/upload.log"
+fi
+
+# --- 5. Досылка того, что не уехало раньше ---
+for stale in "$OUT"/*.gpg; do
+  [ -e "$stale" ] || break
+  if /usr/local/bin/habitoff-yadisk upload "$stale" >>"$STATE/upload.log" 2>&1; then
+    rm -f "$stale"
+    date -u +%s > "$STATE/last-upload"
+  fi
+done
+
+# --- 6. Чистка локальных ---
+find "$DIR" -maxdepth 1 -name 'db-*.dump'  -mtime "+$KEEP_LOCAL" -delete
+find "$DIR" -maxdepth 1 -name 'conf-*.tgz' -mtime "+$KEEP_LOCAL" -delete
+find "$OUT" -maxdepth 1 -name '*.gpg'      -mtime "+$KEEP_LOCAL" -delete
+rm -f "$DIR/.err"
+
+printf '%s\n' "$TS $SIZE upload=$UPLOAD_OK" > "$STATE/last-backup"
+logger -t habitoff "бэкап $TS готов, размер $SIZE, отправка: $UPLOAD_OK"
+exit 0
