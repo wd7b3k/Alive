@@ -22,6 +22,8 @@ export type Summary = {
   worst_component: string | null;
   window_hours: number;
   generated_at: string;
+  /** С какого момента измерения считаются настоящими. Граница живёт в ops.settings. */
+  observations_since: string;
   components_live: number;
   components_failing: number;
   components_warning: number;
@@ -30,6 +32,8 @@ export type Summary = {
   checks_total: number;
   checks_unregistered: number;
   uptime_pct: number | null;
+  /** Сколько наблюдений было. Меньше порога — процент не считается вовсе. */
+  uptime_samples: number;
 };
 
 export type Component = {
@@ -48,6 +52,7 @@ export type Component = {
   last_seen: string | null;
   uptime_pct: number | null;
   latency_p95_ms: number | null;
+  uptime_samples: number;
 };
 
 export type Check = {
