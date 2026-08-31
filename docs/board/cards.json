@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-01",
-  "appliedCommit": "9e82bf0f4ac88086f220d360cfbf1dc9e668246c",
+  "appliedCommit": "9410de43b6d40eef2d51b38fbe2310b432b3aa25",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3410,11 +3410,12 @@
       "type": "tech",
       "epic": "process",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "файл лежит в рабочей копии владельца untracked, при этом он и есть точка входа для Claude — решение, которого нет в git, не считается принятым состоянием",
-      "updated": "2026-08-30",
+      "updated": "2026-09-01",
       "commits": [
-        "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5"
+        "6501b1b30e0c25adb1e47fabf85b8e73c27c92e5",
+        "9410de43b6d40eef2d51b38fbe2310b432b3aa25"
       ]
     },
     {
