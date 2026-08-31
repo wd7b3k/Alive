@@ -85,11 +85,14 @@ if [[ -z "$marker" ]]; then
 elif grep -q '^FAIL' "$marker" 2>/dev/null; then
   # Свежая метка о неудаче хуже старой метки об успехе: возраст здесь уже не важен.
   reason="$(head -c 200 "$marker" | json_escape)"
-  emit backups_restore_test "$(basename "$marker")" fail - 0 "{\"note\":$reason}"
+  emit backups_restore_test - fail - 0 "{\"note\":$reason}"
 else
   days=$(( ( $(date +%s) - $(stat -c %Y "$marker") ) / 86400 ))
   st=ok; [[ "$days" -ge 30 ]] && st=warn; [[ "$days" -ge 60 ]] && st=fail
-  emit backups_restore_test "$(basename "$marker")" "$st" - "$days" '{}'
+  # Цель остаётся прежней (`-`), а имя метки уходит в подробности. Состояние на экране
+  # ключуется парой «проверка + цель»: смена цели оставила бы прежнюю строку последней
+  # навсегда, и починенная проверка светилась бы отказом рядом со своим же «ok».
+  emit backups_restore_test - "$st" - "$days" "{\"marker\":\"$(basename "$marker")\"}"
 fi
 
 flush_buffer || true

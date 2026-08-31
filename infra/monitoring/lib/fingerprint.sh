@@ -103,8 +103,24 @@ build_fingerprint_probe() {
     GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$REPO_DIR" \
     node scripts/check-deploy-drift.mjs "$HABITOFF_ORIGIN" 2>&1)" && drift_rc=0 || drift_rc=$?
   if [[ "$drift_rc" -ne 0 ]]; then
-    printf 'fail\t{"note":%s,"chunk":"%s"}\n' \
-      "$(head -n 2 <<<"$drift" | tr '\n' ' ' | json_escape)" "$live_chunk"
+    # Отставание прода от `main` — это НЕ авария, и различие принципиальное.
+    #
+    # 31.08.2026 экран показывал «Авария» и «Веб-приложение — ОТКАЗ» при полностью
+    # исправном сайте: владелец напушил восемнадцать коммитов, выкладки не было, и
+    # проверка честно сообщила о расхождении — а раздел раскрасил это как падение
+    # продукта. Так мониторинг и теряют: первая же тревога, за которой ничего не
+    # сломано, обесценивает все следующие.
+    #
+    # Отставание версии означает «выложите новое», а не «продукт лежит». Остальные
+    # исходы этой проверки — главная не отдаётся, отдаётся не тот бандл, нет
+    # entry-чанка — остаются отказом: там действительно сломано.
+    if [[ "$drift" == *"отстаёт от origin/main"* ]]; then
+      printf 'warn\t{"note":%s,"chunk":"%s"}\n' \
+        "$(head -n 2 <<<"$drift" | tr '\n' ' ' | json_escape)" "$live_chunk"
+    else
+      printf 'fail\t{"note":%s,"chunk":"%s"}\n' \
+        "$(head -n 2 <<<"$drift" | tr '\n' ' ' | json_escape)" "$live_chunk"
+    fi
     return 0
   fi
 
