@@ -95,9 +95,17 @@ describe('предрендер публичных адресов', () => {
     // на первой же — docs/SEO_AND_ANALYTICS.md отказался от неё сознательно. Проверить
     // это содержимым нельзя: базы здесь нет. Зато можно проверить единственный способ,
     // которым каталог мог бы сюда попасть, — импорт.
-    const source = readFileSync(fileURLToPath(new URL('./prerender.ts', import.meta.url)), 'utf8');
-    const imports = [...source.matchAll(/^import[^;]*from '([^']+)';/gm)].map((m) => m[1]);
-    expect(imports.sort()).toEqual(['../redesign/releases', './seo']);
+    //
+    // Утверждения для разметки `/knowledge` приезжают не импортом, а файлом выгрузки,
+    // который кладёт выкладка, и в git его нет.
+    for (const [file, allowed] of [
+      ['./prerender.ts', ['../redesign/releases', './schema', './seo']],
+      ['./schema.ts', ['./seo']],
+    ] as const) {
+      const source = readFileSync(fileURLToPath(new URL(file, import.meta.url)), 'utf8');
+      const imports = [...source.matchAll(/^import[^;]*from '([^']+)';/gm)].map((m) => m[1]);
+      expect(imports.sort(), file).toEqual([...allowed]);
+    }
   });
 
   it('несуществующий адрес получает своё тело, ссылки и noindex', () => {
