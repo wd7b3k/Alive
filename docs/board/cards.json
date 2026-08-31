@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "generated": "2026-08-31",
-  "appliedCommit": "329a948c668aecf4b45d3308c4625a1f8d24687c",
+  "generated": "2026-09-01",
+  "appliedCommit": "9e82bf0f4ac88086f220d360cfbf1dc9e668246c",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3644,6 +3644,58 @@
       "updated": "2026-08-31",
       "commits": [
         "ff72ef6a0156da410a0a03ec136585004781bb99"
+      ]
+    },
+    {
+      "id": "doska-v-adminke-razvorachivaetsya",
+      "title": "Доска в админке разворачивается",
+      "type": "feature",
+      "epic": "process",
+      "priority": 1,
+      "status": "done",
+      "body": "рамка ограничена шириной .r-page и высотой экрана минус 260px, канбан из пяти колонок в неё не помещается",
+      "updated": "2026-08-31",
+      "commits": [
+        "1e83a65876cfed987666cfebed29a9da78f77d23"
+      ]
+    },
+    {
+      "id": "appliedcommit-ne-perezhivaet-peresborku",
+      "title": "appliedCommit не переживает пересборку ветки",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "check видит расхождение, но не отличает забытый apply от rebase. Если записанного хеша нет среди предков HEAD — это пересборка, и сообщение должно быть другим, с готовой командой замены",
+      "updated": "2026-08-31",
+      "commits": [
+        "1e83a65876cfed987666cfebed29a9da78f77d23"
+      ]
+    },
+    {
+      "id": "treylery-teryayutsya-kogda-kommit",
+      "title": "Трейлеры теряются, когда коммит стал предком ветки",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "после rebase коммиты уходят из диапазона appliedCommit..HEAD, и их движения не применяются никогда. Поймали случайно на PR #29 — четыре карточки остались в старых колонках",
+      "updated": "2026-08-31",
+      "commits": [
+        "1e83a65876cfed987666cfebed29a9da78f77d23"
+      ]
+    },
+    {
+      "id": "doska-tyanet-shrifty-iz",
+      "title": "Доска тянет шрифты из Google на проде",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 1,
+      "status": "backlog",
+      "body": "scripts/board-template.html грузит fonts.googleapis.com, и раздел админки делает это уже с habitoff.ru — против инварианта «никаких внешних сервисов в рантайме прода»",
+      "updated": "2026-08-31",
+      "commits": [
+        "1e83a65876cfed987666cfebed29a9da78f77d23"
       ]
     }
   ]

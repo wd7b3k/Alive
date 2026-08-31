@@ -37,6 +37,13 @@ export type AdminSection = {
   render?: (ctx: AdminContext) => ReactNode;
   /** Внешний адрес вместо раздела: пункт становится ссылкой. */
   href?: string;
+  /**
+   * Раздел просит всю ширину окна вместо 1160px `.r-page`.
+   *
+   * Флаг, а не класс в самом блоке: ширину задаёт контейнер страницы, до которого блоку
+   * не дотянуться, и решение о ней должно быть видно в реестре, а не в чужом файле.
+   */
+  wide?: boolean;
 };
 
 /**
@@ -80,6 +87,9 @@ export const ADMIN_SECTIONS: AdminSection[] = [
     hint: 'Работы проекта из docs/board/cards.json. Двигает карточку коммит.',
     icon: 'journal',
     status: 'live',
+    // Доска — единственный раздел с чужой страницей внутри: пять колонок канбана в
+    // 1160px не встают, а внутрь рамки приложению не дотянуться.
+    wide: true,
     render: () => <AdminBoard />,
   },
   {
@@ -149,7 +159,7 @@ export function AdminPage({ data, path }: { data: Bootstrap; path: string }) {
   const section = adminSectionFromPath(path);
 
   return (
-    <main className="r-page r-admin">
+    <main className={section?.wide ? 'r-page r-admin r-admin-wide' : 'r-page r-admin'}>
       <div className="r-title">
         <p className="r-kicker">Закрытый раздел</p>
         <h1>Управление</h1>
