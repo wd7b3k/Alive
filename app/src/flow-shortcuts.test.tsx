@@ -167,6 +167,42 @@ describe('Guided — короткие пути', () => {
     const html = render(base, 'coffee');
     expect(html).toContain('Что ты на самом деле сейчас ищешь?');
   });
+  /**
+   * Контекст вне каталога (Р1). Проверяется присутствие и место, а не оформление:
+   * карточка обязана быть последней в сетке — если она уедет наверх, она перестанет
+   * быть выходом из каталога и станет ещё одним его пунктом, который читают первым.
+   */
+  it('в конце сетки контекстов стоит выход из каталога', () => {
+    const html = render(base);
+    expect(html).toContain('Моей ситуации тут нет');
+    expect(html.indexOf('T-social')).toBeLessThan(html.indexOf('Моей ситуации тут нет'));
+  });
+
+  it('выход из каталога есть и при поднятых наверх личных контекстах', () => {
+    const data = {
+      ...base,
+      episodes: [
+        ep('cigarette', 'coffee', 'pause'),
+        ep('cigarette', 'coffee', 'pause'),
+        ep('cigarette', 'boredom', 'switch'),
+        ep('cigarette', 'tension', 'switch'),
+      ],
+    };
+    const html = render(data);
+    expect(html).toContain('Моей ситуации тут нет');
+    expect(html.indexOf('Остальные контексты')).toBeLessThan(html.indexOf('Моей ситуации тут нет'));
+  });
+
+  /**
+   * Поле раскрывается на месте карточки, а не отдельным экраном: на первом рендере
+   * его нет вовсе. Шаг сценария при этом не появляется — сетка контекстов остаётся
+   * первым экраном (P17).
+   */
+  it('не показывает поле ввода до нажатия', () => {
+    const html = render(base);
+    expect(html).not.toContain('В двух словах');
+  });
+
   it('короткий путь не проглатывает шаг результата', () => {
     const episodes = Array.from({ length: 5 }, () => ep('cigarette', 'coffee', 'pause'));
     const html = render({ ...base, episodes }, 'coffee');
