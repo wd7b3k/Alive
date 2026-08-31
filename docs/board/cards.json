@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "generated": "2026-08-30",
-  "appliedCommit": "838ac2995d084fbb2fc5ede7ab042b1acf95cce4",
+  "generated": "2026-08-31",
+  "appliedCommit": "822bf623a16239bb9be7d6ca76cd3797698c6f59",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -2272,9 +2272,9 @@
       "type": "feature",
       "epic": "perf",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "Google выполняет JS и видит настоящие заголовки; для Яндекса и краулеров моделей отдельный статический HTML под каждый публичный адрес — ограничение снимается. Живые карточки в index.html не копировать: содержание правится миграциями, HTML руками, первое расхождение станет ложью в выдаче.",
-      "updated": "2026-08-27",
+      "updated": "2026-08-31",
       "chats": [
         {
           "label": "alive-production-readiness-2026-08-25",
@@ -2282,7 +2282,9 @@
           "url": ""
         }
       ],
-      "commits": []
+      "commits": [
+        "336e9c6c518408e7bc7b7e00f120b484d255a345"
+      ]
     },
     {
       "id": "perf-cache",
@@ -2964,7 +2966,7 @@
       "priority": 3,
       "status": "doing",
       "body": "Роль и панель администратора, воронка продукта, интеллект замен, аналитика Связок и Смыслов, входящие UGC, здоровье системы, инциденты, письма-оповещения, недельная сводка. Гейт: администратор не читает личный текст по умолчанию, инциденты дедуплицированы, сводка отвечает «что улучшать». доска перенесена страницей целиком: роадмэп, список, фильтры, правки, выгрузки",
-      "updated": "2026-08-30",
+      "updated": "2026-08-31",
       "deps": "Гейт v3.1",
       "docs": [
         {
@@ -2975,7 +2977,8 @@
       "commits": [
         "2ef46a9ff6497d546577c3cb080a54246e489064",
         "25418073dc57214fd3f9779fa469a8ffa05a32b8",
-        "bded70c7be6e0bc578f92a4f3b65f241eca12888"
+        "bded70c7be6e0bc578f92a4f3b65f241eca12888",
+        "b2423e9e3cc567a51de07188ed1c5ed2e07a798a"
       ]
     },
     {
@@ -3432,6 +3435,123 @@
           "label": "ADR-0015-counters.md",
           "path": "docs/decisions/ADR-0015-counters.md"
         }
+      ]
+    },
+    {
+      "id": "monitoring-pokazyvaet-avariyu-pri",
+      "title": "Мониторинг показывает аварию при работающем сервисе",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "агрегаты считают записи до починки проверок, процент по четырём точкам, две карточки из трёх про несуществующее",
+      "updated": "2026-08-31",
+      "commits": [
+        "9653eba50ef1ebed01c2a8a779d159b1ddbf9125"
+      ]
+    },
+    {
+      "id": "voronka-po-istochnikam-i",
+      "title": "Воронка по источникам и этапам",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "admin_source_funnel плюс экран, доля считается от своего источника",
+      "updated": "2026-08-31",
+      "commits": [
+        "9653eba50ef1ebed01c2a8a779d159b1ddbf9125"
+      ]
+    },
+    {
+      "id": "navigaciya-knopkami-vmesto-ssylok",
+      "title": "Навигация кнопками вместо ссылок: у сайта нулевая ссылочная связность",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "ноль a href в HTML, робот не может уйти с главной",
+      "updated": "2026-08-31",
+      "commits": [
+        "893655fba54238e10820c7af05912b1b697bb59e"
+      ]
+    },
+    {
+      "id": "prerender-otdaet-glavnuyu-pod",
+      "title": "Пререндер отдаёт главную под пятью адресами",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "одинаковый h1 и 2240 знаков одного текста, дубли в индексе",
+      "updated": "2026-08-31",
+      "commits": [
+        "893655fba54238e10820c7af05912b1b697bb59e"
+      ]
+    },
+    {
+      "id": "schetchiki-vidno-v-monitoringe",
+      "title": "Счётчики видно в мониторинге и в аналитике",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "установлен и доступен как две разные проверки, блок «Чем меряем», отметка автоматических визитов",
+      "updated": "2026-08-31",
+      "commits": [
+        "8316f897be4c1e847e2a5fa849185f0f5448d585"
+      ]
+    },
+    {
+      "id": "monitoring-pokazyval-avariyu-na",
+      "title": "Мониторинг показывал аварию на исправном сервисе",
+      "type": "bug",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "агрегаты считали записи периода разработки, процент считался по четырём точкам, а треть экрана занимали части, которых нет",
+      "updated": "2026-08-31",
+      "commits": [
+        "3f0e15329c708d2a6d1f42e9aaa34e92358b8dc1"
+      ]
+    },
+    {
+      "id": "prerender-otdaval-obolochku-glavnoy",
+      "title": "Пререндер отдавал оболочку главной под пятью адресами",
+      "type": "bug",
+      "epic": "seo",
+      "priority": 1,
+      "status": "done",
+      "body": "голова подменялась, тело бралось от главной — 2240 знаков одного текста при разных canonical, для поисковика это дубли",
+      "updated": "2026-08-31",
+      "commits": [
+        "336e9c6c518408e7bc7b7e00f120b484d255a345"
+      ]
+    },
+    {
+      "id": "u-sayta-ne-bylo",
+      "title": "У сайта не было ни одной внутренней ссылки",
+      "type": "bug",
+      "epic": "seo",
+      "priority": 1,
+      "status": "done",
+      "body": "навигация построена на кнопках, в сыром HTML ноль a href — обход держался на карте сайта, ссылочной связности не было",
+      "updated": "2026-08-31",
+      "commits": [
+        "336e9c6c518408e7bc7b7e00f120b484d255a345"
+      ]
+    },
+    {
+      "id": "stranica-404-otdavala-pustoe",
+      "title": "Страница 404 отдавала пустое тело",
+      "type": "bug",
+      "epic": "seo",
+      "priority": 2,
+      "status": "done",
+      "body": "код правильный, тело нулевой длины: человек видел белый экран, робот пустой документ",
+      "updated": "2026-08-31",
+      "commits": [
+        "336e9c6c518408e7bc7b7e00f120b484d255a345"
       ]
     }
   ]
