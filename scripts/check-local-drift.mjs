@@ -11,7 +11,7 @@
 
 import { execSync } from 'node:child_process';
 
-const sh = (cmd) => execSync(cmd, { encoding: 'utf8' }).trim();
+const sh = (cmd) => execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
 let problems = 0;
 
@@ -21,10 +21,17 @@ try {
   console.log('ВНИМАНИЕ: git fetch не прошёл. Сравнение идёт с последним известным состоянием origin.');
 }
 
-const rows = sh("git for-each-ref --format='%(refname:short)\t%(upstream:short)' refs/heads")
+// Разделитель задаётся как %09, а не символом табуляции в самой команде. Причина не
+// косметическая: execSync на Windows запускает cmd.exe, для которого табуляция —
+// разделитель аргументов, а одинарные кавычки — обычные символы. Настоящая табуляция
+// разрывала --format надвое, git получал формат без %(upstream:short), и проверка
+// объявляла «существует только здесь» про каждую ветку, включая только что запушенную.
+// 31.08.2026 она так отчиталась о 75 ветках подряд — то есть ни разу не сказала правду
+// на единственной машине, где её запускают.
+const rows = sh('git for-each-ref --format="%(refname:short)%09%(upstream:short)" refs/heads')
   .split('\n')
   .filter(Boolean)
-  .map((line) => line.replace(/^'|'$/g, '').split('\t'));
+  .map((line) => line.split('\t'));
 
 const noUpstream = [];
 const ahead = [];
@@ -34,7 +41,18 @@ for (const [branch, upstream] of rows) {
     noUpstream.push(branch);
     continue;
   }
-  const count = Number(sh(`git rev-list --count ${upstream}..${branch}`));
+  // upstream в конфиге переживает удаление ветки в origin — после слияния PR это
+  // обычное дело. Тогда rev-list падает с кодом 128 и роняет весь скрипт: до
+  // 31.08.2026 это не проявлялось только потому, что до сравнения дело не доходило.
+  // Ветка, у которой origin больше нет, — ровно тот случай, ради которого скрипт
+  // написан, поэтому она идёт в тот же список, а не в исключение.
+  let count;
+  try {
+    count = Number(sh(`git rev-list --count ${upstream}..${branch}`));
+  } catch {
+    noUpstream.push(branch);
+    continue;
+  }
   if (count > 0) ahead.push({ branch, count });
 }
 
