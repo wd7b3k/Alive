@@ -57,7 +57,16 @@ import {
 import { GoalCard, GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
 import { ShareWin } from './redesign/share';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
-import { Brand, Header, LoginPage, Modal, PublicHeader, ShellButton } from './redesign/shared';
+import {
+  AppLink,
+  Brand,
+  Header,
+  LoginPage,
+  Modal,
+  PublicHeader,
+  ShellButton,
+  ShellLink,
+} from './redesign/shared';
 import { RELEASES } from './redesign/releases';
 
 /**
@@ -181,13 +190,13 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                     <small>Просто записать факт</small>
                   </span>
                 </button>
-                <button type="button" onClick={() => go('/experiment')}>
+                <AppLink href="/experiment">
                   <Icon name="shield" size={22} />
                   <span>
                     <strong>Как это работает</strong>
                     <small>Методология и приватность</small>
                   </span>
-                </button>
+                </AppLink>
               </div>
               <p className="r-privacy">
                 Вход нужен только для того, чтобы узнать тебя при следующем заходе. Личные записи
@@ -213,9 +222,9 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                     <p className="r-kicker observe">Карта контекстов</p>
                     <h2>Что система уже умеет замечать</h2>
                   </div>
-                  <button onClick={() => go('/links')}>
+                  <AppLink href="/links">
                     Вся карта · {catalog.triggers.length} <Icon name="arrow" size={16} />
-                  </button>
+                  </AppLink>
                 </div>
                 <div className="r-strip">
                   {catalog.triggers.slice(0, 6).map((trigger) => (
@@ -247,9 +256,9 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                     <p className="r-kicker">Смыслы</p>
                     <h2>Ради чего становится интереснее жить иначе</h2>
                   </div>
-                  <button onClick={() => go('/meanings')}>
+                  <AppLink href="/meanings">
                     Все смыслы · {catalog.goals.length} <Icon name="arrow" size={16} />
-                  </button>
+                  </AppLink>
                 </div>
                 {/* Фильтр по типу здесь не нужен: это превью из трёх карточек, а не
                     библиотека. Библиотека — на своём экране. */}
@@ -268,9 +277,9 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
                     <p className="r-kicker">Факты</p>
                     <h2>Что известно — и где это заканчивается</h2>
                   </div>
-                  <button onClick={() => go('/knowledge')}>
+                  <AppLink href="/knowledge">
                     Все факты · {allCards.length} <Icon name="arrow" size={16} />
-                  </button>
+                  </AppLink>
                 </div>
                 {/* Одна карточка, а не весь слой: раздел на главной обязан быть
                     приглашением, иначе экран «Факты» нечего открывать. */}
@@ -606,9 +615,9 @@ function Setup({
             // заполнять форму, упирался в тупик — ни «Отмена», ни «Назад». Теперь есть
             // выход в открытую часть продукта; настройка спросит снова при следующем
             // заходе, ничего не теряется. См. ADR-0006.
-            <button className="r-button ghost small" onClick={() => go('/knowledge')}>
+            <AppLink href="/knowledge" className="r-button ghost small">
               Пока просто посмотреть
-            </button>
+            </AppLink>
           )}
         </div>
         <label className="r-field">
@@ -1749,9 +1758,9 @@ function Today({
                 результаты — она не реагирует на твой день.
               </p>
             </div>
-            <button onClick={() => go('/knowledge')}>
+            <AppLink href="/knowledge">
               Весь раздел <Icon name="arrow" size={16} />
-            </button>
+            </AppLink>
           </div>
           <KnowledgeCardView knowledge={data.knowledge} card={todayCard} />
         </section>
@@ -1763,9 +1772,9 @@ function Today({
             <h2>Где автоматизм сейчас сильнее всего</h2>
             <p>Места, где следующий эксперимент даст больше всего информации.</p>
           </div>
-          <button onClick={() => go('/links')}>
+          <AppLink href="/links">
             Все Связки <Icon name="arrow" size={16} />
-          </button>
+          </AppLink>
         </div>
         <div className="r-attention-grid">
           {attention.map((t) => {
@@ -1801,9 +1810,9 @@ function Today({
             </p>
           </div>
           {data.episodes.length > 2 && (
-            <button onClick={() => go('/path')}>
+            <AppLink href="/path">
               Весь путь · {data.episodes.length} <Icon name="arrow" size={16} />
-            </button>
+            </AppLink>
           )}
         </div>
         {data.episodes.length ? (
@@ -2528,9 +2537,9 @@ function Experiment() {
           правилам.
         </p>
         <div className="r-actions">
-          <ShellButton className="primary" onClick={() => go('/')}>
+          <ShellLink href="/" className="primary">
             Вернуться в Habitoff
-          </ShellButton>
+          </ShellLink>
         </div>
       </article>
     </main>
@@ -2622,9 +2631,9 @@ function Profile({
                 разбора эпизода. Ни одной записи о конкретном человеке.
               </p>
             </div>
-            <ShellButton className="ghost small" onClick={() => go('/health')}>
+            <ShellLink href="/health" className="ghost small">
               Открыть
-            </ShellButton>
+            </ShellLink>
           </div>
           <div className="r-section-head">
             <div>
@@ -2635,9 +2644,9 @@ function Profile({
                 никак.
               </p>
             </div>
-            <ShellButton className="ghost small" onClick={() => go('/admin')}>
+            <ShellLink href="/admin" className="ghost small">
               Открыть
-            </ShellButton>
+            </ShellLink>
           </div>
         </section>
       )}
@@ -2669,22 +2678,22 @@ function Profile({
       </section>
       <section className="r-section">
         <div className="r-profile-links">
-          <button onClick={() => go('/experiment')}>
+          <AppLink href="/experiment">
             <Icon name="shield" />
             <span>
               <strong>Как работает эксперимент</strong>
               <small>Методология, ограничения и приватность</small>
             </span>
             <Icon name="arrow" />
-          </button>
-          <button onClick={() => go('/releases')}>
+          </AppLink>
+          <AppLink href="/releases">
             <Icon name="path" />
             <span>
               <strong>История версий</strong>
               <small>Что меняется в Habitoff</small>
             </span>
             <Icon name="arrow" />
-          </button>
+          </AppLink>
         </div>
         <ShellButton className="danger" onClick={logout}>
           Выйти из аккаунта
@@ -2765,9 +2774,9 @@ function Releases() {
         ))}
         <BuildStamp />
         <div className="r-actions">
-          <ShellButton className="primary" onClick={() => go('/')}>
+          <ShellLink href="/" className="primary">
             Назад в Habitoff
-          </ShellButton>
+          </ShellLink>
         </div>
       </article>
     </main>

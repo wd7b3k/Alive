@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-08-31",
-  "appliedCommit": "1e83a65876cfed987666cfebed29a9da78f77d23",
+  "appliedCommit": "62864f43692c00d394dc4b04868e5af7180efd60",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -2272,9 +2272,9 @@
       "type": "feature",
       "epic": "perf",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "Google выполняет JS и видит настоящие заголовки; для Яндекса и краулеров моделей отдельный статический HTML под каждый публичный адрес — ограничение снимается. Живые карточки в index.html не копировать: содержание правится миграциями, HTML руками, первое расхождение станет ложью в выдаче.",
-      "updated": "2026-08-27",
+      "updated": "2026-08-31",
       "chats": [
         {
           "label": "alive-production-readiness-2026-08-25",
@@ -2282,7 +2282,9 @@
           "url": ""
         }
       ],
-      "commits": []
+      "commits": [
+        "b4e014c5f6868b7bd4930a6432f2dc9006b93e6e"
+      ]
     },
     {
       "id": "perf-cache",
@@ -3487,55 +3489,42 @@
       ]
     },
     {
-      "id": "doska-v-adminke-razvorachivaetsya",
-      "title": "Доска в админке разворачивается",
-      "type": "feature",
-      "epic": "process",
+      "id": "prerender-otdaval-obolochku-glavnoy",
+      "title": "Пререндер отдавал оболочку главной под пятью адресами",
+      "type": "bug",
+      "epic": "seo",
       "priority": 1,
       "status": "done",
-      "body": "рамка ограничена шириной .r-page и высотой экрана минус 260px, канбан из пяти колонок в неё не помещается",
+      "body": "голова подменялась, тело бралось от главной — 2240 знаков одного текста при разных canonical, для поисковика это дубли",
       "updated": "2026-08-31",
       "commits": [
-        "1e83a65876cfed987666cfebed29a9da78f77d23"
+        "b4e014c5f6868b7bd4930a6432f2dc9006b93e6e"
       ]
     },
     {
-      "id": "appliedcommit-ne-perezhivaet-peresborku",
-      "title": "appliedCommit не переживает пересборку ветки",
-      "type": "tech",
-      "epic": "process",
+      "id": "u-sayta-ne-bylo",
+      "title": "У сайта не было ни одной внутренней ссылки",
+      "type": "bug",
+      "epic": "seo",
       "priority": 1,
-      "status": "backlog",
-      "body": "check видит расхождение, но не отличает забытый apply от rebase. Если записанного хеша нет среди предков HEAD — это пересборка, и сообщение должно быть другим, с готовой командой замены",
+      "status": "done",
+      "body": "навигация построена на кнопках, в сыром HTML ноль a href — обход держался на карте сайта, ссылочной связности не было",
       "updated": "2026-08-31",
       "commits": [
-        "1e83a65876cfed987666cfebed29a9da78f77d23"
+        "b4e014c5f6868b7bd4930a6432f2dc9006b93e6e"
       ]
     },
     {
-      "id": "treylery-teryayutsya-kogda-kommit",
-      "title": "Трейлеры теряются, когда коммит стал предком ветки",
-      "type": "tech",
-      "epic": "process",
-      "priority": 1,
-      "status": "backlog",
-      "body": "после rebase коммиты уходят из диапазона appliedCommit..HEAD, и их движения не применяются никогда. Поймали случайно на PR #29 — четыре карточки остались в старых колонках",
+      "id": "stranica-404-otdavala-pustoe",
+      "title": "Страница 404 отдавала пустое тело",
+      "type": "bug",
+      "epic": "seo",
+      "priority": 2,
+      "status": "done",
+      "body": "код правильный, тело нулевой длины: человек видел белый экран, робот пустой документ",
       "updated": "2026-08-31",
       "commits": [
-        "1e83a65876cfed987666cfebed29a9da78f77d23"
-      ]
-    },
-    {
-      "id": "doska-tyanet-shrifty-iz",
-      "title": "Доска тянет шрифты из Google на проде",
-      "type": "tech",
-      "epic": "infra",
-      "priority": 1,
-      "status": "backlog",
-      "body": "scripts/board-template.html грузит fonts.googleapis.com, и раздел админки делает это уже с habitoff.ru — против инварианта «никаких внешних сервисов в рантайме прода»",
-      "updated": "2026-08-31",
-      "commits": [
-        "1e83a65876cfed987666cfebed29a9da78f77d23"
+        "b4e014c5f6868b7bd4930a6432f2dc9006b93e6e"
       ]
     }
   ]
