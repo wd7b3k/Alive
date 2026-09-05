@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "3b65e6ecf07bae50e756fa3eedb3ea135594ff03",
+  "appliedCommit": "70dbea647c3e39440986f53c1e44ce100297e69d",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3780,6 +3780,33 @@
       "updated": "2026-09-05",
       "commits": [
         "70c7360d20aa582a97f56c8dbbcff64f3b1a5d08"
+      ]
+    },
+    {
+      "id": "rel-admin-changelog",
+      "title": "Раздел «Что сделано» отвечает git, а не память",
+      "type": "feature",
+      "epic": "release",
+      "priority": 2,
+      "status": "done",
+      "body": "Внутренний /admin/releases: вся история репозитория, разобранная на сборке скриптом scripts/build-changelog.mjs. Карточка доски по трейлеру Board:, номер PR, постановка, метка миграции, группировка по версиям, фильтры в адресе. Публичный /releases не тронут. Постановка — docs/tasks/T-20260905-01-release-admin-releases.md, решение — ADR-0018.",
+      "updated": "2026-09-05",
+      "chats": [],
+      "commits": [
+        "03e8ede89be91cd3bb24d745807c0def75e77226"
+      ]
+    },
+    {
+      "id": "spiski-napravleniy-na-doske",
+      "title": "Списки направлений на доске и в постановках разошлись",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "epics в cards.json тринадцать, без money legal knowledge social, зато с next; docs/tasks/README.md называет шестнадцать без next. Раздел «Что сделано» вынужден знать оба набора, иначе на экране латиница.",
+      "updated": "2026-09-05",
+      "commits": [
+        "03e8ede89be91cd3bb24d745807c0def75e77226"
       ]
     }
   ]
