@@ -42,7 +42,8 @@ begin
     -- Разделение заходов на «за ним кто-то есть» и «один заход и ничего». Обязана
     -- отработать и на пустой базе: витрина, падающая до первого посетителя,
     -- обнаружится ровно тогда, когда посетители появятся.
-    'select count(*) from public.admin_traffic_quality(30)'
+    'select count(*) from public.admin_traffic_quality(30)',
+    'select count(*) from public.admin_funnel_stages(30)'
   ]
   loop
     execute statement into rows_out;
@@ -61,4 +62,43 @@ begin
     end if;
     raise notice 'ok: не-администратору отказано (%)', left(sqlerrm, 60);
   end;
+end $$;
+
+-- Дедупликация вех: две строки одной вехи одного человека дают единицу.
+--
+-- Клиент пишет `funnel_stage` каждый раз, когда веха случается, — иначе второй человек
+-- за тем же ноутбуком не попадёт в воронку вовсе. Значит повторы обязан снимать запрос,
+-- и проверить это надо на настоящих строках, а не на прочтении кода: двойной счёт,
+-- переехавший из клиента в отчёт, выглядит как рост.
+do $$
+declare
+  target uuid;
+  counted bigint;
+  written bigint;
+begin
+  select p.id into target from public.profiles p order by p.created_at limit 1;
+  update public.profiles set role = 'admin', status = 'active' where id = target;
+  perform set_config(
+    'request.jwt.claims',
+    json_build_object('sub', target, 'role', 'authenticated')::text,
+    true
+  );
+
+  insert into public.analytics_events (user_id, event_type, funnel_stage, surface, occurred_at)
+  values
+    (target, 'funnel_stage', 'onboarded', 'setup', now() - interval '2 hours'),
+    (target, 'funnel_stage', 'onboarded', 'setup', now() - interval '1 hour');
+
+  select s.people, s.rows_written into counted, written
+  from public.admin_funnel_stages(30) s where s.stage = 'onboarded';
+
+  if written <> 2 then
+    raise exception 'ожидались две записанные строки вехи, а не %', written;
+  end if;
+  if counted <> 1 then
+    raise exception 'две строки одной вехи одного человека дали % вместо единицы', counted;
+  end if;
+  raise notice 'ok: две строки вехи одного человека → % человек при % строках', counted, written;
+
+  update public.profiles set role = 'participant' where id = target;
 end $$;

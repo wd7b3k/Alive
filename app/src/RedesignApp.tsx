@@ -95,7 +95,7 @@ import {
   triggerIcon,
   when,
 } from './redesign/utils';
-import { trackEvent, trackStageOnce } from './services/analytics';
+import { trackEvent, trackStage } from './services/analytics';
 import { reportError } from './services/error-monitoring';
 import { navigateTo as go } from './services/navigation';
 import { codeFromPath, pathForCode } from './domain/knowledge-address';
@@ -664,7 +664,7 @@ function Setup({
       await saveOnboarding(session, { goalText: goal, products });
       // Само событие «настройка завершена» пишет триггер в базе; здесь отмечается веха
       // машинным кодом и уходит цель в кабинеты — этого триггер сделать не может.
-      trackStageOnce(session.user.id, 'onboarded', 'setup');
+      trackStage(session.user.id, 'onboarded', 'setup');
       await done();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить настройки');
@@ -1271,17 +1271,13 @@ export function Guided({
       // повторный — что к нему вернулись. «Доведён до результата» считается так же,
       // как в базе: запись закрыта и исход не `open`.
       const firstEver = data.episodes.length === 0;
-      trackStageOnce(
-        session.user.id,
-        firstEver ? 'first_episode' : 'repeat_episode',
-        'guided_flow',
-      );
+      trackStage(session.user.id, firstEver ? 'first_episode' : 'repeat_episode', 'guided_flow');
       // «Доведён до результата» здесь безусловно, и это не упрощение: сценарий тяги не
       // умеет закончиться исходом `open` — в типе его нет, а `completed_at` ставит сам
       // `saveGuidedEpisode`. Условие `outcome <> 'open'` осталось бы кодом, который
       // никогда не ложен, то есть враньём в форме осторожности. Появится другой способ
       // завести эпизод — условие вернётся вместе с ним.
-      trackStageOnce(session.user.id, 'episode_with_result', 'guided_flow');
+      trackStage(session.user.id, 'episode_with_result', 'guided_flow');
       await saved();
       close();
     } finally {

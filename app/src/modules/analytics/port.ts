@@ -93,6 +93,17 @@ export type TrafficQualityRow = {
   note: string | null;
 };
 
+export type FunnelStageRow = {
+  stage: string;
+  title: string;
+  /** Люди: повторы сняты запросом, `distinct on (человек, этап)`. */
+  people: number;
+  /** Строк записано всего. Разница с `people` и есть снятый двойной счёт. */
+  rows_written: number;
+  first_at: string | null;
+  last_at: string | null;
+};
+
 export type AnalyticsSnapshot = {
   core: CoreMetricRow[];
   funnel: FunnelRow[];
@@ -103,6 +114,7 @@ export type AnalyticsSnapshot = {
   sourceFunnel: SourceFunnelRow[];
   headline: HeadlineRow[];
   trafficQuality: TrafficQualityRow[];
+  funnelStages: FunnelStageRow[];
 };
 
 async function call<T>(name: string, args: Record<string, unknown>): Promise<T[]> {
@@ -114,22 +126,33 @@ async function call<T>(name: string, args: Record<string, unknown>): Promise<T[]
 }
 
 /**
- * Девять запросов уходят разом. Последовательно это девять кругов ожидания на экране,
+ * Десять запросов уходят разом. Последовательно это десять кругов ожидания на экране,
  * который открывают, чтобы посмотреть числа, а не посидеть.
  */
 export async function loadAnalytics(days: number, weeks: number): Promise<AnalyticsSnapshot> {
-  const [core, funnel, flow, retention, sources, states, sourceFunnel, headline, trafficQuality] =
-    await Promise.all([
-      call<CoreMetricRow>('admin_core_metrics', { weeks }),
-      call<FunnelRow>('admin_funnel', { days }),
-      call<FlowStepRow>('admin_flow_steps', { days }),
-      call<RetentionRow>('admin_retention', { weeks }),
-      call<SourceRow>('admin_sources', { days }),
-      call<StateRow>('admin_user_states', {}),
-      call<SourceFunnelRow>('admin_source_funnel', { days }),
-      call<HeadlineRow>('admin_headline', { days }),
-      call<TrafficQualityRow>('admin_traffic_quality', { days }),
-    ]);
+  const [
+    core,
+    funnel,
+    flow,
+    retention,
+    sources,
+    states,
+    sourceFunnel,
+    headline,
+    trafficQuality,
+    funnelStages,
+  ] = await Promise.all([
+    call<CoreMetricRow>('admin_core_metrics', { weeks }),
+    call<FunnelRow>('admin_funnel', { days }),
+    call<FlowStepRow>('admin_flow_steps', { days }),
+    call<RetentionRow>('admin_retention', { weeks }),
+    call<SourceRow>('admin_sources', { days }),
+    call<StateRow>('admin_user_states', {}),
+    call<SourceFunnelRow>('admin_source_funnel', { days }),
+    call<HeadlineRow>('admin_headline', { days }),
+    call<TrafficQualityRow>('admin_traffic_quality', { days }),
+    call<FunnelStageRow>('admin_funnel_stages', { days }),
+  ]);
   return {
     core,
     funnel,
@@ -140,5 +163,6 @@ export async function loadAnalytics(days: number, weeks: number): Promise<Analyt
     sourceFunnel,
     headline,
     trafficQuality,
+    funnelStages,
   };
 }

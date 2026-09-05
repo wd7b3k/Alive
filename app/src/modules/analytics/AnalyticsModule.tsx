@@ -7,6 +7,7 @@ import {
   type AnalyticsSnapshot,
   type CoreMetricRow,
   type HeadlineRow,
+  type FunnelStageRow,
   type SourceFunnelRow,
   type TrafficQualityRow,
 } from './port';
@@ -240,6 +241,34 @@ function TrafficQuality({ rows }: { rows: TrafficQualityRow[] }) {
   );
 }
 
+/**
+ * Вехи воронки по событиям клиента.
+ *
+ * Люди и записи показаны рядом. Разница между ними — повторы, снятые запросом
+ * `distinct on (человек, этап)`; клиент пишет каждый раз намеренно, потому что решать в
+ * браузере, было ли уже такое, значит терять второго человека за тем же ноутбуком.
+ */
+function FunnelStages({ rows }: { rows: FunnelStageRow[] }) {
+  const top = Math.max(1, ...rows.map((row) => row.people));
+  return (
+    <div className="r-viz">
+      {rows.map((row) => (
+        <BarRow
+          key={row.stage}
+          label={row.title}
+          value={row.people}
+          max={top}
+          caption={
+            row.rows_written > row.people
+              ? `${row.people} · записей ${row.rows_written}`
+              : `${row.people}`
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
 function SourceFunnel({ rows }: { rows: SourceFunnelRow[] }) {
   return (
     <div className="r-viz-funnel">
@@ -430,6 +459,32 @@ export function AnalyticsModule() {
                 </div>
                 {funnel.some((row) => row.note) && (
                   <p className="r-viz-note">{funnel.find((row) => row.note)?.note}</p>
+                )}
+                <p className="r-viz-note">
+                  Шаг «эпизод доведён до результата» всегда равен предыдущему, и читать его как
+                  конверсию нельзя. Это не совпадение и не ошибка счёта: сценарий тяги не умеет
+                  закончиться исходом «открыт» — записанный эпизод по построению закрыт и с исходом.
+                  Шаг станет содержательным, когда появится второй способ завести эпизод, который
+                  можно бросить на середине.
+                </p>
+              </section>
+
+              <section>
+                <p className="r-kicker">Вехи по событиям клиента</p>
+                <p className="r-lead">
+                  То же самое, но посчитанное не по таблицам, а по тому, что успел записать браузер.
+                  Расхождение с воронкой выше — это и есть мера того, сколько событий не доехало:
+                  блокировщики, закрытая вкладка, потерянная сеть. «Людей» и «записей» показаны
+                  рядом намеренно: разница между ними — снятый двойной счёт, и видеть его полезнее,
+                  чем прятать.
+                </p>
+                {snapshot.funnelStages.every((row) => row.rows_written === 0) ? (
+                  <p className="r-muted">
+                    Клиент начал писать вехи 05.09.2026. За выбранный период их ещё нет — это «не
+                    записывали», а не «никто не дошёл».
+                  </p>
+                ) : (
+                  <FunnelStages rows={snapshot.funnelStages} />
                 )}
               </section>
 
