@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "947eefe9d7c1547700081f7257e578a73af46fdb",
+  "appliedCommit": "887ee5fa5882368465d37a1d02c23bd6ef9daa7a",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3807,6 +3807,46 @@
       "updated": "2026-09-05",
       "commits": [
         "03e8ede89be91cd3bb24d745807c0def75e77226"
+      ]
+    },
+    {
+      "id": "rel-publish-backlog",
+      "title": "Невыложенное разобрано, прод на 3.3",
+      "type": "infra",
+      "epic": "release",
+      "priority": 1,
+      "status": "done",
+      "body": "Опись веток, разведение номеров задач и ADR, слияние корзин Б и А, версия 3.3.0 и выкладка. Корзина А оказалась вдвое меньше описи: chore/ops-fixes и feat/server-apply-migrations уже в main в более поздней редакции. Постановка — docs/tasks/T-20260905-11-release-publish-backlog.md.",
+      "updated": "2026-09-05",
+      "chats": [],
+      "commits": [
+        "81b10aae4fc6921dbcf7d8595f69c99f592df209"
+      ]
+    },
+    {
+      "id": "migracii-zadnim-chislom-delayut",
+      "title": "Миграции задним числом делают три ветки несоединимыми",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 1,
+      "status": "backlog",
+      "body": "task/counter-health, agent/monitoring-truth и agent/source-funnel-rebased несут миграции 20260831180000 и 20260831190000, а в базе применены от 05.09; применятель их не пропустит, но применит к более новой схеме — даты переписать до слияния",
+      "updated": "2026-09-05",
+      "commits": [
+        "81b10aae4fc6921dbcf7d8595f69c99f592df209"
+      ]
+    },
+    {
+      "id": "avgustovskiy-arhiv-schitaetsya-nevylozhennoy",
+      "title": "Августовский архив считается невыложенной работой",
+      "type": "docs",
+      "epic": "process",
+      "priority": 3,
+      "status": "backlog",
+      "body": "десять веток до 20.08 (origin/v3.0-*, agent/v4.0.0-*, agent/owner-vision-*, agent/r1-*, agent/v3.1-*, agent/product-strategy-*, migration/standalone-repo) каждый раз попадают в опись невыложенного; пометить архивом или удалить — решение владельца",
+      "updated": "2026-09-05",
+      "commits": [
+        "81b10aae4fc6921dbcf7d8595f69c99f592df209"
       ]
     },
     {
