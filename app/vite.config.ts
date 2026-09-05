@@ -13,6 +13,13 @@ import {
   type SitemapEntry,
 } from './src/services/prerender';
 import { cards, pathFor } from './src/services/knowledge-catalog';
+import { readContent } from './src/services/knowledge-articles';
+import {
+  buildArticles,
+  clusterLinks,
+  llmsArticlesSection,
+  type Claim,
+} from './src/services/knowledge-article-pages';
 import { PRERENDER_PATHS } from './src/services/seo';
 
 const version: string = JSON.parse(
@@ -94,6 +101,7 @@ const SHARED_SOURCES = [
  * сборки на каждый адрес не заводится: это те же байты бандла, а не пять приложений.
  */
 function prerenderPublicRoutes(): Plugin {
+  const root = fileURLToPath(new URL('.', import.meta.url));
   return {
     name: 'habitoff-prerender-routes',
     enforce: 'post',
@@ -106,6 +114,28 @@ function prerenderPublicRoutes(): Plugin {
       if (!outDir) throw new Error('Предрендер: у сборки нет каталога вывода.');
       const source = String(index.source);
 
+      // Каталог и статьи собираются до первой записи на диск. Список кластеров нужен
+      // уже разделу «Факты и мифы», а отказ на неверной статье должен случиться раньше,
+      // чем в `dist` появится половина раздела.
+      //
+      // Решение владельца 05.09.2026 (ADR-0017): адрес карточки выводится из первичного
+      // ключа и не меняется — адрес, который переехал, теряет всё, что набрал в индексе.
+      const catalog = cards();
+
+      // В базу сборка не ходит: утверждения статей подставляются из той же выгрузки, из
+      // которой собираются карточки, — единственного источника на сборке (ADR-0018).
+      // Поэтому здесь нет ни ветки «каталог недоступен», ни второго читателя.
+      const claims = new Map<string, Claim>(catalog.map((card) => [card.code, card]));
+      const css = [...source.matchAll(/<link rel="stylesheet"[^>]*href="([^"]+)"/g)].map(
+        (match) => match[1],
+      );
+      const articles = buildArticles(
+        join(root, '..', 'content', 'knowledge'),
+        claims,
+        { css },
+        readContent,
+      );
+
       // Главная переписывается через тот же путь, что и разделы: ей дописывается
       // навигация. Без неё робот доходит до главной и упирается в тупик — уйти с неё
       // по ссылке было некуда, ноль внутренних ссылок в сыром HTML на всех адресах.
@@ -114,7 +144,10 @@ function prerenderPublicRoutes(): Plugin {
       for (const path of PRERENDER_PATHS) {
         const file = join(outDir, path.slice(1), 'index.html');
         mkdirSync(dirname(file), { recursive: true });
-        writeFileSync(file, renderRoute(source, path), 'utf8');
+        // Под карточками «Фактов и мифов» появляется список кластеров: карточка
+        // отвечает коротко, разбор — длинно, и переход между ними должен быть виден.
+        const extra = path === '/knowledge' ? clusterLinks(articles.registry) : undefined;
+        writeFileSync(file, renderRoute(source, path, extra), 'utf8');
       }
 
       // Страница для несуществующего адреса. Её отдаёт Caddy через handle_errors,
@@ -122,15 +155,28 @@ function prerenderPublicRoutes(): Plugin {
       // и человек видел белый экран. В карту сайта она не попадает и несёт noindex.
       writeFileSync(join(outDir, '404.html'), renderNotFound(source), 'utf8');
 
-      // Страница на каждую опубликованную карточку каталога. Решение владельца
-      // 05.09.2026 (ADR-0018): адрес выводится из первичного ключа и не меняется —
-      // адрес, который переехал, теряет всё, что успел набрать в индексе.
-      const catalog = cards();
+      // Страница на каждую опубликованную карточку каталога.
       for (const card of catalog) {
         const file = join(outDir, pathFor(card).slice(1), 'index.html');
         mkdirSync(dirname(file), { recursive: true });
         writeFileSync(file, renderCard(source, card), 'utf8');
       }
+
+      for (const file of articles.files) {
+        const target = join(outDir, file.path);
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, file.contents, 'utf8');
+      }
+
+      // Список кластеров дописывается в `llms.txt` на сборке: числа и адреса карточек в
+      // нём собирает выгрузка из базы, а статьи в базе не лежат. Руками не набирается
+      // ничего — ни здесь, ни там.
+      const llms = join(outDir, 'llms.txt');
+      writeFileSync(
+        llms,
+        `${readFileSync(llms, 'utf8').trimEnd()}\n${llmsArticlesSection(articles.registry, articles.articles)}`,
+        'utf8',
+      );
 
       const entries: SitemapEntry[] = [
         ...['/', ...PRERENDER_PATHS].map((path) => ({
@@ -143,6 +189,12 @@ function prerenderPublicRoutes(): Plugin {
         // дата означала бы «все тридцать восемь страниц изменились», и поисковик
         // перестал бы верить полю целиком.
         ...catalog.map((card) => ({ path: pathFor(card), lastmod: card.updated })),
+        // У статьи дата берётся из git по её файлу и по шаблонам, из которых она
+        // собрана, — тем же способом, что у разделов.
+        ...articles.routes.map((route) => ({
+          path: route.path,
+          lastmod: lastModified([...SHARED_SOURCES, ...route.sources]),
+        })),
       ];
       writeFileSync(join(outDir, 'sitemap.xml'), renderSitemap(entries), 'utf8');
       // Объём меряется по собранной странице, а не по полям карточки: в индекс уходит
