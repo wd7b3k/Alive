@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "accee0408c69f5337238f375f6460ff287e56fd1",
+  "appliedCommit": "3b65e6ecf07bae50e756fa3eedb3ea135594ff03",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3754,6 +3754,32 @@
       "updated": "2026-09-05",
       "commits": [
         "ffaffca48b2c3ef679a7656f5711e741476b6752"
+      ]
+    },
+    {
+      "id": "kanal-opovescheniya-pust-alerty",
+      "title": "Канал оповещения пуст: алерты не покидают сервер",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "TELEGRAM_BOT_TOKEN и CHAT_ID в /etc/habitoff/backup.env объявлены без значений, notify молча выходит",
+      "updated": "2026-08-31",
+      "commits": [
+        "dd1f7973fd09db3a0d31979005b7739e3bcf43aa"
+      ]
+    },
+    {
+      "id": "postanovki-lezhali-vne-git",
+      "title": "Постановки лежали вне git пятнадцатью позициями",
+      "type": "docs",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "рабочая копия владельца хранила двенадцать постановок за 05.09, HANDOFF.md, руководство сбора и content/ незакоммиченными; перенесены задачей T-20260905-11",
+      "updated": "2026-09-05",
+      "commits": [
+        "70c7360d20aa582a97f56c8dbbcff64f3b1a5d08"
       ]
     }
   ]
