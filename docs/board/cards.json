@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "02496c93bb2d52a4384f53ae8d28d421367274a2",
+  "appliedCommit": "5b5e05e4528e2840c1edd6eea955763c288a43ef",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3860,6 +3860,45 @@
       "updated": "2026-09-05",
       "commits": [
         "62f0100705d789de4392e74079b9765693345626"
+      ]
+    },
+    {
+      "id": "klaster-chto-novogo-vylozhit",
+      "title": "Кластер «Что нового»: выложить и завести в индекс",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "восемь разборов свежих обзоров и регуляторных решений лежат в content/knowledge/novoe. Довести до живых проиндексированных адресов: свести движок статей с принятым ADR-0017, выложить, заказать переобход.",
+      "updated": "2026-09-05",
+      "commits": [
+        "9c5a55a46c4c5f45ef25920d04ebb1475bd73dbb"
+      ]
+    },
+    {
+      "id": "zamer-indeksacii-klastera-cherez",
+      "title": "Замер индексации кластера через две недели",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "19.09.2026 проверить, сколько из девятнадцати новых адресов в индексе Яндекса и Google, есть ли показы по небрендовым запросам и цитируется ли раздел в ИИ-ответах. Точка отсчёта на 05.09.2026 — один адрес в Яндексе, один в Google.",
+      "updated": "2026-09-05",
+      "commits": [
+        "fff64a50ccd37a4cdec082846a7b254ab591705d"
+      ]
+    },
+    {
+      "id": "vetka-starogo-dvizhka-statey",
+      "title": "Ветка старого движка статей закрыта",
+      "type": "tech",
+      "epic": "process",
+      "priority": 3,
+      "status": "backlog",
+      "body": "task/knowledge-base отменена ADR-0018, уникального кода не осталось, журнал сессии 31.08 перенесён в main. Ветка удалена локально и на origin, воркtree снят.",
+      "updated": "2026-09-05",
+      "commits": [
+        "bdd2e6a56ea81e65c2b546db27bdee23ca622a51"
       ]
     }
   ]

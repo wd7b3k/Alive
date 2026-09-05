@@ -298,8 +298,14 @@ export function cardBody(card: CatalogCard): string {
   return parts.join('\n      ');
 }
 
-/** Тело раздела: свой заголовок, свой текст и ссылки на соседние разделы. */
-export function routeBody(path: string): string | null {
+/**
+ * Тело раздела: свой заголовок, свой текст и ссылки на соседние разделы.
+ *
+ * `extra` — готовая разметка, собранная вне этого модуля: сейчас это список кластеров
+ * базы знаний. Она приходит параметром, а не импортом, потому что предрендер знает про
+ * каталог, но знать ещё и про содержание статей ему незачем.
+ */
+export function routeBody(path: string, extra?: string): string | null {
   const body = BODIES[path];
   if (!body) return null;
   const paragraphs = body.paragraphs.map((text) => `        <p>${escapeHtml(text)}</p>`).join('\n');
@@ -311,6 +317,7 @@ export function routeBody(path: string): string | null {
   // `/knowledge` — единственный раздел, которому есть что перечислить: у карточек
   // теперь свои адреса. Остальные станут хабами, когда адреса получат и они.
   if (path === '/knowledge') parts.push(knowledgeIndexBlock());
+  if (extra) parts.push(extra);
   parts.push(navBlock(path), '      </main>');
   return parts.join('\n      ');
 }
@@ -338,7 +345,7 @@ export function notFoundBody(): string {
 /**
  * Документ для одного адреса: тот же бандл, свои заголовок, описание и содержание.
  */
-export function renderRoute(indexHtml: string, path: string): string {
+export function renderRoute(indexHtml: string, path: string, extra?: string): string {
   const meta = metaFor(path);
   const url = ORIGIN + path;
   const title = escapeHtml(meta.title);
@@ -396,7 +403,7 @@ export function renderRoute(indexHtml: string, path: string): string {
     });
   }
 
-  const body = path === '/releases' ? releasesBody() : routeBody(path);
+  const body = path === '/releases' ? releasesBody() : routeBody(path, extra);
   if (body) {
     html = replaceOne(html, 'статический слепок в <body>', PRERENDER_BODY, body);
   } else if (path === '/') {

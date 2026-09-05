@@ -406,6 +406,109 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
 .r-viz-cabinets small{font-size:var(--r-fs-xs);line-height:1.5;color:var(--r-dim)}
 @media(max-width:600px){.r-viz-tiles,.r-viz-cabinets{grid-template-columns:1fr}.r-viz-funnel p em{margin-left:0}}
 
+/* ---------------------------------------------------------------------------
+      Страницы базы знаний: статика без React.
+   ---------------------------------------------------------------------------
+   Эти правила рисуют документы, которые раскладывает сборка (`knowledge-article-pages.ts`):
+   статью, кластер и страницу метода. Приложение на них не грузится вовсе — человеку,
+   пришедшему из поиска за одним ответом, 613 КБ приложения не нужны, — поэтому шапка
+   и подвал здесь свои, а всё остальное переиспользует уже существующие классы:
+   бейдж уровня, границу утверждения, список источников. Второй дизайн-системы не
+   заводится, и цвета берутся из тех же токенов.
+   Типографика длинного текста — единственное, чего в системе не было: карточки
+   продукта короткие, а статья читается подряд. */
+.r-static{display:flex;flex-direction:column;min-height:100dvh}
+.r-static-header{width:min(760px,calc(100% - 36px));margin:0 auto;padding:var(--r-sp-6) 0 var(--r-sp-4);display:flex;flex-wrap:wrap;align-items:center;gap:var(--r-sp-3) var(--r-sp-6);border-bottom:1px solid var(--r-line)}
+.r-static-brand{font-weight:800;font-size:var(--r-fs-lead);letter-spacing:.01em;text-decoration:none}
+.r-static-header nav ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--r-sp-2) var(--r-sp-4)}
+.r-static-header a{color:var(--r-muted);font-size:var(--r-fs-sm);text-decoration:none}
+.r-static-header a:hover{color:var(--r-text)}
+.r-static-footer{width:min(760px,calc(100% - 36px));margin:auto auto 0;padding:var(--r-sp-7) 0 var(--r-sp-8);border-top:1px solid var(--r-line);color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.6}
+.r-static-footer p{margin:0 0 var(--r-sp-2)}
+.r-static-footer a{color:var(--r-teal-dim)}
+
+.r-article{width:min(760px,calc(100% - 36px));margin:0 auto;padding:var(--r-sp-6) 0 var(--r-sp-8);color:var(--r-muted);font-size:var(--r-fs-body);line-height:1.7}
+.r-article h1{font-size:clamp(29px,5vw,44px);line-height:1.12;color:var(--r-text);margin:0 0 var(--r-sp-5);max-width:24ch}
+.r-article-answer{margin:0 0 var(--r-sp-5);font-size:var(--r-fs-lead);line-height:1.6;color:#dff0e9}
+.r-article-meta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--r-sp-2) var(--r-sp-3);margin:0 0 var(--r-sp-6);font-size:var(--r-fs-xs)}
+.r-article-meta .r-evidence-limit{max-width:46ch}
+
+.r-breadcrumbs{margin:0 0 var(--r-sp-5);font-size:var(--r-fs-xs);color:var(--r-dim)}
+.r-breadcrumbs ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--r-sp-1) var(--r-sp-2)}
+.r-breadcrumbs li+li::before{content:"→";margin-right:var(--r-sp-2);color:var(--r-line2)}
+.r-breadcrumbs a{color:var(--r-teal-dim)}
+
+.r-article-toc{margin:0 0 var(--r-sp-6);padding:var(--r-sp-4) var(--r-sp-5);border:1px solid var(--r-line);border-radius:var(--r-r-lg);background:rgba(255,255,255,.02)}
+.r-article-toc h2{margin:0 0 var(--r-sp-2);font-size:var(--r-fs-kicker);letter-spacing:.08em;text-transform:uppercase;color:var(--r-dim)}
+.r-article-toc ol{margin:0;padding-left:var(--r-sp-5);display:grid;gap:var(--r-sp-1);font-size:var(--r-fs-sm)}
+.r-article-toc a{color:var(--r-teal-dim)}
+
+.r-article-body h2{margin:var(--r-sp-8) 0 var(--r-sp-3);font-size:var(--r-fs-h2);line-height:1.2;color:var(--r-text)}
+.r-article-body h3{margin:var(--r-sp-6) 0 var(--r-sp-2);font-size:var(--r-fs-h3);color:#cfe3df}
+.r-article-body p{margin:0 0 var(--r-sp-4);max-width:66ch}
+.r-article-body ul{margin:0 0 var(--r-sp-4);padding-left:var(--r-sp-5);display:grid;gap:var(--r-sp-2);max-width:66ch}
+.r-article-body blockquote{margin:0 0 var(--r-sp-4);padding-left:var(--r-sp-4);border-left:2px solid var(--r-line2);color:#dff0e9}
+.r-article-body b{color:var(--r-text)}
+.r-article-body a{color:var(--r-teal)}
+.r-article-ref{font-size:var(--r-fs-kicker);line-height:1}
+.r-article-ref a{padding:0 var(--r-sp-1);color:var(--r-sand);text-decoration:none}
+
+/* Утверждение каталога внутри статьи. Форма мифа обязана читаться как разобранное
+   убеждение, а не как позиция продукта: правило то же, что в «Фактах и мифах». */
+.r-article-claim{--g:var(--r-teal);display:grid;gap:var(--r-sp-2);margin:0 0 var(--r-sp-5);padding:var(--r-sp-5);border:1px solid color-mix(in srgb,var(--g) 20%,var(--r-line));border-radius:var(--r-r-xl);background:radial-gradient(320px 200px at 100% 0,color-mix(in srgb,var(--g) 8%,transparent),transparent 72%),rgba(255,255,255,.02)}
+.r-article-claim.myth{--g:var(--r-red)}
+.r-article-claim>header{display:flex;align-items:center;gap:var(--r-sp-2);flex-wrap:wrap}
+.r-article-claim>header .r-knowledge-kind{color:var(--g)}
+.r-article-claim>header .r-evidence-badge{margin-top:0;margin-left:auto}
+.r-article-claim p{margin:0;font-size:var(--r-fs-sm);line-height:1.6;max-width:none}
+.r-article-claim-title{color:var(--r-text);font-size:var(--r-fs-lead)!important;line-height:1.35!important}
+.r-article-claim-source a{color:#8fded5;overflow-wrap:anywhere}
+.r-article-claim-source small{color:var(--r-dim)}
+.r-article-claim-back a{color:var(--r-teal-dim);font-size:var(--r-fs-xs)}
+
+.r-article-faq h3{margin:var(--r-sp-5) 0 var(--r-sp-2);font-size:var(--r-fs-h3);color:#cfe3df}
+.r-article-faq p{margin:0 0 var(--r-sp-3);max-width:66ch}
+.r-article-sources h2,.r-article-changelog h2,.r-article-related h2,.r-article-faq h2{margin:var(--r-sp-8) 0 var(--r-sp-3);font-size:var(--r-fs-h2);color:var(--r-text)}
+.r-article-sources ol{margin:0;padding-left:var(--r-sp-5);display:grid;gap:var(--r-sp-3);font-size:var(--r-fs-sm)}
+.r-article-sources a{color:#8fded5;overflow-wrap:anywhere}
+.r-article-sources small{display:block;margin-top:var(--r-sp-1);color:var(--r-dim);font-size:var(--r-fs-xs)}
+.r-article-changelog ul,.r-article-related ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--r-sp-3);font-size:var(--r-fs-sm)}
+.r-article-changelog time{color:var(--r-sand);font-variant-numeric:tabular-nums}
+.r-article-related a{color:var(--r-teal)}
+.r-article-related small{display:block;margin-top:var(--r-sp-1);color:var(--r-dim);font-size:var(--r-fs-xs)}
+
+/* Переход в продукт стоит после ответа, а не вместо него, и ведёт в чтение. */
+.r-article-next{margin:var(--r-sp-8) 0 0;padding:var(--r-sp-5);border:1px solid var(--r-line2);border-radius:var(--r-r-xl);background:rgba(224,201,166,.045)}
+.r-article-next p{margin:0 0 var(--r-sp-2);font-size:var(--r-fs-sm)}
+.r-article-next p:last-child{margin:0}
+.r-article-next a{color:var(--r-sand)}
+
+.r-cluster-list{list-style:none;margin:var(--r-sp-6) 0 var(--r-sp-7);padding:0;display:grid;gap:var(--r-sp-4)}
+.r-cluster-list li{padding:var(--r-sp-5);border:1px solid var(--r-line);border-radius:var(--r-r-xl);background:rgba(255,255,255,.02)}
+.r-cluster-list h2{margin:0 0 var(--r-sp-2);font-size:var(--r-fs-h3);line-height:1.3}
+.r-cluster-list h2 a{color:var(--r-text)}
+.r-cluster-list p{margin:0 0 var(--r-sp-3);font-size:var(--r-fs-sm);max-width:66ch}
+.r-cluster p{max-width:66ch}
+
+.r-method-levels{margin:0 0 var(--r-sp-5);display:grid;gap:var(--r-sp-3)}
+.r-method-levels dt{margin:0}
+.r-method-levels dd{margin:var(--r-sp-1) 0 0;padding-left:var(--r-sp-4);border-left:1px solid var(--r-line)}
+.r-method-levels dd p{margin:0 0 var(--r-sp-1);font-size:var(--r-fs-sm)}
+
+@media(max-width:600px){
+  .r-static-header{gap:var(--r-sp-2) var(--r-sp-4);padding-top:var(--r-sp-5)}
+  .r-article{padding-top:var(--r-sp-5)}
+  .r-article-claim{padding:var(--r-sp-4)}
+}
+
+/* Ссылки на разборы под карточками раздела «Факты и мифы». Обычные ссылки, а не
+   кнопки: страница статьи — отдельный документ без React, и переход туда должен быть
+   полной загрузкой. */
+.r-cluster-links{list-style:none;margin:0;padding:0;display:grid;gap:var(--r-sp-3)}
+.r-cluster-links li{padding:var(--r-sp-4) var(--r-sp-5);border:1px solid var(--r-line);border-radius:var(--r-r-lg);background:rgba(255,255,255,.02)}
+.r-cluster-links a{color:var(--r-teal);font-size:var(--r-fs-body);font-weight:700}
+.r-cluster-links small{display:block;margin-top:var(--r-sp-1);color:var(--r-muted);font-size:var(--r-fs-sm);line-height:1.5}
+
 /* Раздел админки «Что сделано»: история репозитория, разобранная на сборке.
    Строк здесь три сотни, поэтому строка изменения — самый узкий элемент раздела:
    одна высота, никаких карточек, моноширинный отпечаток как якорь для глаза.
