@@ -1,0 +1,655 @@
+{
+  "note": "Снимок метаданных опубликованного каталога. Текстов здесь нет: они живут в базе. Служит для сверки «до» и «после» сессии — база знаний обязана быть только читателем.",
+  "taken": "2026-08-31",
+  "counts": {
+    "fact": 19,
+    "myth": 19
+  },
+  "cards": [
+    {
+      "code": "low_intensity_cvd",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today"
+      ],
+      "sort_order": 10,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "mortality_decade",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today"
+      ],
+      "sort_order": 20,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "quit_before_40",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today",
+        "public"
+      ],
+      "sort_order": 30,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "heavy_smoker_cvd_5y",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today",
+        "public"
+      ],
+      "sort_order": 40,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "mental_health_after_quit",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today",
+        "public"
+      ],
+      "sort_order": 50,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "nrt_safer",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today",
+        "public"
+      ],
+      "sort_order": 60,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "light_not_safe",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today"
+      ],
+      "sort_order": 70,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "hookah_not_safe",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "hookah"
+      ],
+      "surfaces": [
+        "today"
+      ],
+      "sort_order": 75,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "secondhand_no_safe",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette",
+        "hookah"
+      ],
+      "surfaces": [
+        "today"
+      ],
+      "sort_order": 80,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "oral_health",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today"
+      ],
+      "sort_order": 90,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "rewards_work",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today",
+        "public"
+      ],
+      "sort_order": 100,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "treatment_plus_support",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette",
+        "hookah"
+      ],
+      "surfaces": [
+        "today",
+        "public"
+      ],
+      "sort_order": 110,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "who_medications",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette",
+        "hookah"
+      ],
+      "surfaces": [
+        "today",
+        "public"
+      ],
+      "sort_order": 120,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "cues_matter",
+      "kind": "fact",
+      "level": "B",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "links",
+        "today"
+      ],
+      "sort_order": 130,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "craving_is_signal",
+      "kind": "fact",
+      "level": "B",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "flow",
+        "links",
+        "today"
+      ],
+      "sort_order": 140,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "expectancies_predict_lapse",
+      "kind": "fact",
+      "level": "B",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "links",
+        "today"
+      ],
+      "sort_order": 150,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "digital_support",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette",
+        "hookah"
+      ],
+      "surfaces": [
+        "today"
+      ],
+      "sort_order": 160,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "weight_varies",
+      "kind": "fact",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today"
+      ],
+      "sort_order": 170,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "lapse_is_data",
+      "kind": "fact",
+      "level": "B",
+      "product_types": [
+        "cigarette",
+        "hookah",
+        "vape"
+      ],
+      "surfaces": [
+        "flow",
+        "today"
+      ],
+      "sort_order": 180,
+      "trigger_codes": [],
+      "has_source": true
+    },
+    {
+      "code": "calms_me",
+      "kind": "myth",
+      "level": "B",
+      "product_types": [
+        "cigarette",
+        "vape"
+      ],
+      "surfaces": [
+        "flow",
+        "links",
+        "today",
+        "public"
+      ],
+      "sort_order": 10,
+      "trigger_codes": [
+        "tension",
+        "anger",
+        "irritability",
+        "anxiety",
+        "uncertainty"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "focus_better",
+      "kind": "myth",
+      "level": "B",
+      "product_types": [
+        "cigarette",
+        "vape"
+      ],
+      "surfaces": [
+        "flow",
+        "links"
+      ],
+      "sort_order": 20,
+      "trigger_codes": [
+        "work_computer",
+        "task_start",
+        "thinking"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "only_real_pause",
+      "kind": "myth",
+      "level": "C",
+      "product_types": [
+        "cigarette",
+        "hookah",
+        "vape"
+      ],
+      "surfaces": [
+        "flow",
+        "links"
+      ],
+      "sort_order": 30,
+      "trigger_codes": [
+        "task_transition",
+        "after_task",
+        "evening"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "coffee_needs_smoke",
+      "kind": "myth",
+      "level": "B",
+      "product_types": [
+        "cigarette",
+        "vape"
+      ],
+      "surfaces": [
+        "flow",
+        "links"
+      ],
+      "sort_order": 40,
+      "trigger_codes": [
+        "coffee"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "meal_needs_smoke",
+      "kind": "myth",
+      "level": "C",
+      "product_types": [
+        "cigarette",
+        "vape"
+      ],
+      "surfaces": [
+        "flow",
+        "links"
+      ],
+      "sort_order": 50,
+      "trigger_codes": [
+        "after_meal"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "smoking_is_style",
+      "kind": "myth",
+      "level": "C",
+      "product_types": [
+        "cigarette",
+        "hookah",
+        "vape"
+      ],
+      "surfaces": [
+        "links"
+      ],
+      "sort_order": 60,
+      "trigger_codes": [
+        "social",
+        "hookah_venue"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "social_helper",
+      "kind": "myth",
+      "level": "B",
+      "product_types": [
+        "cigarette",
+        "hookah",
+        "vape"
+      ],
+      "surfaces": [
+        "flow",
+        "links"
+      ],
+      "sort_order": 70,
+      "trigger_codes": [
+        "social",
+        "hookah_venue"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "one_does_not_count",
+      "kind": "myth",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "flow",
+        "today"
+      ],
+      "sort_order": 80,
+      "trigger_codes": [
+        "spontaneous"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "light_is_safer",
+      "kind": "myth",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today"
+      ],
+      "sort_order": 90,
+      "trigger_codes": [
+        "other"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "hookah_is_mild",
+      "kind": "myth",
+      "level": "A",
+      "product_types": [
+        "hookah"
+      ],
+      "surfaces": [
+        "links",
+        "today"
+      ],
+      "sort_order": 95,
+      "trigger_codes": [
+        "hookah_venue",
+        "social"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "nrt_same_as_smoking",
+      "kind": "myth",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today",
+        "public"
+      ],
+      "sort_order": 100,
+      "trigger_codes": [
+        "other"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "vape_is_harmless",
+      "kind": "myth",
+      "level": "A",
+      "product_types": [
+        "vape",
+        "cigarette"
+      ],
+      "surfaces": [
+        "today"
+      ],
+      "sort_order": 110,
+      "trigger_codes": [
+        "other"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "weight_is_inevitable",
+      "kind": "myth",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today",
+        "public"
+      ],
+      "sort_order": 120,
+      "trigger_codes": [
+        "other"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "too_late_to_quit",
+      "kind": "myth",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "today",
+        "public"
+      ],
+      "sort_order": 130,
+      "trigger_codes": [
+        "other"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "lapse_resets_all",
+      "kind": "myth",
+      "level": "B",
+      "product_types": [
+        "cigarette",
+        "hookah",
+        "vape"
+      ],
+      "surfaces": [
+        "flow",
+        "today",
+        "public"
+      ],
+      "sort_order": 140,
+      "trigger_codes": [
+        "other"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "can_quit_anytime",
+      "kind": "myth",
+      "level": "C",
+      "product_types": [
+        "cigarette",
+        "hookah",
+        "vape"
+      ],
+      "surfaces": [
+        "links",
+        "today"
+      ],
+      "sort_order": 150,
+      "trigger_codes": [
+        "spontaneous",
+        "other"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "too_stressed_to_quit",
+      "kind": "myth",
+      "level": "B",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "flow",
+        "links",
+        "public"
+      ],
+      "sort_order": 160,
+      "trigger_codes": [
+        "tension",
+        "anxiety",
+        "uncertainty"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "one_of_few_pleasures",
+      "kind": "myth",
+      "level": "B",
+      "product_types": [
+        "cigarette",
+        "hookah",
+        "vape"
+      ],
+      "surfaces": [
+        "flow",
+        "links",
+        "today"
+      ],
+      "sort_order": 170,
+      "trigger_codes": [
+        "boredom",
+        "evening",
+        "social"
+      ],
+      "has_source": true
+    },
+    {
+      "code": "without_smoking_more_anxious",
+      "kind": "myth",
+      "level": "A",
+      "product_types": [
+        "cigarette"
+      ],
+      "surfaces": [
+        "flow",
+        "links",
+        "today"
+      ],
+      "sort_order": 180,
+      "trigger_codes": [
+        "anxiety",
+        "irritability",
+        "tension"
+      ],
+      "has_source": true
+    }
+  ]
+}
