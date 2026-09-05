@@ -1027,7 +1027,7 @@ export function Guided({
   // Контекст вне каталога. Поле раскрывается на месте карточки и не добавляет шага:
   // человек, чьей ситуации в каталоге не нашлось, не должен получить за это лишний
   // экран (P17). До этого выбора у него не было — и `trigger_code` эпизода становился
-  // ложью, а починить её задним числом нечем. См. ADR-0006 и ADR-0017.
+  // ложью, а починить её задним числом нечем. См. ADR-0006 и ADR-0019.
   const [otherOpen, setOtherOpen] = useState(false);
   const [customTrigger, setCustomTrigger] = useState('');
   const candidates = useMemo(

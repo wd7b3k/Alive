@@ -131,7 +131,7 @@ Privileged access к private content, если когда-либо потреб�
 IDs/categories, timestamps, latency/error metadata, coarse product context.
 
 Правило действует и там, где текст человека стоит прямо рядом с событием. Контекст вне
-каталога (ADR-0017, Р1) пишет в `analytics_events` событие `trigger_other_used` с кодом
+каталога (ADR-0019, Р1) пишет в `analytics_events` событие `trigger_other_used` с кодом
 причины `no_trigger_match` и флагом `text_given`; сам текст остаётся в эпизоде.
 Проверяется это не договорённостью и не фильтром `sanitizeMetadata` — он выбрасывает
 строки длиннее 64 знаков и от текста короче не спасает, — а тестом

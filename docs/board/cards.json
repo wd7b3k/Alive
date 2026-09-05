@@ -3452,8 +3452,8 @@
       ],
       "docs": [
         {
-          "label": "ADR-0017-participant-feedback.md",
-          "path": "docs/decisions/ADR-0017-participant-feedback.md"
+          "label": "ADR-0019-participant-feedback.md",
+          "path": "docs/decisions/ADR-0019-participant-feedback.md"
         }
       ]
     },
