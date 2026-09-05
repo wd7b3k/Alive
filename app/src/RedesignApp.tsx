@@ -49,15 +49,12 @@ import {
   splitByKind,
 } from './domain/knowledge';
 import {
-  ArticleMore,
   AwarenessCardView,
   EvidenceBadge,
   EvidenceDetail,
   KnowledgeCardView,
-  KnowledgeClusters,
   KnowledgeCollapsed,
 } from './redesign/knowledge';
-import { articlesForCard, articlesForContext } from './domain/articles';
 import { GoalCard, GoalLibrary, GoalSpotlight, goalOfTheDay } from './redesign/goals';
 import { ShareWin } from './redesign/share';
 import { usePublicCatalog } from './hooks/usePublicCatalog';
@@ -506,9 +503,6 @@ function PublicKnowledgeCard({ code, catalog }: { code: string; catalog: PublicC
       </section>
       <section className="r-section">
         <KnowledgeCardView knowledge={knowledge} card={card} />
-        {/* Разборы, которые цитируют эту карточку. Нет цитат — нет и блока: заголовок
-            над пустотой хуже отсутствия заголовка. */}
-        <ArticleMore articles={articlesForCard(card.code)} from="card" cardCode={card.code} />
         <div className="r-actions">
           <ShellLink href="/knowledge" className="ghost">
             Все факты и мифы
@@ -579,7 +573,6 @@ function PublicKnowledge({
           </div>
         </section>
       )}
-      <KnowledgeClusters />
     </>
   );
 }
@@ -1859,15 +1852,6 @@ function Today({
             </AppLink>
           </div>
           <KnowledgeCardView knowledge={data.knowledge} card={todayCard} />
-          {/* Разбор именно этой карточки, а не «что-нибудь из раздела»: она уже выбрана
-              по дню и по продуктам человека. */}
-          <ArticleMore
-            articles={articlesForCard(todayCard.code, 2)}
-            from="today"
-            cardCode={todayCard.code}
-            userId={data.profile.id}
-            title="Разобрать подробнее"
-          />
         </section>
       )}
       <section className="r-section">
@@ -2118,19 +2102,6 @@ function Links({
             );
           })}
         </div>
-        {/* Ссылки не внутри сетки: её ячейки — кнопки, открывающие поток, а ссылка
-            внутри кнопки это невалидная разметка, которую браузеры чинят по-своему.
-            Отбор идёт по моментам самого человека, продуктам и поверхности `links`. */}
-        <ArticleMore
-          articles={articlesForContext(data.knowledge, {
-            surface: 'links',
-            products: data.products.map((product) => product.product_type),
-            limit: 3,
-          })}
-          from="links"
-          userId={data.profile.id}
-          title="Разборы под твои моменты"
-        />
       </section>
     </main>
   );
@@ -2594,8 +2565,6 @@ function KnowledgePage({ data }: { data: Bootstrap }) {
           <p>Карточки не пришли из базы. Это не значит, что их нет — попробуй обновить страницу.</p>
         </section>
       )}
-
-      <KnowledgeClusters userId={data.profile.id} />
     </main>
   );
 }

@@ -17,6 +17,11 @@
  * читать, и в тот раз, когда изменение будет настоящим, ничего не произойдёт. Поэтому
  * новая сборка сравнивается с уже опубликованной, побайтно.
  *
+ * **Исчезнувшие адреса сообщаются тоже.** Удалённая страница — такое же изменение, как
+ * правленая, и поисковику надо сказать о ней раньше, чем он придёт сам: иначе адрес
+ * висит в очереди обхода неделями. Что он получит по этому адресу — 410 или 404 —
+ * решает `infra/caddy/Caddyfile`, а не этот скрипт.
+ *
  * **Отказ пинга не роняет выкладку.** К моменту вызова симлинк уже переключён, сайт уже
  * новый. Уронить здесь — значит объявить успешную выкладку неудачной из-за чужого
  * сервера.
@@ -87,13 +92,26 @@ const changed = all.filter(({ path, file }) => {
   return readFileSync(before).compare(readFileSync(file)) !== 0;
 });
 
-if (!changed.length) {
+// Адреса, которые были в прошлой выкладке и исчезли в этой.
+const live = new Set(all.map(({ path }) => path));
+const removed =
+  previous === 'none'
+    ? []
+    : pages(previous)
+        .map(({ path }) => path)
+        .filter((path) => !live.has(path));
+
+if (!changed.length && !removed.length) {
   console.log(`IndexNow: страниц ${all.length}, изменившихся нет — сообщать нечего.`);
   process.exit(0);
 }
 
-const urlList = changed.map(({ path }) => ORIGIN + path);
-console.log(`IndexNow: изменилось ${urlList.length} из ${all.length} адресов.`);
+const urlList = [...changed.map(({ path }) => path), ...removed].map((path) => ORIGIN + path);
+console.log(
+  `IndexNow: изменилось ${changed.length} из ${all.length} адресов` +
+    (removed.length ? `, удалено ${removed.length}` : '') +
+    '.',
+);
 for (const url of urlList.slice(0, 20)) console.log(`  ${url}`);
 if (urlList.length > 20) console.log(`  … и ещё ${urlList.length - 20}`);
 
