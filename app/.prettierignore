@@ -23,3 +23,7 @@ vite.config.ts
 # Выгрузка каталога из базы: файл производный, его формат задаёт скрипт
 # scripts/dump-knowledge-catalog.mjs. Переформатировать его значит спорить с генератором.
 knowledge-catalog.json
+
+# Разобранная история репозитория: файл производный, его формат задаёт
+# scripts/build-changelog.mjs. В git его нет вовсе.
+src/generated/

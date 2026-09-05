@@ -123,7 +123,7 @@ function prerenderPublicRoutes(): Plugin {
       writeFileSync(join(outDir, '404.html'), renderNotFound(source), 'utf8');
 
       // Страница на каждую опубликованную карточку каталога. Решение владельца
-      // 05.09.2026 (ADR-0018): адрес выводится из первичного ключа и не меняется —
+      // 05.09.2026 (ADR-0017): адрес выводится из первичного ключа и не меняется —
       // адрес, который переехал, теряет всё, что успел набрать в индексе.
       const catalog = cards();
       for (const card of catalog) {
