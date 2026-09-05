@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "6a165186b5e7e14f880a70722aa4d9a0d1faa96b",
+  "appliedCommit": "d3369f35828e24a10d684517d8356f9578684112",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3912,6 +3912,39 @@
       "updated": "2026-09-05",
       "commits": [
         "6a165186b5e7e14f880a70722aa4d9a0d1faa96b"
+      ]
+    },
+    {
+      "id": "knowledge-catalog-feed",
+      "title": "База знаний = раздел Фактов: убрать слой, наладить пополнение, углубить карточки",
+      "type": "tech",
+      "epic": "content",
+      "priority": 1,
+      "status": "doing",
+      "body": "T-20260905-12, три части: снятие слоя статей, еженедельный сбор находок, развёрнутые тексты восьми карточек",
+      "updated": "2026-09-05",
+      "commits": [
+        "9c36654df39fde801206874b860443441d7319b4"
+      ],
+      "docs": [
+        "docs/tasks/T-20260905-12-knowledge-catalog-feed.md",
+        "docs/RUNBOOK_KNOWLEDGE_CATALOG.md"
+      ],
+      "chats": [
+        "https://claude.ai/code/session_01KeDhckSxJXNTKY2PZ4fzDg"
+      ]
+    },
+    {
+      "id": "knowledge-410-cleanup",
+      "title": "Снять правило 410 для адресов статей",
+      "type": "tech",
+      "epic": "infra",
+      "priority": 3,
+      "status": "backlog",
+      "body": "конец октября 2026, блок @gone в infra/caddy/Caddyfile: к этому сроку очередь обхода опустеет, и адреса станут обычными несуществующими",
+      "updated": "2026-09-05",
+      "commits": [
+        "9c36654df39fde801206874b860443441d7319b4"
       ]
     }
   ]
