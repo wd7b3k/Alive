@@ -19,6 +19,13 @@ export type CatalogCard = {
   kind: 'fact' | 'myth';
   /** Заголовок: у факта — утверждение, у мифа — само убеждение. */
   claim: string;
+  /**
+   * Вопрос так, как его задаёт человек: «правда ли, что сигарета успокаивает».
+   *
+   * Заполнен не у всех: проход идёт по спросу, и `null` — обычное значение. Заголовок
+   * страницы берёт `headingOf`, а не это поле напрямую.
+   */
+  question: string | null;
   /** Что известно. */
   known: string;
   /** Что это меняет для тебя. */
@@ -79,6 +86,18 @@ export function cardByCode(code: string): CatalogCard | undefined {
 
 export function pathFor(card: CatalogCard): string {
   return pathForCode(card.code);
+}
+
+/**
+ * Заголовок страницы карточки.
+ *
+ * Вопрос, если он есть, — иначе утверждение. Спрос по этим темам живёт в длинных
+ * вопросах живым языком, и `<h1>`, повторяющий формулировку каталога, отвечает не на то,
+ * что человек набрал. Одна функция на всех: `<h1>`, `Question` в разметке и хлебные
+ * крошки обязаны говорить одно и то же, иначе разметка описывает несуществующую страницу.
+ */
+export function headingOf(card: CatalogCard): string {
+  return card.question ?? card.claim;
 }
 
 export function levelOf(card: CatalogCard) {

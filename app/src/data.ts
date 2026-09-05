@@ -338,6 +338,11 @@ export type KnowledgeCard = {
   kind: 'fact' | 'myth';
   /** Заголовок: у факта — утверждение, у мифа — само убеждение. */
   claim_ru: string;
+  /**
+   * Вопрос так, как его задаёт человек. Заполнен не у всех карточек — `null` обычное
+   * значение, и заголовок страницы в этом случае берёт `claim_ru`.
+   */
+  question_ru: string | null;
   /** Что известно. */
   known_ru: string;
   /** Что это меняет для тебя, сегодня. */
@@ -381,6 +386,7 @@ export const EMPTY_KNOWLEDGE: Knowledge = {
 type FactRow = {
   code: string;
   title: string;
+  question_ru: string | null;
   short_text: string;
   full_text: string;
   changes_ru: string;
@@ -394,6 +400,7 @@ type FactRow = {
 type MythRow = {
   code: string;
   title: string;
+  question_ru: string | null;
   short_reframe: string;
   explanation: string;
   changes_ru: string;
@@ -429,14 +436,14 @@ export async function loadKnowledge(): Promise<Knowledge> {
     supabase
       .from('facts_catalog')
       .select(
-        `code,title,short_text,full_text,changes_ru,evidence_level,product_types,surfaces,sort_order,${SOURCE_COLUMNS}`,
+        `code,title,question_ru,short_text,full_text,changes_ru,evidence_level,product_types,surfaces,sort_order,${SOURCE_COLUMNS}`,
       )
       .eq('published', true)
       .order('sort_order'),
     supabase
       .from('myths_catalog')
       .select(
-        `code,title,short_reframe,explanation,changes_ru,evidence_level,product_types,surfaces,trigger_codes,sort_order,${SOURCE_COLUMNS}`,
+        `code,title,question_ru,short_reframe,explanation,changes_ru,evidence_level,product_types,surfaces,trigger_codes,sort_order,${SOURCE_COLUMNS}`,
       )
       .eq('published', true)
       .order('sort_order'),
@@ -446,6 +453,7 @@ export async function loadKnowledge(): Promise<Knowledge> {
     code: row.code,
     kind: 'fact',
     claim_ru: row.title,
+    question_ru: row.question_ru ?? null,
     known_ru: row.short_text,
     changes_ru: row.changes_ru,
     detail_ru: row.full_text,
@@ -461,6 +469,7 @@ export async function loadKnowledge(): Promise<Knowledge> {
     code: row.code,
     kind: 'myth',
     claim_ru: row.title,
+    question_ru: row.question_ru ?? null,
     known_ru: row.short_reframe,
     changes_ru: row.changes_ru,
     detail_ru: row.explanation,

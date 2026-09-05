@@ -16,7 +16,7 @@
  * попадает.
  */
 import { ORIGIN, metaFor } from './seo';
-import { GROUPS, cards, levelOf, pathFor, type CatalogCard } from './knowledge-catalog';
+import { GROUPS, cards, headingOf, levelOf, pathFor, type CatalogCard } from './knowledge-catalog';
 
 type Node = Record<string, unknown>;
 
@@ -166,13 +166,18 @@ export function cardGraph(card: CatalogCard): Node[] {
   const level = levelOf(card);
   const group = GROUPS.find((entry) => entry.kind === card.kind);
   const url = `${ORIGIN}${pathFor(card)}`;
-  const answer = [card.known, card.changes, card.detail].filter(Boolean).join(' ');
+  const heading = headingOf(card);
+  // Утверждение входит в ответ, когда заголовком стал вопрос: на странице оно ровно там
+  // же — строкой под `<h1>`. Разметка описывает видимый текст и ничего сверх него.
+  const answer = [heading === card.claim ? '' : card.claim, card.known, card.changes, card.detail]
+    .filter(Boolean)
+    .join(' ');
   return [
     {
       '@type': 'WebPage',
       '@id': `${url}#page`,
       url,
-      name: card.claim,
+      name: heading,
       description: card.known,
       inLanguage: 'ru-RU',
       isPartOf: { '@id': WEBSITE_ID },
@@ -186,13 +191,13 @@ export function cardGraph(card: CatalogCard): Node[] {
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Главная', item: `${ORIGIN}/` },
         { '@type': 'ListItem', position: 2, name: 'Факты и мифы', item: `${ORIGIN}/knowledge` },
-        { '@type': 'ListItem', position: 3, name: card.claim, item: url },
+        { '@type': 'ListItem', position: 3, name: heading, item: url },
       ],
     },
     {
       '@type': 'Question',
       '@id': `${url}#claim`,
-      name: card.claim,
+      name: heading,
       ...(group ? { about: group.title } : {}),
       acceptedAnswer: {
         '@type': 'Answer',

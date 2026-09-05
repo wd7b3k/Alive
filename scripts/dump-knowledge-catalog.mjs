@@ -50,10 +50,15 @@ const check = process.argv.includes('--check');
  *
  * `scope` — границы применимости: у мифа это `evidence_scope`, у факта — `evidence_kind`.
  * Поле одно, потому что на странице это одна строка «Границы».
+ *
+ * `question` — вопрос так, как его задаёт человек. Он есть не у всех карточек: заполняется
+ * проходом по спросу, и `null` здесь нормальное значение, а не пропуск. Страница в этом
+ * случае берёт заголовком утверждение, как было до 05.09.2026.
  */
 const SQL = `
   select coalesce(json_agg(row_to_json(t) order by t.kind desc, t.sort_order), '[]'::json) from (
-    select m.code, 'myth' as kind, m.title as claim, m.short_reframe as known,
+    select m.code, 'myth' as kind, m.title as claim, m.question_ru as question,
+           m.short_reframe as known,
            m.changes_ru as changes, m.explanation as detail,
            m.evidence_level as level, m.evidence_scope as scope,
            m.trigger_codes as triggers, m.need_codes as needs,
@@ -67,7 +72,8 @@ const SQL = `
       join public.evidence_sources s on s.id = m.source_id
      where m.published
     union all
-    select f.code, 'fact' as kind, f.title as claim, f.short_text as known,
+    select f.code, 'fact' as kind, f.title as claim, f.question_ru as question,
+           f.short_text as known,
            f.changes_ru as changes, f.full_text as detail,
            f.evidence_level as level, f.evidence_kind as scope,
            '{}'::text[] as triggers, '{}'::text[] as needs,

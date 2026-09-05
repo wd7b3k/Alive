@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { codeFromPath, pathForCode } from '../domain/knowledge-address';
-import { cardBody, cardMeta, cardPaths, renderCard, renderRoute } from './prerender';
+import { cardBody, cardMeta, cardPaths, paragraphs, renderCard, renderRoute } from './prerender';
 import { cardGraph, knowledgeHubList } from './schema';
-import { cards, cardByCode, pathFor } from './knowledge-catalog';
+import { cards, cardByCode, headingOf, pathFor, type CatalogCard } from './knowledge-catalog';
 
 const template = readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8');
 
@@ -122,7 +122,10 @@ describe('разметка не описывает того, чего нет н�
       expect(question, card.code).toBeTruthy();
       expect(text, `${card.code}: name из разметки не найден в тексте`).toContain(question!.name);
       for (const piece of [card.known, card.changes, card.detail].filter(Boolean)) {
-        expect(text, `${card.code}: часть ответа не найдена в тексте`).toContain(piece);
+        // Длинные поля приходят абзацами; на странице они разложены по `<p>`, а `visible`
+        // склеивает всё в одну строку. Сравнивать надо так же нормализованно.
+        const flat = piece.replace(/\s+/g, ' ').trim();
+        expect(text, `${card.code}: часть ответа не найдена в тексте`).toContain(flat);
       }
       expect(text).toContain(question!.acceptedAnswer.citation.name.split(' · ')[0]);
     }
@@ -161,5 +164,54 @@ describe('разметка не описывает того, чего нет н�
       'https://habitoff.ru/knowledge',
       `https://habitoff.ru${pathFor(cards()[0])}`,
     ]);
+  });
+});
+
+describe('вопрос живым языком', () => {
+  /**
+   * `question_ru` заполнен не у всех карточек и по замыслу: проход идёт по спросу.
+   * Поэтому проверяются обе ветки — без вопроса страница обязана остаться прежней, иначе
+   * тридцать адресов поедут заголовками ради восьми.
+   */
+  const withQuestion: CatalogCard = {
+    ...cards()[0],
+    question: 'Правда ли, что сигарета успокаивает?',
+    claim: 'Сигарета успокаивает',
+    detail: 'Первый абзац о механизме.\n\nВторой абзац о границах.',
+  };
+
+  it('вопрос становится заголовком, а утверждение остаётся видимым', () => {
+    const html = cardBody(withQuestion);
+    expect(html).toContain('<h1>Правда ли, что сигарета успокаивает?</h1>');
+    expect(visible(html)).toContain('Сигарета успокаивает');
+  });
+
+  it('без вопроса заголовок прежний — утверждение карточки', () => {
+    const html = cardBody({ ...withQuestion, question: null });
+    expect(html).toContain('<h1>Сигарета успокаивает</h1>');
+    expect(html).not.toContain('Правда ли');
+  });
+
+  it('разметка Question берёт тот же заголовок, что и <h1>', () => {
+    for (const card of [withQuestion, { ...withQuestion, question: null }]) {
+      const question = cardGraph(card).find((node) => node['@type'] === 'Question') as Record<
+        string,
+        any
+      >;
+      expect(question.name).toBe(headingOf(card));
+      expect(visible(cardBody(card))).toContain(question.name);
+      // Утверждение не исчезает оттого, что перестало быть заголовком: с вопросом оно
+      // уходит в ответ, без вопроса — само и есть заголовок. Видно его в обоих случаях.
+      const inMarkup = card.question ? question.acceptedAnswer.text : question.name;
+      expect(inMarkup, card.code).toContain(card.claim);
+    }
+  });
+
+  it('развёрнутый текст разложен по абзацам, а не склеен в один', () => {
+    const html = cardBody(withQuestion);
+    expect(html).toContain('<p>Первый абзац о механизме.</p>');
+    expect(html).toContain('<p>Второй абзац о границах.</p>');
+    expect(paragraphs('раз\n\nдва\n   \nтри')).toHaveLength(3);
+    expect(paragraphs('одна строка')).toHaveLength(1);
   });
 });

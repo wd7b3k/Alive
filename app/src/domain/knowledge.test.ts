@@ -14,6 +14,7 @@ function card(over: Partial<KnowledgeCard> & Pick<KnowledgeCard, 'code'>): Knowl
   return {
     kind: 'fact',
     claim_ru: 'claim',
+    question_ru: null,
     known_ru: 'known',
     changes_ru: 'changes',
     evidence_level: 'C',

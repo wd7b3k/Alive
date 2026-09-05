@@ -22,7 +22,15 @@
  */
 import { RELEASES } from '../redesign/releases';
 import { ORIGIN, metaFor } from './seo';
-import { GROUPS, cardByCode, cards, levelOf, pathFor, type CatalogCard } from './knowledge-catalog';
+import {
+  GROUPS,
+  cardByCode,
+  cards,
+  headingOf,
+  levelOf,
+  pathFor,
+  type CatalogCard,
+} from './knowledge-catalog';
 import { codeFromPath } from '../domain/knowledge-address';
 import { relatedCards } from './knowledge-related';
 import { cardGraph, notFoundGraph, routeGraph, scriptTag, withFaqCitations } from './schema';
@@ -219,6 +227,15 @@ export function knowledgeIndexBlock(): string {
  */
 const related = relatedCards(cards());
 
+/** Абзацы длинного поля: пустая строка в тексте — граница абзаца, а не пробел. */
+export function paragraphs(text: string): string[] {
+  return text
+    .split(/\n\s*\n/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => `        <p>${escapeHtml(part)}</p>`);
+}
+
 /**
  * Страница одной карточки.
  *
@@ -229,20 +246,27 @@ const related = relatedCards(cards());
  */
 export function cardBody(card: CatalogCard): string {
   const level = levelOf(card);
+  const heading = headingOf(card);
   const source = card.source_publication
     ? `${card.source_title} · ${card.source_publication}`
     : card.source_title;
   const parts = [
     '<main class="r-prerender">',
     `        <p class="r-kicker">${card.kind === 'fact' ? 'Факт' : 'Разобранное убеждение'}</p>`,
-    `        <h1>${escapeHtml(card.claim)}</h1>`,
-    `        <p>${escapeHtml(card.known)}</p>`,
+    `        <h1>${escapeHtml(heading)}</h1>`,
   ];
+  // Когда заголовком стал вопрос, утверждение остаётся на странице отдельной строкой:
+  // оно и есть короткий ответ, и разметка `Question` ссылается на видимый текст.
+  if (heading !== card.claim) parts.push(`        <p><b>${escapeHtml(card.claim)}</b></p>`);
+  parts.push(`        <p>${escapeHtml(card.known)}</p>`);
   if (card.changes) {
     parts.push('        <h2>Что это меняет</h2>', `        <p>${escapeHtml(card.changes)}</p>`);
   }
   if (card.detail) {
-    parts.push('        <h2>Как это работает</h2>', `        <p>${escapeHtml(card.detail)}</p>`);
+    // Развёрнутый текст приходит абзацами, разделёнными пустой строкой. Склеить их в
+    // один `<p>` значит выдать четыреста слов сплошняком: читать это нельзя ни человеку,
+    // ни машине, разбирающей структуру страницы.
+    parts.push('        <h2>Как это работает</h2>', ...paragraphs(card.detail));
   }
   parts.push('        <h2>Насколько это надёжно</h2>');
   if (level) {

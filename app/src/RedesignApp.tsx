@@ -498,11 +498,17 @@ function PublicKnowledgeCard({ code, catalog }: { code: string; catalog: PublicC
     <>
       <section className="r-title">
         <p className="r-kicker">{card.kind === 'fact' ? 'Факт' : 'Разобранное убеждение'}</p>
-        <h1>{card.claim_ru}</h1>
+        {/* Заголовок — вопрос, если он у карточки есть: спрос по этим темам живёт в
+            длинных вопросах живым языком, а формулировка каталога отвечает не на то,
+            что человек набрал. Утверждение при этом остаётся видимым строкой ниже. */}
+        <h1>{card.question_ru ?? card.claim_ru}</h1>
+        {card.question_ru && <p className="r-lead">{card.claim_ru}</p>}
         <p className="r-lead">{card.known_ru}</p>
       </section>
       <section className="r-section">
-        <KnowledgeCardView knowledge={knowledge} card={card} />
+        {/* `full` — страница карточки, а не список: развёрнутый текст здесь основное
+            содержимое, и прятать его за раскрытием значит отдать пустую страницу. */}
+        <KnowledgeCardView knowledge={knowledge} card={card} full />
         <div className="r-actions">
           <ShellLink href="/knowledge" className="ghost">
             Все факты и мифы

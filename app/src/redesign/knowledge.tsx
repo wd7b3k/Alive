@@ -120,10 +120,13 @@ export function KnowledgeCardView({
   knowledge,
   card,
   compact = false,
+  full = false,
 }: {
   knowledge: Knowledge;
   card: KnowledgeCard;
   compact?: boolean;
+  /** Страница карточки: развёрнутый текст раскрыт, потому что он и есть страница. */
+  full?: boolean;
 }) {
   const level = levelOf(knowledge, card.evidence_level);
   const sources = sourcesForCard(knowledge, card);
@@ -151,13 +154,23 @@ export function KnowledgeCardView({
           <b>Что это меняет для тебя.</b> {card.changes_ru}
         </p>
       </div>
-      <details className="r-evidence-detail">
+      <details className="r-evidence-detail" open={full}>
         <summary>
           <span className="r-evidence-more">Границы и источники</span>
           <Icon name="arrow" size={16} />
         </summary>
         <div>
-          <p className="r-evidence-limit">{card.detail_ru}</p>
+          {/* Абзацы приходят из базы разделёнными пустой строкой. Четыреста слов одним
+              абзацем не читаются — ни на странице, ни в выдаче. */}
+          {card.detail_ru
+            .split(/\n\s*\n/)
+            .map((part) => part.trim())
+            .filter(Boolean)
+            .map((part) => (
+              <p className="r-evidence-limit" key={part.slice(0, 40)}>
+                {part}
+              </p>
+            ))}
           {level && <p className="r-evidence-limit">{level.limit_ru}</p>}
           <SourceList sources={sources} />
         </div>
