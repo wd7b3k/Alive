@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "accee0408c69f5337238f375f6460ff287e56fd1",
+  "appliedCommit": "fff64a50ccd37a4cdec082846a7b254ab591705d",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3754,6 +3754,32 @@
       "updated": "2026-09-05",
       "commits": [
         "ffaffca48b2c3ef679a7656f5711e741476b6752"
+      ]
+    },
+    {
+      "id": "klaster-chto-novogo-vylozhit",
+      "title": "Кластер «Что нового»: выложить и завести в индекс",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "восемь разборов свежих обзоров и регуляторных решений лежат в content/knowledge/novoe. Довести до живых проиндексированных адресов: свести движок статей с принятым ADR-0017, выложить, заказать переобход.",
+      "updated": "2026-09-05",
+      "commits": [
+        "9c5a55a46c4c5f45ef25920d04ebb1475bd73dbb"
+      ]
+    },
+    {
+      "id": "zamer-indeksacii-klastera-cherez",
+      "title": "Замер индексации кластера через две недели",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "19.09.2026 проверить, сколько из девятнадцати новых адресов в индексе Яндекса и Google, есть ли показы по небрендовым запросам и цитируется ли раздел в ИИ-ответах. Точка отсчёта на 05.09.2026 — один адрес в Яндексе, один в Google.",
+      "updated": "2026-09-05",
+      "commits": [
+        "fff64a50ccd37a4cdec082846a7b254ab591705d"
       ]
     }
   ]
