@@ -5,6 +5,7 @@ import { Icon, type IconName } from '../ui-icons';
 import { AnalyticsModule } from '../modules/analytics';
 import { MonitoringModule } from '../modules/monitoring';
 import { AdminBoard } from './admin-board';
+import { AdminReleases, REPO_URL } from './admin-releases';
 
 /**
  * Закрытый раздел управления: одно место, одна структура.
@@ -94,10 +95,14 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   },
   {
     id: 'releases',
-    title: 'Релизы',
-    hint: 'Версии, гейты и выкладка.',
+    title: 'Что сделано',
+    hint: 'Вся история репозитория с ссылками на коммиты. Считается из git на сборке, а не из базы.',
     icon: 'flag',
-    status: 'planned',
+    status: 'live',
+    // Единственный раздел, который не ходит через `admin_*`: данных о работах в базе
+    // нет, источник целиком лежит в репозитории. Исключение из правила выше записано
+    // осознанно — ADR-0018 и шапка `admin-releases.tsx`, а не молчание.
+    render: () => <AdminReleases />,
   },
   {
     id: 'repo',
@@ -105,7 +110,7 @@ export const ADMIN_SECTIONS: AdminSection[] = [
     hint: 'Источник истины проекта на GitHub.',
     icon: 'chain',
     status: 'live',
-    href: 'https://github.com/wd7b3k/Alive',
+    href: REPO_URL,
   },
 ];
 

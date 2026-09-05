@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "bdd2e6a56ea81e65c2b546db27bdee23ca622a51",
+  "appliedCommit": "947eefe9d7c1547700081f7257e578a73af46fdb",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3754,6 +3754,59 @@
       "updated": "2026-09-05",
       "commits": [
         "ffaffca48b2c3ef679a7656f5711e741476b6752"
+      ]
+    },
+    {
+      "id": "kanal-opovescheniya-pust-alerty",
+      "title": "Канал оповещения пуст: алерты не покидают сервер",
+      "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "TELEGRAM_BOT_TOKEN и CHAT_ID в /etc/habitoff/backup.env объявлены без значений, notify молча выходит",
+      "updated": "2026-08-31",
+      "commits": [
+        "dd1f7973fd09db3a0d31979005b7739e3bcf43aa"
+      ]
+    },
+    {
+      "id": "postanovki-lezhali-vne-git",
+      "title": "Постановки лежали вне git пятнадцатью позициями",
+      "type": "docs",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "рабочая копия владельца хранила двенадцать постановок за 05.09, HANDOFF.md, руководство сбора и content/ незакоммиченными; перенесены задачей T-20260905-11",
+      "updated": "2026-09-05",
+      "commits": [
+        "70c7360d20aa582a97f56c8dbbcff64f3b1a5d08"
+      ]
+    },
+    {
+      "id": "rel-admin-changelog",
+      "title": "Раздел «Что сделано» отвечает git, а не память",
+      "type": "feature",
+      "epic": "release",
+      "priority": 2,
+      "status": "done",
+      "body": "Внутренний /admin/releases: вся история репозитория, разобранная на сборке скриптом scripts/build-changelog.mjs. Карточка доски по трейлеру Board:, номер PR, постановка, метка миграции, группировка по версиям, фильтры в адресе. Публичный /releases не тронут. Постановка — docs/tasks/T-20260905-01-release-admin-releases.md, решение — ADR-0018.",
+      "updated": "2026-09-05",
+      "chats": [],
+      "commits": [
+        "03e8ede89be91cd3bb24d745807c0def75e77226"
+      ]
+    },
+    {
+      "id": "spiski-napravleniy-na-doske",
+      "title": "Списки направлений на доске и в постановках разошлись",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "epics в cards.json тринадцать, без money legal knowledge social, зато с next; docs/tasks/README.md называет шестнадцать без next. Раздел «Что сделано» вынужден знать оба набора, иначе на экране латиница.",
+      "updated": "2026-09-05",
+      "commits": [
+        "03e8ede89be91cd3bb24d745807c0def75e77226"
       ]
     },
     {

@@ -123,7 +123,7 @@ function prerenderPublicRoutes(): Plugin {
       const catalog = cards();
 
       // В базу сборка не ходит: утверждения статей подставляются из той же выгрузки, из
-      // которой собираются карточки, — единственного источника на сборке (ADR-0018).
+      // которой собираются карточки, — единственного источника на сборке (ADR-0019).
       // Поэтому здесь нет ни ветки «каталог недоступен», ни второго читателя.
       const claims = new Map<string, Claim>(catalog.map((card) => [card.code, card]));
       const css = [...source.matchAll(/<link rel="stylesheet"[^>]*href="([^"]+)"/g)].map(

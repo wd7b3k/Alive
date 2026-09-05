@@ -30,8 +30,13 @@ jobs:
         working-directory: app
 
     steps:
+      # Полная история нужна сборке: scripts/build-changelog.mjs разбирает git log
+      # в раздел «Что сделано». С глубиной 1 он собрал бы список из одного коммита и
+      # молча — ADR-0018.
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

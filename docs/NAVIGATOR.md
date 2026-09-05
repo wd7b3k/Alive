@@ -29,7 +29,7 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
 |---|---|---|
 | `infra` | `INFRASTRUCTURE_STATE.md`, `ROLLOUT.md`, `RELEASE_POLICY.md`, `infra/*/README.md` | `scripts/state.sh`, `check-deploy-drift.mjs`, сервер |
 | `process` | `AGENTS.md`, `docs/tasks/README.md`, `docs/board/README.md` | `scripts/tasks.mjs`, `board.mjs check` |
-| `release` | `RELEASE_POLICY.md`, `CURRENT_STATE.md`, `ROADMAP.md` | `releases/`, `/version.json` |
+| `release` | `RELEASE_POLICY.md`, `CURRENT_STATE.md`, `ROADMAP.md`, `ADMIN.md`, ADR-0018 | `releases/`, `/version.json`, раздел `/admin/releases` |
 | `pilot` | `PRODUCTION_READINESS.md`, `ROLLOUT.md`, `HYPOTHESES_AND_METRICS.md` | доска, срез `BACKLOG.md` |
 | `design` | `DESIGN_SYSTEM.md`, `SCREENS.md`, `V3_VISUAL_UX_BASELINE.md` | `app/src/redesign/`, тесты инвариантов CSS |
 | `brand` | `BRANDBOOK.md`, `TONE_OF_VOICE.md` | `app/src/assets/` |
@@ -41,7 +41,7 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
 | `perf` | `ARCHITECTURE.md`, `MODULES.md` | замеры сборки и рендера |
 | `money` | `PROJECT_CHARTER.md` §2, `docs/tasks/R-…-money-….md` | — (решение подвешено) |
 | `legal` | `PRIVACY_AND_DATA.md`, `PROJECT_CHARTER.md` | — (внедрение не начато) |
-| `knowledge` | `METHODOLOGY.md`, `SOURCE_REGISTER.md`, `ORIGINS_AND_ATTRIBUTION.md`, `EDITORIAL_PROTOCOL_MED.md`, ADR-0017, ADR-0018 | карточки — из каталога базы; статьи — `content/knowledge/<кластер>/*.md`, сборка `app/src/services/knowledge-articles.ts` и `knowledge-article-pages.ts` |
+| `knowledge` | `METHODOLOGY.md`, `SOURCE_REGISTER.md`, `ORIGINS_AND_ATTRIBUTION.md`, `EDITORIAL_PROTOCOL_MED.md`, ADR-0017, ADR-0019 | карточки — из каталога базы; статьи — `content/knowledge/<кластер>/*.md`, сборка `app/src/services/knowledge-articles.ts` и `knowledge-article-pages.ts` |
 | `social` | `PRODUCT_STRATEGY.md`, `TONE_OF_VOICE.md` | — |
 
 Сквозные, читаются при любой значимой задаче: `AGENTS.md`, `docs/CURRENT_STATE.md`
@@ -53,6 +53,7 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
 |---|---|---|
 | Правила работы AI | `AGENTS.md` | чатом |
 | Состояние работ | `docs/board/cards.json`, срез `BACKLOG.md` | памятью |
+| Что уже уехало на прод | раздел `/admin/releases` — разбор git на сборке | записями сессий |
 | Постановки | `docs/tasks/` — разборы `R-…`, задачи `T-…` | `docs/ai_sessions/` (это запись сессии) |
 | Принятые решения | `docs/decisions/ADR-*.md` | документами, которые их описывают |
 | Состояние продукта | `docs/CURRENT_STATE.md` | `INFRASTRUCTURE_STATE.md` (это про сервер) |
@@ -79,6 +80,13 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
 - **31.08.2026 · `PROJECT_CHARTER.md` §2 против решений о деньгах.** Устав объявляет проект
   полностью некоммерческим и исключает подписочную выручку; 30.08 обсуждены донаты и
   подписка. ADR нет, решение подвешено — `docs/tasks/R-20260830-01-money-monetization.md`.
+
+- **05.09.2026 · ссылки на ADR о каталоге вели на несуществующий номер.** Шесть мест в
+  коде (`knowledge-address.ts`, `RedesignApp.tsx`, `knowledge-catalog.ts`,
+  `prerender.test.ts`, `vite.config.ts`, `dump-knowledge-catalog.mjs`) ссылались на
+  ADR-0018, тогда как решение об адресах карточек лежит в ADR-0017. Найдено попутно
+  задачей T-20260905-12 и закрыто ею же: номер ADR-0018 занят решением о списке
+  сделанного, и два разных решения не могут носить один номер.
 
 ## Как поддерживать
 

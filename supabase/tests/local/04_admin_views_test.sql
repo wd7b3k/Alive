@@ -39,6 +39,17 @@ begin
     -- участники появятся, — то есть в худший момент.
     'select count(*) from public.admin_source_funnel(30)',
     'select count(*) from public.admin_headline(30)',
+    -- Витрины «Здоровья продукта» и гипотез существовали до этого теста и потому в него
+    -- не входили. Ровно этот зазор и даёт ошибки: функция, которую никто не вызывал,
+    -- считается работающей, пока её не откроет человек.
+    'select count(*) from public.admin_product_health(30)',
+    'select count(*) from public.admin_hypothesis_metrics(14)',
+    -- Витрины мониторинга. Они моложе теста на два дня и в него тоже не попали.
+    'select count(*) from public.admin_service_summary(24)',
+    'select count(*) from public.admin_service_surfaces(24)',
+    'select count(*) from public.admin_service_checks(24)',
+    'select count(*) from public.admin_service_health(24)',
+    'select count(*) from public.admin_service_incidents(7)',
     -- Разделение заходов на «за ним кто-то есть» и «один заход и ничего». Обязана
     -- отработать и на пустой базе: витрина, падающая до первого посетителя,
     -- обнаружится ровно тогда, когда посетители появятся.
