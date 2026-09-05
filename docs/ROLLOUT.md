@@ -96,7 +96,15 @@ npm test
 На сервере:
 
 ```
-cd /srv/alive/repo && git fetch && git checkout main && git pull
+cd /srv/alive/repo && git checkout main && git fetch origin && git merge --ff-only origin/main
+
+> **Почему `fetch` и `merge`, а не `git pull`.** 05.09.2026 выкладка дважды упала на
+> `fatal: Cannot fast-forward to multiple branches`. Причина не в конфиге — он чистый:
+> один remote, один refspec, `branch.main.merge` один. Но `git pull origin main` в этом
+> клоне пишет в `.git/FETCH_HEAD` строку про `main` **дважды**, обе помечены на слияние,
+> и `--ff-only` отказывается выбирать. Разделённые `fetch` и `merge --ff-only` этой
+> неоднозначности не создают: первый только обновляет `refs/remotes/origin/*`, второй
+> получает ровно одну ветку по имени.
 /srv/alive/deploy.sh
 ```
 
@@ -112,7 +120,7 @@ cd /srv/alive/repo && git fetch && git checkout main && git pull
 Порядок поэтому такой: **сначала миграции, потом сборка.** На сервере, до `deploy.sh`:
 
 ```
-cd /srv/alive/repo && git pull
+cd /srv/alive/repo && git fetch origin && git merge --ff-only origin/main
 for f in supabase/migrations/20260827*.sql; do
   docker exec -i supabase-db psql -U postgres -d postgres -v ON_ERROR_STOP=1 < "$f" || break
 done
@@ -128,7 +136,7 @@ done
 как «что-то с миграциями». Правильный порядок теперь такой:
 
 ```
-cd /srv/alive/repo && git pull --ff-only
+cd /srv/alive/repo && git fetch origin && git merge --ff-only origin/main
 infra/server/apply-migrations.sh            # показать, чего не хватает
 infra/server/apply-migrations.sh --apply    # применить и записать в журнал
 /srv/alive/deploy.sh

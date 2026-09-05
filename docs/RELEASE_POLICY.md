@@ -61,7 +61,7 @@
 Прод — один сервер, собирается **только с `main`**.
 
 ```bash
-cd /srv/alive/repo && git checkout main && git pull && /srv/alive/deploy.sh
+cd /srv/alive/repo && git checkout main && git fetch origin && git merge --ff-only origin/main && /srv/alive/deploy.sh
 ```
 
 `deploy.sh` делает ровно это, по порядку:
