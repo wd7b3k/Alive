@@ -41,7 +41,7 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
 | `perf` | `ARCHITECTURE.md`, `MODULES.md` | замеры сборки и рендера |
 | `money` | `PROJECT_CHARTER.md` §2, `docs/tasks/R-…-money-….md` | — (решение подвешено) |
 | `legal` | `PRIVACY_AND_DATA.md`, `PROJECT_CHARTER.md` | — (внедрение не начато) |
-| `knowledge` | `METHODOLOGY.md`, `SOURCE_REGISTER.md`, `ORIGINS_AND_ATTRIBUTION.md`, `EDITORIAL_PROTOCOL_MED.md`, ADR-0017, ADR-0019 | карточки — из каталога базы; статьи — `content/knowledge/<кластер>/*.md`, сборка `app/src/services/knowledge-articles.ts` и `knowledge-article-pages.ts` |
+| `knowledge` | `METHODOLOGY.md`, `SOURCE_REGISTER.md`, `ORIGINS_AND_ATTRIBUTION.md`, `EDITORIAL_PROTOCOL_MED.md`, ADR-0017, ADR-0019 | карточки — из каталога базы; статьи — `content/knowledge/<кластер>/*.md`, сборка `app/src/services/knowledge-articles.ts` и `knowledge-article-pages.ts`; в приложении — индекс `app/knowledge-articles.json` и отбор `app/src/domain/articles.ts` |
 | `social` | `PRODUCT_STRATEGY.md`, `TONE_OF_VOICE.md` | — |
 
 Сквозные, читаются при любой значимой задаче: `AGENTS.md`, `docs/CURRENT_STATE.md`
