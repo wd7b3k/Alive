@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "5b5e05e4528e2840c1edd6eea955763c288a43ef",
+  "appliedCommit": "33654a6af32ffcfd106a0d4a72403be23595cb5b",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3899,6 +3899,19 @@
       "updated": "2026-09-05",
       "commits": [
         "bdd2e6a56ea81e65c2b546db27bdee23ca622a51"
+      ]
+    },
+    {
+      "id": "razbory-byli-nedostizhimy-iz",
+      "title": "Разборы были недостижимы из приложения",
+      "type": "bug",
+      "epic": "seo",
+      "priority": 1,
+      "status": "backlog",
+      "body": "список кластеров стоял только в статическом слепке /knowledge, который React заменяет собой при монтировании. Робот раздел видел, участник — нет. Починено в тот же вечер, регресс ловит redesign/knowledge-clusters.test.tsx.",
+      "updated": "2026-09-05",
+      "commits": [
+        "33654a6af32ffcfd106a0d4a72403be23595cb5b"
       ]
     }
   ]
