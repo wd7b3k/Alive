@@ -60,6 +60,66 @@ const ABOUT: Record<string, string> = {
   '/releases': 'История версий Habitoff',
 };
 
+/**
+ * Какая карточка каталога отвечает за какой вопрос на главной.
+ *
+ * Здесь только коды — тексты вопросов и ответов остаются в `index.html`, где их писали
+ * и вычитывали. Иначе это была бы вторая копия текста, а копии в этом проекте уже
+ * заканчивались расхождением.
+ *
+ * Вопрос без карточки — ошибка сборки, а не «оставим без источника». Правило то же, что
+ * в базе: опубликованная карточка уровня A или B без источника отклоняется триггером.
+ * В разметке — то есть ровно там, откуда утверждение уходит в сниппет и в пересказ
+ * модели, — оно до 05.09.2026 не действовало.
+ */
+const FAQ_SOURCES: Record<string, string> = {
+  'Поздно ли бросать курить после многих лет?': 'too_late_to_quit',
+  'Нужно ли бросать курить силой воли?': 'treatment_plus_support',
+  'Станет ли психологически хуже, если бросить курить?': 'mental_health_after_quit',
+  'Вейп безопаснее сигарет?': 'vape_is_harmless',
+  'Очищает ли вода кальянный дым?': 'hookah_not_safe',
+};
+
+/**
+ * Дописывает `citation` каждому ответу в `FAQPage`.
+ *
+ * Граф берётся из `index.html` как есть и правится точечно: тексты не переписываются,
+ * добавляется только источник. Если вопрос не сопоставлен карточке — сборка падает и
+ * называет вопрос: решать, найти ему карточку или убрать из разметки, должен человек.
+ */
+export function withFaqCitations(graph: Node[]): Node[] {
+  return graph.map((node) => {
+    if (node['@type'] !== 'FAQPage') return node;
+    const questions = (node.mainEntity as Node[]) ?? [];
+    return {
+      ...node,
+      mainEntity: questions.map((question) => {
+        const name = String(question.name ?? '');
+        const code = FAQ_SOURCES[name];
+        if (!code) {
+          throw new Error(
+            `Разметка главной: у вопроса «${name}» нет карточки каталога с источником. ` +
+              'Сопоставь его в FAQ_SOURCES или убери вопрос из FAQPage — ' +
+              'утверждение о здоровье без источника в разметку не идёт.',
+          );
+        }
+        const card = cards().find((entry) => entry.code === code);
+        if (!card) {
+          throw new Error(
+            `Разметка главной: карточки ${code} нет в выгрузке — она снята с публикации? ` +
+              `Вопрос «${name}» остался бы без источника.`,
+          );
+        }
+        const answer = (question.acceptedAnswer as Node) ?? {};
+        return {
+          ...question,
+          acceptedAnswer: { ...answer, citation: citationOf(card) },
+        };
+      }),
+    };
+  });
+}
+
 function citationOf(card: CatalogCard): Node {
   return {
     '@type': 'CreativeWork',
