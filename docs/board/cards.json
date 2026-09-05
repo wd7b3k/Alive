@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "03e8ede89be91cd3bb24d745807c0def75e77226",
+  "appliedCommit": "930dbce1deead40455f9ea08a35bdeacea15f002",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3715,31 +3715,43 @@
       ]
     },
     {
+      "id": "kartochki-kataloga-ne-ssylalis",
+      "title": "Карточки каталога не ссылались друг на друга",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 2,
+      "status": "done",
+      "body": "со страницы вели только хаб, главная и Связки — звезда из 38 листьев без связей между ними; плюс nofollow на ссылках к источникам",
+      "updated": "2026-09-05",
+      "commits": [
+        "af58cce927576fb227852b532ab09977f53e1bec"
+      ]
+    },
+    {
+      "id": "zapreta-indeksacii-lichnyh-ekranov",
+      "title": "Запрета индексации личных экранов не было ни для одного робота",
+      "type": "bug",
+      "epic": "privacy",
+      "priority": 1,
+      "status": "done",
+      "body": "мета-тег ставит JavaScript, которого краулер не выполняет, а Disallow запрещает обход, но не показ; вскрылось при включении обхода по счётчикам Метрики",
+      "updated": "2026-09-05",
+      "commits": [
+        "2f8f3fc06d55db76726a33896ab1fc874f06595a",
+        "930dbce1deead40455f9ea08a35bdeacea15f002"
+      ]
+    },
+    {
       "id": "rel-admin-changelog",
       "title": "Раздел «Что сделано» отвечает git, а не память",
       "type": "feature",
       "epic": "release",
       "priority": 2,
-      "status": "done",
+      "status": "doing",
       "body": "Внутренний /admin/releases: вся история репозитория, разобранная на сборке скриптом scripts/build-changelog.mjs. Карточка доски по трейлеру Board:, номер PR, постановка, метка миграции, группировка по версиям, фильтры в адресе. Публичный /releases не тронут. Постановка — docs/tasks/T-20260905-01-release-admin-releases.md, решение — ADR-0018.",
       "updated": "2026-09-05",
       "chats": [],
-      "commits": [
-        "03e8ede89be91cd3bb24d745807c0def75e77226"
-      ]
-    },
-    {
-      "id": "spiski-napravleniy-na-doske",
-      "title": "Списки направлений на доске и в постановках разошлись",
-      "type": "tech",
-      "epic": "process",
-      "priority": 2,
-      "status": "backlog",
-      "body": "epics в cards.json тринадцать, без money legal knowledge social, зато с next; docs/tasks/README.md называет шестнадцать без next. Раздел «Что сделано» вынужден знать оба набора, иначе на экране латиница.",
-      "updated": "2026-09-05",
-      "commits": [
-        "03e8ede89be91cd3bb24d745807c0def75e77226"
-      ]
+      "commits": []
     }
   ]
 }

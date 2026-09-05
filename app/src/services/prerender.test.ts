@@ -106,11 +106,13 @@ describe('предрендер публичных адресов', () => {
           '../domain/knowledge-address',
           '../redesign/releases',
           './knowledge-catalog',
+          './knowledge-related',
           './schema',
           './seo',
         ],
       ],
       ['./schema.ts', ['./knowledge-catalog', './seo']],
+      ['./knowledge-related.ts', ['./knowledge-catalog']],
       [
         './knowledge-catalog.ts',
         [

@@ -29,6 +29,14 @@ export type CatalogCard = {
   /** Границы применимости: у мифа `evidence_scope`, у факта `evidence_kind`. */
   scope: string | null;
   triggers: string[];
+  /** Потребность за пусковым моментом; у фактов пусто. */
+  needs: string[];
+  /** Замены, которые предлагаются в этом контексте; у фактов пусто. */
+  replacements: string[];
+  /** Метки контекста — самый прямой сигнал «про то же самое». */
+  tags: string[];
+  /** Категория факта; у мифов `null`. */
+  category: string | null;
   products: string[];
   /** Дата последней сверки карточки с источником. */
   verified: string;

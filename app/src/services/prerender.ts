@@ -24,6 +24,7 @@ import { RELEASES } from '../redesign/releases';
 import { ORIGIN, metaFor } from './seo';
 import { GROUPS, cardByCode, cards, levelOf, pathFor, type CatalogCard } from './knowledge-catalog';
 import { codeFromPath } from '../domain/knowledge-address';
+import { relatedCards } from './knowledge-related';
 import { cardGraph, notFoundGraph, routeGraph, scriptTag } from './schema';
 
 export function escapeHtml(value: string): string {
@@ -214,6 +215,11 @@ export function knowledgeIndexBlock(): string {
 }
 
 /**
+ * Граф связей считается один раз на сборку: он детерминирован и от страницы не зависит.
+ */
+const related = relatedCards(cards());
+
+/**
  * Страница одной карточки.
  *
  * Всё, что есть в карточке, лежит здесь текстом: утверждение, что известно, что это
@@ -247,10 +253,15 @@ export function cardBody(card: CatalogCard): string {
   }
   if (card.scope) parts.push(`        <p><b>Границы:</b> ${escapeHtml(card.scope)}</p>`);
   const doi = card.source_doi
-    ? ` · <a href="https://doi.org/${escapeHtml(card.source_doi)}" rel="nofollow noopener">doi</a>`
+    ? ` · <a href="https://doi.org/${escapeHtml(card.source_doi)}" rel="noopener">doi</a>`
     : '';
   parts.push(
-    `        <p><b>Источник:</b> <a href="${escapeHtml(card.source_url)}" rel="nofollow noopener">` +
+    // Без `nofollow`, и это не упущение. `nofollow` придуман для ссылок, за которые
+    // страница не ручается: платных, пользовательских, непроверенных. Здесь ровно
+    // наоборот — ссылка на источник и есть то единственное, чем этот продукт отличается
+    // от пересказов без ссылок в той же нише. `nofollow` на ней сообщал бы поисковику
+    // «я за это не отвечаю», и это была бы неправда.
+    `        <p><b>Источник:</b> <a href="${escapeHtml(card.source_url)}" rel="noopener">` +
       `${escapeHtml(source)}</a>${doi}. Сверено ${escapeHtml(card.verified)}.</p>`,
   );
   if (card.triggers.length) {
@@ -258,6 +269,25 @@ export function cardBody(card: CatalogCard): string {
     parts.push(`        <p><b>Где встречается:</b> ${escapeHtml(card.triggers.join(', '))}.</p>`);
   }
   parts.push('        <p>Это не медицинская рекомендация и не замена врачу.</p>');
+
+  // Соседние карточки. До вечера 05.09.2026 их не было: со страницы вели только хаб,
+  // главная и «Связки» — звезда без связей между листьями. Список собирается на той же
+  // выгрузке и симметричен: если A ссылается на B, B ссылается на A.
+  const neighbours = related.get(card.code) ?? [];
+  if (neighbours.length) {
+    parts.push('        <h2>Рядом об этом же</h2>');
+    parts.push('        <ul class="r-prerender-cards">');
+    for (const code of neighbours) {
+      const other = cardByCode(code);
+      if (!other) continue;
+      parts.push(
+        `          <li><a href="${pathFor(other)}">${escapeHtml(other.claim)}</a> — ` +
+          `${escapeHtml(other.known)}</li>`,
+      );
+    }
+    parts.push('        </ul>');
+  }
+
   parts.push(
     '        <nav class="r-prerender-nav" aria-label="Навигация"><ul>' +
       '<li><a href="/knowledge">Все факты и мифы</a></li>' +

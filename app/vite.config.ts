@@ -145,9 +145,33 @@ function prerenderPublicRoutes(): Plugin {
         ...catalog.map((card) => ({ path: pathFor(card), lastmod: card.updated })),
       ];
       writeFileSync(join(outDir, 'sitemap.xml'), renderSitemap(entries), 'utf8');
+      // Объём меряется по собранной странице, а не по полям карточки: в индекс уходит
+      // страница, и она заметно больше — уровень доказательности, границы, источник,
+      // соседи. Отчёт 05.09 считал по полям и назвал 31 карточку тонкой; по страницам
+      // тонких не оказалось вовсе.
+      //
+      // Список печатается, но сборку не роняет: решение дописывать карточку принимает
+      // владелец, а не сборка.
+      const lengths = catalog.map((card) => {
+        const page = readFileSync(join(outDir, pathFor(card).slice(1), 'index.html'), 'utf8');
+        const body = page.match(/<main class="r-prerender">([\s\S]*?)<\/main>/);
+        const text = (body ? body[1] : '')
+          .replace(/<[^>]*>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        return { code: card.code, length: text.length };
+      });
+      const thin = lengths.filter((entry) => entry.length < 400);
+      const shortest = lengths.reduce((min, entry) => (entry.length < min.length ? entry : min));
       console.log(
-        `предрендер: ${1 + PRERENDER_PATHS.length} разделов и ${catalog.length} карточек каталога`,
+        `предрендер: ${1 + PRERENDER_PATHS.length} разделов и ${catalog.length} карточек каталога; ` +
+          `самая короткая страница — ${shortest.code}, ${shortest.length} знаков`,
       );
+      if (thin.length) {
+        console.log(
+          `короче 400 знаков на собранной странице: ${thin.map((entry) => entry.code).join(', ')}`,
+        );
+      }
     },
   };
 }
