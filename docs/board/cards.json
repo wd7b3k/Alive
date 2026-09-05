@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "1ff7b97eb33d1c8b8a5cb92873189a41546eebfc",
+  "appliedCommit": "77974f4bb55552e9f5a37456c890cf73ce6fec9d",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3699,6 +3699,19 @@
       "updated": "2026-08-31",
       "commits": [
         "1e83a65876cfed987666cfebed29a9da78f77d23"
+      ]
+    },
+    {
+      "id": "katalog-bez-svoih-adresov",
+      "title": "Каталог без своих адресов",
+      "type": "research",
+      "epic": "seo",
+      "priority": 1,
+      "status": "done",
+      "body": "66 разобранных вопросов на трёх адресах, разметка описывает то, чего нет в видимом HTML; разбор R-20260905-01, решение ADR-0017",
+      "updated": "2026-09-05",
+      "commits": [
+        "c546fd89011edace7b7e5596deaf3ef4233c245e"
       ]
     }
   ]
