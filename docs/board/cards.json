@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "77974f4bb55552e9f5a37456c890cf73ce6fec9d",
+  "appliedCommit": "af58cce927576fb227852b532ab09977f53e1bec",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3712,6 +3712,19 @@
       "updated": "2026-09-05",
       "commits": [
         "c546fd89011edace7b7e5596deaf3ef4233c245e"
+      ]
+    },
+    {
+      "id": "kartochki-kataloga-ne-ssylalis",
+      "title": "Карточки каталога не ссылались друг на друга",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 2,
+      "status": "done",
+      "body": "со страницы вели только хаб, главная и Связки — звезда из 38 листьев без связей между ними; плюс nofollow на ссылках к источникам",
+      "updated": "2026-09-05",
+      "commits": [
+        "af58cce927576fb227852b532ab09977f53e1bec"
       ]
     }
   ]

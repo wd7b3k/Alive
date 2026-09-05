@@ -15,6 +15,20 @@
       "anxiety",
       "uncertainty"
     ],
+    "needs": [
+      "release_tension",
+      "pause"
+    ],
+    "replacements": [
+      "five_long_exhales",
+      "ground_feet",
+      "walk_two_minutes"
+    ],
+    "tags": [
+      "stress",
+      "anxiety"
+    ],
+    "category": null,
     "products": [
       "cigarette",
       "vape"
@@ -40,6 +54,16 @@
       "spontaneous",
       "other"
     ],
+    "needs": [
+      "meaning"
+    ],
+    "replacements": [
+      "write_real_need"
+    ],
+    "tags": [
+      "control"
+    ],
+    "category": null,
     "products": [
       "cigarette",
       "hookah",
@@ -65,6 +89,20 @@
     "triggers": [
       "coffee"
     ],
+    "needs": [
+      "pleasure",
+      "closure",
+      "pause"
+    ],
+    "replacements": [
+      "brush_teeth",
+      "tea_ritual",
+      "walk_two_minutes"
+    ],
+    "tags": [
+      "coffee"
+    ],
+    "category": null,
     "products": [
       "cigarette",
       "vape"
@@ -87,6 +125,13 @@
     "level": "B",
     "scope": "systematic_review_meta_analysis",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "craving",
+      "behavior"
+    ],
+    "category": "behavior",
     "products": [
       "cigarette"
     ],
@@ -108,6 +153,13 @@
     "level": "B",
     "scope": "systematic_review_meta_analysis",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "cues",
+      "behavior"
+    ],
+    "category": "behavior",
     "products": [
       "cigarette"
     ],
@@ -129,6 +181,13 @@
     "level": "A",
     "scope": "guideline",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "digital",
+      "benefit"
+    ],
+    "category": "behavior",
     "products": [
       "cigarette",
       "hookah"
@@ -151,6 +210,13 @@
     "level": "B",
     "scope": "ecological_momentary_assessment",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "myths",
+      "behavior"
+    ],
+    "category": "behavior",
     "products": [
       "cigarette"
     ],
@@ -176,6 +242,20 @@
       "task_start",
       "thinking"
     ],
+    "needs": [
+      "stimulation",
+      "switch"
+    ],
+    "replacements": [
+      "focus_two_minutes",
+      "walk_two_minutes",
+      "water_pause"
+    ],
+    "tags": [
+      "focus",
+      "work"
+    ],
+    "category": null,
     "products": [
       "cigarette",
       "vape"
@@ -198,6 +278,13 @@
     "level": "A",
     "scope": "prospective_cohort",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "benefit",
+      "heavy_smoking"
+    ],
+    "category": "heart",
     "products": [
       "cigarette"
     ],
@@ -222,6 +309,16 @@
       "hookah_venue",
       "social"
     ],
+    "needs": [
+      "pleasure",
+      "connection"
+    ],
+    "replacements": [],
+    "tags": [
+      "hookah",
+      "risk"
+    ],
+    "category": null,
     "products": [
       "hookah"
     ],
@@ -243,6 +340,13 @@
     "level": "A",
     "scope": "public_health",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "hookah",
+      "risk"
+    ],
+    "category": "product",
     "products": [
       "hookah"
     ],
@@ -264,6 +368,13 @@
     "level": "B",
     "scope": "guideline",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "lapse",
+      "benefit"
+    ],
+    "category": "behavior",
     "products": [
       "cigarette",
       "hookah",
@@ -289,6 +400,18 @@
     "triggers": [
       "other"
     ],
+    "needs": [
+      "meaning",
+      "release_tension"
+    ],
+    "replacements": [
+      "meaning_read",
+      "write_real_need"
+    ],
+    "tags": [
+      "lapse"
+    ],
+    "category": null,
     "products": [
       "cigarette",
       "hookah",
@@ -314,6 +437,15 @@
     "triggers": [
       "other"
     ],
+    "needs": [
+      "pleasure"
+    ],
+    "replacements": [],
+    "tags": [
+      "risk",
+      "product"
+    ],
+    "category": null,
     "products": [
       "cigarette"
     ],
@@ -335,6 +467,13 @@
     "level": "A",
     "scope": "surgeon_general",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "risk",
+      "product"
+    ],
+    "category": "product",
     "products": [
       "cigarette"
     ],
@@ -356,6 +495,13 @@
     "level": "A",
     "scope": "meta_analysis",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "risk",
+      "low_intensity"
+    ],
+    "category": "heart",
     "products": [
       "cigarette"
     ],
@@ -379,6 +525,19 @@
     "triggers": [
       "after_meal"
     ],
+    "needs": [
+      "closure",
+      "oral_sensory"
+    ],
+    "replacements": [
+      "brush_teeth",
+      "mint_reset",
+      "walk_two_minutes"
+    ],
+    "tags": [
+      "after_meal"
+    ],
+    "category": null,
     "products": [
       "cigarette",
       "vape"
@@ -401,6 +560,13 @@
     "level": "A",
     "scope": "systematic_review",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "benefit",
+      "stress"
+    ],
+    "category": "mental_health",
     "products": [
       "cigarette"
     ],
@@ -422,6 +588,12 @@
     "level": "A",
     "scope": "prospective_cohort",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "risk"
+    ],
+    "category": "mortality",
     "products": [
       "cigarette"
     ],
@@ -443,6 +615,13 @@
     "level": "A",
     "scope": "guideline_public_health",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "nrt",
+      "benefit"
+    ],
+    "category": "treatment",
     "products": [
       "cigarette"
     ],
@@ -466,6 +645,18 @@
     "triggers": [
       "other"
     ],
+    "needs": [
+      "release_tension",
+      "oral_sensory"
+    ],
+    "replacements": [
+      "nrt_gum",
+      "nrt_spray"
+    ],
+    "tags": [
+      "nrt"
+    ],
+    "category": null,
     "products": [
       "cigarette"
     ],
@@ -489,6 +680,16 @@
     "triggers": [
       "spontaneous"
     ],
+    "needs": [
+      "pleasure"
+    ],
+    "replacements": [
+      "meaning_read"
+    ],
+    "tags": [
+      "risk"
+    ],
+    "category": null,
     "products": [
       "cigarette"
     ],
@@ -514,6 +715,21 @@
       "evening",
       "social"
     ],
+    "needs": [
+      "pleasure",
+      "pause",
+      "connection"
+    ],
+    "replacements": [
+      "favorite_song",
+      "tea_pause",
+      "savor_result"
+    ],
+    "tags": [
+      "pleasure",
+      "boredom"
+    ],
+    "category": null,
     "products": [
       "cigarette",
       "hookah",
@@ -541,6 +757,20 @@
       "after_task",
       "evening"
     ],
+    "needs": [
+      "pause",
+      "solitude",
+      "self_presence"
+    ],
+    "replacements": [
+      "phone_down_pause",
+      "tea_pause",
+      "gaze_far_minute"
+    ],
+    "tags": [
+      "pause"
+    ],
+    "category": null,
     "products": [
       "cigarette",
       "hookah",
@@ -564,6 +794,13 @@
     "level": "A",
     "scope": "public_health",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "oral",
+      "risk"
+    ],
+    "category": "oral_health",
     "products": [
       "cigarette"
     ],
@@ -585,6 +822,12 @@
     "level": "A",
     "scope": "prospective_cohort",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "benefit"
+    ],
+    "category": "mortality",
     "products": [
       "cigarette"
     ],
@@ -606,6 +849,13 @@
     "level": "A",
     "scope": "systematic_review",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "reward",
+      "benefit"
+    ],
+    "category": "behavior",
     "products": [
       "cigarette"
     ],
@@ -627,6 +877,13 @@
     "level": "A",
     "scope": "public_health",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "others",
+      "social"
+    ],
+    "category": "others",
     "products": [
       "cigarette",
       "hookah"
@@ -652,6 +909,20 @@
       "social",
       "hookah_venue"
     ],
+    "needs": [
+      "pleasure",
+      "connection",
+      "meaning"
+    ],
+    "replacements": [
+      "meaning_read",
+      "meaning_card"
+    ],
+    "tags": [
+      "identity",
+      "social"
+    ],
+    "category": null,
     "products": [
       "cigarette",
       "hookah",
@@ -678,6 +949,17 @@
       "social",
       "hookah_venue"
     ],
+    "needs": [
+      "connection"
+    ],
+    "replacements": [
+      "text_support",
+      "stay_close"
+    ],
+    "tags": [
+      "social"
+    ],
+    "category": null,
     "products": [
       "cigarette",
       "hookah",
@@ -703,6 +985,17 @@
     "triggers": [
       "other"
     ],
+    "needs": [
+      "meaning"
+    ],
+    "replacements": [
+      "meaning_read",
+      "future_resource"
+    ],
+    "tags": [
+      "fatalism"
+    ],
+    "category": null,
     "products": [
       "cigarette"
     ],
@@ -728,6 +1021,19 @@
       "anxiety",
       "uncertainty"
     ],
+    "needs": [
+      "release_tension",
+      "pause"
+    ],
+    "replacements": [
+      "five_long_exhales",
+      "nrt_gum",
+      "walk_two_minutes"
+    ],
+    "tags": [
+      "stress"
+    ],
+    "category": null,
     "products": [
       "cigarette"
     ],
@@ -749,6 +1055,13 @@
     "level": "A",
     "scope": "guideline",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "treatment",
+      "benefit"
+    ],
+    "category": "treatment",
     "products": [
       "cigarette",
       "hookah"
@@ -773,6 +1086,15 @@
     "triggers": [
       "other"
     ],
+    "needs": [
+      "pleasure"
+    ],
+    "replacements": [],
+    "tags": [
+      "vape",
+      "harm_reduction"
+    ],
+    "category": null,
     "products": [
       "vape",
       "cigarette"
@@ -797,6 +1119,19 @@
     "triggers": [
       "other"
     ],
+    "needs": [
+      "pleasure",
+      "oral_sensory"
+    ],
+    "replacements": [
+      "walk_two_minutes",
+      "apple_crunch",
+      "carrot_crunch"
+    ],
+    "tags": [
+      "weight"
+    ],
+    "category": null,
     "products": [
       "cigarette"
     ],
@@ -818,6 +1153,12 @@
     "level": "A",
     "scope": "meta_analysis",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "weight"
+    ],
+    "category": "weight",
     "products": [
       "cigarette"
     ],
@@ -839,6 +1180,12 @@
     "level": "A",
     "scope": "guideline",
     "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "treatment"
+    ],
+    "category": "treatment",
     "products": [
       "cigarette",
       "hookah"
@@ -865,6 +1212,17 @@
       "irritability",
       "tension"
     ],
+    "needs": [
+      "release_tension"
+    ],
+    "replacements": [
+      "ground_feet",
+      "five_long_exhales"
+    ],
+    "tags": [
+      "mental_health"
+    ],
+    "category": null,
     "products": [
       "cigarette"
     ],
