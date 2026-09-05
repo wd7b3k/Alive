@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "efc3f94fe6d02c26eb6ade1ba810e23ec9453ebc",
+  "appliedCommit": "cd194f353e3e6e385d3aca5f3c0e87855325d357",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3920,12 +3920,13 @@
       "type": "tech",
       "epic": "content",
       "priority": 1,
-      "status": "verify",
+      "status": "done",
       "body": "T-20260905-12, три части: снятие слоя статей, еженедельный сбор находок, развёрнутые тексты восьми карточек",
       "updated": "2026-09-05",
       "commits": [
         "9c36654df39fde801206874b860443441d7319b4",
-        "efc3f94fe6d02c26eb6ade1ba810e23ec9453ebc"
+        "efc3f94fe6d02c26eb6ade1ba810e23ec9453ebc",
+        "cd194f353e3e6e385d3aca5f3c0e87855325d357"
       ],
       "docs": [
         "docs/tasks/T-20260905-12-knowledge-catalog-feed.md",
