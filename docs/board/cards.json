@@ -3748,7 +3748,7 @@
       "epic": "release",
       "priority": 2,
       "status": "done",
-      "body": "Внутренний /admin/releases: вся история репозитория, разобранная на сборке скриптом scripts/build-changelog.mjs. Карточка доски по трейлеру Board:, номер PR, постановка, метка миграции, группировка по версиям, фильтры в адресе. Публичный /releases не тронут. Постановка — docs/tasks/T-20260905-01-release-admin-releases.md, решение — ADR-0018.",
+      "body": "Внутренний /admin/releases: вся история репозитория, разобранная на сборке скриптом scripts/build-changelog.mjs. Карточка доски по трейлеру Board:, номер PR, постановка, метка миграции, группировка по версиям, фильтры в адресе. Публичный /releases не тронут. Постановка — docs/tasks/T-20260905-12-release-admin-releases.md, решение — ADR-0018.",
       "updated": "2026-09-05",
       "chats": [],
       "commits": [
