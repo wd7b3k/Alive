@@ -18,6 +18,21 @@ import { getSupabase } from '../supabase';
 const VISITOR_KEY = 'habitoff:visitor:v1';
 const SESSION_KEY = 'habitoff:session:v1';
 const ATTRIBUTED_KEY = 'habitoff:visitor-attributed:v1';
+/**
+ * Пройденные этапы воронки — по одному ключу на человека.
+ *
+ * Первая редакция хранила всё одной строкой без имени человека, и это была ошибка с
+ * дорогим следствием: второй человек в том же браузере не попадал в воронку вовсе. Не
+ * «его цель не ушла» — его не было ни в целях, ни в собственном слое. Одна семья, один
+ * ноутбук, один аккаунт на двоих — и половина участников пилота невидима.
+ *
+ * Ключ v2 включает идентификатор: у вошедшего — его `user_id`, у ещё не вошедшего —
+ * идентификатор посетителя. Выход отметку не переносит, потому что переносить нечего:
+ * у следующего человека другой ключ.
+ */
+const FUNNEL_PREFIX = 'habitoff:funnel:v2:';
+/** Ключ первой редакции. Хранит имена этапов без человека и потому ничего не значит. */
+const FUNNEL_KEY_V1 = 'habitoff:funnel:v1';
 /** Пауза, после которой заход считается новым. Тридцать минут — общепринятая граница. */
 const SESSION_IDLE_MS = 30 * 60 * 1000;
 
@@ -62,6 +77,14 @@ function writeStore(store: Storage | undefined, key: string, value: string): voi
   }
 }
 
+function dropStore(store: Storage | undefined, key: string): void {
+  try {
+    store?.removeItem(key);
+  } catch {
+    /* Не смогли убрать — не повод падать: это уборка, а не работа. */
+  }
+}
+
 function newId(): string {
   try {
     return crypto.randomUUID();
@@ -78,6 +101,42 @@ export function getVisitorId(): string | null {
     writeStore(window.localStorage, VISITOR_KEY, id);
   }
   return id;
+}
+
+/**
+ * Отметить этап воронки пройденным ЭТИМ человеком. Возвращает `true` только в первый раз.
+ *
+ * Отметка существует ради одного — цели в кабинете. Цель означает «человек дошёл», а не
+ * «компонент отрисовался»: без неё `onboarded` уходила бы при каждом открытии приложения
+ * после настройки, и конверсия выросла бы в разы в сторону, которая выглядит как успех.
+ *
+ * Собственный слой этой отметкой НЕ управляется. Событие пишется всегда, а повторы
+ * снимаются запросом — `distinct on (человек, этап)`. Так и должно быть: браузер знает
+ * про свой `localStorage`, а про то, сколько раз человек дошёл до вехи, знает база.
+ *
+ * `subject` — тот, чей это путь: `user_id` у вошедшего, идентификатор посетителя у ещё
+ * не вошедшего. Пусто — берётся посетитель.
+ *
+ * Хранилище может быть недоступно (приватное окно, запрет данных сайта). Тогда функция
+ * честно отвечает `true` каждый раз: посчитать цель дважды лучше, чем не посчитать ни
+ * разу.
+ */
+export function markFunnelStageOnce(stage: string, subject?: string | null): boolean {
+  if (typeof window === 'undefined') return false;
+  const owner = subject || getVisitorId();
+  // Ни аккаунта, ни посетителя — значит хранилище недоступно целиком. Отмечать негде,
+  // и молчать в этом случае значило бы потерять цель совсем.
+  if (!owner) return true;
+
+  const key = `${FUNNEL_PREFIX}${owner}`;
+  const reached = (readStore(window.localStorage, key) ?? '').split(',').filter(Boolean);
+  if (reached.includes(stage)) return false;
+  reached.push(stage);
+  writeStore(window.localStorage, key, reached.join(','));
+  // Ключ первой редакции больше ничего не значит: он хранил этапы без человека.
+  // Убирается при первой же отметке, чтобы не остался в браузерах навсегда.
+  dropStore(window.localStorage, FUNNEL_KEY_V1);
+  return true;
 }
 
 /**

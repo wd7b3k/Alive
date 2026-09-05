@@ -16,38 +16,7 @@
  * попадает.
  */
 import { ORIGIN, metaFor } from './seo';
-
-/**
- * Одно утверждение каталога вместе с источником.
- *
- * Приезжает из базы на этапе выкладки (`scripts/dump-knowledge-for-schema.mjs`), а не
- * лежит копией в репозитории. Причина простая: текст каталога правят миграции — их уже
- * одиннадцать только по мифам, — и любая копия в git разошлась бы с базой на следующей
- * же. `docs/SEO_AND_ANALYTICS.md` называет такую копию хуже отсутствия, и это про неё.
- */
-export type KnowledgeEntry = {
-  code: string;
-  /** Убеждение, как его формулирует человек. В разметке — `Question.name`. */
-  title: string;
-  /** Что известно на самом деле. В разметке — `acceptedAnswer.text`. */
-  answer: string;
-  sourceLabel: string;
-  sourceUrl: string;
-  doi?: string | null;
-};
-
-/**
- * Ссылка на собственную методологию источником не является.
- *
- * Три мифа из девятнадцати ссылаются на `docs/METHODOLOGY.md` — это рабочие эвристики
- * проекта, и `AGENTS.md` требует называть их эвристиками, а не выдавать за доказанное.
- * В разметку, которая уезжает в сниппет и в пересказ модели, они не идут: сослаться на
- * себя — это не сослаться.
- */
-export function hasExternalSource(entry: KnowledgeEntry): boolean {
-  if (!entry.sourceUrl) return false;
-  return !/github\.com\/wd7b3k|habitoff\.ru/i.test(entry.sourceUrl);
-}
+import { GROUPS, cards, levelOf, pathFor, type CatalogCard } from './knowledge-catalog';
 
 type Node = Record<string, unknown>;
 
@@ -92,47 +61,156 @@ const ABOUT: Record<string, string> = {
 };
 
 /**
- * Вопросы и ответы каталога — только те, у кого есть внешний источник.
+ * Какая карточка каталога отвечает за какой вопрос на главной.
  *
- * Каждый `Question` несёт `citation` на публикацию. Утверждение без источника в разметку
- * не попадает вовсе: в сниппете и в пересказе модели оно осталось бы утверждением о
- * здоровье без основания.
+ * Здесь только коды — тексты вопросов и ответов остаются в `index.html`, где их писали
+ * и вычитывали. Иначе это была бы вторая копия текста, а копии в этом проекте уже
+ * заканчивались расхождением.
+ *
+ * Вопрос без карточки — ошибка сборки, а не «оставим без источника». Правило то же, что
+ * в базе: опубликованная карточка уровня A или B без источника отклоняется триггером.
+ * В разметке — то есть ровно там, откуда утверждение уходит в сниппет и в пересказ
+ * модели, — оно до 05.09.2026 не действовало.
  */
-export function knowledgeItemList(entries: KnowledgeEntry[]): Node | null {
-  const cited = entries.filter(hasExternalSource);
-  if (!cited.length) return null;
+const FAQ_SOURCES: Record<string, string> = {
+  'Поздно ли бросать курить после многих лет?': 'too_late_to_quit',
+  'Нужно ли бросать курить силой воли?': 'treatment_plus_support',
+  'Станет ли психологически хуже, если бросить курить?': 'mental_health_after_quit',
+  'Вейп безопаснее сигарет?': 'vape_is_harmless',
+  'Очищает ли вода кальянный дым?': 'hookah_not_safe',
+};
+
+/**
+ * Дописывает `citation` каждому ответу в `FAQPage`.
+ *
+ * Граф берётся из `index.html` как есть и правится точечно: тексты не переписываются,
+ * добавляется только источник. Если вопрос не сопоставлен карточке — сборка падает и
+ * называет вопрос: решать, найти ему карточку или убрать из разметки, должен человек.
+ */
+export function withFaqCitations(graph: Node[]): Node[] {
+  return graph.map((node) => {
+    if (node['@type'] !== 'FAQPage') return node;
+    const questions = (node.mainEntity as Node[]) ?? [];
+    return {
+      ...node,
+      mainEntity: questions.map((question) => {
+        const name = String(question.name ?? '');
+        const code = FAQ_SOURCES[name];
+        if (!code) {
+          throw new Error(
+            `Разметка главной: у вопроса «${name}» нет карточки каталога с источником. ` +
+              'Сопоставь его в FAQ_SOURCES или убери вопрос из FAQPage — ' +
+              'утверждение о здоровье без источника в разметку не идёт.',
+          );
+        }
+        const card = cards().find((entry) => entry.code === code);
+        if (!card) {
+          throw new Error(
+            `Разметка главной: карточки ${code} нет в выгрузке — она снята с публикации? ` +
+              `Вопрос «${name}» остался бы без источника.`,
+          );
+        }
+        const answer = (question.acceptedAnswer as Node) ?? {};
+        return {
+          ...question,
+          acceptedAnswer: { ...answer, citation: citationOf(card) },
+        };
+      }),
+    };
+  });
+}
+
+function citationOf(card: CatalogCard): Node {
+  return {
+    '@type': 'CreativeWork',
+    name: card.source_publication
+      ? `${card.source_title} · ${card.source_publication}`
+      : card.source_title,
+    url: card.source_url,
+    ...(card.source_doi ? { identifier: `https://doi.org/${card.source_doi}` } : {}),
+  };
+}
+
+/**
+ * Оглавление каталога: элементы ссылаются на реальные адреса.
+ *
+ * До 05.09.2026 `ItemList` на `/knowledge` перечислял шестнадцать вопросов, у которых
+ * не было ни адреса, ни присутствия в видимом тексте страницы. Теперь у каждого своя
+ * страница, и элемент списка — ссылка на неё, а не вопрос, живущий только в разметке.
+ */
+export function knowledgeHubList(): Node {
+  const all = cards();
   return {
     '@type': 'ItemList',
     '@id': `${ORIGIN}/knowledge#claims`,
-    name: 'Разобранные убеждения о курении',
-    numberOfItems: cited.length,
-    itemListElement: cited.map((entry, index) => ({
+    name: 'Факты и разобранные убеждения о курении',
+    numberOfItems: all.length,
+    itemListElement: all.map((card, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      item: {
-        '@type': 'Question',
-        '@id': `${ORIGIN}/knowledge#${entry.code}`,
-        name: entry.title,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: entry.answer,
-          citation: {
-            '@type': 'CreativeWork',
-            name: entry.sourceLabel,
-            url: entry.sourceUrl,
-            ...(entry.doi ? { identifier: `https://doi.org/${entry.doi}` } : {}),
-          },
-        },
-      },
+      name: card.claim,
+      url: `${ORIGIN}${pathFor(card)}`,
     })),
   };
+}
+
+/**
+ * Разметка страницы карточки.
+ *
+ * `Question` с `acceptedAnswer` и `citation` — и ничего сверх того, что есть в видимом
+ * тексте страницы. Не `ClaimReview`: он предназначен организациям-фактчекерам и имеет
+ * отдельные требования допуска. Не `QAPage`: он про форумы с пользовательскими
+ * ответами, а здесь редакционная карточка с источником.
+ */
+export function cardGraph(card: CatalogCard): Node[] {
+  const level = levelOf(card);
+  const group = GROUPS.find((entry) => entry.kind === card.kind);
+  const url = `${ORIGIN}${pathFor(card)}`;
+  const answer = [card.known, card.changes, card.detail].filter(Boolean).join(' ');
+  return [
+    {
+      '@type': 'WebPage',
+      '@id': `${url}#page`,
+      url,
+      name: card.claim,
+      description: card.known,
+      inLanguage: 'ru-RU',
+      isPartOf: { '@id': WEBSITE_ID },
+      breadcrumb: { '@id': `${url}#breadcrumb` },
+      mainEntity: { '@id': `${url}#claim` },
+      ...(card.verified ? { dateModified: card.updated } : {}),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${url}#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Главная', item: `${ORIGIN}/` },
+        { '@type': 'ListItem', position: 2, name: 'Факты и мифы', item: `${ORIGIN}/knowledge` },
+        { '@type': 'ListItem', position: 3, name: card.claim, item: url },
+      ],
+    },
+    {
+      '@type': 'Question',
+      '@id': `${url}#claim`,
+      name: card.claim,
+      ...(group ? { about: group.title } : {}),
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: answer,
+        // Уровень доказательности и его границы — часть ответа, а не украшение:
+        // утверждение без границ здесь не показывается нигде, включая разметку.
+        ...(level ? { abstract: `${level.label_ru}. ${level.limit_ru}` } : {}),
+        citation: citationOf(card),
+      },
+    },
+  ];
 }
 
 /**
  * Граф для внутреннего адреса. `WebSite` присутствует ссылкой, а не копией: узел
  * описан на главной, здесь он только адресуется по `@id`.
  */
-export function routeGraph(path: string, entries: KnowledgeEntry[] = []): Node[] {
+export function routeGraph(path: string): Node[] {
   const meta = metaFor(path);
   const crumbName = CRUMB[path] ?? meta.title;
   const page: Node = {
@@ -148,11 +226,8 @@ export function routeGraph(path: string, entries: KnowledgeEntry[] = []): Node[]
   };
   const graph: Node[] = [page, breadcrumb(path, crumbName)];
   if (path === '/knowledge') {
-    const list = knowledgeItemList(entries);
-    if (list) {
-      graph.push(list);
-      page.mainEntity = { '@id': `${ORIGIN}/knowledge#claims` };
-    }
+    graph.push(knowledgeHubList());
+    page.mainEntity = { '@id': `${ORIGIN}/knowledge#claims` };
   }
   return graph;
 }

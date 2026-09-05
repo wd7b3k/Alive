@@ -1,0 +1,1237 @@
+[
+  {
+    "code": "calms_me",
+    "kind": "myth",
+    "claim": "Сигарета меня успокаивает",
+    "known": "Облегчение реально, но часть напряжения создаёт сама зависимость в промежутках между сигаретами.",
+    "changes": "Если напряжение вернулось через час, проверь: это стресс дня или уже отмена. Сначала пять длинных выдохов — потом решение.",
+    "detail": "Отмена никотина даёт раздражительность, тревогу и внутреннее беспокойство. Следующая доза ненадолго снимает часть этого — и цикл легко принять за лечение стресса.",
+    "level": "B",
+    "scope": "Механизм отмены и исследования психического состояния после отказа",
+    "triggers": [
+      "tension",
+      "anger",
+      "irritability",
+      "anxiety",
+      "uncertainty"
+    ],
+    "needs": [
+      "release_tension",
+      "pause"
+    ],
+    "replacements": [
+      "five_long_exhales",
+      "ground_feet",
+      "walk_two_minutes"
+    ],
+    "tags": [
+      "stress",
+      "anxiety"
+    ],
+    "category": null,
+    "products": [
+      "cigarette",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 10,
+    "source_title": "CDC — 7 Common Withdrawal Symptoms",
+    "source_url": "https://www.cdc.gov/tobacco/campaign/tips/quit-smoking/7-common-withdrawal-symptoms/index.html",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "can_quit_anytime",
+    "kind": "myth",
+    "claim": "Я могу бросить когда захочу",
+    "known": "Спорить с этим не нужно. Проще посмотреть на свои данные: какие эпизоды повторяются и насколько легко на самом деле пропустить привычный ответ.",
+    "changes": "Не доказывай ничего. Отметь неделю эпизодов и посмотри, сколько раз выбор был твой, а сколько автоматический.",
+    "detail": "Habitoff заменяет спор наблюдением за повторяемостью: сигнал — тяга — никотин, и как часто эта цепочка замыкается.",
+    "level": "C",
+    "scope": "Поведенческая гипотеза Habitoff",
+    "triggers": [
+      "spontaneous",
+      "other"
+    ],
+    "needs": [
+      "meaning"
+    ],
+    "replacements": [
+      "write_real_need"
+    ],
+    "tags": [
+      "control"
+    ],
+    "category": null,
+    "products": [
+      "cigarette",
+      "hookah",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 150,
+    "source_title": "ALIVE Method v1",
+    "source_url": "https://github.com/wd7b3k/Alive/blob/main/docs/METHODOLOGY.md",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "coffee_needs_smoke",
+    "kind": "myth",
+    "claim": "Кофе без сигареты уже не тот",
+    "known": "Повторяемая пара «кофе — сигарета» становится сильным сигналом. Сам кофе продолжения этой цепочки не требует.",
+    "changes": "Оставь кофе, поменяй то, что идёт после: другое место, другой финал. Неделя — и связка слабеет.",
+    "detail": "Сигналы среды — один из главных непосредственных предвестников срыва. Смена места, порядка действий или следующего шага позволяет проверить новую связку.",
+    "level": "B",
+    "scope": "Дневниковые исследования о предвестниках срыва; конкретная замена в Habitoff экспериментальна",
+    "triggers": [
+      "coffee"
+    ],
+    "needs": [
+      "pleasure",
+      "closure",
+      "pause"
+    ],
+    "replacements": [
+      "brush_teeth",
+      "tea_ritual",
+      "walk_two_minutes"
+    ],
+    "tags": [
+      "coffee"
+    ],
+    "category": null,
+    "products": [
+      "cigarette",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 40,
+    "source_title": "Perski et al. Addiction 2023",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/36807443/",
+    "source_doi": "10.1111/add.16173",
+    "source_publication": null
+  },
+  {
+    "code": "craving_is_signal",
+    "kind": "fact",
+    "claim": "Тяга — изменяющееся состояние, а не приказ",
+    "known": "В дневниковых исследованиях сила тяги в моменте связана со срывом, но сама тяга не означает, что курение неизбежно.",
+    "changes": "Когда накрывает — засеки две минуты. Тяга меняется сама, и это видно по твоим же отметкам.",
+    "detail": "Связь измерена на группах людей в моменте, а не как прогноз для конкретного эпизода.",
+    "level": "B",
+    "scope": "systematic_review_meta_analysis",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "craving",
+      "behavior"
+    ],
+    "category": "behavior",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 140,
+    "source_title": "Perski et al. Addiction 2023",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/36807443/",
+    "source_doi": "10.1111/add.16173",
+    "source_publication": null
+  },
+  {
+    "code": "cues_matter",
+    "kind": "fact",
+    "claim": "Окружение может быть сильнее абстрактной силы воли",
+    "known": "Обзор дневниковых исследований нашёл сильную связь между сигналами среды и срывом — у одного и того же человека в разные моменты.",
+    "changes": "Начни не с силы воли, а со среды: убери пачку из привычного места и поменяй маршрут одного эпизода.",
+    "detail": "Речь о непосредственных предвестниках эпизода, а не о причинах зависимости в целом.",
+    "level": "B",
+    "scope": "systematic_review_meta_analysis",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "cues",
+      "behavior"
+    ],
+    "category": "behavior",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 130,
+    "source_title": "Perski et al. Addiction 2023",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/36807443/",
+    "source_doi": "10.1111/add.16173",
+    "source_publication": null
+  },
+  {
+    "code": "digital_support",
+    "kind": "fact",
+    "claim": "Цифровая поддержка может быть частью отказа",
+    "known": "ВОЗ допускает текстовые рассылки, мобильные приложения и интернет-программы как дополнение к лечению или как инструмент самопомощи.",
+    "changes": "Habitoff — инструмент, а не лечение. Пользуйся им как дополнением и смотри, что даёт результат именно тебе.",
+    "detail": "Это про класс инструментов, а не про конкретное приложение: свою пользу каждое доказывает отдельно.",
+    "level": "A",
+    "scope": "guideline",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "digital",
+      "benefit"
+    ],
+    "category": "behavior",
+    "products": [
+      "cigarette",
+      "hookah"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 160,
+    "source_title": "WHO Clinical Treatment Guideline 2024",
+    "source_url": "https://www.who.int/publications/i/item/9789240096431",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "expectancies_predict_lapse",
+    "kind": "fact",
+    "claim": "Обещание сигареты — часть зависимости",
+    "known": "В дневниковых исследованиях ожидание хорошего от сигареты предсказывало первый срыв на следующий день.",
+    "changes": "Перед эпизодом запиши, чего ждёшь от сигареты. Потом сравни с тем, что получилось на самом деле.",
+    "detail": "Предсказание вероятностное и на уровне группы, а не приговор для отдельного дня.",
+    "level": "B",
+    "scope": "ecological_momentary_assessment",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "myths",
+      "behavior"
+    ],
+    "category": "behavior",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 150,
+    "source_title": "Gwaltney et al. 2005",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/16351387/",
+    "source_doi": "10.1037/0021-843X.114.4.661",
+    "source_publication": null
+  },
+  {
+    "code": "focus_better",
+    "kind": "myth",
+    "claim": "С сигаретой я лучше соображаю",
+    "known": "Никотин может временно снять трудности с концентрацией, вызванные отменой. Это не делает зависимость способом держать фокус.",
+    "changes": "Перед тем как выйти, поставь себе две минуты на одну задачу. Часто «нужна сигарета» означает «нужен перерыв».",
+    "detail": "Проблемы с концентрацией — известный симптом никотиновой отмены. Полезно отделить снятие отмены от устойчивой способности сосредоточиться.",
+    "level": "B",
+    "scope": "Механизм отмены и концентрации",
+    "triggers": [
+      "work_computer",
+      "task_start",
+      "thinking"
+    ],
+    "needs": [
+      "stimulation",
+      "switch"
+    ],
+    "replacements": [
+      "focus_two_minutes",
+      "walk_two_minutes",
+      "water_pause"
+    ],
+    "tags": [
+      "focus",
+      "work"
+    ],
+    "category": null,
+    "products": [
+      "cigarette",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 20,
+    "source_title": "CDC — 7 Common Withdrawal Symptoms",
+    "source_url": "https://www.cdc.gov/tobacco/campaign/tips/quit-smoking/7-common-withdrawal-symptoms/index.html",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "heavy_smoker_cvd_5y",
+    "kind": "fact",
+    "claim": "Сердечно-сосудистый риск начинает меняться после отказа",
+    "known": "В когорте JAMA у бросивших с большим стажем сердечно-сосудистый риск был ниже уже в первые пять лет после отказа, чем у продолжающих курить.",
+    "changes": "Даже долгий стаж не отменяет выигрыш: первые годы после отказа уже считаются.",
+    "detail": "В исследование вошли 8 770 человек, большим стажем считали от 20 пачко-лет. По сравнению с никогда не курившими риск мог оставаться повышенным существенно дольше.",
+    "level": "A",
+    "scope": "prospective_cohort",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "benefit",
+      "heavy_smoking"
+    ],
+    "category": "heart",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 40,
+    "source_title": "Duncan et al. JAMA 2019",
+    "source_url": "https://jamanetwork.com/journals/jama/fullarticle/2748507",
+    "source_doi": "10.1001/jama.2019.10298",
+    "source_publication": null
+  },
+  {
+    "code": "hookah_is_mild",
+    "kind": "myth",
+    "claim": "Кальян мягче сигарет",
+    "known": "Вода и аромат не делают кальян безопасной альтернативой.",
+    "changes": "Считай сеанс полноценным эпизодом, а не «лёгким вариантом» — тогда статистика перестанет тебя обманывать.",
+    "detail": "По данным CDC, вода не фильтрует токсичные вещества дыма до безопасного уровня, а уголь добавляет угарный газ и другие токсиканты.",
+    "level": "A",
+    "scope": "Позиция авторитетных организаций общественного здоровья",
+    "triggers": [
+      "hookah_venue",
+      "social"
+    ],
+    "needs": [
+      "pleasure",
+      "connection"
+    ],
+    "replacements": [],
+    "tags": [
+      "hookah",
+      "risk"
+    ],
+    "category": null,
+    "products": [
+      "hookah"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 95,
+    "source_title": "Обзор Центров по контролю и профилактике заболеваний США о кальяне",
+    "source_url": "https://www.cdc.gov/tobacco/other-tobacco-products/hookahs.html",
+    "source_doi": null,
+    "source_publication": "CDC"
+  },
+  {
+    "code": "hookah_not_safe",
+    "kind": "fact",
+    "claim": "Кальян не становится безопасным из-за воды",
+    "known": "Вода в кальяне не отфильтровывает дым до безопасного уровня.",
+    "changes": "Отмечай кальян как полноценный эпизод — иначе твоя статистика будет мягче реальности.",
+    "detail": "По данным CDC, дым кальяна содержит многие из тех же вредных веществ, что и сигаретный, а уголь добавляет угарный газ и другие токсиканты.",
+    "level": "A",
+    "scope": "public_health",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "hookah",
+      "risk"
+    ],
+    "category": "product",
+    "products": [
+      "hookah"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 75,
+    "source_title": "Обзор Центров по контролю и профилактике заболеваний США о кальяне",
+    "source_url": "https://www.cdc.gov/tobacco/other-tobacco-products/hookahs.html",
+    "source_doi": null,
+    "source_publication": "CDC"
+  },
+  {
+    "code": "lapse_is_data",
+    "kind": "fact",
+    "claim": "Один эпизод не обязан становиться возвратом к старому режиму",
+    "known": "После эпизода полезнее разобрать триггер, потребность и следующий ответ, чем объявлять попытку законченной.",
+    "changes": "Разбери один эпизод и выбери другой ответ на завтра. В Habitoff счётчик не обнуляется.",
+    "detail": "Это рекомендация по профилактике срывов, а не обещание, что эпизод ничего не стоит.",
+    "level": "B",
+    "scope": "guideline",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "lapse",
+      "benefit"
+    ],
+    "category": "behavior",
+    "products": [
+      "cigarette",
+      "hookah",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 180,
+    "source_title": "NICE NG209 — Treating tobacco dependence",
+    "source_url": "https://www.nice.org.uk/guidance/ng209/chapter/treating-tobacco-dependence",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "lapse_resets_all",
+    "kind": "myth",
+    "claim": "Одна сигарета — и всё пропало",
+    "known": "Один эпизод не стирает предыдущую работу. Он показывает сильную Связку и даёт данные для следующего ответа.",
+    "changes": "Запиши эпизод, найди триггер, выбери один другой ответ на завтра. Всё, что было до этого, остаётся твоим.",
+    "detail": "Рекомендации по профилактике срывов советуют пересматривать способ справляться после неудачной попытки, а не превращать единичный эпизод в приговор.",
+    "level": "B",
+    "scope": "Рекомендации по профилактике возврата к курению",
+    "triggers": [
+      "other"
+    ],
+    "needs": [
+      "meaning",
+      "release_tension"
+    ],
+    "replacements": [
+      "meaning_read",
+      "write_real_need"
+    ],
+    "tags": [
+      "lapse"
+    ],
+    "category": null,
+    "products": [
+      "cigarette",
+      "hookah",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 140,
+    "source_title": "NICE NG209 — Treating tobacco dependence",
+    "source_url": "https://www.nice.org.uk/guidance/ng209/chapter/treating-tobacco-dependence",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "light_is_safer",
+    "kind": "myth",
+    "claim": "Light безопаснее обычных сигарет",
+    "known": "Надпись light или «низкое содержание смол» не превращает сигарету в безопасную альтернативу.",
+    "changes": "Если переход на light был твоим способом снизить вред — это место, где стоит выбрать другой шаг.",
+    "detail": "Низкие машинные замеры смол и никотина и маркетинговые надписи исторически создавали ложное ощущение заметно меньшего риска.",
+    "level": "A",
+    "scope": "Авторитетные данные о вреде табака",
+    "triggers": [
+      "other"
+    ],
+    "needs": [
+      "pleasure"
+    ],
+    "replacements": [],
+    "tags": [
+      "risk",
+      "product"
+    ],
+    "category": null,
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 90,
+    "source_title": "U.S. Surgeon General 2000 highlights",
+    "source_url": "https://archive.cdc.gov/www_cdc_gov/tobacco/sgr/2000/highlights.html",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "light_not_safe",
+    "kind": "fact",
+    "claim": "Light не делает сигарету безопасной",
+    "known": "Надписи light и «низкое содержание смол» не означают заметно меньший риск для здоровья.",
+    "changes": "Если «перейти на light» было твоим планом снижения вреда — стоит выбрать другой.",
+    "detail": "Старые машинные замеры смол и такие надписи создавали ложное ощущение безопасности.",
+    "level": "A",
+    "scope": "surgeon_general",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "risk",
+      "product"
+    ],
+    "category": "product",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 70,
+    "source_title": "U.S. Surgeon General 2000 highlights",
+    "source_url": "https://archive.cdc.gov/www_cdc_gov/tobacco/sgr/2000/highlights.html",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "low_intensity_cvd",
+    "kind": "fact",
+    "claim": "Даже одна сигарета — не «почти ноль»",
+    "known": "Для сердца и сосудов риск не падает пропорционально количеству сигарет.",
+    "changes": "Сокращать количество полезно, но это не финиш: одна в день — всё ещё существенный риск.",
+    "detail": "Обзор 141 когортного исследования: примерно одна сигарета в день несёт непропорционально большую долю дополнительного риска ишемической болезни сердца и инсульта относительно 20 сигарет в день. Это данные о группах, а не личный прогноз.",
+    "level": "A",
+    "scope": "meta_analysis",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "risk",
+      "low_intensity"
+    ],
+    "category": "heart",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 10,
+    "source_title": "Метаанализ сердечно-сосудистого риска даже при одной сигарете в день",
+    "source_url": "https://www.bmj.com/content/360/bmj.j5855",
+    "source_doi": "10.1136/bmj.j5855",
+    "source_publication": "BMJ"
+  },
+  {
+    "code": "meal_needs_smoke",
+    "kind": "myth",
+    "claim": "После еды без сигареты будто не закончено",
+    "known": "Ощущение завершения можно сохранить, если поставить в конец другое действие.",
+    "changes": "Выбери свой финал: почистить зубы, мятная пастилка, две минуты пешком. Важно, чтобы он был один и тот же.",
+    "detail": "Повторяемая последовательность делает сигарету привычной точкой завершения еды. Новое финальное действие разрывает её, не отменяя саму паузу.",
+    "level": "C",
+    "scope": "Гипотеза Habitoff о перестройке привычного сигнала",
+    "triggers": [
+      "after_meal"
+    ],
+    "needs": [
+      "closure",
+      "oral_sensory"
+    ],
+    "replacements": [
+      "brush_teeth",
+      "mint_reset",
+      "walk_two_minutes"
+    ],
+    "tags": [
+      "after_meal"
+    ],
+    "category": null,
+    "products": [
+      "cigarette",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 50,
+    "source_title": "ALIVE Method v1",
+    "source_url": "https://github.com/wd7b3k/Alive/blob/main/docs/METHODOLOGY.md",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "mental_health_after_quit",
+    "kind": "fact",
+    "claim": "Отказ не означает постоянное ухудшение настроения",
+    "known": "Кокрейновский обзор не нашёл признаков долгосрочного ухудшения психического состояния после отказа; по ряду показателей у бросивших оно было лучше.",
+    "changes": "Не суди по первой неделе. Отмечай настроение и сравни с тем, что будет через месяц.",
+    "detail": "Первые недели отмены и долгая перспектива — не одно и то же.",
+    "level": "A",
+    "scope": "systematic_review",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "benefit",
+      "stress"
+    ],
+    "category": "mental_health",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 50,
+    "source_title": "Taylor et al. Cochrane 2021",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/33687070/",
+    "source_doi": "10.1002/14651858.CD013522.pub2",
+    "source_publication": null
+  },
+  {
+    "code": "mortality_decade",
+    "kind": "fact",
+    "claim": "Продолжение курения связано с потерей примерно десятилетия жизни",
+    "known": "В крупной американской когорте курящие в среднем теряли больше 10 лет жизни по сравнению с никогда не курившими.",
+    "changes": "Цифра не про тебя лично — но направление выигрыша от отказа одно и то же.",
+    "detail": "Это среднее по большой группе людей, а не предсказание срока жизни конкретного человека.",
+    "level": "A",
+    "scope": "prospective_cohort",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "risk"
+    ],
+    "category": "mortality",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 20,
+    "source_title": "Jha et al. NEJM 2013",
+    "source_url": "https://www.nejm.org/doi/full/10.1056/NEJMsa1211128",
+    "source_doi": "10.1056/NEJMsa1211128",
+    "source_publication": null
+  },
+  {
+    "code": "nrt_safer",
+    "kind": "fact",
+    "claim": "НЗТ намного безопаснее продолжения курения",
+    "known": "Никотинзаместительная терапия даёт никотин без сигаретного дыма и продуктов горения.",
+    "changes": "Если тебя останавливал страх «просто заменить одно другим» — это вопрос к врачу, а не довод продолжать курить.",
+    "detail": "Никотин от этого не становится полезным веществом; речь только о разнице в вреде.",
+    "level": "A",
+    "scope": "guideline_public_health",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "nrt",
+      "benefit"
+    ],
+    "category": "treatment",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 60,
+    "source_title": "CDC — Quit Medicines Are Much Safer Than Smoking",
+    "source_url": "https://www.cdc.gov/tobacco/campaign/tips/quit-smoking/quit-smoking-medications/3-reasons-to-use-medicines-when-you-quit/quit-medicines-are-safer-than-smoking/index.html",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "nrt_same_as_smoking",
+    "kind": "myth",
+    "claim": "НЗТ — почти то же самое, что курить",
+    "known": "Никотин остаётся никотином, но сигаретный дым добавляет продукты горения. Заместительная терапия намного безопаснее продолжения курения.",
+    "changes": "Если из-за этого убеждения НЗТ откладывалась — это разговор с врачом или фармацевтом.",
+    "detail": "Никотинзаместительная терапия доставляет никотин без дыма и используется как доказательная помощь при отказе.",
+    "level": "A",
+    "scope": "Безопасность препаратов для отказа от курения",
+    "triggers": [
+      "other"
+    ],
+    "needs": [
+      "release_tension",
+      "oral_sensory"
+    ],
+    "replacements": [
+      "nrt_gum",
+      "nrt_spray"
+    ],
+    "tags": [
+      "nrt"
+    ],
+    "category": null,
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 100,
+    "source_title": "CDC — Quit Medicines Are Much Safer Than Smoking",
+    "source_url": "https://www.cdc.gov/tobacco/campaign/tips/quit-smoking/quit-smoking-medications/3-reasons-to-use-medicines-when-you-quit/quit-medicines-are-safer-than-smoking/index.html",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "one_does_not_count",
+    "kind": "myth",
+    "claim": "Одна сигарета почти не считается",
+    "known": "Для сердца и сосудов риск не уменьшается пропорционально количеству сигарет.",
+    "changes": "«Одна» — тоже эпизод. Отметь её, и увидишь, сколько таких «одна» набирается за месяц.",
+    "detail": "Крупный обзор когортных исследований показал непропорционально высокий дополнительный сердечно-сосудистый риск даже примерно при одной сигарете в день.",
+    "level": "A",
+    "scope": "Сердечно-сосудистый риск по популяции; не индивидуальный прогноз",
+    "triggers": [
+      "spontaneous"
+    ],
+    "needs": [
+      "pleasure"
+    ],
+    "replacements": [
+      "meaning_read"
+    ],
+    "tags": [
+      "risk"
+    ],
+    "category": null,
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 80,
+    "source_title": "Метаанализ сердечно-сосудистого риска даже при одной сигарете в день",
+    "source_url": "https://www.bmj.com/content/360/bmj.j5855",
+    "source_doi": "10.1136/bmj.j5855",
+    "source_publication": "BMJ"
+  },
+  {
+    "code": "one_of_few_pleasures",
+    "kind": "myth",
+    "claim": "Курение — одна из моих немногих радостей",
+    "known": "Отрицать удовольствие не нужно. Полезнее разобрать, что именно в нём ценно: никотин, пауза, ожидание, место, вкус или общение.",
+    "changes": "Назови, что именно ты ценишь в этом моменте, и подбери замену под это, а не «вместо сигареты вообще».",
+    "detail": "Ожидание хорошего от сигареты связано со срывами, а первые исследования по работе с такими ожиданиями показывают, что часть ценности можно вернуть другими способами.",
+    "level": "B",
+    "scope": "Исследования ожидаемого эффекта; разбор мифов в Habitoff остаётся экспериментальным",
+    "triggers": [
+      "boredom",
+      "evening",
+      "social"
+    ],
+    "needs": [
+      "pleasure",
+      "pause",
+      "connection"
+    ],
+    "replacements": [
+      "favorite_song",
+      "tea_pause",
+      "savor_result"
+    ],
+    "tags": [
+      "pleasure",
+      "boredom"
+    ],
+    "category": null,
+    "products": [
+      "cigarette",
+      "hookah",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 170,
+    "source_title": "Kaufmann & Haaga 2023",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/36356395/",
+    "source_doi": "10.1016/j.addbeh.2022.107542",
+    "source_publication": null
+  },
+  {
+    "code": "only_real_pause",
+    "kind": "myth",
+    "claim": "Сигарета — мой единственный настоящий отдых",
+    "known": "Пауза тебе действительно нужна. Дым — не обязательная её часть.",
+    "changes": "Возьми ту же паузу без сигареты: выйти, отложить телефон, смотреть вдаль минуту. Право остановиться остаётся.",
+    "detail": "Курение соединяет в один пакет разрешение остановиться, смену места, дыхательный ритм и никотин. Habitoff сохраняет функцию паузы и меняет форму.",
+    "level": "C",
+    "scope": "Гипотеза о разборе привычки на составляющие",
+    "triggers": [
+      "task_transition",
+      "after_task",
+      "evening"
+    ],
+    "needs": [
+      "pause",
+      "solitude",
+      "self_presence"
+    ],
+    "replacements": [
+      "phone_down_pause",
+      "tea_pause",
+      "gaze_far_minute"
+    ],
+    "tags": [
+      "pause"
+    ],
+    "category": null,
+    "products": [
+      "cigarette",
+      "hookah",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 30,
+    "source_title": "ALIVE Method v1",
+    "source_url": "https://github.com/wd7b3k/Alive/blob/main/docs/METHODOLOGY.md",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "oral_health",
+    "kind": "fact",
+    "claim": "Табак влияет не только на лёгкие",
+    "known": "Курение связано с болезнями дёсен, потерей зубов и раком полости рта.",
+    "changes": "Часть изменений заметна без анализов: дёсны, вкус, запах.",
+    "detail": "Внешний вид — только небольшая часть последствий для полости рта.",
+    "level": "A",
+    "scope": "public_health",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "oral",
+      "risk"
+    ],
+    "category": "oral_health",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 90,
+    "source_title": "CDC — Tobacco Use and Oral Health Facts",
+    "source_url": "https://www.cdc.gov/oral-health/data-research/facts-stats/fast-facts-tobacco-use-and-oral-health.html",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "quit_before_40",
+    "kind": "fact",
+    "claim": "Отказ раньше даёт особенно большой выигрыш",
+    "known": "В той же крупной когорте отказ до 40 лет убирал большую часть дополнительной смертности, связанной с продолжением курения.",
+    "changes": "Точка отсчёта — сегодняшний день, а не возраст, в котором всё началось.",
+    "detail": "Раньше лучше, но это не значит, что после 40 бросать бессмысленно.",
+    "level": "A",
+    "scope": "prospective_cohort",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "benefit"
+    ],
+    "category": "mortality",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 30,
+    "source_title": "Jha et al. NEJM 2013",
+    "source_url": "https://www.nejm.org/doi/full/10.1056/NEJMsa1211128",
+    "source_doi": "10.1056/NEJMsa1211128",
+    "source_publication": null
+  },
+  {
+    "code": "rewards_work",
+    "kind": "fact",
+    "claim": "Награды могут реально помогать бросить",
+    "known": "Кокрейновский обзор 2025 года нашёл убедительные данные, что вознаграждения повышают долю бросивших в долгую.",
+    "changes": "Награда за удержание — рабочий механизм. В Habitoff это Freedom Fund, и он добровольный.",
+    "detail": "В основном анализе — 39 исследований и 18 303 участника, отношение рисков 1,52.",
+    "level": "A",
+    "scope": "systematic_review",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "reward",
+      "benefit"
+    ],
+    "category": "behavior",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 100,
+    "source_title": "Notley et al. Cochrane 2025",
+    "source_url": "https://www.cochrane.org/evidence/CD004307_can-rewards-help-people-quit-smoking-and-do-they-work-long-term",
+    "source_doi": "10.1002/14651858.CD004307.pub7",
+    "source_publication": null
+  },
+  {
+    "code": "secondhand_no_safe",
+    "kind": "fact",
+    "claim": "Для пассивного табачного дыма нет безопасного уровня воздействия",
+    "known": "Пассивное курение вызывает серьёзные последствия для сердца, сосудов и дыхания.",
+    "changes": "Если рядом дети или близкие, вынести курение из дома и машины даёт эффект сразу. Это не повод себя стыдить.",
+    "detail": "Безопасного уровня воздействия не установлено.",
+    "level": "A",
+    "scope": "public_health",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "others",
+      "social"
+    ],
+    "category": "others",
+    "products": [
+      "cigarette",
+      "hookah"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 80,
+    "source_title": "CDC — About Secondhand Smoke",
+    "source_url": "https://www.cdc.gov/tobacco/secondhand-smoke/about.html",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "smoking_is_style",
+    "kind": "myth",
+    "claim": "Курить стильно",
+    "known": "Рекламный образ легко отделить от дыма, запаха и реальных последствий для полости рта.",
+    "changes": "Оставь себе образ, если он важен, и проверь, из чего он состоит на самом деле сегодня.",
+    "detail": "Habitoff не спорит со вкусом и не стыдит. Мы возвращаем в образ те физические эффекты, которые романтизация обычно опускает.",
+    "level": "C",
+    "scope": "Переосмысление образа себя и фактические данные о здоровье",
+    "triggers": [
+      "social",
+      "hookah_venue"
+    ],
+    "needs": [
+      "pleasure",
+      "connection",
+      "meaning"
+    ],
+    "replacements": [
+      "meaning_read",
+      "meaning_card"
+    ],
+    "tags": [
+      "identity",
+      "social"
+    ],
+    "category": null,
+    "products": [
+      "cigarette",
+      "hookah",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 60,
+    "source_title": "CDC — Tobacco Use and Oral Health Facts",
+    "source_url": "https://www.cdc.gov/oral-health/data-research/facts-stats/fast-facts-tobacco-use-and-oral-health.html",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "social_helper",
+    "kind": "myth",
+    "claim": "Курение помогает мне общаться",
+    "known": "Общий выход и контакт приятны сами по себе. Сигарета не обязана быть пропуском в разговор.",
+    "changes": "Выйди вместе, но без сигареты, или напиши тому, с кем обычно куришь. Контакт останется.",
+    "detail": "Социальные сигналы тесно связаны со срывами, но потребность в общении можно закрывать напрямую.",
+    "level": "B",
+    "scope": "Исследования о сигналах среды и социальном контексте",
+    "triggers": [
+      "social",
+      "hookah_venue"
+    ],
+    "needs": [
+      "connection"
+    ],
+    "replacements": [
+      "text_support",
+      "stay_close"
+    ],
+    "tags": [
+      "social"
+    ],
+    "category": null,
+    "products": [
+      "cigarette",
+      "hookah",
+      "vape"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 70,
+    "source_title": "Perski et al. Addiction 2023",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/36807443/",
+    "source_doi": "10.1111/add.16173",
+    "source_publication": null
+  },
+  {
+    "code": "too_late_to_quit",
+    "kind": "myth",
+    "claim": "Я курю слишком давно — уже поздно",
+    "known": "Раньше бросить лучше, но польза отказа сохраняется и после долгого стажа.",
+    "changes": "Твоя точка отсчёта — сегодня. Выигрыш считается от неё, а не от того, что уже прошло.",
+    "detail": "Данные крупных когорт показывают существенную разницу в смертности между продолжающими курить и бросившими в разном возрасте.",
+    "level": "A",
+    "scope": "Смертность и выигрыш от отказа по популяции; не индивидуальный прогноз",
+    "triggers": [
+      "other"
+    ],
+    "needs": [
+      "meaning"
+    ],
+    "replacements": [
+      "meaning_read",
+      "future_resource"
+    ],
+    "tags": [
+      "fatalism"
+    ],
+    "category": null,
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 130,
+    "source_title": "Jha et al. NEJM 2013",
+    "source_url": "https://www.nejm.org/doi/full/10.1056/NEJMsa1211128",
+    "source_doi": "10.1056/NEJMsa1211128",
+    "source_publication": null
+  },
+  {
+    "code": "too_stressed_to_quit",
+    "kind": "myth",
+    "claim": "Сейчас слишком стрессовый период",
+    "known": "Страх стать напряжённее после отказа понятен, но прекращение курения не означает постоянный рост стресса.",
+    "changes": "Не обязательно выбирать между стрессом и отказом. Начни с одного эпизода в день и поддержки на период отмены.",
+    "detail": "Ожидание, что без сигарет станет тяжелее, само по себе связано с меньшими шансами удержаться. Поддержка в период отмены и доказательное лечение снижают нагрузку попытки.",
+    "level": "B",
+    "scope": "Проспективные исследования ожиданий и поддержка в период отмены",
+    "triggers": [
+      "tension",
+      "anxiety",
+      "uncertainty"
+    ],
+    "needs": [
+      "release_tension",
+      "pause"
+    ],
+    "replacements": [
+      "five_long_exhales",
+      "nrt_gum",
+      "walk_two_minutes"
+    ],
+    "tags": [
+      "stress"
+    ],
+    "category": null,
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 160,
+    "source_title": "Stress-related expectations about smoking cessation",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/28367399/",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "treatment_plus_support",
+    "kind": "fact",
+    "claim": "Поддержка и лекарства работают сильнее вместе",
+    "known": "ВОЗ рекомендует сочетать доказательную лекарственную терапию с поведенческой поддержкой.",
+    "changes": "Приложение — половина. Вторая половина — врач и доказательное лечение.",
+    "detail": "Рекомендация о комбинации, а не о том, что одна поддержка заменяет лечение.",
+    "level": "A",
+    "scope": "guideline",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "treatment",
+      "benefit"
+    ],
+    "category": "treatment",
+    "products": [
+      "cigarette",
+      "hookah"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 110,
+    "source_title": "WHO Clinical Treatment Guideline 2024",
+    "source_url": "https://www.who.int/publications/i/item/9789240096431",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "vape_is_harmless",
+    "kind": "myth",
+    "claim": "Вейп безвреден",
+    "known": "Меньший риск по сравнению с горящей сигаретой в отдельных сценариях не означает отсутствие вреда или зависимости.",
+    "changes": "Если вейп был шагом от сигарет — это шаг, а не финиш. Отмечай его как эпизод, чтобы видеть реальную картину.",
+    "detail": "У никотиновых электронных сигарет есть данные о помощи в отказе от обычных сигарет в исследованиях, но это не доказательство безвредности и не то же самое, что прекращение никотина.",
+    "level": "A",
+    "scope": "Разграничение отказа от курения и снижения вреда",
+    "triggers": [
+      "other"
+    ],
+    "needs": [
+      "pleasure"
+    ],
+    "replacements": [],
+    "tags": [
+      "vape",
+      "harm_reduction"
+    ],
+    "category": null,
+    "products": [
+      "vape",
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 110,
+    "source_title": "Cochrane — Electronic cigarettes for smoking cessation",
+    "source_url": "https://www.cochrane.org/evidence/CD010216_can-electronic-cigarettes-help-people-stop-smoking-and-do-they-have-any-unwanted-effects-when-used",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "weight_is_inevitable",
+    "kind": "myth",
+    "claim": "Если брошу, обязательно сильно поправлюсь",
+    "known": "После отказа вес у части людей растёт, но разброс большой. Это отдельная управляемая задача, а не одинаковый для всех исход.",
+    "changes": "Веди вес отдельной целью: движение и еда. Не смешивай её с решением про сигареты.",
+    "detail": "Обзоры показывают средний набор веса после отказа и очень большой разброс между людьми — вплоть до отсутствия набора и снижения веса.",
+    "level": "A",
+    "scope": "Данные об изменении веса по популяции",
+    "triggers": [
+      "other"
+    ],
+    "needs": [
+      "pleasure",
+      "oral_sensory"
+    ],
+    "replacements": [
+      "walk_two_minutes",
+      "apple_crunch",
+      "carrot_crunch"
+    ],
+    "tags": [
+      "weight"
+    ],
+    "category": null,
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 120,
+    "source_title": "BMJ — Weight gain in smokers after quitting cigarettes",
+    "source_url": "https://www.bmj.com/content/345/bmj.e4439",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "weight_varies",
+    "kind": "fact",
+    "claim": "Набор веса после отказа не одинаков у всех",
+    "known": "Средний набор веса после отказа существует, но разброс между людьми очень большой.",
+    "changes": "Веди вес как отдельную задачу питания и движения. Это не аргумент продолжать курить.",
+    "detail": "Среднее по группе ничего не говорит о том, что будет у конкретного человека.",
+    "level": "A",
+    "scope": "meta_analysis",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "weight"
+    ],
+    "category": "weight",
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 170,
+    "source_title": "BMJ — Weight gain in smokers after quitting cigarettes",
+    "source_url": "https://www.bmj.com/content/345/bmj.e4439",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "who_medications",
+    "kind": "fact",
+    "claim": "Есть несколько доказательных медикаментозных вариантов",
+    "known": "ВОЗ рекомендует никотинзаместительную терапию, варениклин, бупропион и цитизин.",
+    "changes": "Вариантов больше одного. Подбор — с врачом, а не по отзывам.",
+    "detail": "Выбор препарата и его безопасность зависят от человека, инструкции и консультации врача.",
+    "level": "A",
+    "scope": "guideline",
+    "triggers": [],
+    "needs": [],
+    "replacements": [],
+    "tags": [
+      "treatment"
+    ],
+    "category": "treatment",
+    "products": [
+      "cigarette",
+      "hookah"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-26",
+    "sort_order": 120,
+    "source_title": "WHO Clinical Treatment Guideline 2024",
+    "source_url": "https://www.who.int/publications/i/item/9789240096431",
+    "source_doi": null,
+    "source_publication": null
+  },
+  {
+    "code": "without_smoking_more_anxious",
+    "kind": "myth",
+    "claim": "Без сигарет я навсегда стану тревожнее",
+    "known": "Отмена может быть неприятной, но в долгих наблюдениях отказ не связан с ухудшением психического состояния и часто идёт вместе с улучшением.",
+    "changes": "Сравнивай себя не с первой неделей. Отметь тревогу сейчас и через месяц — в разделе «Путь» это видно.",
+    "detail": "Важно различать первые недели отмены и более длинный период после неё.",
+    "level": "A",
+    "scope": "Данные систематического обзора",
+    "triggers": [
+      "anxiety",
+      "irritability",
+      "tension"
+    ],
+    "needs": [
+      "release_tension"
+    ],
+    "replacements": [
+      "ground_feet",
+      "five_long_exhales"
+    ],
+    "tags": [
+      "mental_health"
+    ],
+    "category": null,
+    "products": [
+      "cigarette"
+    ],
+    "verified": "2026-08-16",
+    "updated": "2026-08-27",
+    "sort_order": 180,
+    "source_title": "Taylor et al. Cochrane 2021",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/33687070/",
+    "source_doi": "10.1002/14651858.CD013522.pub2",
+    "source_publication": null
+  }
+]

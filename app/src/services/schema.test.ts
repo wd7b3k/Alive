@@ -3,46 +3,12 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import {
-  hasExternalSource,
-  knowledgeItemList,
-  notFoundGraph,
-  routeGraph,
-  scriptTag,
-  type KnowledgeEntry,
-} from './schema';
+import { knowledgeHubList, notFoundGraph, scriptTag } from './schema';
+import { cards } from './knowledge-catalog';
 import { renderNotFound, renderRoute } from './prerender';
 import { PRERENDER_PATHS } from './seo';
 
 const template = readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8');
-
-/** Три записи: две с внешним источником, одна со ссылкой на собственную методологию. */
-const CATALOG: KnowledgeEntry[] = [
-  {
-    code: 'one_does_not_count',
-    title: 'Одна сигарета почти не считается',
-    answer: 'Для сердца и сосудов риск не уменьшается линейно вместе с количеством сигарет.',
-    sourceLabel: 'Hackshaw et al. BMJ 2018',
-    sourceUrl: 'https://www.bmj.com/content/360/bmj.j5855',
-    doi: null,
-  },
-  {
-    code: 'too_late_to_quit',
-    title: 'Я курю слишком давно — уже поздно',
-    answer: 'Раньше бросить лучше, но польза отказа сохраняется и после долгого стажа.',
-    sourceLabel: 'Jha et al. NEJM 2013',
-    sourceUrl: 'https://www.nejm.org/doi/full/10.1056/NEJMsa1211128',
-    doi: '10.1056/NEJMsa1211128',
-  },
-  {
-    code: 'only_real_pause',
-    title: 'Сигарета — мой единственный настоящий отдых',
-    answer: 'Пауза тебе действительно нужна. Дым — не обязательная её часть.',
-    sourceLabel: 'Метод Habitoff',
-    sourceUrl: 'https://github.com/wd7b3k/Alive/blob/main/docs/METHODOLOGY.md',
-    doi: null,
-  },
-];
 
 function graphOf(html: string): Record<string, unknown>[] {
   const block = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
@@ -51,43 +17,6 @@ function graphOf(html: string): Record<string, unknown>[] {
 }
 
 const types = (graph: Record<string, unknown>[]) => graph.map((node) => node['@type']);
-
-describe('источник утверждения', () => {
-  it('ссылка на собственную методологию источником не считается', () => {
-    expect(hasExternalSource(CATALOG[0])).toBe(true);
-    expect(hasExternalSource(CATALOG[2])).toBe(false);
-  });
-
-  it('утверждение без источника в разметку не попадает', () => {
-    const list = knowledgeItemList(CATALOG) as Record<string, unknown>;
-    expect(list.numberOfItems).toBe(2);
-    expect(JSON.stringify(list)).not.toContain('only_real_pause');
-  });
-
-  it('у каждого вопроса есть citation с адресом', () => {
-    const list = knowledgeItemList(CATALOG) as { itemListElement: Record<string, any>[] };
-    for (const element of list.itemListElement) {
-      const citation = element.item.acceptedAnswer.citation;
-      expect(citation['@type']).toBe('CreativeWork');
-      expect(citation.url).toMatch(/^https:\/\//);
-      expect(citation.name.length).toBeGreaterThan(3);
-    }
-  });
-
-  it('doi превращается в разрешимый адрес, а не остаётся кодом', () => {
-    const list = knowledgeItemList(CATALOG) as { itemListElement: Record<string, any>[] };
-    const withDoi = list.itemListElement.find((e) => e.item['@id'].endsWith('too_late_to_quit'));
-    expect(withDoi).toBeTruthy();
-    expect(withDoi!.item.acceptedAnswer.citation.identifier).toBe(
-      'https://doi.org/10.1056/NEJMsa1211128',
-    );
-  });
-
-  it('пустой каталог не рождает пустой ItemList', () => {
-    expect(knowledgeItemList([])).toBeNull();
-    expect(knowledgeItemList([CATALOG[2]])).toBeNull();
-  });
-});
 
 describe('разметка по месту', () => {
   it('FAQPage стоит ровно на одном адресе — на главной', () => {
@@ -116,15 +45,19 @@ describe('разметка по месту', () => {
     }
   });
 
-  it('ItemList появляется только на /knowledge и только с каталогом', () => {
-    expect(types(graphOf(renderRoute(template, '/knowledge', CATALOG)))).toContain('ItemList');
-    expect(types(graphOf(renderRoute(template, '/knowledge')))).not.toContain('ItemList');
-    expect(types(graphOf(renderRoute(template, '/links', CATALOG)))).not.toContain('ItemList');
+  it('ItemList стоит только на /knowledge и перечисляет реальные адреса', () => {
+    expect(types(graphOf(renderRoute(template, '/knowledge')))).toContain('ItemList');
+    expect(types(graphOf(renderRoute(template, '/links')))).not.toContain('ItemList');
+    const list = knowledgeHubList() as { numberOfItems: number; itemListElement: any[] };
+    expect(list.numberOfItems).toBe(cards().length);
+    for (const element of list.itemListElement) {
+      expect(element.url).toMatch(/^https:\/\/habitoff\.ru\/knowledge\/[a-z0-9-]+$/);
+    }
   });
 
   it('Organization и sameAs не заводятся: адресов сообществ ещё нет', () => {
     for (const path of ['/', ...PRERENDER_PATHS]) {
-      const raw = JSON.stringify(graphOf(renderRoute(template, path, CATALOG)));
+      const raw = JSON.stringify(graphOf(renderRoute(template, path)));
       expect(raw, path).not.toContain('"Organization"');
       expect(raw, path).not.toContain('sameAs');
     }
@@ -135,11 +68,8 @@ describe('разметка по месту', () => {
   });
 
   it('закрывающий тег внутри данных не рвёт скрипт', () => {
-    const nasty: KnowledgeEntry = {
-      ...CATALOG[0],
-      title: 'Миф про </script><script>alert(1)</script>',
-    };
-    const tag = scriptTag(routeGraph('/knowledge', [nasty]));
+    // Тексты каталога правят люди, и `</script>` в них теоретически возможен.
+    const tag = scriptTag([{ '@type': 'WebPage', name: 'Про </script><script>alert(1)</script>' }]);
     expect(tag.match(/<\/script>/g)).toHaveLength(1);
     expect(tag).toContain('\\u003c/script');
   });

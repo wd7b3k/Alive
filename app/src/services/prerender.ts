@@ -22,7 +22,10 @@
  */
 import { RELEASES } from '../redesign/releases';
 import { ORIGIN, metaFor } from './seo';
-import { notFoundGraph, routeGraph, scriptTag, type KnowledgeEntry } from './schema';
+import { GROUPS, cardByCode, cards, levelOf, pathFor, type CatalogCard } from './knowledge-catalog';
+import { codeFromPath } from '../domain/knowledge-address';
+import { relatedCards } from './knowledge-related';
+import { cardGraph, notFoundGraph, routeGraph, scriptTag, withFaqCitations } from './schema';
 
 export function escapeHtml(value: string): string {
   return value
@@ -181,18 +184,135 @@ export function releasesBody(): string {
   ].join('\n      ');
 }
 
+/**
+ * Оглавление каталога на `/knowledge`.
+ *
+ * До 05.09.2026 раздел был описанием самого себя: 141 слово текста и ни одной ссылки
+ * вглубь. Разметка при этом объявляла шестнадцать вопросов, которых в видимом HTML не
+ * было ни одного — то есть описывала то, чего на странице нет.
+ *
+ * Теперь это хаб: каждая опубликованная карточка присутствует и текстом, и ссылкой на
+ * собственный адрес. Группы те же две, что в приложении.
+ */
+export function knowledgeIndexBlock(): string {
+  const all = cards();
+  const parts: string[] = [];
+  for (const group of GROUPS) {
+    const inGroup = all.filter((card) => card.kind === group.kind);
+    if (!inGroup.length) continue;
+    parts.push(`        <h2>${escapeHtml(group.title)}</h2>`);
+    parts.push(`        <p>${escapeHtml(group.lead)}</p>`);
+    parts.push('        <ul class="r-prerender-cards">');
+    for (const card of inGroup) {
+      parts.push(
+        `          <li><a href="${pathFor(card)}">${escapeHtml(card.claim)}</a> — ` +
+          `${escapeHtml(card.known)}</li>`,
+      );
+    }
+    parts.push('        </ul>');
+  }
+  return parts.join('\n      ');
+}
+
+/**
+ * Граф связей считается один раз на сборку: он детерминирован и от страницы не зависит.
+ */
+const related = relatedCards(cards());
+
+/**
+ * Страница одной карточки.
+ *
+ * Всё, что есть в карточке, лежит здесь текстом: утверждение, что известно, что это
+ * меняет, механизм, уровень доказательности со своими границами, границы самой
+ * карточки, источник ссылкой и дата сверки. Это и есть условие, при котором разметка
+ * внизу ничего не выдумывает: `Question` описывает то, что человек видит.
+ */
+export function cardBody(card: CatalogCard): string {
+  const level = levelOf(card);
+  const source = card.source_publication
+    ? `${card.source_title} · ${card.source_publication}`
+    : card.source_title;
+  const parts = [
+    '<main class="r-prerender">',
+    `        <p class="r-kicker">${card.kind === 'fact' ? 'Факт' : 'Разобранное убеждение'}</p>`,
+    `        <h1>${escapeHtml(card.claim)}</h1>`,
+    `        <p>${escapeHtml(card.known)}</p>`,
+  ];
+  if (card.changes) {
+    parts.push('        <h2>Что это меняет</h2>', `        <p>${escapeHtml(card.changes)}</p>`);
+  }
+  if (card.detail) {
+    parts.push('        <h2>Как это работает</h2>', `        <p>${escapeHtml(card.detail)}</p>`);
+  }
+  parts.push('        <h2>Насколько это надёжно</h2>');
+  if (level) {
+    parts.push(
+      `        <p><b>${escapeHtml(level.label_ru)}.</b> ${escapeHtml(level.claim_ru)}</p>`,
+    );
+    parts.push(`        <p>${escapeHtml(level.limit_ru)}</p>`);
+  }
+  if (card.scope) parts.push(`        <p><b>Границы:</b> ${escapeHtml(card.scope)}</p>`);
+  const doi = card.source_doi
+    ? ` · <a href="https://doi.org/${escapeHtml(card.source_doi)}" rel="noopener">doi</a>`
+    : '';
+  parts.push(
+    // Без `nofollow`, и это не упущение. `nofollow` придуман для ссылок, за которые
+    // страница не ручается: платных, пользовательских, непроверенных. Здесь ровно
+    // наоборот — ссылка на источник и есть то единственное, чем этот продукт отличается
+    // от пересказов без ссылок в той же нише. `nofollow` на ней сообщал бы поисковику
+    // «я за это не отвечаю», и это была бы неправда.
+    `        <p><b>Источник:</b> <a href="${escapeHtml(card.source_url)}" rel="noopener">` +
+      `${escapeHtml(source)}</a>${doi}. Сверено ${escapeHtml(card.verified)}.</p>`,
+  );
+  if (card.triggers.length) {
+    // Пока текстом: ссылками они станут, когда собственные адреса получит `/links`.
+    parts.push(`        <p><b>Где встречается:</b> ${escapeHtml(card.triggers.join(', '))}.</p>`);
+  }
+  parts.push('        <p>Это не медицинская рекомендация и не замена врачу.</p>');
+
+  // Соседние карточки. До вечера 05.09.2026 их не было: со страницы вели только хаб,
+  // главная и «Связки» — звезда без связей между листьями. Список собирается на той же
+  // выгрузке и симметричен: если A ссылается на B, B ссылается на A.
+  const neighbours = related.get(card.code) ?? [];
+  if (neighbours.length) {
+    parts.push('        <h2>Рядом об этом же</h2>');
+    parts.push('        <ul class="r-prerender-cards">');
+    for (const code of neighbours) {
+      const other = cardByCode(code);
+      if (!other) continue;
+      parts.push(
+        `          <li><a href="${pathFor(other)}">${escapeHtml(other.claim)}</a> — ` +
+          `${escapeHtml(other.known)}</li>`,
+      );
+    }
+    parts.push('        </ul>');
+  }
+
+  parts.push(
+    '        <nav class="r-prerender-nav" aria-label="Навигация"><ul>' +
+      '<li><a href="/knowledge">Все факты и мифы</a></li>' +
+      '<li><a href="/">Главная</a></li>' +
+      '<li><a href="/links">Связки</a></li></ul></nav>',
+  );
+  parts.push('      </main>');
+  return parts.join('\n      ');
+}
+
 /** Тело раздела: свой заголовок, свой текст и ссылки на соседние разделы. */
 export function routeBody(path: string): string | null {
   const body = BODIES[path];
   if (!body) return null;
   const paragraphs = body.paragraphs.map((text) => `        <p>${escapeHtml(text)}</p>`).join('\n');
-  return [
+  const parts = [
     '<main class="r-prerender">',
     `        <h1>${escapeHtml(body.h1)}</h1>`,
     paragraphs,
-    navBlock(path),
-    '      </main>',
-  ].join('\n      ');
+  ];
+  // `/knowledge` — единственный раздел, которому есть что перечислить: у карточек
+  // теперь свои адреса. Остальные станут хабами, когда адреса получат и они.
+  if (path === '/knowledge') parts.push(knowledgeIndexBlock());
+  parts.push(navBlock(path), '      </main>');
+  return parts.join('\n      ');
 }
 
 /**
@@ -218,11 +338,7 @@ export function notFoundBody(): string {
 /**
  * Документ для одного адреса: тот же бандл, свои заголовок, описание и содержание.
  */
-export function renderRoute(
-  indexHtml: string,
-  path: string,
-  knowledge: KnowledgeEntry[] = [],
-): string {
+export function renderRoute(indexHtml: string, path: string): string {
   const meta = metaFor(path);
   const url = ORIGIN + path;
   const title = escapeHtml(meta.title);
@@ -266,12 +382,18 @@ export function renderRoute(
   // свою: до 31.08.2026 пререндер копировал главную целиком, и шесть страниц несли
   // один и тот же набор вопросов.
   if (path !== '/') {
-    html = replaceOne(
-      html,
-      'блок application/ld+json',
-      LD_JSON,
-      scriptTag(routeGraph(path, knowledge)),
-    );
+    html = replaceOne(html, 'блок application/ld+json', LD_JSON, scriptTag(routeGraph(path)));
+  } else {
+    // На главной граф остаётся тот, что написан в `index.html`: тексты вопросов писали и
+    // вычитывали там, и второй копии им заводить незачем. Дописывается одно — `citation`
+    // у каждого ответа. Утверждение о здоровье без источника не должно уходить ни в
+    // сниппет, ни в пересказ модели; в базе это правило держит триггер с самого начала,
+    // а в разметке до 05.09.2026 оно не действовало.
+    html = replaceOne(html, 'блок application/ld+json', LD_JSON, (match) => {
+      const json = match.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, '');
+      const parsed = JSON.parse(json) as { '@graph': Record<string, unknown>[] };
+      return scriptTag(withFaqCitations(parsed['@graph']));
+    });
   }
 
   const body = path === '/releases' ? releasesBody() : routeBody(path);
@@ -313,6 +435,75 @@ export function renderNotFound(indexHtml: string): string {
   html = replaceOne(html, 'блок application/ld+json', LD_JSON, scriptTag(notFoundGraph()));
   html = replaceOne(html, 'статический слепок в <body>', PRERENDER_BODY, notFoundBody());
   return html;
+}
+
+/**
+ * Заголовок и описание страницы карточки.
+ *
+ * Берутся из самой карточки, а не из `seo.ts`: заводить там тридцать восемь записей
+ * значило бы держать вторую копию каталога в коде — ровно то, от чего уходили.
+ */
+export function cardMeta(card: CatalogCard): { title: string; description: string } {
+  const description = card.known.length > 300 ? `${card.known.slice(0, 297)}…` : card.known;
+  return { title: `${card.claim} — Habitoff`, description };
+}
+
+/** Документ страницы карточки: свои голова, тело и разметка. */
+export function renderCard(indexHtml: string, card: CatalogCard): string {
+  const meta = cardMeta(card);
+  const url = ORIGIN + pathFor(card);
+  const title = escapeHtml(meta.title);
+  const description = escapeHtml(meta.description);
+
+  let html = indexHtml;
+  html = replaceOne(html, 'тег <title>', TITLE, `<title>${title}</title>`);
+  html = replaceOne(
+    html,
+    'мета-тег description',
+    metaByName('description'),
+    `<meta name="description" content="${description}" />`,
+  );
+  html = replaceOne(
+    html,
+    'ссылка canonical',
+    CANONICAL,
+    `<link rel="canonical" href="${escapeHtml(url)}" />`,
+  );
+  html = replaceOne(
+    html,
+    'мета-тег og:url',
+    metaByProperty('og:url'),
+    `<meta property="og:url" content="${escapeHtml(url)}" />`,
+  );
+  html = replaceOne(
+    html,
+    'мета-тег og:title',
+    metaByProperty('og:title'),
+    `<meta property="og:title" content="${title}" />`,
+  );
+  html = replaceOne(
+    html,
+    'мета-тег og:description',
+    metaByProperty('og:description'),
+    `<meta property="og:description" content="${description}" />`,
+  );
+  html = replaceOne(html, 'блок application/ld+json', LD_JSON, scriptTag(cardGraph(card)));
+  html = replaceOne(html, 'статический слепок в <body>', PRERENDER_BODY, cardBody(card));
+  return html;
+}
+
+/** Все адреса карточек — для карты сайта и для проверки маршрутов. */
+export function cardPaths(): string[] {
+  return cards().map((card) => pathFor(card));
+}
+
+/**
+ * Карточка по адресу, если такой адрес есть. Нужен и сборке, и тесту: он же проверяет,
+ * что преобразование «код → адрес → код» ничего не теряет.
+ */
+export function cardForPath(path: string): CatalogCard | undefined {
+  const code = codeFromPath(path);
+  return code ? cardByCode(code) : undefined;
 }
 
 export type SitemapEntry = { path: string; lastmod: string };

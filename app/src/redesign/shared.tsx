@@ -2,8 +2,7 @@ import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
 import type { Bootstrap } from '../data';
 import { getSupabase } from '../supabase';
 import { GOOGLE, fetchProviders, overrideFromEnv, type AuthProvider } from '../auth-providers';
-import { trackAnonEvent } from '../services/analytics';
-import { trackGoal } from '../services/counters';
+import { reachStageGoal, trackAnonEvent } from '../services/analytics';
 import { navigateTo } from '../services/navigation';
 import { Icon, type IconName } from '../ui-icons';
 import { ProviderMark, providerTile } from './provider-marks';
@@ -349,7 +348,9 @@ export function LoginPage() {
       funnel_stage: 'landing',
       metadata: { provider: provider.id },
     });
-    trackGoal('auth_started');
+    // Цель, а не событие: событие про нажатие и уходит при каждом, цель про человека
+    // и уходит один раз. Пара «этап → цель» живёт в STAGE_TO_GOAL.
+    reachStageGoal('landing');
     setBusy(provider.id);
     setError('');
     const message = await startSignIn(provider.id);

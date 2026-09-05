@@ -19,6 +19,7 @@ import {
   type Bootstrap,
   type Goal,
   type GuidedEpisodeDraft,
+  type Knowledge,
   type KnowledgeCard,
   type NicotineProduct,
   type OnboardingDraft,
@@ -94,9 +95,10 @@ import {
   triggerIcon,
   when,
 } from './redesign/utils';
-import { trackEvent } from './services/analytics';
+import { trackEvent, trackStage } from './services/analytics';
 import { reportError } from './services/error-monitoring';
 import { navigateTo as go } from './services/navigation';
+import { codeFromPath, pathForCode } from './domain/knowledge-address';
 import { InstallPrompt } from './redesign/install';
 import { TogetherPage } from './redesign/together';
 import { HealthPage } from './redesign/health';
@@ -119,6 +121,10 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
   const publicCards = cardsForSurface(catalog?.knowledge ?? EMPTY_KNOWLEDGE, 'public');
   const allCards = catalog?.knowledge.cards ?? [];
   const { facts, myths } = splitByKind(allCards);
+  // Адрес карточки каталога — решение владельца 05.09.2026, ADR-0018. Разбирается тем
+  // же кодом, что и сборка, иначе переход внутри приложения и обновление страницы на
+  // том же адресе разошлись бы.
+  const knowledgeCode = codeFromPath(path);
 
   // Каждая кнопка, которая раньше сразу открывала Google, теперь ведёт на экран входа.
   // Способов входа стало больше одного, и выбирать за человека, каким аккаунтом ему
@@ -136,7 +142,8 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
         {path === '/links' && <PublicLinks catalog={catalog} onSignIn={signIn} />}
         {path === '/meanings' && <PublicMeanings catalog={catalog} />}
         {path === '/knowledge' && <PublicKnowledge facts={facts} myths={myths} catalog={catalog} />}
-        {path !== '/links' && path !== '/meanings' && path !== '/knowledge' && (
+        {knowledgeCode && <PublicKnowledgeCard code={knowledgeCode} catalog={catalog} />}
+        {path !== '/links' && path !== '/meanings' && path !== '/knowledge' && !knowledgeCode && (
           <>
             {/* Первый экран несёт только имя, обещание и одно действие. Всё остальное —
                 вторичные действия, оговорка о приватности, приглашение вглубь — стоит
@@ -439,6 +446,73 @@ function PublicMeanings({ catalog }: { catalog: PublicCatalog | null }) {
 }
 
 /** «Факты» до входа: те же карточки, что и внутри, с источниками и границами. */
+/**
+ * Карточка на хабе плюс ссылка на её собственный адрес.
+ *
+ * Ссылка добавлена, а не заменила карточку: человеку на хабе по-прежнему видно
+ * содержание, а роботу и тому, кто хочет прислать другу одну карточку, — адрес.
+ */
+function KnowledgeCardLink({ knowledge, card }: { knowledge: Knowledge; card: KnowledgeCard }) {
+  return (
+    <div className="r-knowledge-card-linked">
+      <KnowledgeCardView knowledge={knowledge} card={card} />
+      <AppLink href={pathForCode(card.code)} className="r-linklike">
+        Отдельная страница карточки
+      </AppLink>
+    </div>
+  );
+}
+
+/**
+ * Экран одной карточки каталога.
+ *
+ * Существует, чтобы переход внутри приложения и обновление страницы на том же адресе
+ * давали одно и то же. Статический файл для этого адреса кладёт сборка; здесь — то,
+ * что человек увидит после того, как приложение поднимется.
+ */
+function PublicKnowledgeCard({ code, catalog }: { code: string; catalog: PublicCatalog | null }) {
+  const knowledge = catalog?.knowledge ?? EMPTY_KNOWLEDGE;
+  const card = knowledge.cards.find((entry) => entry.code === code);
+
+  useEffect(() => {
+    if (card) document.title = `${card.claim_ru} — Habitoff`;
+  }, [card]);
+
+  if (!card) {
+    // Каталог ещё грузится — молчим: подпись «не найдено» на полсекунды хуже пустоты.
+    if (!catalog) return null;
+    return (
+      <section className="r-title">
+        <h1>Такой карточки нет</h1>
+        <p className="r-lead">
+          Возможно, она снята с публикации или адрес набран с опечаткой.{' '}
+          <AppLink href="/knowledge" className="r-linklike">
+            Все факты и мифы
+          </AppLink>
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <>
+      <section className="r-title">
+        <p className="r-kicker">{card.kind === 'fact' ? 'Факт' : 'Разобранное убеждение'}</p>
+        <h1>{card.claim_ru}</h1>
+        <p className="r-lead">{card.known_ru}</p>
+      </section>
+      <section className="r-section">
+        <KnowledgeCardView knowledge={knowledge} card={card} />
+        <div className="r-actions">
+          <ShellLink href="/knowledge" className="ghost">
+            Все факты и мифы
+          </ShellLink>
+        </div>
+      </section>
+    </>
+  );
+}
+
 function PublicKnowledge({
   facts,
   myths,
@@ -472,7 +546,7 @@ function PublicKnowledge({
           </div>
           <div className="r-knowledge-grid">
             {facts.map((card) => (
-              <KnowledgeCardView key={card.code} knowledge={knowledge} card={card} />
+              <KnowledgeCardLink key={card.code} knowledge={knowledge} card={card} />
             ))}
           </div>
         </section>
@@ -494,7 +568,7 @@ function PublicKnowledge({
           </div>
           <div className="r-knowledge-grid">
             {myths.map((card) => (
-              <KnowledgeCardView key={card.code} knowledge={knowledge} card={card} />
+              <KnowledgeCardLink key={card.code} knowledge={knowledge} card={card} />
             ))}
           </div>
         </section>
@@ -588,6 +662,9 @@ function Setup({
     setError('');
     try {
       await saveOnboarding(session, { goalText: goal, products });
+      // Само событие «настройка завершена» пишет триггер в базе; здесь отмечается веха
+      // машинным кодом и уходит цель в кабинеты — этого триггер сделать не может.
+      trackStage(session.user.id, 'onboarded', 'setup');
       await done();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить настройки');
@@ -1189,6 +1266,18 @@ export function Guided({
         tobacco,
       });
       savedRef.current = true;
+      // Три вехи разом, и каждая уходит один раз на человека. Первый эпизод и
+      // повторный — разные вопросы: первый говорит, что продукт вообще заработал,
+      // повторный — что к нему вернулись. «Доведён до результата» считается так же,
+      // как в базе: запись закрыта и исход не `open`.
+      const firstEver = data.episodes.length === 0;
+      trackStage(session.user.id, firstEver ? 'first_episode' : 'repeat_episode', 'guided_flow');
+      // «Доведён до результата» здесь безусловно, и это не упрощение: сценарий тяги не
+      // умеет закончиться исходом `open` — в типе его нет, а `completed_at` ставит сам
+      // `saveGuidedEpisode`. Условие `outcome <> 'open'` осталось бы кодом, который
+      // никогда не ложен, то есть враньём в форме осторожности. Появится другой способ
+      // завести эпизод — условие вернётся вместе с ним.
+      trackStage(session.user.id, 'episode_with_result', 'guided_flow');
       await saved();
       close();
     } finally {

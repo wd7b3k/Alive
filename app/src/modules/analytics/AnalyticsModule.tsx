@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { reportError } from '../../services/error-monitoring';
+import { COUNTERS_LIVE_SINCE } from '../../services/counters';
 import { CABINETS } from './index';
 import {
   loadAnalytics,
   type AnalyticsSnapshot,
   type CoreMetricRow,
   type HeadlineRow,
+  type FunnelStageRow,
   type SourceFunnelRow,
+  type TrafficQualityRow,
 } from './port';
 
 /**
@@ -200,6 +203,72 @@ const FUNNEL_STAGES: { key: keyof SourceFunnelRow; label: string }[] = [
  * лучше мелкого хорошего — сравниваются объёмы, а искать надо конверсию: пять визитов и
  * пять результатов важнее ста визитов и нуля.
  */
+/**
+ * Заходы, за которыми кто-то есть, и заходы с единственным событием.
+ *
+ * Первые данные счётчика оказались обходчиками из дата-центров: шесть «активных
+ * пользователей» GA за август — Boardman, Council Bluffs и соседи, то есть Амазон и
+ * Гугл. Отделить их внешним сервисом мы не можем и не хотим; поведенческий признак
+ * своих данных работает не хуже: тот, кому интересно, оставляет второе событие.
+ *
+ * Слово «бот» здесь не употребляется намеренно. Один заход — это описание поведения, а
+ * не приговор: так выглядит и робот, и человек, закрывший вкладку через две секунды.
+ */
+function TrafficQuality({ rows }: { rows: TrafficQualityRow[] }) {
+  return (
+    <div className="r-viz">
+      {rows.map((row) => (
+        <div key={row.segment} className="r-viz-row">
+          <span>{row.title}</span>
+          <span className="r-viz-bar">
+            <i
+              style={{
+                width: `${row.share_pct === null ? 0 : Math.max(2, Number(row.share_pct))}%`,
+              }}
+            />
+          </span>
+          <b>
+            {row.visitors === null
+              ? '—'
+              : `${row.visitors}${row.share_pct === null ? '' : ` · ${row.share_pct}%`}`}
+          </b>
+        </div>
+      ))}
+      <p className="r-viz-note">
+        {rows.map((row) => `${row.title}: ${row.note ?? row.hint}`).join(' ')}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Вехи воронки по событиям клиента.
+ *
+ * Люди и записи показаны рядом. Разница между ними — повторы, снятые запросом
+ * `distinct on (человек, этап)`; клиент пишет каждый раз намеренно, потому что решать в
+ * браузере, было ли уже такое, значит терять второго человека за тем же ноутбуком.
+ */
+function FunnelStages({ rows }: { rows: FunnelStageRow[] }) {
+  const top = Math.max(1, ...rows.map((row) => row.people));
+  return (
+    <div className="r-viz">
+      {rows.map((row) => (
+        <BarRow
+          key={row.stage}
+          label={row.title}
+          value={row.people}
+          max={top}
+          caption={
+            row.rows_written > row.people
+              ? `${row.people} · записей ${row.rows_written}`
+              : `${row.people}`
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
 function SourceFunnel({ rows }: { rows: SourceFunnelRow[] }) {
   return (
     <div className="r-viz-funnel">
@@ -391,6 +460,32 @@ export function AnalyticsModule() {
                 {funnel.some((row) => row.note) && (
                   <p className="r-viz-note">{funnel.find((row) => row.note)?.note}</p>
                 )}
+                <p className="r-viz-note">
+                  Шаг «эпизод доведён до результата» всегда равен предыдущему, и читать его как
+                  конверсию нельзя. Это не совпадение и не ошибка счёта: сценарий тяги не умеет
+                  закончиться исходом «открыт» — записанный эпизод по построению закрыт и с исходом.
+                  Шаг станет содержательным, когда появится второй способ завести эпизод, который
+                  можно бросить на середине.
+                </p>
+              </section>
+
+              <section>
+                <p className="r-kicker">Вехи по событиям клиента</p>
+                <p className="r-lead">
+                  То же самое, но посчитанное не по таблицам, а по тому, что успел записать браузер.
+                  Расхождение с воронкой выше — это и есть мера того, сколько событий не доехало:
+                  блокировщики, закрытая вкладка, потерянная сеть. «Людей» и «записей» показаны
+                  рядом намеренно: разница между ними — снятый двойной счёт, и видеть его полезнее,
+                  чем прятать.
+                </p>
+                {snapshot.funnelStages.every((row) => row.rows_written === 0) ? (
+                  <p className="r-muted">
+                    Клиент начал писать вехи 05.09.2026. За выбранный период их ещё нет — это «не
+                    записывали», а не «никто не дошёл».
+                  </p>
+                ) : (
+                  <FunnelStages rows={snapshot.funnelStages} />
+                )}
               </section>
 
               <section>
@@ -548,11 +643,29 @@ export function AnalyticsModule() {
                 </p>
                 {snapshot.sourceFunnel.length === 0 ? (
                   <p className="r-muted">
-                    Ни в одном источнике нет трёх посетителей за период — все разрезы подавлены.
+                    Пусто не потому, что данных нет, а потому, что они подавлены: строка появляется
+                    у источника, приведшего хотя бы трёх посетителей за период. Всего посетителей за
+                    это окно —{' '}
+                    {snapshot.trafficQuality.reduce((sum, row) => sum + (row.visitors ?? 0), 0) ||
+                      'меньше трёх'}
+                    , и ни один источник пока не набрал троих. Порог тот же, что везде, и снижать
+                    его нельзя: разрез из одного человека — это уже не статистика, а он сам.
                   </p>
                 ) : (
                   <SourceFunnel rows={snapshot.sourceFunnel} />
                 )}
+              </section>
+
+              <section>
+                <p className="r-kicker">За заходом кто-то есть?</p>
+                <p className="r-lead">
+                  Первые данные счётчиков — обходчики из дата-центров, а не люди: шесть «активных
+                  пользователей» GA за август сидели в Boardman и Council Bluffs, то есть у Амазона
+                  и Гугла, при нуле посетителей из России. Отделяем поведением, а не внешним
+                  сервисом: тот, кому интересно, оставляет после открытия страницы хотя бы ещё одно
+                  событие. Ни адрес, ни user-agent для этого не хранятся.
+                </p>
+                <TrafficQuality rows={snapshot.trafficQuality} />
               </section>
 
               <section>
@@ -562,6 +675,12 @@ export function AnalyticsModule() {
                   поисковые запросы. Своя база остаётся источником истины по продуктовым числам —
                   счётчики отвечают за то, чего она не знает. Расхождение в 5–15% нормально:
                   блокировщики режут счётчики, в России заметно.
+                </p>
+                <p className="r-viz-note">
+                  Данные счётчиков есть только с {COUNTERS_LIVE_SINCE}: раньше этого дня
+                  идентификаторы в сборке были пустыми, и кабинет за более ранний период показывает
+                  не «ноль посетителей», а «счётчика не было». На этой разнице уже один раз
+                  построили вывод — не повторять.
                 </p>
                 <div className="r-viz-cabinets">
                   {CABINETS.map((cabinet) => (

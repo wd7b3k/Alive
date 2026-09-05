@@ -90,17 +90,37 @@ describe('предрендер публичных адресов', () => {
     }
   });
 
-  it('копий каталога в статику не приезжает', () => {
-    // Факты, мифы, связки и смыслы правятся миграциями, и копия разошлась бы с базой
-    // на первой же — docs/SEO_AND_ANALYTICS.md отказался от неё сознательно. Проверить
-    // это содержимым нельзя: базы здесь нет. Зато можно проверить единственный способ,
-    // которым каталог мог бы сюда попасть, — импорт.
+  it('каталог приезжает выгрузкой, а не набирается руками', () => {
+    // ADR-0018 переписал прежний запрет «каталог не копируется в статику»: запрет был
+    // не на копию, а на копию, набранную руками. Выгрузка `app/knowledge-catalog.json`
+    // снимается скриптом с базы и коммитится — её видно в диффе и обновляет её команда,
+    // а не человек по памяти.
     //
-    // Утверждения для разметки `/knowledge` приезжают не импортом, а файлом выгрузки,
-    // который кладёт выкладка, и в git его нет.
+    // Проверяется единственный способ, которым тексты каталога могут сюда попасть, —
+    // импорт. Прямая строка с содержанием карточки в этих модулях означала бы ровно ту
+    // копию, которая запрещена.
     for (const [file, allowed] of [
-      ['./prerender.ts', ['../redesign/releases', './schema', './seo']],
-      ['./schema.ts', ['./seo']],
+      [
+        './prerender.ts',
+        [
+          '../domain/knowledge-address',
+          '../redesign/releases',
+          './knowledge-catalog',
+          './knowledge-related',
+          './schema',
+          './seo',
+        ],
+      ],
+      ['./schema.ts', ['./knowledge-catalog', './seo']],
+      ['./knowledge-related.ts', ['./knowledge-catalog']],
+      [
+        './knowledge-catalog.ts',
+        [
+          '../../knowledge-catalog.json',
+          '../domain/evidence-levels',
+          '../domain/knowledge-address',
+        ],
+      ],
     ] as const) {
       const source = readFileSync(fileURLToPath(new URL(file, import.meta.url)), 'utf8');
       const imports = [...source.matchAll(/^import[^;]*from '([^']+)';/gm)].map((m) => m[1]);
