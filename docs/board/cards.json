@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "00fc9dfb40c3ec34f817c814076ea91aff5c65d1",
+  "appliedCommit": "91ce91b1f4f3d3c18153d10200f5965dbc31f2e6",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3955,11 +3955,12 @@
       "type": "tech",
       "epic": "content",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "withdrawal_shape, no_minute_timeline, quit_vaping_is_task, lung_decline_slows лежат в базе с published = false; после «да» — update, пересборка выгрузки и выкладка",
       "updated": "2026-09-05",
       "commits": [
-        "00fc9dfb40c3ec34f817c814076ea91aff5c65d1"
+        "00fc9dfb40c3ec34f817c814076ea91aff5c65d1",
+        "91ce91b1f4f3d3c18153d10200f5965dbc31f2e6"
       ]
     }
   ]
