@@ -279,7 +279,7 @@ node scripts/render-og-card.mjs
 не перечитывает. Пересобирается `node scripts/knowledge-lock.mjs` вместе с миграцией,
 которая правит каталог.
 
-Решение целиком — `docs/decisions/ADR-0017-knowledge-base.md`. Форма медицинских
+Решение целиком — `docs/decisions/ADR-0020-knowledge-base.md`. Форма медицинских
 формулировок — `docs/EDITORIAL_PROTOCOL_MED.md`, и каждое её правило проверяется
 тестом, а не вниманием на ревью.
 

@@ -170,7 +170,7 @@ Private original остаётся у исходного модуля.
 - сборка: `app/src/services/knowledge-content.ts` (чтение и гарды),
   `knowledge-pages.ts` (разметка), `knowledge-build.ts` (что кладётся в `dist`);
 - форма медицинских формулировок — `docs/EDITORIAL_PROTOCOL_MED.md`, проверяется тестом;
-- решение — `docs/decisions/ADR-0017-knowledge-base.md`.
+- решение — `docs/decisions/ADR-0020-knowledge-base.md`.
 
 ## 16. Analytics
 
