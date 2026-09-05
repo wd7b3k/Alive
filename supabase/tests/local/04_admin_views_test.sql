@@ -38,7 +38,11 @@ begin
     -- базе: витрина, падающая до первого участника, обнаружится ровно тогда, когда
     -- участники появятся, — то есть в худший момент.
     'select count(*) from public.admin_source_funnel(30)',
-    'select count(*) from public.admin_headline(30)'
+    'select count(*) from public.admin_headline(30)',
+    -- Разделение заходов на «за ним кто-то есть» и «один заход и ничего». Обязана
+    -- отработать и на пустой базе: витрина, падающая до первого посетителя,
+    -- обнаружится ровно тогда, когда посетители появятся.
+    'select count(*) from public.admin_traffic_quality(30)'
   ]
   loop
     execute statement into rows_out;
