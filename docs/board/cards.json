@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "930dbce1deead40455f9ea08a35bdeacea15f002",
+  "appliedCommit": "6c852c9416b352ab0822aa8416dd9dbb8a7170cd",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3747,11 +3747,26 @@
       "type": "feature",
       "epic": "release",
       "priority": 2,
-      "status": "doing",
+      "status": "done",
       "body": "Внутренний /admin/releases: вся история репозитория, разобранная на сборке скриптом scripts/build-changelog.mjs. Карточка доски по трейлеру Board:, номер PR, постановка, метка миграции, группировка по версиям, фильтры в адресе. Публичный /releases не тронут. Постановка — docs/tasks/T-20260905-01-release-admin-releases.md, решение — ADR-0018.",
       "updated": "2026-09-05",
       "chats": [],
-      "commits": []
+      "commits": [
+        "03e8ede89be91cd3bb24d745807c0def75e77226"
+      ]
+    },
+    {
+      "id": "spiski-napravleniy-na-doske",
+      "title": "Списки направлений на доске и в постановках разошлись",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "epics в cards.json тринадцать, без money legal knowledge social, зато с next; docs/tasks/README.md называет шестнадцать без next. Раздел «Что сделано» вынужден знать оба набора, иначе на экране латиница.",
+      "updated": "2026-09-05",
+      "commits": [
+        "03e8ede89be91cd3bb24d745807c0def75e77226"
+      ]
     }
   ]
 }
