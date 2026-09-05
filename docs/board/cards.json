@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "930dbce1deead40455f9ea08a35bdeacea15f002",
+  "appliedCommit": "895cfa060fe272038f03260cc25a25bc1f88c2f7",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3250,11 +3250,12 @@
       "type": "tech",
       "epic": "content",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "Файл называет 19 фактов, 19 мифов и 28 моментов, а FAQPage цитирует пять мифов. Это статические копии каталога, который правится миграциями — тот самый механизм, который для index.html был отвергнут.",
-      "updated": "2026-08-30",
+      "updated": "2026-09-05",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "895cfa060fe272038f03260cc25a25bc1f88c2f7"
       ]
     },
     {
