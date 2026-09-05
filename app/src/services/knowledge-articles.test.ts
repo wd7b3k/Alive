@@ -297,8 +297,13 @@ describe('настоящее содержание раздела', () => {
   it('в рантайм приложения модули базы знаний не попадают', () => {
     // Тот же приём, что у предрендера: единственный способ утянуть чтение каталога в
     // браузер — импорт. Ищем его во всём, что бандлится.
+    //
+    // `knowledge-articles.json` под запрет не подпадает и не должен: это не модуль
+    // сборки, а готовый индекс, ради которого всё и делалось, — приложение обязано его
+    // читать, иначе из него в разборы не попасть. Запрещены именно модули: они тянут за
+    // собой `node:fs` и разбор markdown.
     const src = fileURLToPath(new URL('..', import.meta.url));
-    const forbidden = /knowledge-articles|knowledge-article-pages/;
+    const forbidden = /knowledge-articles(?!\.json)|knowledge-article-pages/;
     const walk = (dir: string, found: string[] = []): string[] => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const full = `${dir}/${entry.name}`;
