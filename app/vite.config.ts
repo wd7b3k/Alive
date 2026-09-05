@@ -16,6 +16,7 @@ import { cards, pathFor } from './src/services/knowledge-catalog';
 import { readContent } from './src/services/knowledge-articles';
 import {
   buildArticles,
+  buildArticlesIndex,
   clusterLinks,
   llmsArticlesSection,
   type Claim,
@@ -134,6 +135,16 @@ function prerenderPublicRoutes(): Plugin {
         claims,
         { css },
         readContent,
+      );
+
+      // Индекс статей для приложения. Кладётся в исходники и коммитится — как выгрузка
+      // каталога (ADR-0017): приложение не читает markdown и не знает про `content/`.
+      // Устаревший индекс ловит `knowledge-articles-index.test.ts`, а не глаз на ревью.
+      writeFileSync(
+        join(root, 'knowledge-articles.json'),
+        `${JSON.stringify(buildArticlesIndex(articles.registry, articles.articles, claims), null, 2)}
+`,
+        'utf8',
       );
 
       // Главная переписывается через тот же путь, что и разделы: ей дописывается

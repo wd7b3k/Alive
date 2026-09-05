@@ -993,3 +993,90 @@ export function llmsArticlesSection(registry: ClusterRegistry, articles: Article
   lines.push('Обновления: /knowledge/updates/latest.json и /knowledge/updates/feed.xml', '');
   return lines.join('\n');
 }
+
+// ---------------------------------------------------------------------------
+// Индекс для приложения
+// ---------------------------------------------------------------------------
+
+export type ArticleIndexEntry = {
+  slug: string;
+  cluster: string;
+  /** Заголовок, который видит человек, — тот же, что стоит на самой странице. */
+  title: string;
+  question: string;
+  answer_short: string;
+  level: string;
+  claims: string[];
+  /** Контекст, унаследованный от процитированных карточек. */
+  triggers: string[];
+  needs: string[];
+  product_types: string[];
+  tags: string[];
+};
+
+export type ArticlesIndex = {
+  note: string;
+  clusters: { slug: string; title: string; description: string }[];
+  articles: ArticleIndexEntry[];
+};
+
+/**
+ * Индекс статей для приложения: `app/knowledge-articles.json`.
+ *
+ * Приложение не читает markdown и не знает про `content/`. Оно получает готовый индекс —
+ * ровно так же, как получает каталог карточек (ADR-0017): выгрузки и индексы коммитятся,
+ * а не собираются на выкладке.
+ *
+ * **Контекст статья наследует от процитированных карточек.** Своих `triggers`, `needs`,
+ * продуктов и меток у неё нет и заводить их незачем: статья существует вокруг утверждений
+ * каталога, и если карточку перепривязали к другому моменту, разбор обязан переехать
+ * вместе с ней. Второй набор привязок разошёлся бы с первым на первой же миграции.
+ *
+ * **Поверхностей в индексе нет намеренно.** В выгрузке каталога поля `surfaces` не
+ * существует, а заводить его копией — та же вторая привязка, только хуже: раскладка по
+ * экранам правится миграциями чаще прочего. Приложение вычисляет поверхность статьи из
+ * живых карточек, которые она цитирует (`domain/articles.ts`), и потому узнаёт о переезде
+ * карточки сразу, а не после пересборки индекса.
+ */
+export function buildArticlesIndex(
+  registry: ClusterRegistry,
+  articles: Article[],
+  catalog: Map<string, Claim>,
+): ArticlesIndex {
+  const union = (values: (string[] | undefined)[]) =>
+    [...new Set(values.flatMap((list) => list ?? []))].sort();
+
+  return {
+    note:
+      'Индекс статей для приложения. Собирается сборкой из content/knowledge и выгрузки ' +
+      'каталога, коммитится. Контекст статьи унаследован от карточек, которые она цитирует.',
+    clusters: registry.clusters.map((cluster) => ({
+      slug: cluster.slug,
+      title: cluster.title,
+      description: cluster.description,
+    })),
+    articles: registry.clusters.flatMap((cluster) =>
+      cluster.articles
+        .map((slug) => articles.find((article) => article.slug === slug))
+        .filter((article): article is Article => Boolean(article))
+        .map((article) => {
+          const cited = article.claims
+            .map((code) => catalog.get(code))
+            .filter((card): card is Claim => Boolean(card));
+          return {
+            slug: article.slug,
+            cluster: article.cluster,
+            title: article.h1,
+            question: article.question,
+            answer_short: article.answer_short,
+            level: article.level,
+            claims: [...article.claims].sort(),
+            triggers: union(cited.map((card) => card.triggers)),
+            needs: union(cited.map((card) => card.needs)),
+            product_types: union(cited.map((card) => card.products)),
+            tags: union(cited.map((card) => card.tags)),
+          };
+        }),
+    ),
+  };
+}

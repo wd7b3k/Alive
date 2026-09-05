@@ -575,3 +575,12 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
    Поэтому у списков фон непрозрачный, а у `option` цвета заданы явно: `color-scheme:dark`
    на `:root` до попапа не доносится, если фон задан своим значением. */
 select option,select optgroup{background:var(--r-surface2);color:var(--r-text)}
+
+/* Блок «Подробнее»: ссылки на разборы под карточкой, в «Связках» и в «Сегодня».
+   Список короткий по устройству — две-три ссылки; десять были бы ещё одним местом,
+   где надо выбирать. */
+.r-article-more{margin-top:var(--r-sp-4);padding-top:var(--r-sp-4);border-top:1px solid var(--r-line)}
+.r-article-more>.r-kicker{margin:0 0 var(--r-sp-2)}
+.r-article-more ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--r-sp-3)}
+.r-article-more a{color:var(--r-teal);font-size:var(--r-fs-sm);font-weight:700}
+.r-article-more small{display:block;margin-top:var(--r-sp-1);color:var(--r-muted);font-size:var(--r-fs-xs);line-height:1.5}
