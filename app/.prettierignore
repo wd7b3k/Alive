@@ -24,6 +24,11 @@ vite.config.ts
 # scripts/dump-knowledge-catalog.mjs. Переформатировать его значит спорить с генератором.
 knowledge-catalog.json
 
+# Индекс статей для приложения: файл производный, его формат задаёт сборка
+# (buildArticlesIndex). Причина та же — переформатирование спорит с генератором, и
+# следующая сборка вернёт всё назад.
+knowledge-articles.json
+
 # Разобранная история репозитория: файл производный, его формат задаёт
 # scripts/build-changelog.mjs. В git его нет вовсе.
 src/generated/
