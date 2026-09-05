@@ -405,3 +405,62 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
 .r-viz-cabinets b{font-size:var(--r-fs-sm);color:var(--r-text)}
 .r-viz-cabinets small{font-size:var(--r-fs-xs);line-height:1.5;color:var(--r-dim)}
 @media(max-width:600px){.r-viz-tiles,.r-viz-cabinets{grid-template-columns:1fr}.r-viz-funnel p em{margin-left:0}}
+
+/* Раздел админки «Что сделано»: история репозитория, разобранная на сборке.
+   Строк здесь три сотни, поэтому строка изменения — самый узкий элемент раздела:
+   одна высота, никаких карточек, моноширинный отпечаток как якорь для глаза.
+   Раскрытие сделано на <details>: собственного состояния у строки нет, и триста
+   переключателей в React их бы завели. Блок — admin-releases.tsx. */
+.r-releases{display:grid;gap:var(--r-sp-5);min-width:0}
+.r-releases-head{display:grid;gap:var(--r-sp-1)}
+.r-releases-head h2{margin:0;font-size:var(--r-fs-h2);letter-spacing:-.02em}
+.r-releases-stamp{margin:0;color:var(--r-muted);font-size:var(--r-fs-sm);display:flex;flex-wrap:wrap;gap:var(--r-sp-2);align-items:baseline}
+.r-releases-stamp code,.r-releases-warn code,.r-releases-limit code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:var(--r-fs-xs)}
+.r-releases-warn{margin:0;padding:var(--r-sp-3);border:1px solid rgba(240,154,154,.42);border-radius:var(--r-r-md);background:rgba(240,154,154,.08);color:var(--r-text);font-size:var(--r-fs-sm);line-height:1.6}
+.r-releases-limit{margin:0;color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.6}
+.r-releases-count{margin:0;color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.6}
+.r-releases-filters{display:flex;flex-wrap:wrap;gap:var(--r-sp-3);align-items:flex-end}
+.r-releases-filters label{display:grid;gap:var(--r-sp-1);min-width:0}
+.r-releases-filters label>span{color:var(--r-dim);font-size:var(--r-fs-kicker);text-transform:uppercase;letter-spacing:.1em}
+.r-releases-filters select,.r-releases-filters input[type="search"]{min-height:40px;padding:0 var(--r-sp-3);border:1px solid var(--r-line);border-radius:var(--r-r-full);background:rgba(255,255,255,.02);color:var(--r-text);font-size:var(--r-fs-sm)}
+.r-releases-filters input[type="search"]{min-width:220px}
+.r-releases-filters>button{min-height:40px;padding:0 var(--r-sp-4);border:1px solid var(--r-line);border-radius:var(--r-r-full);background:rgba(255,255,255,.02);color:var(--r-muted);font-size:var(--r-fs-sm);font-weight:700}
+.r-releases-filters>button:hover{color:var(--r-text);border-color:rgba(224,201,166,.32)}
+.r-releases-filters .r-releases-check{display:flex;flex-direction:row;align-items:center;gap:var(--r-sp-2);min-height:40px}
+.r-releases-filters .r-releases-check>span{color:var(--r-muted);font-size:var(--r-fs-sm);text-transform:none;letter-spacing:0}
+.r-releases-block{display:grid;gap:0;min-width:0}
+.r-releases-group{display:grid;gap:var(--r-sp-1);padding:var(--r-sp-4) 0 var(--r-sp-3)}
+.r-releases-group h3{margin:0;font-size:var(--r-fs-h3);letter-spacing:-.01em}
+.r-releases-group p{margin:0;color:var(--r-muted);font-size:var(--r-fs-sm)}
+.r-releases-note{color:var(--r-dim)!important;font-size:var(--r-fs-xs)!important;line-height:1.6}
+.r-releases-row{border-top:1px solid var(--r-line);min-width:0}
+.r-releases-row>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--r-sp-2);padding:var(--r-sp-3) 0;cursor:pointer;list-style:none;min-width:0}
+.r-releases-row>summary::-webkit-details-marker{display:none}
+.r-releases-row>summary:hover .r-releases-subject{color:var(--r-text)}
+.r-releases-row[open]>summary .r-releases-subject{color:var(--r-text)}
+.r-releases-kind{flex:none;min-width:112px;color:var(--r-dim);font-size:var(--r-fs-xs);font-weight:700}
+.r-releases-kind.kind-feature{color:var(--r-teal)}
+.r-releases-kind.kind-fix{color:var(--r-red)}
+.r-releases-kind.kind-infra{color:var(--r-sand-dim)}
+.r-releases-kind i,.r-releases-theme i{font-style:normal;opacity:.55;cursor:help}
+.r-releases-theme{flex:none;min-width:132px;color:var(--r-dim);font-size:var(--r-fs-xs)}
+.r-releases-subject{flex:1 1 260px;min-width:0;color:var(--r-muted);font-size:var(--r-fs-sm);line-height:1.5;overflow-wrap:anywhere}
+.r-releases-migration{flex:none;color:var(--r-sand);font-size:var(--r-fs-xs);font-weight:750;border:1px solid rgba(224,201,166,.32);border-radius:var(--r-r-full);padding:0 var(--r-sp-2)}
+.r-releases-date{flex:none;margin-left:auto;color:var(--r-dim);font-size:var(--r-fs-xs);font-variant-numeric:tabular-nums}
+.r-releases-body{display:grid;gap:var(--r-sp-3);padding:0 0 var(--r-sp-4) var(--r-sp-4);margin:0 0 var(--r-sp-1) 2px;border-left:2px solid var(--r-line)}
+.r-releases-body>pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--r-muted);font-family:inherit;font-size:var(--r-fs-sm);line-height:1.65}
+.r-releases-body>p{margin:0}
+.r-releases-dirs{color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.6;overflow-wrap:anywhere}
+.r-releases-dirs code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.r-releases-links{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--r-sp-3);font-size:var(--r-fs-xs)}
+.r-releases-sha{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--r-teal);text-decoration:none;border-bottom:1px solid rgba(81,221,208,.32)}
+.r-releases-link{color:var(--r-muted);text-decoration:none;border-bottom:1px solid var(--r-line)}
+.r-releases-link:hover,.r-releases-sha:hover{color:var(--r-text)}
+.r-releases-author{margin-left:auto;color:var(--r-dim)}
+@media(max-width:720px){
+  .r-releases-kind,.r-releases-theme{min-width:0}
+  .r-releases-date{margin-left:0}
+  .r-releases-filters input[type="search"]{min-width:0;width:100%}
+  .r-releases-search{flex:1 1 100%}
+  .r-releases-author{margin-left:0}
+}

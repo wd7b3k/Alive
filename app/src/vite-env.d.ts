@@ -11,6 +11,12 @@ interface ImportMetaEnv {
   readonly VITE_COMMIT_SHA?: string;
   /** Версия из app/package.json. Подставляется vite.config.ts. */
   readonly VITE_BUILD_VERSION?: string;
+  /**
+   * Адрес репозитория для ссылок раздела «Что сделано». Одно значение на весь раздел;
+   * по умолчанию https://github.com/wd7b3k/Alive. В GitHub API из браузера ничего не
+   * ходит — ссылки статические.
+   */
+  readonly VITE_REPO_URL?: string;
 }
 
 interface ImportMeta {

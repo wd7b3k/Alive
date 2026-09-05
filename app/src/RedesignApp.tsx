@@ -121,7 +121,7 @@ function PublicHome({ catalog, path }: { catalog: PublicCatalog | null; path: st
   const publicCards = cardsForSurface(catalog?.knowledge ?? EMPTY_KNOWLEDGE, 'public');
   const allCards = catalog?.knowledge.cards ?? [];
   const { facts, myths } = splitByKind(allCards);
-  // Адрес карточки каталога — решение владельца 05.09.2026, ADR-0018. Разбирается тем
+  // Адрес карточки каталога — решение владельца 05.09.2026, ADR-0017. Разбирается тем
   // же кодом, что и сборка, иначе переход внутри приложения и обновление страницы на
   // том же адресе разошлись бы.
   const knowledgeCode = codeFromPath(path);
