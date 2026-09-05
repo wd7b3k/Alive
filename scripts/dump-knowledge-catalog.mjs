@@ -41,7 +41,9 @@ const SQL = `
     select m.code, 'myth' as kind, m.title as claim, m.short_reframe as known,
            m.changes_ru as changes, m.explanation as detail,
            m.evidence_level as level, m.evidence_scope as scope,
-           m.trigger_codes as triggers, m.product_types as products,
+           m.trigger_codes as triggers, m.need_codes as needs,
+           m.replacement_codes as replacements, m.context_tags as tags,
+           null::text as category, m.product_types as products,
            m.last_verified_at::text as verified, m.updated_at::date::text as updated,
            m.sort_order,
            s.source_label_ru as source_title, s.url as source_url, s.doi as source_doi,
@@ -53,7 +55,9 @@ const SQL = `
     select f.code, 'fact' as kind, f.title as claim, f.short_text as known,
            f.changes_ru as changes, f.full_text as detail,
            f.evidence_level as level, f.evidence_kind as scope,
-           '{}'::text[] as triggers, f.product_types as products,
+           '{}'::text[] as triggers, '{}'::text[] as needs,
+           '{}'::text[] as replacements, f.context_tags as tags,
+           f.category, f.product_types as products,
            f.last_verified_at::text as verified, f.updated_at::date::text as updated,
            f.sort_order,
            s.source_label_ru as source_title, s.url as source_url, s.doi as source_doi,
@@ -106,8 +110,11 @@ if (!Array.isArray(rows) || rows.length === 0) {
 // Порядок показа задаёт `sort_order`, он остаётся полем.
 rows.sort((left, right) => left.code.localeCompare(right.code));
 for (const row of rows) {
-  row.triggers = row.triggers ?? [];
-  row.products = row.products ?? [];
+  // Пустой массив, а не null: страницы и связи между ними считаются одинаково для
+  // фактов и мифов, и ветка «а вдруг null» была бы в каждом месте, где они читаются.
+  for (const field of ['triggers', 'needs', 'replacements', 'tags', 'products']) {
+    row[field] = row[field] ?? [];
+  }
 }
 
 const payload = `${JSON.stringify(rows, null, 2)}\n`;
@@ -140,10 +147,8 @@ if (check) {
 }
 
 writeFileSync(target, payload, 'utf8');
-const thin = rows.filter((row) => `${row.claim} ${row.known} ${row.changes} ${row.detail}`.length < 400);
 console.log(`Выгружено карточек: ${rows.length} (фактов и мифов вместе).`);
-if (thin.length) {
-  // Не отказ и не сокрытие: страницы всё равно собираются. Решение о том, дописывать
-  // ли карточку, принимает владелец, а не сборка.
-  console.log(`Меньше 400 знаков текста — стоит дописать: ${thin.map((row) => row.code).join(', ')}`);
-}
+// Объём текста здесь сознательно не считается. Считать его по полям карточки — значит
+// мерить не то, что уходит в индекс: собранная страница добавляет уровень
+// доказательности, границы, источник и соседей. Замер живёт в сборке, где страница
+// уже есть целиком.
