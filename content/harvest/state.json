@@ -1,0 +1,80 @@
+{
+  "lastRun": "2026-09-05",
+  "seen": [
+    "pmid:42685897",
+    "pmid:42696167",
+    "pmid:42693832",
+    "pmid:42691132",
+    "pmid:42691113",
+    "pmid:42679180",
+    "pmid:42673522",
+    "pmid:42673520",
+    "pmid:42667650",
+    "pmid:42667646",
+    "pmid:42692816",
+    "pmid:42686417",
+    "pmid:42674869"
+  ],
+  "rejected": [
+    {
+      "id": "pmid:42696167",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42693832",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42691132",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42691113",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42679180",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42673522",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42673520",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42667650",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42667646",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42692816",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42686417",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    },
+    {
+      "id": "pmid:42674869",
+      "reason": "тип не проходит: journal article",
+      "week": "2026-36"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "comment": [
+    "Набор запросов еженедельного сбора. Версионируется отдельно от скрипта: список",
+    "источников меняется чаще, чем логика прогона, и правка списка не должна тянуть за",
+    "собой ревью кода.",
+    "",
+    "type=pubmed — E-utilities: esearch по term с datetype=edat и окном дат, затем",
+    "esummary. Тип публикации приходит от PubMed полем pubtype, по нему и работает отбор.",
+    "type=feed — RSS ленты: типа публикации там нет, и всё, что прошло по ключевым словам,",
+    "попадает в улов кандидатом для человека, а не решением скрипта.",
+    "",
+    "В sources попадает только то, что проверено ответом 200 при заведении. Источник,",
+    "который нельзя опросить машиной, живёт в manual: он не молчащий, он ручной, и путать",
+    "эти две вещи нельзя — молчание источника обязано означать поломку.",
+    "",
+    "Оглавления Tobacco Control и Addiction берутся из PubMed, а не с сайтов издателей:",
+    "их ленты режут по частоте запросов с одного адреса и отвечают 429 на второй заход.",
+    "Одно и то же содержание, но через источник, который не ломается от расписания."
+  ],
+  "sources": [
+    {
+      "id": "cochrane-tobacco",
+      "title": "Кокрейновские обзоры по табаку и никотину",
+      "type": "pubmed",
+      "term": "\"Cochrane Database Syst Rev\"[jour] AND (smoking cessation[tiab] OR tobacco[tiab] OR nicotine[tiab] OR vaping[tiab])"
+    },
+    {
+      "id": "pubmed-cessation-reviews",
+      "title": "Систематические обзоры и метаанализы об отказе от курения",
+      "type": "pubmed",
+      "term": "(smoking cessation[tiab] OR tobacco dependence[tiab] OR nicotine dependence[tiab]) AND (systematic review[pt] OR meta-analysis[pt])"
+    },
+    {
+      "id": "pubmed-cessation-trials",
+      "title": "Рандомизированные испытания средств помощи при отказе",
+      "type": "pubmed",
+      "term": "(smoking cessation[tiab] OR vaping cessation[tiab]) AND randomized controlled trial[pt]"
+    },
+    {
+      "id": "pubmed-guidelines",
+      "title": "Клинические руководства по табачной и никотиновой зависимости",
+      "type": "pubmed",
+      "term": "(tobacco[tiab] OR nicotine[tiab]) AND (guideline[pt] OR practice guideline[pt])"
+    },
+    {
+      "id": "ntr-toc",
+      "title": "Оглавление Nicotine & Tobacco Research",
+      "type": "pubmed",
+      "term": "\"Nicotine Tob Res\"[jour]"
+    },
+    {
+      "id": "who-news",
+      "title": "Новости и доклады ВОЗ",
+      "type": "feed",
+      "url": "https://www.who.int/rss-feeds/news-english.xml",
+      "keywords": ["tobacco", "smoking", "nicotine", "vaping", "e-cigarette"]
+    },
+    {
+      "id": "tobacco-control-toc",
+      "title": "Оглавление Tobacco Control",
+      "type": "pubmed",
+      "term": "\"Tob Control\"[jour]"
+    },
+    {
+      "id": "addiction-toc",
+      "title": "Оглавление Addiction",
+      "type": "pubmed",
+      "term": "\"Addiction\"[jour] AND (smoking[tiab] OR nicotine[tiab] OR tobacco[tiab] OR vaping[tiab])"
+    },
+    {
+      "id": "minzdrav-news",
+      "title": "Новости Минздрава России",
+      "type": "feed",
+      "url": "https://minzdrav.gov.ru/news.rss",
+      "keywords": ["курен", "табак", "никотин", "вейп", "электронн", "сигарет"]
+    }
+  ],
+  "manual": [
+    {
+      "id": "fda-tobacco",
+      "title": "Решения FDA по табачным изделиям",
+      "url": "https://www.fda.gov/tobacco-products/ctp-newsroom",
+      "why": "лента отдаёт 302 на страницу защиты от ботов — машиной не опрашивается"
+    },
+    {
+      "id": "ema-news",
+      "title": "Новости EMA",
+      "url": "https://www.ema.europa.eu/en/news-and-events",
+      "why": "публичной RSS-ленты нет"
+    },
+    {
+      "id": "nice-guidance",
+      "title": "Руководства NICE по табаку",
+      "url": "https://www.nice.org.uk/guidance/lifestyle-and-wellbeing/smoking-and-tobacco",
+      "why": "RSS отключён, остаётся страница раздела"
+    },
+    {
+      "id": "rospotrebnadzor",
+      "title": "Новости Роспотребнадзора",
+      "url": "https://www.rospotrebnadzor.ru/about/info/news/",
+      "why": "лента закрыта авторизацией (401)"
+    },
+    {
+      "id": "rosstat",
+      "title": "Росстат: данные о потреблении табака",
+      "url": "https://rosstat.gov.ru/folder/13721",
+      "why": "ленты нет, публикации выходят разделом сайта"
+    }
+  ]
+}

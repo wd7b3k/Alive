@@ -1,0 +1,132 @@
+{
+  "week": "2026-36",
+  "window": {
+    "since": "2026-08-29",
+    "until": "2026-09-05"
+  },
+  "sources": [
+    {
+      "id": "cochrane-tobacco",
+      "status": "ok",
+      "found": 0
+    },
+    {
+      "id": "pubmed-cessation-reviews",
+      "status": "ok",
+      "found": 0
+    },
+    {
+      "id": "pubmed-cessation-trials",
+      "status": "ok",
+      "found": 0
+    },
+    {
+      "id": "pubmed-guidelines",
+      "status": "ok",
+      "found": 1
+    },
+    {
+      "id": "ntr-toc",
+      "status": "ok",
+      "found": 9
+    },
+    {
+      "id": "who-news",
+      "status": "ok",
+      "found": 0
+    },
+    {
+      "id": "tobacco-control-toc",
+      "status": "ok",
+      "found": 3
+    },
+    {
+      "id": "addiction-toc",
+      "status": "ok",
+      "found": 0
+    },
+    {
+      "id": "minzdrav-news",
+      "status": "ok",
+      "found": 0
+    }
+  ],
+  "accepted": [
+    {
+      "id": "pmid:42685897",
+      "title": "Tobacco Treatment in the Inpatient Setting: An American College of Chest Physicians Clinical Practice Guideline.",
+      "publication": "Chest",
+      "date": "2026-09-02",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/42685897/",
+      "doi": "10.1016/j.chest.2026.08.038",
+      "types": [
+        "journal article",
+        "practice guideline"
+      ],
+      "source": "pubmed-guidelines",
+      "kind": "клиническое руководство"
+    }
+  ],
+  "rejected": [
+    {
+      "id": "pmid:42696167",
+      "title": "Estimating the effect of very low nicotine content cigarettes on abstinence by menthol status using novel statistical methods: A reanalysis of a randomized trial in an experimental marketplace with alternative nicotine systems.",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42693832",
+      "title": "Trends in Smoking-Attributable Disease Burden in China, 1990-2021: Age, Sex, and Risk Factors in a Global Context.",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42691132",
+      "title": "Frequent Mental Distress: Associations with Nicotine Use Behaviors.",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42691113",
+      "title": "Mixed Methods Analysis of Unprompted Participant Text Messages in an Automated Text Message Program for Smoking Cessation Induction.",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42679180",
+      "title": "Messaging Strategies for Tobacco Prevention and Cessation Among People with Depression: A Scoping Review.",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42673522",
+      "title": "Integrating Use Frequency, Vaping, and Dependence to Characterize Nicotine-Cannabis Co-Use in Young Adults: A Latent Class Analysis.",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42673520",
+      "title": "Positive Psychotherapy for Smoking Cessation Enhanced with Text Messaging: A Randomized Controlled Trial.",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42667650",
+      "title": "The impact of cessation aids on sustained quitting and weight gain among adults with a quit attempt in the PATH study.",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42667646",
+      "title": "Socioeconomic, psychological distress, and social norm correlates of youth smoking and vaping: a multilevel pooled cross-sectional analysis.",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42692816",
+      "title": "Your rights versus my rights: Australian media representation of smoking and secondhand smoke in homes.",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42686417",
+      "title": "MPOWER policy intensity and the global burden of smoking-attributable respiratory cancers: lag-aligned inequality regressions with Bayesian age-period-cohort projections (1990-2050).",
+      "reason": "тип не проходит: journal article"
+    },
+    {
+      "id": "pmid:42674869",
+      "title": "Oral nicotine pouch continuity programmes and US college students' intention to use.",
+      "reason": "тип не проходит: journal article"
+    }
+  ]
+}

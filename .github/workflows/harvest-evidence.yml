@@ -1,0 +1,42 @@
+name: Еженедельный сбор находок для каталога
+
+# Понедельник, 06:00 UTC. Прогон только собирает: он не пишет в базу, не коммитит и не
+# заводит карточек — это работа человека по docs/RUNBOOK_KNOWLEDGE_CATALOG.md.
+#
+# Секретов у джоба нет и быть не должно: все источники публичные (PubMed E-utilities,
+# ленты ВОЗ и Минздрава). Секрет здесь означал бы, что сбор ходит куда-то, куда обычный
+# читатель не ходит, — а вся ценность каталога в том, что каждый источник открыт.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  harvest:
+    name: Собрать улов недели
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+
+      # Скрипт выходит кодом 3, если хоть один источник не ответил: «ничего нового» и
+      # «мы не знаем» — разные вещи, и джоб обязан краснеть на второй. Улов при этом
+      # всё равно записан, поэтому шаг выгрузки идёт с if: always().
+      - name: Прогон сбора
+        run: node scripts/harvest-evidence.mjs
+
+      - name: Улов недели артефактом
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harvest
+          path: content/harvest/
+          retention-days: 90
