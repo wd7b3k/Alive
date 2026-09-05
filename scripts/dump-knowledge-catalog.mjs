@@ -14,6 +14,18 @@
  * которые уедут в индекс, появляются в обход ревью. Выгрузка в репозиторий делает
  * изменение контента обычным изменением: коммит, PR, история.
  *
+ * Скрипт кладёт три файла, и все три производные:
+ *
+ * - `app/knowledge-catalog.json` — карточки, из них собираются страницы;
+ * - `app/catalog-counts.json` — числа по остальным каталогам. Отдельным файлом, потому
+ *   что это другой вопрос: не «что за карточки», а «сколько чего опубликовано»;
+ * - `app/public/llms.txt` — что можно цитировать, для языковых моделей.
+ *
+ * В `llms.txt` не должно остаться ни одного числа и ни одного адреса, набранного руками.
+ * До 05.09.2026 там стояло «19 фактов и 19 разобранных мифов» и «28 пусковых моментов» —
+ * и последнее число было просто неправдой: в базе 25. Файл описывал продукт, которого
+ * уже нет, и обнаружить это можно было только сверив глазами.
+ *
  *   node scripts/dump-knowledge-catalog.mjs            # обновить выгрузку
  *   node scripts/dump-knowledge-catalog.mjs --check    # сверить с базой, ничего не писать
  *
@@ -25,6 +37,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const target = fileURLToPath(new URL('../app/knowledge-catalog.json', import.meta.url));
+const countsTarget = fileURLToPath(new URL('../app/catalog-counts.json', import.meta.url));
+const llmsTarget = fileURLToPath(new URL('../app/public/llms.txt', import.meta.url));
+const ORIGIN = 'https://habitoff.ru';
 const envFile = process.env.SUPABASE_ENV_FILE ?? '/srv/supabase/.env';
 const check = process.argv.includes('--check');
 
@@ -79,7 +94,20 @@ function password() {
   }
 }
 
-function fromDatabase() {
+/**
+ * Числа по остальным каталогам. Считаются, а не пишутся: «28 пусковых моментов» в
+ * `llms.txt` держалось руками и разошлось с базой, где их 25.
+ */
+const COUNTS_SQL = `
+  select json_build_object(
+    'triggers', (select count(*) from public.triggers_catalog where published),
+    'replacements', (select count(*) from public.replacements_catalog where published),
+    'goals', (select count(*) from public.goals_catalog where published),
+    'meanings', (select count(*) from public.meanings_catalog where published)
+  )
+`.replace(/\s+/g, ' ');
+
+function fromDatabase(sql) {
   const pgpassword = password();
   if (!pgpassword) {
     console.error(
@@ -91,7 +119,7 @@ function fromDatabase() {
   try {
     return execFileSync(
       'psql',
-      ['-h', '127.0.0.1', '-p', '5432', '-U', 'postgres', '-d', 'postgres', '-tAc', SQL],
+      ['-h', '127.0.0.1', '-p', '5432', '-U', 'postgres', '-d', 'postgres', '-tAc', sql],
       { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, env: { ...process.env, PGPASSWORD: pgpassword } },
     ).trim();
   } catch (error) {
@@ -100,7 +128,8 @@ function fromDatabase() {
   }
 }
 
-const rows = JSON.parse(fromDatabase());
+const rows = JSON.parse(fromDatabase(SQL));
+const counts = JSON.parse(fromDatabase(COUNTS_SQL));
 if (!Array.isArray(rows) || rows.length === 0) {
   console.error('Каталог пуст. Пустой раздел в репозиторий не кладётся.');
   process.exit(2);
@@ -118,37 +147,146 @@ for (const row of rows) {
 }
 
 const payload = `${JSON.stringify(rows, null, 2)}\n`;
+const countsPayload = `${JSON.stringify(counts, null, 2)}\n`;
 
-if (check) {
-  let current = '';
-  try {
-    current = readFileSync(target, 'utf8');
-  } catch {
-    console.error('Выгрузки нет в репозитории. Обнови: node scripts/dump-knowledge-catalog.mjs');
-    process.exit(1);
-  }
-  if (current === payload) {
-    console.log(`Выгрузка совпадает с базой: карточек ${rows.length}.`);
-    process.exit(0);
-  }
-  const inFile = new Map(JSON.parse(current).map((row) => [row.code, row]));
-  const inDb = new Map(rows.map((row) => [row.code, row]));
-  const added = [...inDb.keys()].filter((code) => !inFile.has(code));
-  const gone = [...inFile.keys()].filter((code) => !inDb.has(code));
-  const changed = [...inDb.keys()].filter(
-    (code) => inFile.has(code) && JSON.stringify(inFile.get(code)) !== JSON.stringify(inDb.get(code)),
-  );
-  console.error('Выгрузка разошлась с базой.');
-  if (added.length) console.error(`  появились: ${added.join(', ')}`);
-  if (gone.length) console.error(`  пропали:   ${gone.join(', ')}`);
-  if (changed.length) console.error(`  изменены:  ${changed.join(', ')}`);
-  console.error('Обнови: node scripts/dump-knowledge-catalog.mjs');
-  process.exit(1);
+/** Одна строка ответа для списка. Карточка бывает длинной, а список — это список. */
+function oneLine(text) {
+  const flat = String(text ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return flat.length > 200 ? `${flat.slice(0, 197)}…` : flat;
 }
 
-writeFileSync(target, payload, 'utf8');
-console.log(`Выгружено карточек: ${rows.length} (фактов и мифов вместе).`);
-// Объём текста здесь сознательно не считается. Считать его по полям карточки — значит
+function pathFor(code) {
+  return `/knowledge/${code.replace(/_/g, '-')}`;
+}
+
+/**
+ * `llms.txt` по соглашению llmstxt.org: заголовок, выжимка цитатой, проза, разделы со
+ * списками ссылок.
+ *
+ * Вводная часть и разбор доказательной базы сохранены как были — это лучшее, что в файле
+ * уже написано. Три запретных утверждения сохранены **дословно**: это единственное
+ * место, где продукт говорит моделям, чего ему приписывать нельзя, и ради этого файл в
+ * основном и существует.
+ */
+function renderLlms(cards, totals) {
+  const facts = cards.filter((card) => card.kind === 'fact');
+  const myths = cards.filter((card) => card.kind === 'myth');
+  const byOrder = (left, right) => left.sort_order - right.sort_order;
+  const line = (card) =>
+    `- [${card.claim}](${ORIGIN}${pathFor(card.code)}): ${oneLine(card.known)} ` +
+    `Источник: ${card.source_title}.`;
+
+  return [
+    '# Habitoff',
+    '',
+    '> Некоммерческий эксперимент по изменению никотиновых автоматизмов. Русский язык.',
+    `> ${ORIGIN}`,
+    '',
+    'Habitoff исходит из того, что зависимость держится не на никотине как таковом, а на связке',
+    '«определённый момент → определённое состояние → один и тот же ответ». Продукт помогает',
+    'разобрать эту связку и подобрать другой ответ под конкретный момент, а не запрещать.',
+    '',
+    'Этот файл собирается из базы скриптом `scripts/dump-knowledge-catalog.mjs`. Ни одно число',
+    'и ни один адрес здесь не набраны руками.',
+    '',
+    '## Как устроена доказательная база',
+    '',
+    'Каждое утверждение в разделе «Факты» несёт уровень доказательности, границы применимости',
+    'и источник. Это не редакционное обещание, а ограничение схемы базы: поле с границами —',
+    'обязательное, а опубликованная карточка уровня A или B без источника отклоняется',
+    'триггером.',
+    '',
+    'Три популярных утверждения сознательно **не** опубликованы, потому что источника у них',
+    'нет. При пересказе Habitoff их приписывать нельзя:',
+    '',
+    '- «тяга длится 3–5 минут»;',
+    '- «вейп на 95 % безопаснее сигарет»;',
+    '- любое соотношение «один кальян = N сигарет».',
+    '',
+    `## Факты (${facts.length})`,
+    '',
+    'У каждого своя страница с уровнем доказательности, границами применимости и ссылкой на',
+    'источник.',
+    '',
+    ...facts.slice().sort(byOrder).map(line),
+    '',
+    `## Разобранные убеждения (${myths.length})`,
+    '',
+    'Заголовок — то, что часто говорят, а не то, что утверждает Habitoff. Дальше — что известно',
+    'на самом деле.',
+    '',
+    ...myths.slice().sort(byOrder).map(line),
+    '',
+    '## Что ещё можно цитировать',
+    '',
+    `- [Связки](${ORIGIN}/links): ${totals.triggers} пусковых моментов, разобранных до потребности,`,
+    `  и ${totals.replacements} ответов, подобранных под ситуацию.`,
+    `- [Смыслы](${ORIGIN}/meanings): ${totals.goals} целей и ценностей, ради которых человек меняет`,
+    '  привычку.',
+    `- [Как устроен метод](${ORIGIN}/experiment): методология, границы и модель приватности.`,
+    '',
+    '## Чего в продукте нет',
+    '',
+    'Habitoff не назначает лечение, не называет дозировки и не заменяет помощь специалиста.',
+    'Личные записи людей закрыты правилами доступа PostgreSQL и недоступны без входа —',
+    'в индекс попадает только редакционный каталог.',
+    '',
+  ].join('\n');
+}
+
+const llmsPayload = renderLlms(rows, counts);
+
+const files = [
+  { path: target, payload, name: 'app/knowledge-catalog.json' },
+  { path: countsTarget, payload: countsPayload, name: 'app/catalog-counts.json' },
+  { path: llmsTarget, payload: llmsPayload, name: 'app/public/llms.txt' },
+];
+
+if (check) {
+  let failed = false;
+  for (const file of files) {
+    let current = null;
+    try {
+      current = readFileSync(file.path, 'utf8');
+    } catch {
+      console.error(`${file.name}: файла нет в репозитории.`);
+      failed = true;
+      continue;
+    }
+    if (current === file.payload) continue;
+    failed = true;
+    console.error(`${file.name}: разошёлся с базой.`);
+    if (file.path !== target) continue;
+    // Для каталога понятно, что именно разошлось, — и это стоит напечатать: список
+    // кодов отвечает на вопрос «что случилось», а факт расхождения только на «что-то».
+    const inFile = new Map(JSON.parse(current).map((row) => [row.code, row]));
+    const inDb = new Map(rows.map((row) => [row.code, row]));
+    const added = [...inDb.keys()].filter((code) => !inFile.has(code));
+    const gone = [...inFile.keys()].filter((code) => !inDb.has(code));
+    const changed = [...inDb.keys()].filter(
+      (code) =>
+        inFile.has(code) && JSON.stringify(inFile.get(code)) !== JSON.stringify(inDb.get(code)),
+    );
+    if (added.length) console.error(`  появились: ${added.join(', ')}`);
+    if (gone.length) console.error(`  пропали:   ${gone.join(', ')}`);
+    if (changed.length) console.error(`  изменены:  ${changed.join(', ')}`);
+  }
+  if (failed) {
+    console.error('Обнови: node scripts/dump-knowledge-catalog.mjs');
+    process.exit(1);
+  }
+  console.log(`Всё совпадает с базой: карточек ${rows.length}.`);
+  process.exit(0);
+}
+
+for (const file of files) writeFileSync(file.path, file.payload, 'utf8');
+console.log(
+  `Выгружено: карточек ${rows.length}, пусковых моментов ${counts.triggers}, ` +
+    `замен ${counts.replacements}, целей ${counts.goals}.`,
+);
+console.log(`llms.txt собран: ${llmsPayload.length} знаков.`);
+// Объём текста карточек здесь сознательно не считается. Считать его по полям — значит
 // мерить не то, что уходит в индекс: собранная страница добавляет уровень
-// доказательности, границы, источник и соседей. Замер живёт в сборке, где страница
-// уже есть целиком.
+// доказательности, границы, источник и соседей. Замер живёт в сборке.

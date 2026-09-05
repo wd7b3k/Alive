@@ -223,6 +223,54 @@ describe('собранный dist, запрошенный по HTTP', () => {
     expect(response.status).toBe(404);
   });
 
+  it('ни один ответ в разметке не остаётся без источника', () => {
+    // То же правило, что в базе: опубликованная карточка уровня A или B без источника
+    // отклоняется триггером. В разметке — там, откуда утверждение уходит в сниппет и в
+    // пересказ модели, — оно до 05.09.2026 не действовало: у пяти вопросов на главной
+    // `citation` не было вовсе.
+    const answers: Record<string, unknown>[] = [];
+    const walk = (node: unknown) => {
+      if (!node || typeof node !== 'object') return;
+      if (Array.isArray(node)) return node.forEach(walk);
+      const record = node as Record<string, unknown>;
+      if (record['@type'] === 'Answer') answers.push(record);
+      Object.values(record).forEach(walk);
+    };
+    for (const [route, page] of pages) {
+      const block = page.html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+      if (!block) continue;
+      const before = answers.length;
+      walk(JSON.parse(block[1])['@graph']);
+      for (const answer of answers.slice(before)) {
+        const citation = answer.citation as Record<string, unknown> | undefined;
+        expect(
+          citation?.url,
+          `${route}: ответ без citation — ${String(answer.text).slice(0, 60)}`,
+        ).toMatch(/^https:\/\//);
+      }
+    }
+    expect(answers.length, 'ответов в разметке не нашлось вовсе').toBeGreaterThanOrEqual(5);
+  });
+
+  it('вопросы главной есть в её видимом тексте, а не только в разметке', () => {
+    const home = pages.get('/')!.html;
+    const graph = JSON.parse(
+      home.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1],
+    )['@graph'];
+    const faq = graph.find((node: Record<string, unknown>) => node['@type'] === 'FAQPage');
+    expect(faq, 'на главной нет FAQPage').toBeTruthy();
+    const text = visibleText(home);
+    for (const question of faq.mainEntity) {
+      // Заголовок вопроса на странице сформулирован чуть иначе, чем в разметке, — но
+      // тема обязана быть на странице. Сверяем по самому длинному слову вопроса.
+      const anchorWord = String(question.name)
+        .split(/[^А-Яа-яЁёA-Za-z]+/)
+        .filter((word: string) => word.length > 5)
+        .sort((a: string, b: string) => b.length - a.length)[0];
+      expect(text, `${question.name}: темы нет в тексте страницы`).toContain(anchorWord);
+    }
+  });
+
   it('canonical у каждого адреса указывает на себя', () => {
     for (const route of PUBLIC_ROUTES) {
       const canonical = pages.get(route)!.html.match(/<link rel="canonical" href="([^"]*)"/)?.[1];

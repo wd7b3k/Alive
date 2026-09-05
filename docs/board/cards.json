@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "6c852c9416b352ab0822aa8416dd9dbb8a7170cd",
+  "appliedCommit": "3b65e6ecf07bae50e756fa3eedb3ea135594ff03",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3250,11 +3250,12 @@
       "type": "tech",
       "epic": "content",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "Файл называет 19 фактов, 19 мифов и 28 моментов, а FAQPage цитирует пять мифов. Это статические копии каталога, который правится миграциями — тот самый механизм, который для index.html был отвергнут.",
-      "updated": "2026-08-30",
+      "updated": "2026-09-05",
       "commits": [
-        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
+        "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
+        "895cfa060fe272038f03260cc25a25bc1f88c2f7"
       ]
     },
     {
@@ -3263,12 +3264,13 @@
       "type": "docs",
       "epic": "content",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "В базе уровень доказательности, границы и источник обязательны, а в JSON-LD, то есть ровно там, откуда утверждение попадёт в сниппет и в пересказ модели, их нет. citation появился у ItemList на /knowledge; пять ответов FAQPage на главной по-прежнему без источников",
-      "updated": "2026-08-31",
+      "updated": "2026-09-05",
       "commits": [
         "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
-        "b2fcfcee22b11a1e7d2a7bfa099feb24bf4efd2b"
+        "b2fcfcee22b11a1e7d2a7bfa099feb24bf4efd2b",
+        "ffaffca48b2c3ef679a7656f5711e741476b6752"
       ]
     },
     {
@@ -3742,30 +3744,42 @@
       ]
     },
     {
-      "id": "rel-admin-changelog",
-      "title": "Раздел «Что сделано» отвечает git, а не память",
-      "type": "feature",
-      "epic": "release",
+      "id": "chisla-v-index-html",
+      "title": "Числа в index.html и seo.ts набраны руками",
+      "type": "tech",
+      "epic": "seo",
       "priority": 2,
-      "status": "done",
-      "body": "Внутренний /admin/releases: вся история репозитория, разобранная на сборке скриптом scripts/build-changelog.mjs. Карточка доски по трейлеру Board:, номер PR, постановка, метка миграции, группировка по версиям, фильтры в адресе. Публичный /releases не тронут. Постановка — docs/tasks/T-20260905-12-release-admin-releases.md, решение — ADR-0018.",
+      "status": "backlog",
+      "body": "28 пусковых моментов держалось руками и разошлось с базой, где их 25; описания разделов и статический текст главной считать из каталога, как это уже сделано для llms.txt",
       "updated": "2026-09-05",
-      "chats": [],
       "commits": [
-        "03e8ede89be91cd3bb24d745807c0def75e77226"
+        "ffaffca48b2c3ef679a7656f5711e741476b6752"
       ]
     },
     {
-      "id": "spiski-napravleniy-na-doske",
-      "title": "Списки направлений на доске и в постановках разошлись",
+      "id": "kanal-opovescheniya-pust-alerty",
+      "title": "Канал оповещения пуст: алерты не покидают сервер",
       "type": "tech",
+      "epic": "process",
+      "priority": 1,
+      "status": "backlog",
+      "body": "TELEGRAM_BOT_TOKEN и CHAT_ID в /etc/habitoff/backup.env объявлены без значений, notify молча выходит",
+      "updated": "2026-08-31",
+      "commits": [
+        "dd1f7973fd09db3a0d31979005b7739e3bcf43aa"
+      ]
+    },
+    {
+      "id": "postanovki-lezhali-vne-git",
+      "title": "Постановки лежали вне git пятнадцатью позициями",
+      "type": "docs",
       "epic": "process",
       "priority": 2,
       "status": "backlog",
-      "body": "epics в cards.json тринадцать, без money legal knowledge social, зато с next; docs/tasks/README.md называет шестнадцать без next. Раздел «Что сделано» вынужден знать оба набора, иначе на экране латиница.",
+      "body": "рабочая копия владельца хранила двенадцать постановок за 05.09, HANDOFF.md, руководство сбора и content/ незакоммиченными; перенесены задачей T-20260905-11",
       "updated": "2026-09-05",
       "commits": [
-        "03e8ede89be91cd3bb24d745807c0def75e77226"
+        "70c7360d20aa582a97f56c8dbbcff64f3b1a5d08"
       ]
     }
   ]

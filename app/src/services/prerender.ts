@@ -25,7 +25,7 @@ import { ORIGIN, metaFor } from './seo';
 import { GROUPS, cardByCode, cards, levelOf, pathFor, type CatalogCard } from './knowledge-catalog';
 import { codeFromPath } from '../domain/knowledge-address';
 import { relatedCards } from './knowledge-related';
-import { cardGraph, notFoundGraph, routeGraph, scriptTag } from './schema';
+import { cardGraph, notFoundGraph, routeGraph, scriptTag, withFaqCitations } from './schema';
 
 export function escapeHtml(value: string): string {
   return value
@@ -383,6 +383,17 @@ export function renderRoute(indexHtml: string, path: string): string {
   // один и тот же набор вопросов.
   if (path !== '/') {
     html = replaceOne(html, 'блок application/ld+json', LD_JSON, scriptTag(routeGraph(path)));
+  } else {
+    // На главной граф остаётся тот, что написан в `index.html`: тексты вопросов писали и
+    // вычитывали там, и второй копии им заводить незачем. Дописывается одно — `citation`
+    // у каждого ответа. Утверждение о здоровье без источника не должно уходить ни в
+    // сниппет, ни в пересказ модели; в базе это правило держит триггер с самого начала,
+    // а в разметке до 05.09.2026 оно не действовало.
+    html = replaceOne(html, 'блок application/ld+json', LD_JSON, (match) => {
+      const json = match.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, '');
+      const parsed = JSON.parse(json) as { '@graph': Record<string, unknown>[] };
+      return scriptTag(withFaqCitations(parsed['@graph']));
+    });
   }
 
   const body = path === '/releases' ? releasesBody() : routeBody(path);
