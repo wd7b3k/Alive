@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "fff64a50ccd37a4cdec082846a7b254ab591705d",
+  "appliedCommit": "bdd2e6a56ea81e65c2b546db27bdee23ca622a51",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3780,6 +3780,19 @@
       "updated": "2026-09-05",
       "commits": [
         "fff64a50ccd37a4cdec082846a7b254ab591705d"
+      ]
+    },
+    {
+      "id": "vetka-starogo-dvizhka-statey",
+      "title": "Ветка старого движка статей закрыта",
+      "type": "tech",
+      "epic": "process",
+      "priority": 3,
+      "status": "backlog",
+      "body": "task/knowledge-base отменена ADR-0018, уникального кода не осталось, журнал сессии 31.08 перенесён в main. Ветка удалена локально и на origin, воркtree снят.",
+      "updated": "2026-09-05",
+      "commits": [
+        "bdd2e6a56ea81e65c2b546db27bdee23ca622a51"
       ]
     }
   ]
