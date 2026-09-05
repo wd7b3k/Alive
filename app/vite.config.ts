@@ -6,12 +6,13 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
 import {
+  renderCard,
   renderNotFound,
   renderRoute,
   renderSitemap,
   type SitemapEntry,
 } from './src/services/prerender';
-import type { KnowledgeEntry } from './src/services/schema';
+import { cards, pathFor } from './src/services/knowledge-catalog';
 import { PRERENDER_PATHS } from './src/services/seo';
 
 const version: string = JSON.parse(
@@ -92,17 +93,6 @@ const SHARED_SOURCES = [
  * оригинала ровно тем, чем должны, — заголовком, описанием, canonical и og:url. Своей
  * сборки на каждый адрес не заводится: это те же байты бандла, а не пять приложений.
  */
-/** Выгрузка каталога, если она есть. Нет файла — нет ItemList, и это рабочий случай. */
-function readKnowledge(): KnowledgeEntry[] {
-  try {
-    return JSON.parse(
-      readFileSync(fileURLToPath(new URL('./knowledge-schema.json', import.meta.url)), 'utf8'),
-    ) as KnowledgeEntry[];
-  } catch {
-    return [];
-  }
-}
-
 function prerenderPublicRoutes(): Plugin {
   return {
     name: 'habitoff-prerender-routes',
@@ -116,21 +106,15 @@ function prerenderPublicRoutes(): Plugin {
       if (!outDir) throw new Error('Предрендер: у сборки нет каталога вывода.');
       const source = String(index.source);
 
-      // Утверждения каталога с источниками — для разметки `/knowledge`. Файл кладёт
-      // выкладка (`scripts/dump-knowledge-for-schema.mjs`), в git его нет: тексты живут
-      // в базе, и копия в репозитории разошлась бы с ней на следующей миграции. Нет
-      // файла — нет ItemList, остальная разметка от него не зависит.
-      const knowledge = readKnowledge();
-
       // Главная переписывается через тот же путь, что и разделы: ей дописывается
       // навигация. Без неё робот доходит до главной и упирается в тупик — уйти с неё
       // по ссылке было некуда, ноль внутренних ссылок в сыром HTML на всех адресах.
-      writeFileSync(join(outDir, 'index.html'), renderRoute(source, '/', knowledge), 'utf8');
+      writeFileSync(join(outDir, 'index.html'), renderRoute(source, '/'), 'utf8');
 
       for (const path of PRERENDER_PATHS) {
         const file = join(outDir, path.slice(1), 'index.html');
         mkdirSync(dirname(file), { recursive: true });
-        writeFileSync(file, renderRoute(source, path, knowledge), 'utf8');
+        writeFileSync(file, renderRoute(source, path), 'utf8');
       }
 
       // Страница для несуществующего адреса. Её отдаёт Caddy через handle_errors,
@@ -138,13 +122,32 @@ function prerenderPublicRoutes(): Plugin {
       // и человек видел белый экран. В карту сайта она не попадает и несёт noindex.
       writeFileSync(join(outDir, '404.html'), renderNotFound(source), 'utf8');
 
-      const entries: SitemapEntry[] = ['/', ...PRERENDER_PATHS].map((path) => ({
-        path,
-        lastmod: lastModified(
-          path === '/releases' ? [...SHARED_SOURCES, 'src/redesign/releases.ts'] : SHARED_SOURCES,
-        ),
-      }));
+      // Страница на каждую опубликованную карточку каталога. Решение владельца
+      // 05.09.2026 (ADR-0018): адрес выводится из первичного ключа и не меняется —
+      // адрес, который переехал, теряет всё, что успел набрать в индексе.
+      const catalog = cards();
+      for (const card of catalog) {
+        const file = join(outDir, pathFor(card).slice(1), 'index.html');
+        mkdirSync(dirname(file), { recursive: true });
+        writeFileSync(file, renderCard(source, card), 'utf8');
+      }
+
+      const entries: SitemapEntry[] = [
+        ...['/', ...PRERENDER_PATHS].map((path) => ({
+          path,
+          lastmod: lastModified(
+            path === '/releases' ? [...SHARED_SOURCES, 'src/redesign/releases.ts'] : SHARED_SOURCES,
+          ),
+        })),
+        // У карточки своя дата: `updated_at` из базы, а не общая дата сборки. Общая
+        // дата означала бы «все тридцать восемь страниц изменились», и поисковик
+        // перестал бы верить полю целиком.
+        ...catalog.map((card) => ({ path: pathFor(card), lastmod: card.updated })),
+      ];
       writeFileSync(join(outDir, 'sitemap.xml'), renderSitemap(entries), 'utf8');
+      console.log(
+        `предрендер: ${1 + PRERENDER_PATHS.length} разделов и ${catalog.length} карточек каталога`,
+      );
     },
   };
 }

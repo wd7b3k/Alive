@@ -185,17 +185,42 @@ describe('собранный dist, запрошенный по HTTP', () => {
     }
   });
 
-  it('в разметке нет утверждения без источника', () => {
-    // Каталог приезжает из базы только на выкладке, поэтому в собранном здесь dist
-    // ItemList может отсутствовать. Но если он есть — citation обязан быть у каждого.
-    const html = pages.get('/knowledge')!.html;
-    const block = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
-    const graph = JSON.parse(block![1].replace(/\u003c/g, '<'))['@graph'];
+  it('каждый вопрос в разметке присутствует на странице карточки', () => {
+    // Правило задачи 05.09.2026: ни один элемент разметки не описывает того, чего нет в
+    // видимом HTML. До этого дня `ItemList` на `/knowledge` объявлял шестнадцать
+    // вопросов, и ноль из них были в тексте страницы.
+    const hub = pages.get('/knowledge')!.html;
+    const graph = JSON.parse(
+      hub.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1],
+    )['@graph'];
     const list = graph.find((node: Record<string, unknown>) => node['@type'] === 'ItemList');
-    if (!list) return;
+    expect(list, 'на хабе нет ItemList').toBeTruthy();
+    const text = visibleText(hub);
     for (const element of list.itemListElement) {
-      expect(element.item.acceptedAnswer.citation?.url).toMatch(/^https:\/\//);
+      expect(text, `${element.url}: заголовка нет в видимом тексте`).toContain(element.name);
+      expect(hub, `${element.url}: нет ссылки`).toContain(
+        `href="${new URL(element.url).pathname}"`,
+      );
     }
+  });
+
+  it('страница карточки отдаётся статикой и несёт источник', async () => {
+    const hub = pages.get('/knowledge')!.html;
+    const first = internalLinks(hub).find((href) => href.startsWith('/knowledge/'));
+    expect(first, 'на хабе нет ни одной ссылки на карточку').toBeTruthy();
+    const response = await fetch(`${origin}${first}`);
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    const text = visibleText(html);
+    expect(heading(html)).not.toBe('');
+    expect(text, 'нет уровня доказательности').toContain('Насколько это надёжно');
+    expect(html, 'источник не ссылкой').toMatch(/<b>Источник:<\/b> <a href="https?:\/\//);
+    expect(html).toContain(`<link rel="canonical" href="https://habitoff.ru${first}"`);
+  });
+
+  it('несуществующий код карточки отдаёт 404', async () => {
+    const response = await fetch(`${origin}/knowledge/net-takogo-koda`);
+    expect(response.status).toBe(404);
   });
 
   it('canonical у каждого адреса указывает на себя', () => {
