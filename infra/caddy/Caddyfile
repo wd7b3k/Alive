@@ -57,6 +57,22 @@ habitoff.ru {
 		# этом случае считает файл текстом.
 		header /site.webmanifest Content-Type "application/manifest+json"
 
+		# Запрет индексации личных экранов. Заголовком, а не мета-тегом и не robots.txt —
+		# и это единственная форма, которая здесь работает.
+		#
+		# Мета-тег `noindex` ставит JavaScript, которого краулер не выполняет. `Disallow`
+		# в robots.txt запрещает обход, а не показ: робот, которому запрещено зайти, не
+		# увидит там запрета и вправе оставить адрес в выдаче голой ссылкой. Узнать адрес
+		# ему теперь есть откуда — 05.09.2026 включён обход по счётчикам Метрики, а
+		# счётчик по ADR-0015 стоит и на личных страницах.
+		#
+		# Поэтому `Disallow` для этих путей снят, обход разрешён, а запрет вернулся сюда:
+		# чтобы `noindex` сработал, робот обязан его увидеть.
+		#
+		# Список путей сверяется с `src/services/seo.ts` тестом `services/robots.test.ts`.
+		@private path /profile /profile/* /health /health/* /path /path/* /together /together/* /admin /admin/* /login /login/*
+		header @private X-Robots-Tag "noindex, nofollow"
+
 		route {
 			# Экраны, которые рисует клиент: своего файла у них нет и быть не может.
 			# Список сверяется с src/services/seo.ts тестом services/caddy-routes.test.ts —

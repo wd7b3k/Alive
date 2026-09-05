@@ -6,16 +6,31 @@ import { describe, expect, it } from 'vitest';
 import { NOINDEX_PATHS } from './seo';
 
 /**
- * `robots.txt` против собственного текста документации.
+ * Кто закрывает личные экраны — и от чего именно.
  *
- * `docs/SEO_AND_ANALYTICS.md` утверждает «закрыты личные экраны». До 30.08.2026 это
- * было неправдой для GPTBot, ClaudeBot, PerplexityBot и YandexBot: у каждого была
- * своя группа, а группы в robots.txt не складываются — робот подчиняется только своей.
- * Утечки не было (без входа там пусто), но документ расходился с фактом, и заметить
- * это можно было только чтением файла глазами. Теперь падает тест.
+ * Здесь сходятся три списка, которые иначе разъезжаются молча: `NOINDEX_PATHS` в
+ * `seo.ts`, группы в `robots.txt` и матчер `@private` в `infra/caddy/Caddyfile`.
+ *
+ * История, из-за которой этот тест существует, длиннее одной правки. До 30.08.2026
+ * `robots.txt` не закрывал личные экраны для GPTBot, ClaudeBot, PerplexityBot и
+ * YandexBot: у каждого была своя группа, а группы не складываются — робот подчиняется
+ * только своей. Документ при этом утверждал обратное.
+ *
+ * 05.09.2026 выяснилось, что и починенный `Disallow` не закрывал того, что все считали
+ * закрытым. `Disallow` запрещает **обход**, а не показ; мета-тег `noindex` ставит
+ * JavaScript, которого краулер не выполняет. Настоящего запрета индексации не
+ * существовало ни для одного робота — а с включением обхода по счётчикам Метрики робот
+ * узнаёт адреса личных страниц из данных счётчика.
+ *
+ * Поэтому теперь: обход разрешён всем, а индексацию запрещает заголовок
+ * `X-Robots-Tag`, который робот увидит, потому что ему разрешено зайти.
  */
 const robots = readFileSync(
   fileURLToPath(new URL('../../public/robots.txt', import.meta.url)),
+  'utf8',
+);
+const caddyfile = readFileSync(
+  fileURLToPath(new URL('../../../infra/caddy/Caddyfile', import.meta.url)),
   'utf8',
 );
 
@@ -56,12 +71,43 @@ describe('robots.txt', () => {
     }
   });
 
-  it('каждая группа закрывает каждый личный экран', () => {
+  /**
+   * Обход личных экранов больше не запрещён — и это не забывчивость, а условие того,
+   * чтобы запрет индексации вообще работал.
+   *
+   * `Disallow` запрещает обход, а не показ: робот, которому запрещено зайти, не увидит
+   * на странице никакого `noindex` и вправе оставить адрес в выдаче голой ссылкой. С
+   * 05.09.2026 узнать адрес ему есть откуда — включён обход по счётчикам Метрики, а
+   * счётчик по ADR-0015 стоит и на личных страницах.
+   */
+  it('обход личных экранов не запрещён: иначе noindex до робота не доедет', () => {
     expect(parsed.length).toBeGreaterThan(1);
     for (const group of parsed) {
       for (const path of NOINDEX_PATHS) {
-        expect(group.disallow, `${group.agents.join(', ')} → ${path}`).toContain(path);
+        expect(group.disallow, `${group.agents.join(', ')} → ${path}`).not.toContain(path);
       }
+    }
+  });
+
+  it('запрет индексации стоит заголовком на всех личных путях', () => {
+    // Три списка — `seo.ts`, `robots.txt` и `Caddyfile` — сходятся здесь, а не в голове
+    // у того, кто правит один из них.
+    const matcher = caddyfile.match(/@private path ([^\n]+)/);
+    expect(matcher, 'в Caddyfile нет матчера @private').toBeTruthy();
+    const guarded = matcher![1].trim().split(/\s+/);
+    for (const path of NOINDEX_PATHS) {
+      expect(guarded, `${path}: нет в @private`).toContain(path);
+      // Вложенные адреса тоже: `/admin/analytics` — такой же личный экран, как `/admin`.
+      expect(guarded, `${path}/*: вложенные адреса не закрыты`).toContain(`${path}/*`);
+    }
+    expect(caddyfile).toMatch(/header @private X-Robots-Tag "noindex, nofollow"/);
+  });
+
+  it('публичные адреса заголовок не получают', () => {
+    const matcher = caddyfile.match(/@private path ([^\n]+)/);
+    const guarded = matcher![1].trim().split(/\s+/);
+    for (const path of ['/', '/knowledge', '/links', '/meanings', '/experiment', '/releases']) {
+      expect(guarded, `${path} попал под запрет индексации`).not.toContain(path);
     }
   });
 
