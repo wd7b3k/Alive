@@ -4,7 +4,7 @@ import { loadBootstrap, type Bootstrap } from '../data';
 import { publicEnv } from '../env';
 import { recordConsent } from '../services/consent';
 import { reportError } from '../services/error-monitoring';
-import { trackStageOnce } from '../services/analytics';
+import { trackStage } from '../services/analytics';
 import { claimVisitor } from '../services/visitor';
 import { getSupabase } from '../supabase';
 
@@ -99,7 +99,7 @@ export function useBootstrapSession() {
         // весь провайдер, и до 05.09.2026 отрезок «ушёл к провайдеру → вернулся с
         // сессией» не считался ничем. `SIGNED_IN` приходит и при восстановлении
         // сессии на каждой загрузке — от повторов защищает отметка в хранилище.
-        trackStageOnce(current.user.id, 'signed_in', 'login');
+        trackStage(current.user.id, 'signed_in', 'login');
       }
       if (!current) {
         setData(null);

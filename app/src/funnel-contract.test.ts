@@ -75,7 +75,7 @@ describe('этапы воронки отправляются', () => {
     // (там, где событие уже пишется рядом со своим смыслом) и прямая пометка события.
     const sent = stages.filter((stage) => {
       const patterns = [
-        new RegExp(`trackStageOnce\\([^)]*'${stage}'`, 's'),
+        new RegExp(`trackStage\\([^)]*'${stage}'`, 's'),
         new RegExp(`reachStageGoal\\('${stage}'\\)`),
         new RegExp(`funnel_stage: '${stage}'`),
       ];
@@ -90,7 +90,7 @@ describe('этапы воронки отправляются', () => {
       stages
         .filter((stage) =>
           [
-            new RegExp(`trackStageOnce\\([^)]*'${stage}'`, 's'),
+            new RegExp(`trackStage\\([^)]*'${stage}'`, 's'),
             new RegExp(`reachStageGoal\\('${stage}'\\)`),
           ].some((pattern) => pattern.test(code)),
         )
