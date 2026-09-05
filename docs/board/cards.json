@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "884e7ae6cec02bbad1a9bb18bf9344e2f05110fa",
+  "appliedCommit": "c546fd89011edace7b7e5596deaf3ef4233c245e",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -2986,12 +2986,12 @@
         }
       ],
       "commits": [
-        "23033bf80a12bdf5550eea6ff65e4e80cd8ce85e",
         "d577a44965f9b2caa57c8b8a4191bcbe958b230d",
         "9279276554d700e30401227e49e8ed0163187eb8",
         "0f6225901e90c57701bc776259f03bf5d1a22ae7",
         "a34abdfb35e37768bb2574e8b06a124ecf62c68f",
-        "f2a02a81a202eada052dacab04a0fbd581ec370d"
+        "f2a02a81a202eada052dacab04a0fbd581ec370d",
+        "013868db860eb6dd5b60b868b5850fb1686245d5"
       ]
     },
     {
@@ -3699,6 +3699,19 @@
       "updated": "2026-08-31",
       "commits": [
         "1e83a65876cfed987666cfebed29a9da78f77d23"
+      ]
+    },
+    {
+      "id": "katalog-bez-svoih-adresov",
+      "title": "Каталог без своих адресов",
+      "type": "research",
+      "epic": "seo",
+      "priority": 1,
+      "status": "done",
+      "body": "66 разобранных вопросов на трёх адресах, разметка описывает то, чего нет в видимом HTML; разбор R-20260905-01, решение ADR-0017",
+      "updated": "2026-09-05",
+      "commits": [
+        "c546fd89011edace7b7e5596deaf3ef4233c245e"
       ]
     }
   ]
