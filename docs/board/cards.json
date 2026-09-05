@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "cd194f353e3e6e385d3aca5f3c0e87855325d357",
+  "appliedCommit": "00fc9dfb40c3ec34f817c814076ea91aff5c65d1",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3947,6 +3947,19 @@
       "updated": "2026-09-05",
       "commits": [
         "9c36654df39fde801206874b860443441d7319b4"
+      ]
+    },
+    {
+      "id": "knowledge-new-cards-publish",
+      "title": "Решение о публикации четырёх новых карточек каталога",
+      "type": "tech",
+      "epic": "content",
+      "priority": 2,
+      "status": "backlog",
+      "body": "withdrawal_shape, no_minute_timeline, quit_vaping_is_task, lung_decline_slows лежат в базе с published = false; после «да» — update, пересборка выгрузки и выкладка",
+      "updated": "2026-09-05",
+      "commits": [
+        "00fc9dfb40c3ec34f817c814076ea91aff5c65d1"
       ]
     }
   ]
