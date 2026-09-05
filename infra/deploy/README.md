@@ -22,7 +22,7 @@ git не отражался вовсе, и разобрать оборванну
 
 ```bash
 ssh alive@habitoff.ru
-cd /srv/alive/repo && git checkout main && git pull && /srv/alive/deploy.sh
+cd /srv/alive/repo && git checkout main && git fetch origin && git merge --ff-only origin/main && /srv/alive/deploy.sh
 ```
 
 ## Что скрипт проверяет и в каком порядке

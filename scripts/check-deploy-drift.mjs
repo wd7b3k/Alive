@@ -85,7 +85,7 @@ try {
       '  Значит живая сборка сделана до того, как появился отпечаток, и выкладка с текущего main не запускалась.',
       '',
       'Лечится передеплоем: ssh alive@habitoff.ru, затем',
-      '  cd /srv/alive/repo && git fetch && git checkout main && git pull && /srv/alive/deploy.sh',
+      '  cd /srv/alive/repo && git checkout main && git fetch origin && git merge --ff-only origin/main && /srv/alive/deploy.sh',
     ].join('\n'),
   );
 }
@@ -118,7 +118,7 @@ console.error(
     commits,
     '',
     'Лечится передеплоем: ssh alive@habitoff.ru, затем',
-    '  cd /srv/alive/repo && git fetch && git checkout main && git pull && /srv/alive/deploy.sh',
+    '  cd /srv/alive/repo && git checkout main && git fetch origin && git merge --ff-only origin/main && /srv/alive/deploy.sh',
   ].join('\n'),
 );
 process.exit(1);
