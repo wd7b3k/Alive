@@ -3808,6 +3808,18 @@
       "commits": [
         "03e8ede89be91cd3bb24d745807c0def75e77226"
       ]
+    },
+    {
+      "id": "rel-publish-backlog",
+      "title": "Невыложенное разобрано, прод на 3.3",
+      "type": "infra",
+      "epic": "release",
+      "priority": 1,
+      "status": "doing",
+      "body": "Опись веток, разведение номеров задач и ADR, слияние корзин Б и А, версия 3.3.0 и выкладка. Корзина А оказалась вдвое меньше описи: chore/ops-fixes и feat/server-apply-migrations уже в main в более поздней редакции. Постановка — docs/tasks/T-20260905-11-release-publish-backlog.md.",
+      "updated": "2026-09-05",
+      "chats": [],
+      "commits": []
     }
   ]
 }
