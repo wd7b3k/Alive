@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "af58cce927576fb227852b532ab09977f53e1bec",
+  "appliedCommit": "2f8f3fc06d55db76726a33896ab1fc874f06595a",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3725,6 +3725,19 @@
       "updated": "2026-09-05",
       "commits": [
         "af58cce927576fb227852b532ab09977f53e1bec"
+      ]
+    },
+    {
+      "id": "zapreta-indeksacii-lichnyh-ekranov",
+      "title": "Запрета индексации личных экранов не было ни для одного робота",
+      "type": "bug",
+      "epic": "privacy",
+      "priority": 1,
+      "status": "backlog",
+      "body": "мета-тег ставит JavaScript, которого краулер не выполняет, а Disallow запрещает обход, но не показ; вскрылось при включении обхода по счётчикам Метрики",
+      "updated": "2026-09-05",
+      "commits": [
+        "2f8f3fc06d55db76726a33896ab1fc874f06595a"
       ]
     }
   ]
