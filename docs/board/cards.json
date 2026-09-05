@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "930dbce1deead40455f9ea08a35bdeacea15f002",
+  "appliedCommit": "ffaffca48b2c3ef679a7656f5711e741476b6752",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3263,12 +3263,13 @@
       "type": "docs",
       "epic": "content",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "В базе уровень доказательности, границы и источник обязательны, а в JSON-LD, то есть ровно там, откуда утверждение попадёт в сниппет и в пересказ модели, их нет. citation появился у ItemList на /knowledge; пять ответов FAQPage на главной по-прежнему без источников",
-      "updated": "2026-08-31",
+      "updated": "2026-09-05",
       "commits": [
         "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156",
-        "b2fcfcee22b11a1e7d2a7bfa099feb24bf4efd2b"
+        "b2fcfcee22b11a1e7d2a7bfa099feb24bf4efd2b",
+        "ffaffca48b2c3ef679a7656f5711e741476b6752"
       ]
     },
     {
@@ -3739,6 +3740,19 @@
       "commits": [
         "2f8f3fc06d55db76726a33896ab1fc874f06595a",
         "930dbce1deead40455f9ea08a35bdeacea15f002"
+      ]
+    },
+    {
+      "id": "chisla-v-index-html",
+      "title": "Числа в index.html и seo.ts набраны руками",
+      "type": "tech",
+      "epic": "seo",
+      "priority": 2,
+      "status": "backlog",
+      "body": "28 пусковых моментов держалось руками и разошлось с базой, где их 25; описания разделов и статический текст главной считать из каталога, как это уже сделано для llms.txt",
+      "updated": "2026-09-05",
+      "commits": [
+        "ffaffca48b2c3ef679a7656f5711e741476b6752"
       ]
     }
   ]
