@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-05",
-  "appliedCommit": "887ee5fa5882368465d37a1d02c23bd6ef9daa7a",
+  "appliedCommit": "f82c3c02f626972d5fff45f2eb9853102424f793",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3847,6 +3847,19 @@
       "updated": "2026-09-05",
       "commits": [
         "81b10aae4fc6921dbcf7d8595f69c99f592df209"
+      ]
+    },
+    {
+      "id": "vykladka-na-prezhnem-kommite",
+      "title": "Выкладка на прежнем коммите выглядит успешной",
+      "type": "bug",
+      "epic": "infra",
+      "priority": 2,
+      "status": "backlog",
+      "body": "git pull падает, deploy.sh про это не знает и пересобирает то же самое — выкладка отчитывается успехом, а прод не двигается; в порядок выкладки нужен гейт «HEAD после git изменился»",
+      "updated": "2026-09-05",
+      "commits": [
+        "62f0100705d789de4392e74079b9765693345626"
       ]
     },
     {
