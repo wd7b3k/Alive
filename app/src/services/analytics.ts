@@ -1,6 +1,14 @@
 import type { ProductType } from '../data';
 import { getSupabase } from '../supabase';
-import { CLIENT_ID, appVersion, getSessionId, getVisitorId, platformLabel } from './visitor';
+import { STAGE_TO_GOAL, trackGoal } from './counters';
+import {
+  CLIENT_ID,
+  appVersion,
+  getSessionId,
+  getVisitorId,
+  markFunnelStageOnce,
+  platformLabel,
+} from './visitor';
 
 /**
  * Запись продуктовых событий.
@@ -25,8 +33,21 @@ import { CLIENT_ID, appVersion, getSessionId, getVisitorId, platformLabel } from
  *    что sanitizeMetadata их выбрасывает.
  */
 
+/**
+ * Этап воронки в собственном слое.
+ *
+ * Шесть, а не пять: до 05.09.2026 «эпизод доведён до результата» не имел своего этапа,
+ * и его приходилось бы записывать под именем `repeat_episode` — то есть называть одно
+ * другим. Соответствие этапа цели в кабинетах — `STAGE_TO_GOAL` в `counters.ts`,
+ * и это единственное место, где пара записана.
+ */
 export type FunnelStage =
-  'landing' | 'signed_in' | 'onboarded' | 'first_episode' | 'repeat_episode';
+  | 'landing'
+  | 'signed_in'
+  | 'onboarded'
+  | 'first_episode'
+  | 'episode_with_result'
+  | 'repeat_episode';
 
 export type AnalyticsEvent = {
   /** Что произошло. Короткий стабильный код, snake_case. */
@@ -200,4 +221,45 @@ export function trackAnonEvent(event: {
     .then(undefined, () => {
       // Молча. См. правило 2 выше.
     });
+}
+
+/**
+ * Веха воронки: запись в свой слой и цель в кабинеты, одним вызовом и один раз на
+ * человека.
+ *
+ * Почему одним вызовом. До 05.09.2026 цель отправлялась ровно в одном месте из пяти
+ * возможных — `auth_started` на экране входа, — а остальные четыре не отправлялись
+ * никогда. Ошибка держалась неделю и не могла быть поймана ни компилятором, ни
+ * линтером: незаписанного вызова не видно. Единственная защита — не оставлять двух
+ * мест, где о вехе надо вспомнить по отдельности.
+ *
+ * Почему отдельное событие, а не пометка существующего. Часть вех уже пишет база
+ * триггерами — `onboarding_completed`, `account_created`. Дублировать их отсюда
+ * нельзя: воронка посчитает каждый шаг дважды. Но триггер заполняет `funnel_stage`
+ * человеческим текстом («первое знакомство завершено»), а не машинным кодом, и сверить
+ * его с целью в кабинете невозможно. Поэтому здесь пишется своя строка с типом
+ * `funnel_stage`: одна на человека на веху — ровно столько же, сколько уходит целей,
+ * и потому напрямую сравнимая с кабинетом.
+ *
+ * Ничего не ждёт и никогда не бросает — те же правила, что у остального модуля.
+ */
+export function trackStageOnce(
+  userId: string | null | undefined,
+  stage: FunnelStage,
+  surface: string,
+): void {
+  if (!markFunnelStageOnce(stage)) return;
+  trackEvent(userId, { event_type: 'funnel_stage', funnel_stage: stage, surface });
+  trackGoal(STAGE_TO_GOAL[stage]);
+}
+
+/**
+ * Только цель, без записи в свой слой: там, где событие уже пишется рядом со своим
+ * смыслом и дублировать его строкой `funnel_stage` незачем. Сейчас это ровно один
+ * случай — нажатие кнопки входа: событие про нажатие, а цель про человека, и человек
+ * может нажать дважды.
+ */
+export function reachStageGoal(stage: FunnelStage): void {
+  if (!markFunnelStageOnce(stage)) return;
+  trackGoal(STAGE_TO_GOAL[stage]);
 }

@@ -4,6 +4,7 @@ import { loadBootstrap, type Bootstrap } from '../data';
 import { publicEnv } from '../env';
 import { recordConsent } from '../services/consent';
 import { reportError } from '../services/error-monitoring';
+import { trackStageOnce } from '../services/analytics';
 import { claimVisitor } from '../services/visitor';
 import { getSupabase } from '../supabase';
 
@@ -92,7 +93,14 @@ export function useBootstrapSession() {
       // Связать анонимного посетителя с человеком ровно в момент входа. Позже уже
       // поздно: без этой строки источник трафика и регистрация остаются двумя
       // несвязанными фактами, и вопрос «откуда приходят те, кто остаётся» без ответа.
-      if (current && event === 'SIGNED_IN') claimVisitor();
+      if (current && event === 'SIGNED_IN') {
+        claimVisitor();
+        // Веха отмечается здесь, а не по нажатию кнопки: между кнопкой и сессией лежит
+        // весь провайдер, и до 05.09.2026 отрезок «ушёл к провайдеру → вернулся с
+        // сессией» не считался ничем. `SIGNED_IN` приходит и при восстановлении
+        // сессии на каждой загрузке — от повторов защищает отметка в хранилище.
+        trackStageOnce(current.user.id, 'signed_in', 'login');
+      }
       if (!current) {
         setData(null);
         setError('');

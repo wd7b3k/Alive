@@ -18,6 +18,11 @@ import { getSupabase } from '../supabase';
 const VISITOR_KEY = 'habitoff:visitor:v1';
 const SESSION_KEY = 'habitoff:session:v1';
 const ATTRIBUTED_KEY = 'habitoff:visitor-attributed:v1';
+/**
+ * Пройденные этапы воронки. Один ключ на все этапы, а не ключ на этап: цель уходит в
+ * кабинет один раз на человека, и хранить это надо там же, где живёт сам человек.
+ */
+const FUNNEL_KEY = 'habitoff:funnel:v1';
 /** Пауза, после которой заход считается новым. Тридцать минут — общепринятая граница. */
 const SESSION_IDLE_MS = 30 * 60 * 1000;
 
@@ -78,6 +83,28 @@ export function getVisitorId(): string | null {
     writeStore(window.localStorage, VISITOR_KEY, id);
   }
   return id;
+}
+
+/**
+ * Отметить этап воронки пройденным. Возвращает `true` только в первый раз.
+ *
+ * Зачем: цель в кабинете — это «человек дошёл», а не «компонент отрисовался». Без
+ * отметки `onboarded` уходила бы при каждом открытии приложения после настройки, и
+ * конверсия в кабинете выросла бы в разы на ровном месте — причём в сторону, которая
+ * выглядит как успех.
+ *
+ * Хранилище может быть недоступно (приватное окно, запрет данных сайта). Тогда функция
+ * честно отвечает `true` каждый раз: лучше посчитать цель дважды, чем не посчитать её
+ * ни разу. Отдельного ключа на этап нет намеренно — список лежит в одной строке.
+ */
+export function markFunnelStageOnce(stage: string): boolean {
+  if (typeof window === 'undefined') return false;
+  const raw = readStore(window.localStorage, FUNNEL_KEY) ?? '';
+  const reached = raw.split(',').filter(Boolean);
+  if (reached.includes(stage)) return false;
+  reached.push(stage);
+  writeStore(window.localStorage, FUNNEL_KEY, reached.join(','));
+  return true;
 }
 
 /**
