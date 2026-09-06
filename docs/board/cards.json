@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-06",
-  "appliedCommit": "903f0f678928c898e8afbdba62799f9131659019",
+  "appliedCommit": "819c271a48156cd6c5297ba46b0c11ade099bfcd",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3832,11 +3832,12 @@
       "type": "tech",
       "epic": "infra",
       "priority": 1,
-      "status": "backlog",
+      "status": "done",
       "body": "task/counter-health, agent/monitoring-truth и agent/source-funnel-rebased несут миграции 20260831180000 и 20260831190000, а в базе применены от 05.09; применятель их не пропустит, но применит к более новой схеме — даты переписать до слияния",
-      "updated": "2026-09-05",
+      "updated": "2026-09-06",
       "commits": [
-        "81b10aae4fc6921dbcf7d8595f69c99f592df209"
+        "81b10aae4fc6921dbcf7d8595f69c99f592df209",
+        "819c271a48156cd6c5297ba46b0c11ade099bfcd"
       ]
     },
     {
@@ -3845,11 +3846,12 @@
       "type": "docs",
       "epic": "process",
       "priority": 3,
-      "status": "backlog",
+      "status": "done",
       "body": "десять веток до 20.08 (origin/v3.0-*, agent/v4.0.0-*, agent/owner-vision-*, agent/r1-*, agent/v3.1-*, agent/product-strategy-*, migration/standalone-repo) каждый раз попадают в опись невыложенного; пометить архивом или удалить — решение владельца",
-      "updated": "2026-09-05",
+      "updated": "2026-09-06",
       "commits": [
-        "81b10aae4fc6921dbcf7d8595f69c99f592df209"
+        "81b10aae4fc6921dbcf7d8595f69c99f592df209",
+        "819c271a48156cd6c5297ba46b0c11ade099bfcd"
       ]
     },
     {
@@ -4061,6 +4063,19 @@
       "updated": "2026-09-06",
       "commits": [
         "903f0f678928c898e8afbdba62799f9131659019"
+      ]
+    },
+    {
+      "id": "geyt-vykladki-ne-proveryaet",
+      "title": "Гейт выкладки не проверяет, что собирается origin/main",
+      "type": "tech",
+      "epic": "release",
+      "priority": 2,
+      "status": "backlog",
+      "body": "deploy.sh собрал f76f8b7 при origin/main d5aeed7 — репозиторий на сервере отставал на 22 коммита, fetch этого не показал",
+      "updated": "2026-09-06",
+      "commits": [
+        "819c271a48156cd6c5297ba46b0c11ade099bfcd"
       ]
     }
   ]
