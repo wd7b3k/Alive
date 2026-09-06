@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-06",
-  "appliedCommit": "c3da9b035a8f665b83e303b8399a7d5e579db7a7",
+  "appliedCommit": "b83e2c45eee72130adb69f61cc0bc42ec159fecd",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3973,7 +3973,8 @@
       "body": "T-20260906-01, растянутая ссылка вместо служебной строки под карточкой",
       "updated": "2026-09-06",
       "commits": [
-        "c3da9b035a8f665b83e303b8399a7d5e579db7a7"
+        "c3da9b035a8f665b83e303b8399a7d5e579db7a7",
+        "b83e2c45eee72130adb69f61cc0bc42ec159fecd"
       ],
       "docs": [
         "docs/tasks/T-20260906-01-knowledge-card-clickable.md",
@@ -3989,11 +3990,12 @@
       "type": "bug",
       "epic": "design",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "в роутере со входом нет ветки /knowledge/<код>, путь проваливается в «Сегодня»; из-за этого карточки в разделе после входа не сделаны кликабельными",
       "updated": "2026-09-06",
       "commits": [
-        "c3da9b035a8f665b83e303b8399a7d5e579db7a7"
+        "c3da9b035a8f665b83e303b8399a7d5e579db7a7",
+        "b83e2c45eee72130adb69f61cc0bc42ec159fecd"
       ]
     }
   ]
