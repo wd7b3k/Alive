@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-06",
-  "appliedCommit": "819c271a48156cd6c5297ba46b0c11ade099bfcd",
+  "appliedCommit": "89489c3276ca5ada14bc69cc172dc006d8d93ee8",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -152,6 +152,42 @@
       "name": "v3.1 Together и дальше",
       "about": "Социальная поддержка без соревнования, затем админка и product intelligence.",
       "release": "v3.1+"
+    },
+    {
+      "id": "knowledge",
+      "name": "База знаний",
+      "about": "Раздел «Факты и мифы»: карточки с уровнем доказательности, их вечные адреса, выгрузка каталога и еженедельное пополнение. ADR-0017, ADR-0020 не входят: это обратная связь.",
+      "release": "v3.0"
+    },
+    {
+      "id": "i18n",
+      "name": "Английский интерфейс",
+      "about": "Второй язык продукта: слой строк, адреса `/en/`, перевод каталога, выбор языка по стране. Разбор — `R-20260905-01-i18n-english.md`.",
+      "release": "v3.2+"
+    },
+    {
+      "id": "legal",
+      "name": "Право и заимствования",
+      "about": "Атрибуция, границы медицинских утверждений, лицензии на чужие тексты и данные. `ORIGINS_AND_ATTRIBUTION.md`, `EDITORIAL_PROTOCOL_MED.md`.",
+      "release": "—"
+    },
+    {
+      "id": "money",
+      "name": "Деньги",
+      "about": "Подвешенное решение о донатах и подписке. Пока не принято — `R-20260830-01-money-monetization.md`. Ни одна карточка отсюда не идёт в работу без ADR.",
+      "release": "—"
+    },
+    {
+      "id": "social",
+      "name": "Внешние площадки",
+      "about": "Дзен, соцсети, рассылки: где продукт показывается за пределами habitoff.ru. Оригинальные тексты грузятся в Вебмастер до публикации фрагментов.",
+      "release": "—"
+    },
+    {
+      "id": "data",
+      "name": "Данные и модели",
+      "about": "Схема базы, миграции, пересчитываемые модели единиц, экспорт своих данных. Сырые события отдельно от моделей — `DATA_MODEL.md`.",
+      "release": "v3.0"
     }
   ],
   "releases": [
@@ -414,10 +450,10 @@
       "title": "Перенести пользователей из Supabase Cloud",
       "type": "infra",
       "epic": "infra",
-      "priority": 0,
+      "priority": 1,
       "status": "next",
       "body": "pg_dump --data-only по auth.users, auth.identities, profiles и user_*; каталоги не трогать, они приезжают миграциями. Сверка агрегатными SHA-256, проверка RLS заново после переноса.",
-      "updated": "2026-08-27",
+      "updated": "2026-09-06",
       "tags": [
         "pilot",
         "owner"
@@ -444,9 +480,9 @@
       "type": "infra",
       "epic": "infra",
       "priority": 1,
-      "status": "doing",
+      "status": "next",
       "body": "alive-health.sh раз в пять минут: /auth/v1/health, публичная страница, заполненность диска. OnFailure в юните цепляет уведомление. Без этого первым мониторингом будет владелец, открывший сайт с телефона. таймеры лежали выключенными два дня: enable --now пропустили при установке; включены 30.08",
-      "updated": "2026-08-30",
+      "updated": "2026-09-06",
       "tags": [
         "pilot",
         "owner"
@@ -503,10 +539,10 @@
       "title": "Положить infra/ в репозиторий",
       "type": "tech",
       "epic": "infra",
-      "priority": 0,
+      "priority": 1,
       "status": "next",
       "body": "docker-compose.yml, docker-compose.override.yml и Caddyfile с зафиксированными версиями образов. Сейчас конфигурация сервера существует только на сервере — восстановить прод по репозиторию нельзя. Единственное оставшееся нарушение правила «репозиторий — единственный источник истины».",
-      "updated": "2026-08-27",
+      "updated": "2026-09-06",
       "tags": [
         "pilot"
       ],
@@ -532,9 +568,9 @@
       "type": "infra",
       "epic": "infra",
       "priority": 1,
-      "status": "doing",
+      "status": "next",
       "body": "alive.hmnos.ru не выключать до подтверждения стабильности, ориентир — не раньше ~10.09.2026.",
-      "updated": "2026-08-27",
+      "updated": "2026-09-06",
       "chats": [
         {
           "label": "habitoff-vps-state-2026-08-26",
@@ -1917,9 +1953,9 @@
       "type": "research",
       "epic": "pilot",
       "priority": 2,
-      "status": "doing",
+      "status": "next",
       "body": "Витрина показывает их строкой «нечем считать» с объяснением, а не нулём: пилот заранее говорит, на какие вопросы он ответить не сможет. Каждая тянет свою доработку — они разложены отдельными карточками ниже.",
-      "updated": "2026-08-30",
+      "updated": "2026-09-06",
       "chats": [
         {
           "label": "habitoff-pilot-readiness-2026-08-27",
@@ -1937,9 +1973,9 @@
       "type": "feature",
       "epic": "pilot",
       "priority": 2,
-      "status": "doing",
+      "status": "next",
       "body": "Сохранение настроек перезаписывает строку продукта, и базис исчезает без истории. Без отдельной таблицы версий не считается расход против исходного уровня.",
-      "updated": "2026-08-30",
+      "updated": "2026-09-06",
       "chats": [
         {
           "label": "habitoff-pilot-readiness-2026-08-27",
@@ -2210,10 +2246,10 @@
       "title": "Разбить бандл по маршрутам",
       "type": "tech",
       "epic": "perf",
-      "priority": 0,
+      "priority": 1,
       "status": "backlog",
       "body": "Сейчас один чанк: 570 КБ распакованного, 158 КБ brotli, всего ~996 КБ и 35 запросов. При лимите ТСПУ около 16 КБ на соединение такой бандл не грузится в принципе. Порог для сборки: стартовый JS больше 200 КБ роняет сборку.",
-      "updated": "2026-08-27",
+      "updated": "2026-09-06",
       "chats": [
         {
           "label": "alive-ru-availability-and-domain-2026-08-26",
@@ -2228,10 +2264,10 @@
       "title": "Запекать публичные каталоги в статический JSON",
       "type": "feature",
       "epic": "perf",
-      "priority": 0,
+      "priority": 1,
       "status": "backlog",
       "body": "Факты, мифы, контексты, потребности, замены, смыслы, цели меняются миграциями, а не в рантайме. 30 запросов на старте превращаются в 0–2. Это та же работа, что и предрендер: три четверти времени до готового экрана — API, а не хостинг (последний ответ 1488 мс при своей статике на 428 мс).",
-      "updated": "2026-08-27",
+      "updated": "2026-09-06",
       "chats": [
         {
           "label": "alive-ru-availability-and-domain-2026-08-26",
@@ -2544,9 +2580,9 @@
       "type": "docs",
       "epic": "process",
       "priority": 0,
-      "status": "doing",
+      "status": "next",
       "body": "Четыре расхождения прода и репозитория родились в SQL Editor. Своя база убирает эту кнопку — но только если её место не займёт psql по SSH. Любое изменение схемы или контента — миграция в репозитории. Правило сформулировано, механически закреплено частично: гейт миграций есть, запрета на прямой psql нет. apply-migrations.sh доведён до одной транзакции и готов к вливанию",
-      "updated": "2026-08-31",
+      "updated": "2026-09-06",
       "chats": [
         {
           "label": "alive-ru-selfhosting-plan",
@@ -2836,10 +2872,10 @@
       "title": "Гейт v3.0: 36 из 38",
       "type": "tech",
       "epic": "release",
-      "priority": 0,
-      "status": "doing",
+      "priority": 1,
+      "status": "next",
       "body": "Оставшиеся два пункта — запуск локального стека Supabase CLI и db reset. Существо пункта («база из миграций равна проду») доказано иначе: агрегатные SHA-256 совпадают с продом, миграции прогоняются на чистой Postgres. Не доказан сам инструмент, а не эквивалентность. Решение «v3.0 выпущен» принимает владелец.",
-      "updated": "2026-08-27",
+      "updated": "2026-09-06",
       "tags": [
         "owner"
       ],
@@ -3113,10 +3149,10 @@
       "title": "Заказать переобход после ребренда",
       "type": "tech",
       "epic": "seo",
-      "priority": 0,
+      "priority": 1,
       "status": "backlog",
       "body": "В Google одна страница со старым именем ALIVE, снимок четырёхдневной давности. В Яндексе домена нет ни по site, ни по брендовому запросу. Заказывается после подтверждения прав в консолях.",
-      "updated": "2026-08-30",
+      "updated": "2026-09-06",
       "commits": [
         "94cf5bced59fd14b7bc49f7f8f4b5d4784c1a156"
       ]
@@ -4076,6 +4112,99 @@
       "updated": "2026-09-06",
       "commits": [
         "819c271a48156cd6c5297ba46b0c11ade099bfcd"
+      ]
+    },
+    {
+      "id": "pravila-bez-proverok-razbor",
+      "title": "Правила без проверок: разбор R-20260906-01",
+      "type": "research",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "40 правил прозой, 5 проверок в CI; пределы doing/p0/очередь нарушены; три коллизии id постановок; локальный main отстаёт на 112",
+      "updated": "2026-09-06",
+      "commits": [
+        "aac520ebb64f51a400391688dc9b022e6acc7ccd"
+      ]
+    },
+    {
+      "id": "reglament-kanon-zhurnal-i",
+      "title": "Регламент: канон, журнал и роли агентов",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "AGENTS.md 433 -> 215 строк, docs/INCIDENTS.md, .claude/agents/, два обязательных раздела в шаблоне задачи",
+      "updated": "2026-09-06",
+      "commits": [
+        "72f6394fcabbb62612682912637819e9cf9604b9"
+      ]
+    },
+    {
+      "id": "geyty-vmesto-pravil-t",
+      "title": "Гейты вместо правил: T-20260906-02",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "done",
+      "body": "next-id.sh, джобы постановки и пределов, check-numbers.mjs, стоп на отставшем main, проверка экрана в браузере",
+      "updated": "2026-09-06",
+      "commits": [
+        "72f6394fcabbb62612682912637819e9cf9604b9",
+        "04021f8d8f7fab4d48cbfc54a6db35e30863eedc"
+      ]
+    },
+    {
+      "id": "roli-podklyuchayutsya-sami-priemka",
+      "title": "Роли подключаются сами, приёмка доводит до прода",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "описания-триггеры, скилл habitoff-vhod, приёмка + выкладка одной ролью",
+      "updated": "2026-09-06",
+      "commits": [
+        "3ae63faba8105740361201c20b7455681bf6c4ff"
+      ]
+    },
+    {
+      "id": "svesti-nevylozhennoe-i-dovesti",
+      "title": "Свести невыложенное и довести до прода: T-20260906-04",
+      "type": "tech",
+      "epic": "release",
+      "priority": 2,
+      "status": "done",
+      "body": "RUNBOOK базы знаний и восемь разборов вне git, восемь свежих веток, августовский архив",
+      "updated": "2026-09-06",
+      "commits": [
+        "3ae63faba8105740361201c20b7455681bf6c4ff",
+        "e534149d5868f4b4e9dcf7efcd2f621623eb247d"
+      ]
+    },
+    {
+      "id": "pustoy-ref-v-git",
+      "title": "Пустой реф в .git роняет git fetch во всём репозитории",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "refs/heads/docs/roles-contours.lock.…b.stale, нулевой файл от блокировки ветки параллельной сессией; удалён, откуда берётся — не выяснено",
+      "updated": "2026-09-06",
+      "commits": [
+        "94be25fe917b3d119b8b7efbc9c1d7e61faca8c8"
+      ]
+    },
+    {
+      "id": "scripts-ne-pokryt-prettier",
+      "title": "scripts/ не покрыт prettier",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "CI гоняет prettier из каталога app, пятнадцать скриптов вне проверки формата",
+      "updated": "2026-09-06",
+      "commits": [
+        "89489c3276ca5ada14bc69cc172dc006d8d93ee8"
       ]
     }
   ]

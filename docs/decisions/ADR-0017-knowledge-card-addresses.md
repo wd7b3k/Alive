@@ -3,7 +3,7 @@
     Дата: 05.09.2026
     Статус: принято
     Решение владельца: да
-    Разбор: docs/tasks/R-20260905-01-seo-vidimost-kataloga.md
+    Разбор: docs/tasks/R-20260905-02-seo-vidimost-kataloga.md
 
 ## Контекст
 

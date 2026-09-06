@@ -16,6 +16,15 @@ on:
       - 'supabase/tests/**'
       - 'scripts/**'
       - 'docs/board/**'
+      # Джобы postanovka и predely читают постановки, записи сессий и живые документы:
+      # без этих путей PR, который заводит постановку с занятым номером или ломает
+      # число в документе, пропустил бы обе проверки целиком — ровно так, как до
+      # 21.08.2026 PR с одними миграциями пропускал rls-isolation.
+      - 'docs/tasks/**'
+      - 'docs/ai_sessions/**'
+      - 'docs/*.md'
+      - 'CLAUDE.md'
+      - 'AGENTS.md'
       - '.github/workflows/frontend-ci.yml'
 
 permissions:
@@ -126,6 +135,53 @@ jobs:
 
       - name: Собрать страницу доски
         run: node scripts/board.mjs build
+
+  postanovka:
+    name: Постановка знает свой номер и свою тему
+    runs-on: ubuntu-latest
+    steps:
+      # За один день 05.09.2026 номера разъехались пять раз: три постановки и две записи
+      # сессии означали по две разные работы каждая. Номер выдаёт scripts/next-id.sh,
+      # а этот джоб не даёт коллизии дожить до main. Заодно проверяется тема в имени
+      # файла: тема, которой нет среди эпиков доски, означает работу, которую доска
+      # не увидит.
+      #
+      # Числа в живых документах проверяются здесь же: `CLAUDE.md` полгода утверждал
+      # «150 карточек» при 214, и заметил это только разбор.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+
+      - name: Номера постановок и записей сессий уникальны, темы есть на доске
+        run: node scripts/check-tasks.mjs
+
+      - name: Числа в живых документах совпадают с репозиторием
+        run: node scripts/check-numbers.mjs
+
+  predely:
+    name: Пределы одновременной работы
+    runs-on: ubuntu-latest
+    steps:
+      # Пределы записаны в AGENTS.md с 27.08.2026 и до 06.09 не соблюдались ни дня:
+      # восемь doing при пределе два, 44 карточки с приоритетом 0 при пределе три,
+      # четырнадцать неисполненных постановок при пределе одна. Джоб включён жёстким
+      # после того, как состояние разобрано решением владельца: эпик i18n подвешен,
+      # у выполненных задач заполнен «Результат», карточки doing без коммита за три дня
+      # переставлены в next, приоритет 0 оставлен двум карточкам.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+
+      - name: Не больше двух doing, трёх P0 и одной постановки в очереди
+        run: node scripts/check-limits.mjs
 
   rls-isolation:
     name: RLS cross-tenant isolation (local Postgres, no live Supabase credentials)

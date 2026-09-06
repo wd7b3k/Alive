@@ -2,7 +2,7 @@
 
 Chat: https://claude.ai/code/session_01KeDhckSxJXNTKY2PZ4fzDg
 
-Ответ на `docs/tasks/T-20260905-11-knowledge-articles-in-app.md`. Ветка
+Ответ на `docs/tasks/T-20260905-13-knowledge-articles-in-app.md`. Ветка
 `task/knowledge-articles-in-app` от `origin/main`.
 
 ## 1. Предпосылка подтверждена

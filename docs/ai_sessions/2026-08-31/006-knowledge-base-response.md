@@ -13,7 +13,7 @@
 > удалена; запись сохранена, потому что сессия была настоящей и её выводы — про гарды,
 > про `\b` и кириллицу, про счёт адресов — остаются верными.
 >
-> Разбор закрытия: `docs/ai_sessions/2026-09-05/005-knowledge-novoe-response.md`.
+> Разбор закрытия: `docs/ai_sessions/2026-09-05/011-knowledge-novoe-response.md`.
 
 Chat: https://claude.ai/code/session_01KeDhckSxJXNTKY2PZ4fzDg
 

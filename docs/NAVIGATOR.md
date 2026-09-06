@@ -28,7 +28,7 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
 | Тема | Читать | Состояние берётся из |
 |---|---|---|
 | `infra` | `INFRASTRUCTURE_STATE.md`, `ROLLOUT.md`, `RELEASE_POLICY.md`, `infra/*/README.md` | `scripts/state.sh`, `check-deploy-drift.mjs`, сервер |
-| `process` | `AGENTS.md`, `docs/tasks/README.md`, `docs/board/README.md` | `scripts/tasks.mjs`, `board.mjs check` |
+| `process` | `AGENTS.md`, `docs/tasks/README.md`, `docs/board/README.md` | `scripts/state.sh`, `next-id.sh`, `check-tasks.mjs`, `check-numbers.mjs`, `check-limits.mjs`, `board.mjs check` |
 | `release` | `RELEASE_POLICY.md`, `CURRENT_STATE.md`, `ROADMAP.md`, `ADMIN.md`, ADR-0018 | `releases/`, `/version.json`, раздел `/admin/releases` |
 | `pilot` | `PRODUCTION_READINESS.md`, `ROLLOUT.md`, `HYPOTHESES_AND_METRICS.md` | доска, срез `BACKLOG.md` |
 | `design` | `DESIGN_SYSTEM.md`, `SCREENS.md`, `V3_VISUAL_UX_BASELINE.md` | `app/src/redesign/`, тесты инвариантов CSS |
@@ -37,13 +37,13 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
 | `flow` | `PRODUCT_PRINCIPLES.md` (P1–P20), `SCREENS.md`, `V3_PARITY_BASELINE.md` | `app/src/redesign/`, тесты |
 | `auth` | `AUTH_PROVIDERS.md`, `PRIVACY_AND_DATA.md` | сервер, живая проверка входа |
 | `privacy` | `PRIVACY_AND_DATA.md`, `PROJECT_CHARTER.md` | RLS-тесты `supabase/tests/local/` |
-| `seo` | `SEO_AND_ANALYTICS.md`, `SEO_VISIBILITY_AUDIT.md`, `tasks/R-20260905-01-seo-…`, ADR-0017 | живые запросы к `habitoff.ru` |
+| `seo` | `SEO_AND_ANALYTICS.md`, `SEO_VISIBILITY_AUDIT.md`, `tasks/R-20260905-02-seo-…`, ADR-0017 | живые запросы к `habitoff.ru` |
 | `perf` | `ARCHITECTURE.md`, `MODULES.md` | замеры сборки и рендера |
 | `money` | `PROJECT_CHARTER.md` §2, `docs/tasks/R-…-money-….md` | — (решение подвешено) |
 | `legal` | `PRIVACY_AND_DATA.md`, `PROJECT_CHARTER.md` | — (внедрение не начато) |
 | `knowledge` | `METHODOLOGY.md`, `SOURCE_REGISTER.md`, `ORIGINS_AND_ATTRIBUTION.md`, `EDITORIAL_PROTOCOL_MED.md`, ADR-0017 | карточки каталога и ничего кроме: выгрузка `app/knowledge-catalog.json`, адреса `app/src/domain/knowledge-address.ts`, страницы `app/src/services/knowledge-catalog.ts`, соседи `knowledge-related.ts` |
 | `social` | `PRODUCT_STRATEGY.md`, `TONE_OF_VOICE.md` | `content/social/` |
-| `i18n` | `TONE_OF_VOICE.md`, `GLOSSARY.md`, `tasks/R-20260905-01-i18n-english.md` | словарь переводов, живые адреса `/en/` |
+| `i18n` | `TONE_OF_VOICE.md`, `GLOSSARY.md`, `tasks/R-20260905-01-i18n-english.md` | **подвешен 06.09.2026**, условие разморозки — в разборе |
 | `data` | `METRICS.md`, `HYPOTHESES_AND_METRICS.md` | витрины и `admin_`-функции, `ops-contract.test.ts` |
 
 Сквозные, читаются при любой значимой задаче: `AGENTS.md`, `docs/CURRENT_STATE.md`
@@ -54,6 +54,12 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
 | Что | Где | Не путать с |
 |---|---|---|
 | Правила работы AI | `AGENTS.md` | чатом |
+| Чем правило проверяется | таблица «правило → проверка» в `AGENTS.md` | самим правилом: без команды это не правило |
+| Номер постановки, разбора, записи сессии | `scripts/next-id.sh {R\|T\|session}` | глазами по каталогу |
+| Уникальность номеров и темы постановок | `node scripts/check-tasks.mjs`, джоб «постановка» | `board.mjs check` — тот про карточки |
+| Числа, которые считает машина | `node scripts/check-numbers.mjs`, джоб «постановка» | датированными записями: их он не трогает |
+| Пределы одновременной работы | `node scripts/check-limits.mjs`, джоб «пределы» | `BACKLOG.md` — это срез, а не предел |
+| Что видит человек на экране | `node scripts/check-screen.mjs <адрес>` | `curl`: он отдаёт 200 и на пустом каркасе |
 | Почему правило появилось | `docs/INCIDENTS.md` | требованием к сессии — это журнал |
 | Роли агентов и владение файлами | `.claude/agents/` | `AGENTS.md` (там общие правила сети) |
 | Состояние работ | `docs/board/cards.json`, срез `BACKLOG.md` | памятью |
@@ -72,20 +78,22 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
 
 ## Известные расхождения
 
-- **06.09.2026 · постоянная процедура базы знаний существует вне git.**
-  `docs/RUNBOOK_KNOWLEDGE_WEEKLY.md` и `docs/tasks/T-20260906-01-knowledge-card-clickable.md`
-  не найдены ни в одной ветке — только untracked в рабочей копии владельца. Еженедельная
-  задача понедельника ссылается на этот runbook. Закрывается доведением файлов до `origin`.
-- **06.09.2026 · пределы одновременной работы объявлены и не соблюдаются.** `doing` = 8
-  при пределе 2; карточек с приоритетом 0 — 44 при пределе 3; неисполненных `T-` — 14 при
-  пределе 1. Проверки нет — `docs/tasks/T-20260906-03-process-gates.md`.
-- **06.09.2026 · три коллизии номеров постановок.** `R-20260905-01`, `T-20260905-11` и
-  `T-20260905-12` означают по две разные работы; в `docs/ai_sessions/2026-09-05/` дважды
-  заняты номера 004 и 005. Разводится той же задачей `T-20260906-03`.
-
 Ведётся здесь, чтобы следующая сессия не спорила с документом, о котором уже известно,
 что он неверен. Закрывается задачей, а не молчанием.
 
+- ~~**06.09.2026 · постоянная процедура базы знаний существует вне git.**~~
+  **Закрыто 06.09.2026, и не так, как предполагалось.** `RUNBOOK_KNOWLEDGE_WEEKLY.md` не
+  «не выложен», а снят вместе со слоем статей; действующая процедура —
+  `docs/RUNBOOK_KNOWLEDGE_CATALOG.md`, и расписание понедельника указывает на неё.
+  Подробности — двумя записями ниже.
+- ~~**06.09.2026 · пределы одновременной работы объявлены и не соблюдаются.**~~
+  **Закрыто 06.09.2026 решением владельца.** Эпик `i18n` подвешен с условием разморозки,
+  у выполненных постановок заполнен «Результат», карточки `doing` без коммита за три дня
+  переставлены в `next`, приоритет 0 оставлен двум карточкам. Стало 2 / 2 / 1 при пределах
+  2 / 3 / 1; держит `node scripts/check-limits.mjs` в джобе «пределы».
+- ~~**06.09.2026 · три коллизии номеров постановок.**~~ **Закрыто 06.09.2026.** Разведены
+  все пять, плюс ещё две, найденные проверкой в `docs/ai_sessions/2026-08-30/` (001 и 009).
+  Номер выдаёт `scripts/next-id.sh`, коллизию ловит `check-tasks.mjs` в джобе «постановка».
 - **31.08.2026 · `CURRENT_STATE.md` отрицает наблюдаемость, которая работает.** Раздел
   «Что осталось до полноценного прода», пункт 2: «наблюдаемости нет — первым мониторингом
   является владелец с телефоном». То же в `ROLLOUT.md` §5, пункты 3 и 4: «конфигурация
@@ -135,6 +143,13 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
   мифы» и живёт в `main`. Расписание — `.github/workflows/harvest-evidence.yml`,
   понедельник. Пять постановок и записей сессий в `main` ссылаются на удалённое имя: это
   история, а не действующая ссылка.
+
+- **06.09.2026 · пустой реф в `.git` роняет `git fetch` во всём репозитории.**
+  `refs/heads/docs/roles-contours.lock.1788710125.b.stale` — нулевой файл, оставшийся от
+  блокировки ветки параллельной сессией. `git fetch` на нём падает с «bad object», а
+  `scripts/state.sh` до 06.09 не заметил бы: он звал `fetch` без проверки кода возврата.
+  Файл удалён, стоп-строка теперь говорит вслух, когда `fetch` не прошёл. Откуда берётся
+  сам `.stale` — не выяснено, карточка `pustoy-ref-ronyaet-fetch`.
 
 ## Как поддерживать
 
