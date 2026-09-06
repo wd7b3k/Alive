@@ -3896,11 +3896,12 @@
       "type": "bug",
       "epic": "infra",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "git pull падает, deploy.sh про это не знает и пересобирает то же самое — выкладка отчитывается успехом, а прод не двигается; в порядок выкладки нужен гейт «HEAD после git изменился»",
-      "updated": "2026-09-05",
+      "updated": "2026-09-06",
       "commits": [
-        "62f0100705d789de4392e74079b9765693345626"
+        "62f0100705d789de4392e74079b9765693345626",
+        "1fbf5da744df4ce4ebd4849fd8965661d17e6ea4"
       ]
     },
     {
@@ -4107,11 +4108,12 @@
       "type": "tech",
       "epic": "release",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "deploy.sh собрал f76f8b7 при origin/main d5aeed7 — репозиторий на сервере отставал на 22 коммита, fetch этого не показал",
       "updated": "2026-09-06",
       "commits": [
-        "819c271a48156cd6c5297ba46b0c11ade099bfcd"
+        "819c271a48156cd6c5297ba46b0c11ade099bfcd",
+        "1fbf5da744df4ce4ebd4849fd8965661d17e6ea4"
       ]
     },
     {
