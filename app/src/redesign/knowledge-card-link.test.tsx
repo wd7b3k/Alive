@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { KnowledgeCardView } from './knowledge';
+import { KnowledgeCardBody, KnowledgeCardView } from './knowledge';
 import { pathForCode } from '../domain/knowledge-address';
 import type { Knowledge, KnowledgeCard } from '../data';
 import { EVIDENCE_LEVELS } from '../domain/evidence-levels';
@@ -105,16 +105,64 @@ describe('строка-ссылка под карточкой не возвра�
    * Смонтировать здесь весь `RedesignApp` нельзя — он тянет клиент Supabase и роутер, —
    * поэтому проверяется вызов: карточка в сетке без `href` это карточка без адреса.
    */
-  it('обе сетки раздела до входа передают адрес карточки', () => {
+  it('все сетки раздела передают адрес карточки — и до входа, и после', () => {
     const calls = [...appSource.matchAll(/<KnowledgeCardView[\s\S]*?\/>/g)].map((m) => m[0]);
-    // Сетки раздела до входа: карточки приходят из публичного каталога. Раздел после
-    // входа берёт их из `data.knowledge`, и адреса карточек там пока не открываются —
-    // маршрута `/knowledge/<код>` в роутере со входом нет.
-    const publicGrid = calls.filter(
-      (call) => call.includes('key={card.code}') && call.includes('knowledge={knowledge}'),
+    const grids = calls.filter((call) => call.includes('key={card.code}'));
+    // Четыре сетки: факты и мифы до входа, факты и мифы после. Карточка в сетке без
+    // `href` — это карточка без адреса, и раздел снова начинает вести себя по-разному
+    // до и после входа.
+    expect(grids.length).toBe(4);
+    for (const call of grids) expect(call).toContain('href={pathForCode(card.code)}');
+  });
+});
+
+describe('адрес карточки открывается и после входа', () => {
+  /**
+   * До 06.09.2026 ветки `/knowledge/<код>` в роутере со входом не было: путь
+   * проваливался в `else` и показывал «Сегодня». Обновление страницы на адресе карточки
+   * уводило вошедшего человека на другой экран — раздел вёл себя по-разному до и после
+   * входа. Тест падает, если ветка пропала или начала разбирать адрес по-своему.
+   */
+  it('роутер после входа разбирает адрес тем же codeFromPath', () => {
+    expect(appSource).toMatch(
+      /else if \(codeFromPath\(path\)\) page = <KnowledgeCardPage data=\{data\} code=\{codeFromPath\(path\)!\} \/>;/,
     );
-    expect(publicGrid.length).toBe(2);
-    for (const call of publicGrid) expect(call).toContain('href={pathForCode(card.code)}');
+    // Второго разбора адреса в продукте нет: и сборка, и оба роутера зовут одну функцию.
+    expect(appSource).not.toMatch(/path\.startsWith\('\/knowledge\//);
+  });
+
+  it('содержание страницы карточки — одно на оба входа', () => {
+    // `KnowledgeCardBody` рисуется и публичной оболочкой, и экраном после входа.
+    expect(appSource).toContain('<KnowledgeCardBody');
+    expect(appSource.match(/<KnowledgeCardBody/g)?.length).toBe(2);
+  });
+
+  it('страница карточки показывает вопрос, утверждение и развёрнутый текст', () => {
+    const markup = renderToStaticMarkup(
+      <KnowledgeCardBody knowledge={knowledge} code="calms_me" />,
+    );
+    expect(markup).toContain('<h1>Правда ли, что сигарета успокаивает?</h1>');
+    expect(markup).toContain('Сигарета меня успокаивает');
+    expect(markup).toContain('Первый абзац о механизме.');
+    expect(markup).toContain('Второй абзац о границах.');
+    expect(markup).toContain('href="/knowledge"');
+    // На своей странице карточка не ссылается сама на себя.
+    expect(markup).not.toContain('href="/knowledge/calms-me"');
+  });
+
+  it('неизвестный код — не пустая страница и не «Сегодня»', () => {
+    const markup = renderToStaticMarkup(
+      <KnowledgeCardBody knowledge={knowledge} code="net_takoy" />,
+    );
+    expect(markup).toContain('Такой карточки нет');
+    expect(markup).toContain('href="/knowledge"');
+  });
+
+  it('пока каталог грузится, «не найдено» не показывается', () => {
+    const markup = renderToStaticMarkup(
+      <KnowledgeCardBody knowledge={knowledge} code="net_takoy" loading />,
+    );
+    expect(markup).toBe('');
   });
 });
 

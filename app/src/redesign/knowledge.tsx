@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
+
 import type { AwarenessCard, EvidenceSource, Knowledge, KnowledgeCard, Replacement } from '../data';
 import { evidenceForReplacement, levelOf, sourcesForCard } from '../domain/knowledge';
 import { Icon } from '../ui-icons';
-import { AppLink } from './shared';
+import { AppLink, ShellLink } from './shared';
 
 /**
  * Rendering for the evidence layer and «Факты и Мифы».
@@ -200,6 +202,70 @@ export function KnowledgeCardView({
         </div>
       </details>
     </article>
+  );
+}
+
+/**
+ * Содержание страницы одной карточки каталога.
+ *
+ * Одно на оба входа: до входа его показывает публичная оболочка, после входа — своя.
+ * Различается обвязка экрана, содержание — нет. Второй реализации не заводится: две
+ * страницы одного адреса разошлись бы на первой же правке, и человек видел бы разное
+ * до и после входа.
+ */
+export function KnowledgeCardBody({
+  knowledge,
+  code,
+  loading = false,
+}: {
+  knowledge: Knowledge;
+  code: string;
+  /** Каталог ещё не пришёл: молчим, а не пишем «не найдено» на полсекунды. */
+  loading?: boolean;
+}) {
+  const card = knowledge.cards.find((entry) => entry.code === code);
+
+  useEffect(() => {
+    if (card) document.title = `${card.claim_ru} — Habitoff`;
+  }, [card]);
+
+  if (!card) {
+    if (loading) return null;
+    return (
+      <section className="r-title">
+        <h1>Такой карточки нет</h1>
+        <p className="r-lead">
+          Возможно, она снята с публикации или адрес набран с опечаткой.{' '}
+          <AppLink href="/knowledge" className="r-linklike">
+            Все факты и мифы
+          </AppLink>
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <>
+      <section className="r-title">
+        <p className="r-kicker">{card.kind === 'fact' ? 'Факт' : 'Разобранное убеждение'}</p>
+        {/* Заголовок — вопрос, если он у карточки есть: спрос по этим темам живёт в
+            длинных вопросах живым языком, а формулировка каталога отвечает не на то,
+            что человек набрал. Утверждение при этом остаётся видимым строкой ниже. */}
+        <h1>{card.question_ru ?? card.claim_ru}</h1>
+        {card.question_ru && <p className="r-lead">{card.claim_ru}</p>}
+        <p className="r-lead">{card.known_ru}</p>
+      </section>
+      <section className="r-section">
+        {/* `full` — страница карточки, а не список: развёрнутый текст здесь основное
+            содержимое, и прятать его за раскрытием значит отдать пустую страницу. */}
+        <KnowledgeCardView knowledge={knowledge} card={card} full />
+        <div className="r-actions">
+          <ShellLink href="/knowledge" className="ghost">
+            Все факты и мифы
+          </ShellLink>
+        </div>
+      </section>
+    </>
   );
 }
 

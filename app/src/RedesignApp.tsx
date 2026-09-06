@@ -51,6 +51,7 @@ import {
   AwarenessCardView,
   EvidenceBadge,
   EvidenceDetail,
+  KnowledgeCardBody,
   KnowledgeCardView,
   KnowledgeCollapsed,
 } from './redesign/knowledge';
@@ -453,51 +454,30 @@ function PublicMeanings({ catalog }: { catalog: PublicCatalog | null }) {
  * что человек увидит после того, как приложение поднимется.
  */
 function PublicKnowledgeCard({ code, catalog }: { code: string; catalog: PublicCatalog | null }) {
-  const knowledge = catalog?.knowledge ?? EMPTY_KNOWLEDGE;
-  const card = knowledge.cards.find((entry) => entry.code === code);
-
-  useEffect(() => {
-    if (card) document.title = `${card.claim_ru} — Habitoff`;
-  }, [card]);
-
-  if (!card) {
-    // Каталог ещё грузится — молчим: подпись «не найдено» на полсекунды хуже пустоты.
-    if (!catalog) return null;
-    return (
-      <section className="r-title">
-        <h1>Такой карточки нет</h1>
-        <p className="r-lead">
-          Возможно, она снята с публикации или адрес набран с опечаткой.{' '}
-          <AppLink href="/knowledge" className="r-linklike">
-            Все факты и мифы
-          </AppLink>
-        </p>
-      </section>
-    );
-  }
-
   return (
-    <>
-      <section className="r-title">
-        <p className="r-kicker">{card.kind === 'fact' ? 'Факт' : 'Разобранное убеждение'}</p>
-        {/* Заголовок — вопрос, если он у карточки есть: спрос по этим темам живёт в
-            длинных вопросах живым языком, а формулировка каталога отвечает не на то,
-            что человек набрал. Утверждение при этом остаётся видимым строкой ниже. */}
-        <h1>{card.question_ru ?? card.claim_ru}</h1>
-        {card.question_ru && <p className="r-lead">{card.claim_ru}</p>}
-        <p className="r-lead">{card.known_ru}</p>
-      </section>
-      <section className="r-section">
-        {/* `full` — страница карточки, а не список: развёрнутый текст здесь основное
-            содержимое, и прятать его за раскрытием значит отдать пустую страницу. */}
-        <KnowledgeCardView knowledge={knowledge} card={card} full />
-        <div className="r-actions">
-          <ShellLink href="/knowledge" className="ghost">
-            Все факты и мифы
-          </ShellLink>
-        </div>
-      </section>
-    </>
+    <KnowledgeCardBody
+      knowledge={catalog?.knowledge ?? EMPTY_KNOWLEDGE}
+      code={code}
+      loading={!catalog}
+    />
+  );
+}
+
+/**
+ * Тот же адрес карточки, но у вошедшего.
+ *
+ * До 06.09.2026 ветки `/knowledge/<код>` в роутере со входом не было вовсе: путь
+ * проваливался в `else` и показывал «Сегодня». Раздел вёл себя по-разному до и после
+ * входа — обновление страницы на адресе карточки уводило человека на другой экран.
+ *
+ * Адрес разбирается тем же `codeFromPath`, что и сборка, а содержание рисует тот же
+ * `KnowledgeCardBody`, что и до входа: различается только обвязка экрана.
+ */
+function KnowledgeCardPage({ data, code }: { data: Bootstrap; code: string }) {
+  return (
+    <main className="r-page">
+      <KnowledgeCardBody knowledge={data.knowledge} code={code} />
+    </main>
   );
 }
 
@@ -2528,7 +2508,12 @@ function KnowledgePage({ data }: { data: Bootstrap }) {
           </div>
           <div className="r-knowledge-grid">
             {facts.map((card) => (
-              <KnowledgeCardView key={card.code} knowledge={data.knowledge} card={card} />
+              <KnowledgeCardView
+                key={card.code}
+                knowledge={data.knowledge}
+                card={card}
+                href={pathForCode(card.code)}
+              />
             ))}
           </div>
         </section>
@@ -2551,7 +2536,12 @@ function KnowledgePage({ data }: { data: Bootstrap }) {
           </div>
           <div className="r-knowledge-grid">
             {myths.map((card) => (
-              <KnowledgeCardView key={card.code} knowledge={data.knowledge} card={card} />
+              <KnowledgeCardView
+                key={card.code}
+                knowledge={data.knowledge}
+                card={card}
+                href={pathForCode(card.code)}
+              />
             ))}
           </div>
         </section>
@@ -3001,6 +2991,9 @@ export default function RedesignApp() {
   else if (path === '/meanings')
     page = <Meanings session={session} data={data} reload={() => reload(session).then(() => {})} />;
   else if (path === '/knowledge') page = <KnowledgePage data={data} />;
+  // Адрес карточки каталога (ADR-0017) работает и после входа. Разбор один и тот же —
+  // `codeFromPath`, второго разбора адреса в продукте нет.
+  else if (codeFromPath(path)) page = <KnowledgeCardPage data={data} code={codeFromPath(path)!} />;
   else if (path === '/together') page = <TogetherPage data={data} />;
   else if (path === '/health') page = <HealthPage />;
   // Все разделы управления живут под одним адресом: /admin/<раздел>. Реестр разделов —
