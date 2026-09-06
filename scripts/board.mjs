@@ -239,6 +239,20 @@ function check() {
       warns.push(`${c.id}: закрыта, но ни коммита, ни документа, ни чата — по чему её проверить?`);
   });
 
+  // Закрытая карточка без адреса чата. Коммит говорит, что изменилось, но не говорит,
+  // почему решили именно так и что при этом отвергли. На 06.09.2026 непустая ссылка была
+  // у двух карточек из 224: остальные 133 закрытых работы существуют только результатом.
+  // Предупреждение, а не ошибка: у 147 карточек первой сборки 27.08 адресов чатов взять
+  // неоткуда, и роняться на истории эта проверка не должна.
+  const doneNoChat = board.cards.filter(
+    (c) => c.status === "done" && !(c.chats || []).some((ch) => (typeof ch === "string" ? ch : ch && ch.url))
+  );
+  if (doneNoChat.length)
+    warns.push(
+      `${doneNoChat.length} закрытых карточек без ссылки на чат — решение восстановить будет неоткуда. ` +
+        `Привязка: трейлер Board: chat <id> <url>`
+    );
+
   const news = commitsSince(board.appliedCommit);
   const withTrailer = news.filter((c) => parseTrailers(c.body).length);
   if (withTrailer.length)
