@@ -113,3 +113,61 @@ begin
 
   update public.profiles set role = 'participant' where id = target;
 end $$;
+
+-- «Откуда люди»: место × поведение, подавление и отказ не-администратору.
+--
+-- Матрица обязана вернуть все шесть клеток даже там, где данных нет: спрятанная строка
+-- отвечает «ноль» на вопрос, который никто не считал. Разрез меньше трёх посетителей
+-- числа не показывает, но остаётся видимым вместе с причиной.
+do $$
+declare
+  target uuid;
+  cells integer;
+  suppressed integer;
+  shown_visitors bigint;
+begin
+  select p.id into target from public.profiles p order by p.created_at limit 1;
+  update public.profiles set role = 'admin', status = 'active' where id = target;
+  perform set_config(
+    'request.jwt.claims',
+    json_build_object('sub', target, 'role', 'authenticated')::text,
+    true
+  );
+
+  -- Два посетителя из российского пояса: меньше трёх, значит разрез подавлен.
+  insert into public.analytics_visitors (visitor_id, first_seen_at, client_timezone, client_language)
+  values
+    (gen_random_uuid(), now(), 'Europe/Moscow', 'ru-RU'),
+    (gen_random_uuid(), now(), 'Europe/Moscow', 'ru-RU');
+
+  select count(*) into cells from public.admin_traffic_quality(30);
+  if cells <> 6 then
+    raise exception 'ожидались шесть клеток матрицы «место × поведение», а не %', cells;
+  end if;
+
+  select count(*) into suppressed
+  from public.admin_traffic_quality(30)
+  where visitors is null and note is not null;
+  if suppressed = 0 then
+    raise exception 'подавление не сработало: ни одной клетки без числа и без причины';
+  end if;
+
+  select visitors into shown_visitors
+  from public.admin_traffic_quality(30)
+  where region = 'russia' and segment = 'single_event';
+  if shown_visitors is not null then
+    raise exception 'два посетителя показаны числом (%), а порог подавления — три', shown_visitors;
+  end if;
+  raise notice 'ok: матрица из шести клеток, разрез из двух посетителей подавлен';
+
+  update public.profiles set role = 'participant' where id = target;
+  begin
+    perform count(*) from public.admin_traffic_quality(30);
+    raise exception 'участник без роли admin получил матрицу «откуда люди»';
+  exception when others then
+    if sqlerrm like '%участник без роли admin%' then
+      raise;
+    end if;
+    raise notice 'ok: не-администратору отказано (%)', left(sqlerrm, 60);
+  end;
+end $$;
