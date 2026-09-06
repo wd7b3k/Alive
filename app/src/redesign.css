@@ -292,28 +292,62 @@ button[disabled],button:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:760px){.r-admin-wide{width:calc(100% - 24px)}}
 @media(max-width:720px){.r-board-frame{height:calc(100vh - 220px)}}
 
-/* Аналитика админки: формы вместо строк — полосы, столбики, тепловая сетка. */
-.r-viz{display:grid;gap:12px;margin-top:12px}
-.r-viz-row{display:grid;grid-template-columns:minmax(0,9rem) minmax(0,1fr) auto;gap:12px;align-items:center}
-.r-viz-row>span{min-width:0;color:var(--r-muted);font-size:13px;overflow-wrap:anywhere}
-.r-viz-row>b{color:var(--r-text);font-size:13px;white-space:nowrap}
-.r-viz-bar{position:relative;height:10px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden}
-.r-viz-bar>i{display:block;height:100%;border-radius:999px;background:var(--r-teal)}
+/* Аналитика админки: формы вместо строк — полосы, воронка, матрицы, тепловая сетка.
+
+   Класс .r-viz-weeks убран: столбики недель рисует SVG, а правило пережило его на неделю
+   и осталось мёртвым кодом, который выглядит как действующий. Сетка когорт больше не
+   зашита на пять столбцов — горизонты приходят из данных, и пять было совпадением. */
+.r-viz{display:grid;gap:var(--r-sp-3);margin-top:var(--r-sp-3)}
+.r-viz-row{display:grid;grid-template-columns:minmax(0,9rem) minmax(0,1fr) auto;gap:var(--r-sp-3);align-items:center}
+.r-viz-row>span{min-width:0;color:var(--r-muted);font-size:var(--r-fs-sm);overflow-wrap:anywhere}
+.r-viz-row>b{color:var(--r-text);font-size:var(--r-fs-sm);white-space:nowrap}
+.r-viz-bar{position:relative;height:10px;border-radius:var(--r-r-full);background:rgba(255,255,255,.05);overflow:hidden}
+.r-viz-bar>i{display:block;height:100%;border-radius:var(--r-r-full);background:var(--r-teal)}
 .r-viz-bar.sand>i{background:var(--r-sand)}
-.r-viz-note{margin:0;color:var(--r-dim);font-size:11px;line-height:1.45}
-.r-viz-legend{display:flex;flex-wrap:wrap;gap:12px;margin:0;color:var(--r-dim);font-size:11px}
-.r-viz-legend em{display:inline-block;width:8px;height:8px;border-radius:999px;margin-right:4px;font-style:normal}
-.r-viz-weeks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;align-items:end;height:140px;margin-top:12px}
-.r-viz-weeks>div{display:grid;align-content:end;gap:4px;min-width:0}
-.r-viz-weeks b{display:block;min-height:4px;border-radius:8px;background:var(--r-teal)}
-.r-viz-weeks b.pale{background:rgba(81,221,208,.22)}
-.r-viz-weeks small{color:var(--r-dim);font-size:10px;text-align:center;overflow:hidden}
-.r-viz-heat{display:grid;grid-template-columns:minmax(0,7rem) repeat(5,minmax(0,1fr));gap:4px;margin-top:12px;align-items:center}
-.r-viz-heat span{color:var(--r-dim);font-size:10px;text-align:center}
-.r-viz-heat span.row{text-align:left;font-size:11px}
-.r-viz-heat i{display:grid;place-items:center;height:28px;border-radius:8px;font-style:normal;font-size:11px;color:var(--r-text)}
-.r-viz-stack{display:flex;height:16px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.05);margin-top:12px}
+.r-viz-note{margin:0;color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.45}
+.r-viz-legend{display:flex;flex-wrap:wrap;gap:var(--r-sp-3);margin:0;color:var(--r-dim);font-size:var(--r-fs-xs)}
+.r-viz-legend em{display:inline-block;width:8px;height:8px;border-radius:var(--r-r-full);margin-right:4px;font-style:normal}
+.r-viz-heat{display:grid;grid-template-columns:minmax(0,7rem) repeat(var(--r-heat-columns,5),minmax(0,1fr));gap:var(--r-sp-1);margin-top:var(--r-sp-3);align-items:center}
+.r-viz-heat span{color:var(--r-dim);font-size:var(--r-fs-xs);text-align:center}
+.r-viz-heat span.row{text-align:left;font-size:var(--r-fs-xs)}
+.r-viz-heat i{display:grid;place-items:center;height:28px;border-radius:var(--r-r-sm);font-style:normal;font-size:var(--r-fs-xs);color:var(--r-text)}
+.r-viz-stack{display:flex;height:16px;border-radius:var(--r-r-full);overflow:hidden;background:rgba(255,255,255,.05);margin-top:var(--r-sp-3)}
 .r-viz-stack i{display:block;height:100%}
+
+/* «Как читать» — длинное объяснение, закрытое по умолчанию. Раздел открывают ради чисел;
+   абзац перед каждым числом перестают читать вместе с той строкой, где сказано, чему
+   верить нельзя. */
+.r-viz-more{margin:var(--r-sp-1) 0 0}
+.r-viz-more>summary{cursor:pointer;color:var(--r-muted);font-size:var(--r-fs-xs);list-style:none}
+.r-viz-more>summary::-webkit-details-marker{display:none}
+.r-viz-more>summary::before{content:'▸ ';color:var(--r-dim)}
+.r-viz-more[open]>summary::before{content:'▾ '}
+.r-viz-more>div{display:grid;gap:var(--r-sp-2);margin-top:var(--r-sp-2);padding-left:var(--r-sp-3);border-left:1px solid var(--r-line)}
+.r-viz-more p{margin:0;color:var(--r-dim);font-size:var(--r-fs-xs);line-height:1.55}
+
+/* Воронка: одна картина. Толстая полоса — по таблицам, тонкая — по событиям браузера. */
+.r-funnel{display:grid;gap:var(--r-sp-3);margin-top:var(--r-sp-3)}
+.r-funnel-step{display:grid;grid-template-columns:minmax(0,11rem) minmax(0,1fr);gap:var(--r-sp-2) var(--r-sp-3);align-items:center}
+.r-funnel-name{min-width:0;color:var(--r-muted);font-size:var(--r-fs-sm);overflow-wrap:anywhere}
+.r-funnel-bar{position:relative;display:grid;gap:var(--r-sp-1);align-content:center;min-height:16px}
+.r-funnel-bar>i{display:block;height:10px;border-radius:var(--r-r-full);background:var(--r-teal);opacity:.8}
+.r-funnel-bar>i.events{height:3px;background:var(--r-sand);opacity:.85}
+.r-funnel-numbers{grid-column:2;display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--r-sp-2);font-variant-numeric:tabular-nums}
+.r-funnel-numbers b{color:var(--r-text);font-size:var(--r-fs-h3);letter-spacing:-.02em}
+.r-funnel-numbers em{font-style:normal;color:var(--r-dim);font-size:var(--r-fs-xs)}
+
+/* Матрицы: источник × этап и место × поведение. Столбец — одна ступень у всех строк
+   сразу, поэтому слабое место видно взглядом, а не пересчётом. */
+.r-matrix-scroll{overflow-x:auto;margin-top:var(--r-sp-3)}
+.r-matrix{width:100%;border-collapse:separate;border-spacing:var(--r-sp-1)}
+.r-matrix th{font-weight:700;text-align:left;color:var(--r-muted);font-size:var(--r-fs-xs);padding:var(--r-sp-1)}
+.r-matrix thead th{white-space:nowrap}
+.r-matrix tbody th{min-width:8rem}
+.r-matrix tbody th b{display:block;color:var(--r-text);font-size:var(--r-fs-sm)}
+.r-matrix tbody th small{display:block;color:var(--r-dim);font-size:var(--r-fs-xs);overflow-wrap:anywhere}
+.r-matrix td{border-radius:var(--r-r-sm);padding:var(--r-sp-2);text-align:center;min-width:5rem;font-variant-numeric:tabular-nums}
+.r-matrix td b{display:block;color:var(--r-text);font-size:var(--r-fs-sm)}
+.r-matrix td small{display:block;color:var(--r-dim);font-size:var(--r-fs-xs)}
 
 /* Мониторинг: техническое состояние сервиса.
 

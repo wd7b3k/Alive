@@ -84,8 +84,12 @@ export type HeadlineRow = {
 };
 
 export type TrafficQualityRow = {
+  /** `russia` | `other` | `unknown` — по часовому поясу, язык только когда пояса нет. */
+  region: string;
+  region_title: string;
+  /** `engaged` | `single_event` — было ли после открытия страницы второе событие. */
   segment: string;
-  title: string;
+  segment_title: string;
   hint: string;
   visitors: number | null;
   share_pct: number | null;

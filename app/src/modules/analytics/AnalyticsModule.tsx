@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { reportError } from '../../services/error-monitoring';
 import { COUNTERS_LIVE_SINCE } from '../../services/counters';
 import { CABINETS } from './index';
+import { isCurrentWeek, weekRange } from './weeks';
 import {
   loadAnalytics,
   type AnalyticsSnapshot,
   type CoreMetricRow,
-  type HeadlineRow,
   type FunnelStageRow,
+  type HeadlineRow,
   type SourceFunnelRow,
   type TrafficQualityRow,
 } from './port';
@@ -15,28 +16,93 @@ import {
 /**
  * Экран аналитики.
  *
- * Два правила показа, и оба выстраданы.
+ * Три правила показа, и все три выстраданы.
  *
- * **Число без объяснения хуже отсутствия числа.** У каждого раздела сказано, что он
- * означает и чему верить нельзя; там, где данных нет, стоит причина, а не ноль.
+ * **Число без объяснения хуже отсутствия числа.** Там, где данных нет, стоит причина, а не
+ * ноль: ноль читается как «всё плохо», а не как «мы это не измеряем».
  *
- * **Форма читается быстрее строки.** Первая редакция показывала списки определений —
- * ту же разметку, что у «Гипотез». Там она уместна: у каждой метрики длинное пояснение,
- * и читают их по одной. Здесь другое: недели, шаги воронки и когорты сравниваются между
- * собой, а сравнение — это про длину и цвет, а не про чтение двадцати чисел подряд.
+ * **Одна картина вместо четырёх.** Первая редакция рисовала путь человека четырьмя
+ * отдельными формами — воронка по таблицам, вехи по событиям, источники полосами,
+ * источник × этап полосками, — и связать их приходилось в голове. Одна воронка и одна
+ * матрица отвечают на тот же вопрос, не заставляя держать в уме четыре шкалы.
+ *
+ * **Подпись читается одним способом.** «08-31» означало неделю с 31 августа по 6 сентября,
+ * а читалось как день. Диапазон прочитать двояко нельзя.
+ *
+ * Длинные пояснения убраны под «как читать» и закрыты по умолчанию: раздел открывают,
+ * чтобы посмотреть числа. Объяснение нужно один раз, а числа — каждый раз.
  */
 
 const PERIODS = [
-  { days: 7, weeks: 4, label: '7 дней' },
-  { days: 30, weeks: 12, label: '30 дней' },
-  { days: 90, weeks: 26, label: '90 дней' },
+  // Дни и недели названы оба: витрины с окном в днях получают `days`, а недельный график
+  // строится по `weeks`, и подпись «7 дней» над графиком из четырёх недель — это ровно
+  // то расхождение, из-за которого сентябрьскую неделю сочли пропавшей.
+  { days: 7, weeks: 4, label: '7 дней · 4 недели' },
+  { days: 30, weeks: 12, label: '30 дней · 12 недель' },
+  { days: 90, weeks: 26, label: '90 дней · 26 недель' },
 ];
 
 const TEAL = 'var(--r-teal)';
 const SAND = 'var(--r-sand)';
 
+/** Ступени пути и шаг воронки по таблицам, который им соответствует. */
+const STAGE_TO_FUNNEL_STEP: Record<string, number> = {
+  landing: 1,
+  signed_in: 2,
+  onboarded: 3,
+  first_episode: 4,
+  episode_with_result: 5,
+  repeat_episode: 7,
+};
+
+/** Столбцы матрицы «источник × этап». Ключ — поле витрины, подпись — то, что видит человек. */
+const SOURCE_STAGES: { key: keyof SourceFunnelRow; label: string }[] = [
+  { key: 'visitors', label: 'визит' },
+  { key: 'signed_up', label: 'регистрация' },
+  { key: 'onboarded', label: 'настройка' },
+  { key: 'first_episode', label: 'эпизод' },
+  { key: 'with_result', label: 'результат' },
+];
+
 function pct(part: number, whole: number): number {
   return whole > 0 ? Math.round((part / whole) * 100) : 0;
+}
+
+function share(part: number, whole: number): number | null {
+  return whole > 0 ? Math.round((part / whole) * 1000) / 10 : null;
+}
+
+/**
+ * Раздел экрана: короткая подпись сверху, длинное объяснение — под спойлером.
+ *
+ * Предел в 140 знаков на лид не косметика. Раздел открывают, чтобы посмотреть числа;
+ * абзац на триста знаков перед каждым числом читают один раз, а потом перестают читать
+ * вообще — вместе с той строкой, которая объясняла, чему верить нельзя.
+ */
+function Block({
+  kicker,
+  lead,
+  more,
+  children,
+}: {
+  kicker: string;
+  lead: string;
+  more?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section>
+      <p className="r-kicker">{kicker}</p>
+      <p className="r-lead">{lead}</p>
+      {more && (
+        <details className="r-viz-more">
+          <summary>как читать</summary>
+          <div>{more}</div>
+        </details>
+      )}
+      {children}
+    </section>
+  );
 }
 
 /** Полоса: подпись, длина, число. Длина считается от максимума в наборе, а не от ста. */
@@ -97,21 +163,204 @@ function Tile({ row }: { row: HeadlineRow }) {
   );
 }
 
+export type FunnelStep = {
+  stage: string;
+  title: string;
+  /** По таблицам базы: факты, а не то, что успел записать браузер. */
+  people: number;
+  /** По событиям браузера. Разница с `people` — мера того, сколько событий не доехало. */
+  byEvents: number;
+  fromPrevious: number | null;
+  fromFirst: number | null;
+};
+
+/** Свести две воронки в одну картину: шаги по таблицам и вехи по событиям. */
+export function buildFunnel(
+  stages: FunnelStageRow[],
+  steps: { step_no: number; people: number }[],
+): FunnelStep[] {
+  const byTables = (stage: string): number => {
+    const stepNo = STAGE_TO_FUNNEL_STEP[stage];
+    return steps.find((row) => row.step_no === stepNo)?.people ?? 0;
+  };
+  const first = stages.length ? byTables(stages[0].stage) : 0;
+  return stages.map((stage, index) => {
+    const people = byTables(stage.stage);
+    const previous = index === 0 ? null : byTables(stages[index - 1].stage);
+    return {
+      stage: stage.stage,
+      title: stage.title,
+      people,
+      byEvents: stage.people,
+      fromPrevious: previous === null ? null : share(people, previous),
+      fromFirst: index === 0 ? null : share(people, first),
+    };
+  });
+}
+
+/**
+ * Одна воронка вместо двух.
+ *
+ * Толстая полоса — по таблицам: факт есть факт. Тонкая под ней — по событиям браузера, и
+ * её отставание это не вторая правда, а мера потерь: блокировщики, закрытая вкладка,
+ * потерянная сеть. Отдельной секцией это было бы сравнением двух картин; одной картиной
+ * это разница, которую видно не считая.
+ */
+function Funnel({ steps }: { steps: FunnelStep[] }) {
+  const top = Math.max(1, ...steps.map((step) => Math.max(step.people, step.byEvents)));
+  return (
+    <div className="r-funnel">
+      {steps.map((step) => (
+        <div className="r-funnel-step" key={step.stage}>
+          <span className="r-funnel-name">{step.title}</span>
+          <span className="r-funnel-bar">
+            <i style={{ width: `${Math.max(step.people > 0 ? 2 : 0, pct(step.people, top))}%` }} />
+            <i
+              className="events"
+              style={{ width: `${Math.max(step.byEvents > 0 ? 2 : 0, pct(step.byEvents, top))}%` }}
+            />
+          </span>
+          <span className="r-funnel-numbers">
+            <b>{step.people}</b>
+            <em>
+              {step.fromPrevious === null
+                ? 'первая ступень'
+                : `${step.fromPrevious}% от предыдущей`}
+            </em>
+            <em>{step.fromFirst === null ? '100% от первой' : `${step.fromFirst}% от первой`}</em>
+            <em>по событиям {step.byEvents}</em>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Цвет ячейки по доле. Один тон, разная плотность: сравнивают глубину, а не радугу. */
+function cellTone(value: number | null): string {
+  if (value === null) return 'transparent';
+  return `rgba(81,221,208,${0.06 + Math.min(1, value / 100) * 0.42})`;
+}
+
+/**
+ * Источник × этап матрицей.
+ *
+ * Полоски показывали то же самое, но сравнить два источника между собой по ним было
+ * нельзя: у каждого своя шкала и своя строка. В матрице столбец — это одна ступень у
+ * всех источников сразу, и слабое место видно взглядом, а не пересчётом.
+ */
+function SourceMatrix({ rows }: { rows: SourceFunnelRow[] }) {
+  return (
+    <div className="r-matrix-scroll">
+      <table className="r-matrix">
+        <thead>
+          <tr>
+            <th>Источник</th>
+            {SOURCE_STAGES.map((stage) => (
+              <th key={String(stage.key)}>{stage.label}</th>
+            ))}
+            <th>вернулись</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={`${row.source_kind}-${row.detail}`}>
+              <th scope="row">
+                <b>{row.source_kind}</b>
+                <small>{row.detail}</small>
+              </th>
+              {SOURCE_STAGES.map((stage) => {
+                const value = Number(row[stage.key]);
+                const part = share(value, row.visitors);
+                return (
+                  <td key={String(stage.key)} style={{ background: cellTone(part) }}>
+                    <b>{value}</b>
+                    <small>{part === null ? '—' : `${part}%`}</small>
+                  </td>
+                );
+              })}
+              <td>
+                <b>{row.retained_week2}</b>
+                <small>на 2-й неделе</small>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const PLACE_SEGMENTS = ['engaged', 'single_event'];
+
+/**
+ * Откуда люди: место × поведение.
+ *
+ * Поведения одного мало. Обходчик и владелец через VPN ведут себя по-разному, но для
+ * вопроса «пришли ли люди» одинаково бесполезны. Место добавляет второй признак, и
+ * вместе они дают ответ, ради которого экран и открывают.
+ */
+function PlaceMatrix({ rows }: { rows: TrafficQualityRow[] }) {
+  const regions = Array.from(new Set(rows.map((row) => row.region)));
+  const titles = new Map(rows.map((row) => [row.region, row.region_title]));
+  const segments = PLACE_SEGMENTS.filter((segment) =>
+    rows.some((row) => row.segment === segment),
+  ).map((segment) => ({
+    segment,
+    title: rows.find((row) => row.segment === segment)?.segment_title ?? segment,
+  }));
+  const cell = (region: string, segment: string) =>
+    rows.find((row) => row.region === region && row.segment === segment);
+
+  return (
+    <div className="r-matrix-scroll">
+      <table className="r-matrix">
+        <thead>
+          <tr>
+            <th>Место</th>
+            {segments.map((item) => (
+              <th key={item.segment}>{item.title}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {regions.map((region) => (
+            <tr key={region}>
+              <th scope="row">
+                <b>{titles.get(region)}</b>
+              </th>
+              {segments.map((item) => {
+                const found = cell(region, item.segment);
+                return (
+                  <td key={item.segment} style={{ background: cellTone(found?.share_pct ?? null) }}>
+                    <b>{found?.visitors ?? '—'}</b>
+                    <small>
+                      {found?.visitors === null || found?.visitors === undefined
+                        ? (found?.note ?? 'нет данных')
+                        : `${found.share_pct}% от всех`}
+                    </small>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /**
  * Недели одной картинкой: столбики — люди, линия — расход к исходному уровню.
  *
- * Раньше расход шёл строкой текста под графиком, и связь двух метрик приходилось
- * восстанавливать в голове. Это ровно та пара, которую читают вместе: первая может расти,
- * пока вторая стоит, и тогда мы научились удерживать людей, а не помогать им.
- *
- * Оси две, и единицы у них разные, поэтому у линии нет числовой шкалы: она показывает
- * форму, а точное значение стоит в подсказке точки. Общая шкала для людей и процентов
- * означала бы, что одну из двух метрик мы нарисовали неверно.
+ * Подпись — диапазон недели, а не её первый день: «08-31» читалось как 31 августа и
+ * породило вывод, что сентябрьской недели нет. Текущая неделя помечена и нарисована
+ * бледной: она прожита не до конца, и сравнивать её высоту с полными нельзя.
  */
 function WeeksChart({ rows }: { rows: CoreMetricRow[] }) {
-  const step = 26;
+  const step = 44;
   const padTop = 10;
-  const padBottom = 20;
+  const padBottom = 22;
   const height = 150;
   const plot = height - padTop - padBottom;
   const width = Math.max(1, rows.length) * step;
@@ -139,20 +388,23 @@ function WeeksChart({ rows }: { rows: CoreMetricRow[] }) {
   return (
     <svg className="r-viz-chart" viewBox={`0 0 ${width} ${height}`} role="img">
       <title>Недельные участники с результатом и расход к исходному уровню</title>
-      {rows.map((row, index) => (
-        <rect
-          key={row.week}
-          x={cx(index) - step * 0.3}
-          y={barTop(row.participants_with_result)}
-          width={step * 0.6}
-          height={Math.max(2, padTop + plot - barTop(row.participants_with_result))}
-          rx="2"
-          fill={row.participants_with_result === 0 ? 'rgba(255,255,255,.07)' : 'var(--r-teal)'}
-          opacity={row.participants_with_result === 0 ? 1 : 0.75}
-        >
-          <title>{`${row.week}: ${row.participants_with_result} чел.`}</title>
-        </rect>
-      ))}
+      {rows.map((row, index) => {
+        const running = isCurrentWeek(row.week);
+        return (
+          <rect
+            key={row.week}
+            x={cx(index) - step * 0.28}
+            y={barTop(row.participants_with_result)}
+            width={step * 0.56}
+            height={Math.max(2, padTop + plot - barTop(row.participants_with_result))}
+            rx="2"
+            fill={running ? 'rgba(81,221,208,.28)' : 'var(--r-teal)'}
+            opacity={row.participants_with_result === 0 ? 0.35 : 0.8}
+          >
+            <title>{`${weekRange(row.week)}: ${row.participants_with_result} чел.`}</title>
+          </rect>
+        );
+      })}
       {segments
         .filter((segment) => segment.length > 1)
         .map((segment) => (
@@ -167,7 +419,7 @@ function WeeksChart({ rows }: { rows: CoreMetricRow[] }) {
       {ratios.map((value, index) =>
         value === null ? null : (
           <circle key={`dot-${index}`} cx={cx(index)} cy={dotY(value)} r="2.5" fill="var(--r-sand)">
-            <title>{`${rows[index].week}: расход ${Math.round(value * 100)}% от исходного`}</title>
+            <title>{`${weekRange(rows[index].week)}: расход ${Math.round(value * 100)}% от исходного`}</title>
           </circle>
         ),
       )}
@@ -175,142 +427,27 @@ function WeeksChart({ rows }: { rows: CoreMetricRow[] }) {
         <text
           key={`label-${row.week}`}
           x={cx(index)}
-          y={height - 6}
+          y={height - 8}
           textAnchor="middle"
           fontSize="9"
           fill="var(--r-dim)"
         >
-          {row.week.slice(5)}
+          {weekRange(row.week)}
+          {isCurrentWeek(row.week) ? ' · идёт' : ''}
         </text>
       ))}
     </svg>
   );
 }
 
-const FUNNEL_STAGES: { key: keyof SourceFunnelRow; label: string }[] = [
-  { key: 'visitors', label: 'визит' },
-  { key: 'signed_up', label: 'регистрация' },
-  { key: 'onboarded', label: 'настройка' },
-  { key: 'first_episode', label: 'первый эпизод' },
-  { key: 'with_result', label: 'результат' },
-];
-
 /**
- * Воронка по источникам.
+ * Данные отдельно от вида.
  *
- * Ширина сегмента считается от посетителей своего источника, а не от общего максимума, и
- * это главное решение блока. При общей шкале крупный плохой источник всегда выглядит
- * лучше мелкого хорошего — сравниваются объёмы, а искать надо конверсию: пять визитов и
- * пять результатов важнее ста визитов и нуля.
+ * Разделение не про чистоту, а про проверяемость: у модуля не было ни одного теста,
+ * потому что проверить его можно было только подняв загрузку из базы. Вид принимает
+ * готовый снимок и рисуется синхронно — его можно отрендерить в строку и прочитать
+ * глазами теста.
  */
-/**
- * Заходы, за которыми кто-то есть, и заходы с единственным событием.
- *
- * Первые данные счётчика оказались обходчиками из дата-центров: шесть «активных
- * пользователей» GA за август — Boardman, Council Bluffs и соседи, то есть Амазон и
- * Гугл. Отделить их внешним сервисом мы не можем и не хотим; поведенческий признак
- * своих данных работает не хуже: тот, кому интересно, оставляет второе событие.
- *
- * Слово «бот» здесь не употребляется намеренно. Один заход — это описание поведения, а
- * не приговор: так выглядит и робот, и человек, закрывший вкладку через две секунды.
- */
-function TrafficQuality({ rows }: { rows: TrafficQualityRow[] }) {
-  return (
-    <div className="r-viz">
-      {rows.map((row) => (
-        <div key={row.segment} className="r-viz-row">
-          <span>{row.title}</span>
-          <span className="r-viz-bar">
-            <i
-              style={{
-                width: `${row.share_pct === null ? 0 : Math.max(2, Number(row.share_pct))}%`,
-              }}
-            />
-          </span>
-          <b>
-            {row.visitors === null
-              ? '—'
-              : `${row.visitors}${row.share_pct === null ? '' : ` · ${row.share_pct}%`}`}
-          </b>
-        </div>
-      ))}
-      <p className="r-viz-note">
-        {rows.map((row) => `${row.title}: ${row.note ?? row.hint}`).join(' ')}
-      </p>
-    </div>
-  );
-}
-
-/**
- * Вехи воронки по событиям клиента.
- *
- * Люди и записи показаны рядом. Разница между ними — повторы, снятые запросом
- * `distinct on (человек, этап)`; клиент пишет каждый раз намеренно, потому что решать в
- * браузере, было ли уже такое, значит терять второго человека за тем же ноутбуком.
- */
-function FunnelStages({ rows }: { rows: FunnelStageRow[] }) {
-  const top = Math.max(1, ...rows.map((row) => row.people));
-  return (
-    <div className="r-viz">
-      {rows.map((row) => (
-        <BarRow
-          key={row.stage}
-          label={row.title}
-          value={row.people}
-          max={top}
-          caption={
-            row.rows_written > row.people
-              ? `${row.people} · записей ${row.rows_written}`
-              : `${row.people}`
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-function SourceFunnel({ rows }: { rows: SourceFunnelRow[] }) {
-  return (
-    <div className="r-viz-funnel">
-      {rows.map((row) => {
-        const conversion = row.visitors > 0 ? (row.with_result / row.visitors) * 100 : 0;
-        return (
-          <div key={`${row.source_kind}-${row.detail}`}>
-            <p>
-              <b>{row.source_kind}</b>
-              <span>{row.detail}</span>
-              <em>
-                {row.visitors} → {row.with_result} ·{' '}
-                {conversion >= 10 ? Math.round(conversion) : conversion.toFixed(1)}%
-              </em>
-            </p>
-            <div className="r-viz-funnel-bars">
-              {FUNNEL_STAGES.map((stage, index) => {
-                const value = Number(row[stage.key]);
-                const share = row.visitors > 0 ? (value / row.visitors) * 100 : 0;
-                return (
-                  <i key={stage.key} title={`${stage.label}: ${value}`}>
-                    <span
-                      style={{
-                        width: `${Math.max(value > 0 ? 1.5 : 0, share)}%`,
-                        opacity: 0.9 - index * 0.12,
-                      }}
-                    />
-                  </i>
-                );
-              })}
-            </div>
-            <small>
-              {FUNNEL_STAGES.map((stage) => `${stage.label} ${row[stage.key]}`).join(' · ')} ·
-              вернулись на второй неделе {row.retained_week2}
-            </small>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 export function AnalyticsModule() {
   const [periodIndex, setPeriodIndex] = useState(1);
   const [snapshot, setSnapshot] = useState<AnalyticsSnapshot | null>(null);
@@ -341,15 +478,39 @@ export function AnalyticsModule() {
     };
   }, [period.days, period.weeks]);
 
+  return (
+    <AnalyticsView
+      snapshot={snapshot}
+      state={state}
+      reason={reason}
+      periodIndex={periodIndex}
+      onPeriod={setPeriodIndex}
+    />
+  );
+}
+
+export function AnalyticsView({
+  snapshot,
+  state,
+  reason,
+  periodIndex,
+  onPeriod,
+}: {
+  snapshot: AnalyticsSnapshot | null;
+  state: 'loading' | 'ready' | 'failed';
+  reason: string;
+  periodIndex: number;
+  onPeriod: (index: number) => void;
+}) {
   const core = snapshot?.core ?? [];
-  const funnel = snapshot?.funnel ?? [];
-  const funnelTop = funnel[0]?.people ?? 0;
   const flow = snapshot?.flow ?? [];
   const flowTop = Math.max(1, ...flow.map((row) => row.people));
-  const sources = snapshot?.sources ?? [];
-  const sourcesTop = Math.max(1, ...sources.map((row) => row.visitors));
   const states = snapshot?.states ?? [];
   const statesTotal = states.reduce((sum, row) => sum + row.participants, 0);
+  const funnelSteps = snapshot ? buildFunnel(snapshot.funnelStages, snapshot.funnel) : [];
+  const russians =
+    snapshot?.trafficQuality.find((row) => row.region === 'russia' && row.segment === 'engaged') ??
+    null;
 
   const cohorts = Array.from(new Set((snapshot?.retention ?? []).map((row) => row.cohort_week)));
   const horizons = Array.from(
@@ -362,9 +523,8 @@ export function AnalyticsModule() {
         <p className="r-kicker">Служебное</p>
         <h1>Аналитика</h1>
         <p className="r-lead">
-          Считает база: шесть функций, каждая отказывает не-администратору. Разрезы меньше трёх
-          человек не показываются, идентификаторов участников нет ни в одном поле — «посмотреть, как
-          идёт продукт» не должно превращаться в «выгрузить, кто когда курил».
+          Считает база: десять функций, каждая отказывает не-администратору. Идентификаторов
+          участников нет ни в одном поле.
         </p>
 
         <div className="r-health-periods">
@@ -373,7 +533,7 @@ export function AnalyticsModule() {
               key={item.label}
               type="button"
               className={index === periodIndex ? 'active' : ''}
-              onClick={() => setPeriodIndex(index)}
+              onClick={() => onPeriod(index)}
             >
               {item.label}
             </button>
@@ -411,120 +571,105 @@ export function AnalyticsModule() {
             </div>
 
             <div className="r-hypotheses">
-              <section>
-                <p className="r-kicker">Две опорные метрики</p>
-                <p className="r-lead">
-                  Столбики — сколько человек за неделю довели разбор тяги до результата: метрика
-                  жизни, двигается быстро. Числа под ними — во сколько раз недельный расход
-                  отличается от исходного уровня: метрика смысла, двигается медленно. Первая может
-                  расти, пока вторая стоит, и это будет означать, что мы научились удерживать людей,
-                  а не помогать им.
+              <Block
+                kicker="Воронка"
+                lead="Толстая полоса — по таблицам базы, тонкая под ней — по событиям браузера."
+                more={
+                  <>
+                    <p>
+                      Отставание тонкой полосы — не вторая правда, а мера потерь: блокировщики,
+                      закрытая вкладка, потерянная сеть. Таблицы знают факт, браузер — только то,
+                      что успел отправить.
+                    </p>
+                    <p>
+                      Ступень «эпизод доведён до результата» всегда равна предыдущей, и читать её
+                      как конверсию нельзя: сценарий тяги не умеет закончиться исходом «открыт». Она
+                      станет содержательной, когда появится способ завести эпизод, который можно
+                      бросить на середине.
+                    </p>
+                  </>
+                }
+              >
+                <Funnel steps={funnelSteps} />
+              </Block>
+
+              <Block
+                kicker="Источник × этап"
+                lead="Доля в ячейке считается от визитов своего источника, а не от общего максимума."
+                more={
+                  <p>
+                    При общей шкале крупный плохой источник всегда выглядит лучше мелкого хорошего:
+                    сто визитов и ноль результатов рисуются длиннее, чем пять и пять. Искать надо
+                    мелкий хороший — его можно повторить.
+                  </p>
+                }
+              >
+                {snapshot.sourceFunnel.length === 0 ? (
+                  <p className="r-muted">
+                    Строка появляется у источника с тремя посетителями за период. Ни один пока не
+                    набрал троих — это подавление, а не отсутствие данных.
+                  </p>
+                ) : (
+                  <SourceMatrix rows={snapshot.sourceFunnel} />
+                )}
+              </Block>
+
+              <Block
+                kicker="Откуда люди"
+                lead="Место — по часовому поясу; язык учитывается, только когда пояса нет вовсе."
+                more={
+                  <>
+                    <p>
+                      Поведения одного мало. 06.09 из 293 посетителей 133 пришли с поясом UTC и
+                      языком en-US — 120 за два часа равномерно по всем статьям, без единого второго
+                      события; ещё 98 с America/Los_Angeles — это рендерер Google, он же
+                      «пользователи» в GA и «США, отказ 97%» в Метрике.
+                    </p>
+                    <p>
+                      Пояс — сигнал сильнее языка: VPN меняет адрес, но не системное время. Обратная
+                      сторона в том, что русскоязычный человек в нероссийском поясе попадёт в «не
+                      Россию»: мы отвечаем на вопрос «откуда заходят», а не «кто по паспорту». Ни
+                      адрес, ни user-agent для этого не хранятся.
+                    </p>
+                  </>
+                }
+              >
+                <PlaceMatrix rows={snapshot.trafficQuality} />
+                <p className="r-viz-note">
+                  Людей из России со вторым событием —{' '}
+                  {russians?.visitors ?? russians?.note ?? 'нет данных'}.
                 </p>
+              </Block>
+
+              <Block
+                kicker="Две опорные метрики"
+                lead="Столбики — люди с результатом за неделю, песочная линия — расход к исходному уровню."
+                more={
+                  <p>
+                    Первая может расти, пока вторая стоит, и это будет означать, что мы научились
+                    удерживать людей, а не помогать им. Разрыв в линии — неделя, за которую расход
+                    посчитать нечем: соединять её концы значило бы дорисовать данные.
+                  </p>
+                }
+              >
                 {core.length === 0 ? (
                   <p className="r-muted">За выбранный период нет ни одной недели с данными.</p>
                 ) : (
-                  <>
-                    <WeeksChart rows={core} />
-                    <p className="r-viz-note">
-                      Столбики — люди, песочная линия — расход к исходному уровню. Разрыв в линии
-                      означает неделю, за которую расход посчитать нечем: соединять её концы прямой
-                      значило бы дорисовать данные.
-                      {core.every((row) => !row.computable) &&
-                        ' Пока таких недель все: нет записей расхода и исходного уровня.'}
-                    </p>
-                  </>
+                  <WeeksChart rows={core} />
                 )}
-              </section>
+              </Block>
 
-              <section>
-                <p className="r-kicker">Воронка вовлечения</p>
-                <p className="r-lead">
-                  Длина полосы — доля от первого шага. Шаг «визит» считается с 28.08.2026: до этого
-                  события до входа записать было нельзя.
-                </p>
-                <div className="r-viz">
-                  {funnel.map((row) => (
-                    <BarRow
-                      key={row.step_no}
-                      label={`${row.step_no}. ${row.step}`}
-                      value={row.people}
-                      max={funnelTop}
-                      caption={
-                        row.conversion_pct !== null
-                          ? `${row.people} · ${row.conversion_pct}%`
-                          : `${row.people}`
-                      }
-                    />
-                  ))}
-                </div>
-                {funnel.some((row) => row.note) && (
-                  <p className="r-viz-note">{funnel.find((row) => row.note)?.note}</p>
-                )}
-                <p className="r-viz-note">
-                  Шаг «эпизод доведён до результата» всегда равен предыдущему, и читать его как
-                  конверсию нельзя. Это не совпадение и не ошибка счёта: сценарий тяги не умеет
-                  закончиться исходом «открыт» — записанный эпизод по построению закрыт и с исходом.
-                  Шаг станет содержательным, когда появится второй способ завести эпизод, который
-                  можно бросить на середине.
-                </p>
-              </section>
-
-              <section>
-                <p className="r-kicker">Вехи по событиям клиента</p>
-                <p className="r-lead">
-                  То же самое, но посчитанное не по таблицам, а по тому, что успел записать браузер.
-                  Расхождение с воронкой выше — это и есть мера того, сколько событий не доехало:
-                  блокировщики, закрытая вкладка, потерянная сеть. «Людей» и «записей» показаны
-                  рядом намеренно: разница между ними — снятый двойной счёт, и видеть его полезнее,
-                  чем прятать.
-                </p>
-                {snapshot.funnelStages.every((row) => row.rows_written === 0) ? (
-                  <p className="r-muted">
-                    Клиент начал писать вехи 05.09.2026. За выбранный период их ещё нет — это «не
-                    записывали», а не «никто не дошёл».
-                  </p>
-                ) : (
-                  <FunnelStages rows={snapshot.funnelStages} />
-                )}
-              </section>
-
-              <section>
-                <p className="r-kicker">Сценарий тяги по экранам</p>
-                <p className="r-lead">
-                  Аудит 26.08 предположил, что четыре экрана выбора противоречат принципу «минимум
-                  действий в момент тяги». Полоса — сколько человек дошло до экрана, число рядом —
-                  медиана времени на нём. Порядок шагов не меняется: измерение нужно, чтобы спорить
-                  предметно.
-                </p>
-                {flow.length === 0 ? (
-                  <p className="r-muted">
-                    Шаги сценария пишутся с 28.08.2026. За более ранний период их нет.
-                  </p>
-                ) : (
-                  <div className="r-viz">
-                    {flow.map((row) => (
-                      <BarRow
-                        key={row.step_no}
-                        label={`Экран ${row.step_no}`}
-                        value={row.people}
-                        max={flowTop}
-                        caption={`${row.people} чел.${row.median_seconds !== null ? ` · ${row.median_seconds} с` : ''}`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              <section>
-                <p className="r-kicker">Удержание по когортам</p>
-                <p className="r-lead">
-                  Считается по действию, а не по входу: открыть приложение и ничего не записать —
-                  это не удержание. Строка — неделя регистрации, столбец — день жизни.
-                </p>
+              <Block
+                kicker="Удержание по когортам"
+                lead="Считается по действию: открыть приложение и ничего не записать — не удержание."
+              >
                 {cohorts.length === 0 ? (
                   <p className="r-muted">Когорт за период нет.</p>
                 ) : (
-                  <div className="r-viz-heat">
+                  <div
+                    className="r-viz-heat"
+                    style={{ ['--r-heat-columns' as string]: String(horizons.length) }}
+                  >
                     <span />
                     {horizons.map((day) => (
                       <span key={day}>{day} д.</span>
@@ -539,62 +684,20 @@ export function AnalyticsModule() {
                     ))}
                   </div>
                 )}
-              </section>
+              </Block>
 
-              <section>
-                <p className="r-kicker">Источники</p>
-                <p className="r-lead">
-                  Бирюзовая полоса — посетители, песочная — те, кто дошёл до записанного результата.
-                  Вопрос не «сколько визитов», а сколько из них дошло: источник со ста визитами и
-                  нулём разборов хуже источника с пятью и пятью.
-                </p>
-                {sources.length === 0 ? (
-                  <p className="r-muted">
-                    Посетители пишутся с 28.08.2026, разрезы меньше трёх человек подавлены.
+              <Block
+                kicker="Состояния и отток"
+                lead="Окно ожидания считается по ритму самого человека, а не общим порогом."
+                more={
+                  <p>
+                    Для писавшего пять раз в день три дня тишины — сигнал, для писавшего раз в
+                    неделю — норма. Направление ухода это предположение по признакам: успех выглядит
+                    как затухание, отвал — как ступенька. Точный ответ даёт вопрос человеку, а не
+                    запрос.
                   </p>
-                ) : (
-                  <>
-                    <div className="r-viz">
-                      {sources.map((row) => (
-                        <div key={`${row.source_kind}-${row.detail}`}>
-                          <BarRow
-                            label={`${row.source_kind} · ${row.detail}`}
-                            value={row.visitors}
-                            max={sourcesTop}
-                            caption={`${row.visitors}`}
-                          />
-                          <BarRow
-                            label=""
-                            value={row.reached_result}
-                            max={sourcesTop}
-                            caption={`${row.reached_result} с результатом`}
-                            tone="sand"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <p className="r-viz-legend">
-                      <span>
-                        <em style={{ background: TEAL }} />
-                        посетители
-                      </span>
-                      <span>
-                        <em style={{ background: SAND }} />
-                        дошли до результата
-                      </span>
-                    </p>
-                  </>
-                )}
-              </section>
-
-              <section>
-                <p className="r-kicker">Состояния и отток</p>
-                <p className="r-lead">
-                  Окно ожидания считается по собственному ритму человека, а не общим порогом: для
-                  писавшего пять раз в день три дня тишины — сигнал, для писавшего раз в неделю —
-                  норма. Направление ухода — предположение по признакам: успех выглядит как
-                  затухание, отвал — как ступенька. Точный ответ даёт вопрос человеку, а не запрос.
-                </p>
+                }
+              >
                 {states.length === 0 ? (
                   <p className="r-muted">
                     В каждом разрезе меньше трёх участников — всё подавлено.
@@ -630,58 +733,50 @@ export function AnalyticsModule() {
                     )}
                   </>
                 )}
-              </section>
+              </Block>
 
-              <section>
-                <p className="r-kicker">Источник × этап</p>
-                <p className="r-lead">
-                  Пересечение, которого не хватало: какой источник приводит людей, доходящих до
-                  результата, а какой — только визиты. Ширина сегмента считается от посетителей
-                  своего источника, а не от общего максимума: при общей шкале крупный плохой
-                  источник всегда выглядит лучше мелкого хорошего, а искать надо именно мелкий
-                  хороший.
-                </p>
-                {snapshot.sourceFunnel.length === 0 ? (
+              <Block
+                kicker="Сценарий тяги по экранам"
+                lead="Сколько человек дошло до экрана и медиана времени на нём."
+                more={
+                  <p>
+                    Аудит 26.08 предположил, что четыре экрана выбора противоречат принципу «минимум
+                    действий в момент тяги». Порядок шагов не меняется: измерение нужно, чтобы
+                    спорить предметно.
+                  </p>
+                }
+              >
+                {flow.length === 0 ? (
                   <p className="r-muted">
-                    Пусто не потому, что данных нет, а потому, что они подавлены: строка появляется
-                    у источника, приведшего хотя бы трёх посетителей за период. Всего посетителей за
-                    это окно —{' '}
-                    {snapshot.trafficQuality.reduce((sum, row) => sum + (row.visitors ?? 0), 0) ||
-                      'меньше трёх'}
-                    , и ни один источник пока не набрал троих. Порог тот же, что везде, и снижать
-                    его нельзя: разрез из одного человека — это уже не статистика, а он сам.
+                    Шаги сценария пишутся с 28.08.2026. За более ранний период их нет.
                   </p>
                 ) : (
-                  <SourceFunnel rows={snapshot.sourceFunnel} />
+                  <div className="r-viz">
+                    {flow.map((row) => (
+                      <BarRow
+                        key={row.step_no}
+                        label={`Экран ${row.step_no}`}
+                        value={row.people}
+                        max={flowTop}
+                        caption={`${row.people} чел.${row.median_seconds !== null ? ` · ${row.median_seconds} с` : ''}`}
+                      />
+                    ))}
+                  </div>
                 )}
-              </section>
+              </Block>
 
-              <section>
-                <p className="r-kicker">За заходом кто-то есть?</p>
-                <p className="r-lead">
-                  Первые данные счётчиков — обходчики из дата-центров, а не люди: шесть «активных
-                  пользователей» GA за август сидели в Boardman и Council Bluffs, то есть у Амазона
-                  и Гугла, при нуле посетителей из России. Отделяем поведением, а не внешним
-                  сервисом: тот, кому интересно, оставляет после открытия страницы хотя бы ещё одно
-                  событие. Ни адрес, ни user-agent для этого не хранятся.
-                </p>
-                <TrafficQuality rows={snapshot.trafficQuality} />
-              </section>
-
-              <section>
-                <p className="r-kicker">Кабинеты</p>
-                <p className="r-lead">
-                  Там глубина, которой у нас нет и не должно быть: точная география, устройства,
-                  поисковые запросы. Своя база остаётся источником истины по продуктовым числам —
-                  счётчики отвечают за то, чего она не знает. Расхождение в 5–15% нормально:
-                  блокировщики режут счётчики, в России заметно.
-                </p>
-                <p className="r-viz-note">
-                  Данные счётчиков есть только с {COUNTERS_LIVE_SINCE}: раньше этого дня
-                  идентификаторы в сборке были пустыми, и кабинет за более ранний период показывает
-                  не «ноль посетителей», а «счётчика не было». На этой разнице уже один раз
-                  построили вывод — не повторять.
-                </p>
+              <Block
+                kicker="Кабинеты"
+                lead="Глубина, которой у нас нет: география, устройства, запросы. Своя база — источник истины."
+                more={
+                  <p>
+                    Расхождение в 5–15% нормально: блокировщики режут счётчики, в России заметно.
+                    Данные счётчиков есть только с {COUNTERS_LIVE_SINCE} — раньше идентификаторы в
+                    сборке были пустыми, и кабинет за более ранний период показывает не «ноль
+                    посетителей», а «счётчика не было».
+                  </p>
+                }
+              >
                 <div className="r-viz-cabinets">
                   {CABINETS.map((cabinet) => (
                     <a
@@ -695,7 +790,7 @@ export function AnalyticsModule() {
                     </a>
                   ))}
                 </div>
-              </section>
+              </Block>
             </div>
           </>
         )}
@@ -718,21 +813,13 @@ function Cohort({
   return (
     <>
       <span className="row">
-        {week.slice(5)} · {size}
+        {weekRange(week)} · {size}
       </span>
       {horizons.map((day) => {
         const cell = rows.find((row) => row.cohort_week === week && row.horizon_days === day);
         const value = cell?.retained_pct ?? null;
         return (
-          <i
-            key={day}
-            style={{
-              background:
-                value === null
-                  ? 'rgba(255,255,255,.04)'
-                  : `rgba(81,221,208,${0.08 + (Number(value) / 100) * 0.5})`,
-            }}
-          >
+          <i key={day} style={{ background: cellTone(value === null ? null : Number(value)) }}>
             {value === null ? '·' : `${value}%`}
           </i>
         );
