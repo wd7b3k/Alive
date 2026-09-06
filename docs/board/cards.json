@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-06",
-  "appliedCommit": "1bdb0384cac57cb40c38c40b86d889c9deae8599",
+  "appliedCommit": "04021f8d8f7fab4d48cbfc54a6db35e30863eedc",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -4146,11 +4146,12 @@
       "type": "tech",
       "epic": "process",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "next-id.sh, джобы постановки и пределов, check-numbers.mjs, стоп на отставшем main, проверка экрана в браузере",
       "updated": "2026-09-06",
       "commits": [
-        "72f6394fcabbb62612682912637819e9cf9604b9"
+        "72f6394fcabbb62612682912637819e9cf9604b9",
+        "04021f8d8f7fab4d48cbfc54a6db35e30863eedc"
       ]
     },
     {
@@ -4172,11 +4173,25 @@
       "type": "tech",
       "epic": "release",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "RUNBOOK базы знаний и восемь разборов вне git, восемь свежих веток, августовский архив",
       "updated": "2026-09-06",
       "commits": [
-        "3ae63faba8105740361201c20b7455681bf6c4ff"
+        "3ae63faba8105740361201c20b7455681bf6c4ff",
+        "e534149d5868f4b4e9dcf7efcd2f621623eb247d"
+      ]
+    },
+    {
+      "id": "pustoy-ref-v-git",
+      "title": "Пустой реф в .git роняет git fetch во всём репозитории",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "refs/heads/docs/roles-contours.lock.…b.stale, нулевой файл от блокировки ветки параллельной сессией; удалён, откуда берётся — не выяснено",
+      "updated": "2026-09-06",
+      "commits": [
+        "94be25fe917b3d119b8b7efbc9c1d7e61faca8c8"
       ]
     }
   ]
