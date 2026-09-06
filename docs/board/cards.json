@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-06",
-  "appliedCommit": "b83e2c45eee72130adb69f61cc0bc42ec159fecd",
+  "appliedCommit": "8962343828df2512f94e7c086440869776cec9d5",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3969,12 +3969,13 @@
       "type": "tech",
       "epic": "design",
       "priority": 2,
-      "status": "verify",
+      "status": "done",
       "body": "T-20260906-01, растянутая ссылка вместо служебной строки под карточкой",
       "updated": "2026-09-06",
       "commits": [
         "c3da9b035a8f665b83e303b8399a7d5e579db7a7",
-        "b83e2c45eee72130adb69f61cc0bc42ec159fecd"
+        "b83e2c45eee72130adb69f61cc0bc42ec159fecd",
+        "8962343828df2512f94e7c086440869776cec9d5"
       ],
       "docs": [
         "docs/tasks/T-20260906-01-knowledge-card-clickable.md",
