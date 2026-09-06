@@ -1,5 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
-import type { ProductType } from './data';
+import { OTHER_TRIGGER_CODE, type ProductType } from './data';
 import { getSupabase } from './supabase';
 
 export type QuickUseDraft = {
@@ -20,13 +20,15 @@ export async function saveQuickUse(session: Session, draft: QuickUseDraft) {
   if (!supabase) throw new Error('Supabase не настроен');
   const userId = session.user.id;
   const completedAt = new Date().toISOString();
-  const triggerCode = draft.triggerCode && draft.triggerCode !== 'other' ? draft.triggerCode : null;
+  const triggerCode =
+    draft.triggerCode && draft.triggerCode !== OTHER_TRIGGER_CODE ? draft.triggerCode : null;
 
   const episode = await supabase.from('episodes').insert({
     user_id: userId,
     target_product: draft.product,
     trigger_code: triggerCode,
-    custom_trigger_text: draft.triggerCode === 'other' ? draft.customTriggerText || 'Другое' : null,
+    custom_trigger_text:
+      draft.triggerCode === OTHER_TRIGGER_CODE ? draft.customTriggerText || 'Другое' : null,
     outcome: 'nicotine_used',
     private_note: draft.note || null,
     completed_at: completedAt,
