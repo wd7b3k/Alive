@@ -159,6 +159,17 @@ export type Reward = {
   sort_order: number;
 };
 
+/**
+ * Контекст вне каталога.
+ *
+ * Не код триггера, а метка «в каталоге такого нет»: в `episodes` он раскладывается на
+ * пустой `trigger_code` и текст в `custom_trigger_text`. Строка живёт в трёх местах
+ * сразу — сценарий тяги, быстрая запись, запись эпизода, — и пока она была литералом,
+ * опечатка в одном из них молча превратила бы контекст вне каталога в несуществующий
+ * код триггера.
+ */
+export const OTHER_TRIGGER_CODE = 'other';
+
 export type Episode = {
   id: string;
   user_id: string;
@@ -882,8 +893,9 @@ export async function saveGuidedEpisode(session: Session, draft: GuidedEpisodeDr
   const episodeRes = await supabase.from('episodes').insert({
     user_id: userId,
     target_product: draft.product,
-    trigger_code: draft.triggerCode === 'other' ? null : draft.triggerCode,
-    custom_trigger_text: draft.triggerCode === 'other' ? draft.customTriggerText || 'Другое' : null,
+    trigger_code: draft.triggerCode === OTHER_TRIGGER_CODE ? null : draft.triggerCode,
+    custom_trigger_text:
+      draft.triggerCode === OTHER_TRIGGER_CODE ? draft.customTriggerText || 'Другое' : null,
     need_code: draft.needCode || null,
     craving_before: draft.cravingBefore,
     craving_after: draft.cravingAfter,
