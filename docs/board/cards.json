@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-06",
-  "appliedCommit": "4dc2d099739f755c0e295d5d2cd4cd20e199b47c",
+  "appliedCommit": "903f0f678928c898e8afbdba62799f9131659019",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -4048,6 +4048,19 @@
       "updated": "2026-09-06",
       "commits": [
         "26dff8868943341f79e79fe8a79a6e7f4ddb7b27"
+      ]
+    },
+    {
+      "id": "proverka-fayla-net-ni",
+      "title": "Проверка «файла нет ни в одной ветке» врёт",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "untracked-остаток намеренного удаления выглядит как невыложенная работа; отличает только git log --diff-filter=D",
+      "updated": "2026-09-06",
+      "commits": [
+        "903f0f678928c898e8afbdba62799f9131659019"
       ]
     }
   ]
