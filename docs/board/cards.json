@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-06",
-  "appliedCommit": "8962343828df2512f94e7c086440869776cec9d5",
+  "appliedCommit": "4dc2d099739f755c0e295d5d2cd4cd20e199b47c",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -1478,9 +1478,9 @@
       "type": "feature",
       "epic": "flow",
       "priority": 2,
-      "status": "backlog",
+      "status": "done",
       "body": "Схема и запись эпизода его поддерживают, карточки в интерфейсе нет. Участник с контекстом вне 28 карточек вынужден выбрать неправильный. Осознанно не сделано перед пилотом.",
-      "updated": "2026-08-27",
+      "updated": "2026-09-06",
       "chats": [
         {
           "label": "habitoff-pilot-readiness-2026-08-27",
@@ -1488,7 +1488,10 @@
           "url": ""
         }
       ],
-      "commits": []
+      "commits": [
+        "0ca235930696229abae5cb1208d3347535c23851",
+        "4dc2d099739f755c0e295d5d2cd4cd20e199b47c"
+      ]
     },
     {
       "id": "content-layer",
@@ -3997,6 +4000,54 @@
       "commits": [
         "c3da9b035a8f665b83e303b8399a7d5e579db7a7",
         "b83e2c45eee72130adb69f61cc0bc42ec159fecd"
+      ]
+    },
+    {
+      "id": "kontekst-vne-kataloga-v",
+      "title": "Контекст вне каталога в потоке тяги",
+      "type": "feature",
+      "epic": "flow",
+      "priority": 1,
+      "status": "done",
+      "body": "карточка «Моей ситуации тут нет» на шаге 1, поле на месте, текст только в эпизод граница по тексту проверена и на внешних счётчиках, не только на analytics_events",
+      "updated": "2026-09-06",
+      "commits": [
+        "76584e570d636cca1840bfe658972973637b4068",
+        "51732c6124dc86eb31d718a2852972d014ba7b69",
+        "f78ae965e46fc03887850c29a53d28f076b800d9",
+        "4dc2d099739f755c0e295d5d2cd4cd20e199b47c"
+      ],
+      "docs": [
+        {
+          "label": "ADR-0020-participant-feedback.md",
+          "path": "docs/decisions/ADR-0020-participant-feedback.md"
+        }
+      ]
+    },
+    {
+      "id": "postanovka-t-20260906-02",
+      "title": "Постановка T-20260906-02 и решение по выделению текста в git",
+      "type": "tech",
+      "epic": "release",
+      "priority": 2,
+      "status": "backlog",
+      "body": "два файла жили только на машине владельца, при том что запись сессии о них уже в main",
+      "updated": "2026-09-06",
+      "commits": [
+        "994950b9c3c612116e0e376013428908577c8f65"
+      ]
+    },
+    {
+      "id": "kolliziya-nomerov-zapisey-sessii",
+      "title": "Коллизия номеров записей сессии за 05.09",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "две сессии выдали 001 и 002 одновременно; закрывается next-id.sh из T-20260906-03",
+      "updated": "2026-09-06",
+      "commits": [
+        "26dff8868943341f79e79fe8a79a6e7f4ddb7b27"
       ]
     }
   ]
