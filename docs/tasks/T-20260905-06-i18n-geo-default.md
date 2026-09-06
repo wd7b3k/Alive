@@ -6,6 +6,7 @@
     Ветка: task/i18n-geo-default
     Из разбора: R-20260905-01-i18n-english.md
     Поставлено: 05.09.2026 · чат: https://claude.ai/code/session_01Ms5KnD2VoEv5yFWaHqMN9Y
+    Подвешена: 06.09.2026, условие разморозки — `docs/tasks/R-20260905-01-i18n-english.md`
 
 ## Предпосылки
 
