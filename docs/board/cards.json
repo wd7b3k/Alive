@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-06",
-  "appliedCommit": "04021f8d8f7fab4d48cbfc54a6db35e30863eedc",
+  "appliedCommit": "89489c3276ca5ada14bc69cc172dc006d8d93ee8",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -4192,6 +4192,19 @@
       "updated": "2026-09-06",
       "commits": [
         "94be25fe917b3d119b8b7efbc9c1d7e61faca8c8"
+      ]
+    },
+    {
+      "id": "scripts-ne-pokryt-prettier",
+      "title": "scripts/ не покрыт prettier",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "CI гоняет prettier из каталога app, пятнадцать скриптов вне проверки формата",
+      "updated": "2026-09-06",
+      "commits": [
+        "89489c3276ca5ada14bc69cc172dc006d8d93ee8"
       ]
     }
   ]
