@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated": "2026-09-06",
-  "appliedCommit": "819c271a48156cd6c5297ba46b0c11ade099bfcd",
+  "appliedCommit": "1bdb0384cac57cb40c38c40b86d889c9deae8599",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -152,6 +152,42 @@
       "name": "v3.1 Together и дальше",
       "about": "Социальная поддержка без соревнования, затем админка и product intelligence.",
       "release": "v3.1+"
+    },
+    {
+      "id": "knowledge",
+      "name": "База знаний",
+      "about": "Раздел «Факты и мифы»: карточки с уровнем доказательности, их вечные адреса, выгрузка каталога и еженедельное пополнение. ADR-0017, ADR-0020 не входят: это обратная связь.",
+      "release": "v3.0"
+    },
+    {
+      "id": "i18n",
+      "name": "Английский интерфейс",
+      "about": "Второй язык продукта: слой строк, адреса `/en/`, перевод каталога, выбор языка по стране. Разбор — `R-20260905-01-i18n-english.md`.",
+      "release": "v3.2+"
+    },
+    {
+      "id": "legal",
+      "name": "Право и заимствования",
+      "about": "Атрибуция, границы медицинских утверждений, лицензии на чужие тексты и данные. `ORIGINS_AND_ATTRIBUTION.md`, `EDITORIAL_PROTOCOL_MED.md`.",
+      "release": "—"
+    },
+    {
+      "id": "money",
+      "name": "Деньги",
+      "about": "Подвешенное решение о донатах и подписке. Пока не принято — `R-20260830-01-money-monetization.md`. Ни одна карточка отсюда не идёт в работу без ADR.",
+      "release": "—"
+    },
+    {
+      "id": "social",
+      "name": "Внешние площадки",
+      "about": "Дзен, соцсети, рассылки: где продукт показывается за пределами habitoff.ru. Оригинальные тексты грузятся в Вебмастер до публикации фрагментов.",
+      "release": "—"
+    },
+    {
+      "id": "data",
+      "name": "Данные и модели",
+      "about": "Схема базы, миграции, пересчитываемые модели единиц, экспорт своих данных. Сырые события отдельно от моделей — `DATA_MODEL.md`.",
+      "release": "v3.0"
     }
   ],
   "releases": [
@@ -4076,6 +4112,71 @@
       "updated": "2026-09-06",
       "commits": [
         "819c271a48156cd6c5297ba46b0c11ade099bfcd"
+      ]
+    },
+    {
+      "id": "pravila-bez-proverok-razbor",
+      "title": "Правила без проверок: разбор R-20260906-01",
+      "type": "research",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "40 правил прозой, 5 проверок в CI; пределы doing/p0/очередь нарушены; три коллизии id постановок; локальный main отстаёт на 112",
+      "updated": "2026-09-06",
+      "commits": [
+        "aac520ebb64f51a400391688dc9b022e6acc7ccd"
+      ]
+    },
+    {
+      "id": "reglament-kanon-zhurnal-i",
+      "title": "Регламент: канон, журнал и роли агентов",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "AGENTS.md 433 -> 215 строк, docs/INCIDENTS.md, .claude/agents/, два обязательных раздела в шаблоне задачи",
+      "updated": "2026-09-06",
+      "commits": [
+        "72f6394fcabbb62612682912637819e9cf9604b9"
+      ]
+    },
+    {
+      "id": "geyty-vmesto-pravil-t",
+      "title": "Гейты вместо правил: T-20260906-02",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "next-id.sh, джобы постановки и пределов, check-numbers.mjs, стоп на отставшем main, проверка экрана в браузере",
+      "updated": "2026-09-06",
+      "commits": [
+        "72f6394fcabbb62612682912637819e9cf9604b9"
+      ]
+    },
+    {
+      "id": "roli-podklyuchayutsya-sami-priemka",
+      "title": "Роли подключаются сами, приёмка доводит до прода",
+      "type": "tech",
+      "epic": "process",
+      "priority": 2,
+      "status": "backlog",
+      "body": "описания-триггеры, скилл habitoff-vhod, приёмка + выкладка одной ролью",
+      "updated": "2026-09-06",
+      "commits": [
+        "3ae63faba8105740361201c20b7455681bf6c4ff"
+      ]
+    },
+    {
+      "id": "svesti-nevylozhennoe-i-dovesti",
+      "title": "Свести невыложенное и довести до прода: T-20260906-04",
+      "type": "tech",
+      "epic": "release",
+      "priority": 2,
+      "status": "backlog",
+      "body": "RUNBOOK базы знаний и восемь разборов вне git, восемь свежих веток, августовский архив",
+      "updated": "2026-09-06",
+      "commits": [
+        "3ae63faba8105740361201c20b7455681bf6c4ff"
       ]
     }
   ]

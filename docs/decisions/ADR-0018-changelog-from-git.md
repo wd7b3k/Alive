@@ -3,7 +3,7 @@
     Дата: 05.09.2026
     Статус: принято
     Решение владельца: да
-    Задача: docs/tasks/T-20260905-12-release-admin-releases.md
+    Задача: docs/tasks/T-20260905-14-release-admin-releases.md
 
 ## Контекст
 

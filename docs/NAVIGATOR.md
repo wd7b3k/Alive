@@ -37,7 +37,7 @@ Habitoff (репозиторий `wd7b3k/Alive`, имя историческое
 | `flow` | `PRODUCT_PRINCIPLES.md` (P1–P20), `SCREENS.md`, `V3_PARITY_BASELINE.md` | `app/src/redesign/`, тесты |
 | `auth` | `AUTH_PROVIDERS.md`, `PRIVACY_AND_DATA.md` | сервер, живая проверка входа |
 | `privacy` | `PRIVACY_AND_DATA.md`, `PROJECT_CHARTER.md` | RLS-тесты `supabase/tests/local/` |
-| `seo` | `SEO_AND_ANALYTICS.md`, `SEO_VISIBILITY_AUDIT.md`, `tasks/R-20260905-01-seo-…`, ADR-0017 | живые запросы к `habitoff.ru` |
+| `seo` | `SEO_AND_ANALYTICS.md`, `SEO_VISIBILITY_AUDIT.md`, `tasks/R-20260905-02-seo-…`, ADR-0017 | живые запросы к `habitoff.ru` |
 | `perf` | `ARCHITECTURE.md`, `MODULES.md` | замеры сборки и рендера |
 | `money` | `PROJECT_CHARTER.md` §2, `docs/tasks/R-…-money-….md` | — (решение подвешено) |
 | `legal` | `PRIVACY_AND_DATA.md`, `PROJECT_CHARTER.md` | — (внедрение не начато) |
