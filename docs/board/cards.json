@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "generated": "2026-09-05",
-  "appliedCommit": "91ce91b1f4f3d3c18153d10200f5965dbc31f2e6",
+  "generated": "2026-09-06",
+  "appliedCommit": "c3da9b035a8f665b83e303b8399a7d5e579db7a7",
   "repo": "https://github.com/wd7b3k/Alive",
   "branch": "main",
   "project": "Alive",
@@ -3961,6 +3961,39 @@
       "commits": [
         "00fc9dfb40c3ec34f817c814076ea91aff5c65d1",
         "91ce91b1f4f3d3c18153d10200f5965dbc31f2e6"
+      ]
+    },
+    {
+      "id": "knowledge-card-clickable",
+      "title": "Карточка «Фактов» кликается целиком",
+      "type": "tech",
+      "epic": "design",
+      "priority": 2,
+      "status": "verify",
+      "body": "T-20260906-01, растянутая ссылка вместо служебной строки под карточкой",
+      "updated": "2026-09-06",
+      "commits": [
+        "c3da9b035a8f665b83e303b8399a7d5e579db7a7"
+      ],
+      "docs": [
+        "docs/tasks/T-20260906-01-knowledge-card-clickable.md",
+        "docs/ai_sessions/2026-09-06/001-knowledge-card-clickable-response.md"
+      ],
+      "chats": [
+        "https://claude.ai/code/session_01KeDhckSxJXNTKY2PZ4fzDg"
+      ]
+    },
+    {
+      "id": "knowledge-card-route-signed-in",
+      "title": "Адрес карточки не открывается после входа",
+      "type": "bug",
+      "epic": "design",
+      "priority": 2,
+      "status": "backlog",
+      "body": "в роутере со входом нет ветки /knowledge/<код>, путь проваливается в «Сегодня»; из-за этого карточки в разделе после входа не сделаны кликабельными",
+      "updated": "2026-09-06",
+      "commits": [
+        "c3da9b035a8f665b83e303b8399a7d5e579db7a7"
       ]
     }
   ]

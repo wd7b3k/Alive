@@ -213,6 +213,7 @@ uppercase-надзаголовка, где межбуквенное рассто
 | Главная CTA | `.r-craving` | не `.r-button`: составная карточка с иконкой, заголовком и пояснением |
 | Карточка контекста | `.r-trigger-card` | стилизуется и без класса — проверяется тестом |
 | Карточка знания | `.r-knowledge-card`, `.r-awareness-card` | вариант `.myth` — `--r-red` (опровергнуто) |
+| Кликабельная карточка знания | `.r-knowledge-card.linked`, `.r-knowledge-card-link` | ссылка в заголовке растянута `::after` на всю карточку; `details` поднят `position:relative`, иначе раскрытие «Границы и источники» проваливается в ссылку. Цена паттерна — текст карточки не выделяется мышью |
 | Карточка смысла | `.r-goal-card` | `.goal` — `--r-sand`, `.value` — `--r-sand-dim`, `.course` — `--r-teal` |
 | Эпизод | `.r-episode-card` | `.success` — `--r-ok`, `.used` — `--r-muted` |
 | Бейдж доказательности | `.r-evidence-badge` | `.level-a` — `--r-ok`, `.level-b` — `--r-ok-dim`, `.level-c` — `#7d918e` |

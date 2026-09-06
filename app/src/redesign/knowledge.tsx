@@ -1,6 +1,7 @@
 import type { AwarenessCard, EvidenceSource, Knowledge, KnowledgeCard, Replacement } from '../data';
 import { evidenceForReplacement, levelOf, sourcesForCard } from '../domain/knowledge';
 import { Icon } from '../ui-icons';
+import { AppLink } from './shared';
 
 /**
  * Rendering for the evidence layer and «Факты и Мифы».
@@ -121,18 +122,33 @@ export function KnowledgeCardView({
   card,
   compact = false,
   full = false,
+  href,
 }: {
   knowledge: Knowledge;
   card: KnowledgeCard;
   compact?: boolean;
   /** Страница карточки: развёрнутый текст раскрыт, потому что он и есть страница. */
   full?: boolean;
+  /**
+   * Адрес карточки. Задан — кликается вся карточка: ссылка живёт в заголовке и
+   * растягивается псевдоэлементом на всю площадь.
+   *
+   * Ссылка настоящая, а не обработчик на `<article>`: робот видит адрес, скринридер
+   * объявляет «ссылка», работают средний клик и «открыть в новой вкладке». Кликабельный
+   * `div` не даёт ничего из этого, а обработчик на блоке ещё и перехватывает клик по
+   * источнику внутри карточки.
+   */
+  href?: string;
 }) {
   const level = levelOf(knowledge, card.evidence_level);
   const sources = sourcesForCard(knowledge, card);
   const isMyth = card.kind === 'myth';
   return (
-    <article className={`r-knowledge-card ${isMyth ? 'myth' : 'fact'} ${compact ? 'compact' : ''}`}>
+    <article
+      className={`r-knowledge-card ${isMyth ? 'myth' : 'fact'} ${compact ? 'compact' : ''}${
+        href ? ' linked' : ''
+      }`}
+    >
       <header>
         <span className="r-knowledge-kind">
           <Icon name={isMyth ? 'shield' : 'spark'} size={16} />
@@ -145,7 +161,15 @@ export function KnowledgeCardView({
           </span>
         )}
       </header>
-      <h3 className={isMyth ? 'r-knowledge-myth-claim' : ''}>{card.claim_ru}</h3>
+      <h3 className={isMyth ? 'r-knowledge-myth-claim' : ''}>
+        {href ? (
+          <AppLink href={href} className="r-knowledge-card-link">
+            {card.claim_ru}
+          </AppLink>
+        ) : (
+          card.claim_ru
+        )}
+      </h3>
       <div className="r-knowledge-body">
         <p>
           <b>Что известно.</b> {card.known_ru}
