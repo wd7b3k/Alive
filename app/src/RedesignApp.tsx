@@ -19,7 +19,6 @@ import {
   type Bootstrap,
   type Goal,
   type GuidedEpisodeDraft,
-  type Knowledge,
   type KnowledgeCard,
   type NicotineProduct,
   type OnboardingDraft,
@@ -447,23 +446,6 @@ function PublicMeanings({ catalog }: { catalog: PublicCatalog | null }) {
 
 /** «Факты» до входа: те же карточки, что и внутри, с источниками и границами. */
 /**
- * Карточка на хабе плюс ссылка на её собственный адрес.
- *
- * Ссылка добавлена, а не заменила карточку: человеку на хабе по-прежнему видно
- * содержание, а роботу и тому, кто хочет прислать другу одну карточку, — адрес.
- */
-function KnowledgeCardLink({ knowledge, card }: { knowledge: Knowledge; card: KnowledgeCard }) {
-  return (
-    <div className="r-knowledge-card-linked">
-      <KnowledgeCardView knowledge={knowledge} card={card} />
-      <AppLink href={pathForCode(card.code)} className="r-linklike">
-        Отдельная страница карточки
-      </AppLink>
-    </div>
-  );
-}
-
-/**
  * Экран одной карточки каталога.
  *
  * Существует, чтобы переход внутри приложения и обновление страницы на том же адресе
@@ -552,7 +534,12 @@ function PublicKnowledge({
           </div>
           <div className="r-knowledge-grid">
             {facts.map((card) => (
-              <KnowledgeCardLink key={card.code} knowledge={knowledge} card={card} />
+              <KnowledgeCardView
+                key={card.code}
+                knowledge={knowledge}
+                card={card}
+                href={pathForCode(card.code)}
+              />
             ))}
           </div>
         </section>
@@ -574,7 +561,12 @@ function PublicKnowledge({
           </div>
           <div className="r-knowledge-grid">
             {myths.map((card) => (
-              <KnowledgeCardLink key={card.code} knowledge={knowledge} card={card} />
+              <KnowledgeCardView
+                key={card.code}
+                knowledge={knowledge}
+                card={card}
+                href={pathForCode(card.code)}
+              />
             ))}
           </div>
         </section>
