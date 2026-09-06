@@ -15,6 +15,18 @@ sources:
     date: 2025-01-16
     url: https://www.federalregister.gov/documents/2025/01/16/2025-00397/tobacco-product-standard-for-nicotine-yield-of-cigarettes-and-certain-other-combusted-tobacco
     type: проект нормативного акта
+triggers: []
+needs: []
+product_types:
+  - cigarette
+tags:
+  - product
+  - low_intensity
+  - harm_reduction
+  - myths
+surfaces:
+  - links
+  - public
 author:
 reviewer:
 updated: 2026-09-05

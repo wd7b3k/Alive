@@ -14,6 +14,19 @@ sources:
     date: 2025-10-08
     url: https://www.who.int/europe/news/item/08-10-2025-who-european-region-has-the-highest-rate-of-tobacco-use-in-the-world--with-an-alarming-rise-in-young-people-using-e-cigarettes--global-report-warns
     type: доклад международной организации
+triggers: []
+needs: []
+product_types:
+  - cigarette
+  - vape
+tags:
+  - risk
+  - harm
+  - product
+  - vape
+surfaces:
+  - links
+  - public
 author:
 reviewer:
 updated: 2026-09-05

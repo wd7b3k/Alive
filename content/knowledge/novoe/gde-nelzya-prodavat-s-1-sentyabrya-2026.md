@@ -14,6 +14,22 @@ sources:
     date: 2026
     url: https://www.consultant.ru/law/hotdocs/92256.html
     type: обзор законодательства
+triggers:
+  - spontaneous
+  - after_task
+  - social
+needs: []
+product_types:
+  - cigarette
+  - vape
+  - hookah
+tags:
+  - cues
+  - control
+  - product
+surfaces:
+  - links
+  - public
 author:
 reviewer:
 updated: 2026-09-05

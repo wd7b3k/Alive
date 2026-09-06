@@ -14,6 +14,18 @@ sources:
     date: 2026-04-29
     url: https://www.gov.uk/government/news/tobacco-and-vapes-bill-becomes-law
     type: сообщение органа власти
+triggers: []
+needs: []
+product_types:
+  - cigarette
+  - vape
+tags:
+  - control
+  - cues
+  - product
+surfaces:
+  - links
+  - public
 author:
 reviewer:
 updated: 2026-09-05
