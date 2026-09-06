@@ -58,7 +58,7 @@
 | Ветка доведена до `origin`; работа не живёт на одной машине | `node scripts/check-local-drift.mjs` в `scripts/state.sh` |
 | Постановка и документация — в git, а не untracked | `bash scripts/state.sh`, раздел «постановка вне git»: отделяет невыложенное от остатка удаления |
 | Сессия работает от свежего `origin/main` | первая строка `scripts/state.sh`: «СТОП: локальный main отстаёт на N» |
-| Прод собран с `main` и не отстаёт | `node scripts/check-deploy-drift.mjs` и `https://habitoff.ru/version.json` |
+| Прод собран с `main` и не отстаёт | гейт `HEAD == origin/main` в `infra/deploy/deploy.sh` — до сборки; `node scripts/check-deploy-drift.mjs` и `https://habitoff.ru/version.json` — постфактум |
 | Число миграций равно числу записей в журнале | гейт в `infra/deploy/deploy.sh` |
 | Секреты не уезжают в бандл | `node scripts/scan-bundle-for-secrets.mjs dist` в CI |
 | Карточку двигает коммит, доска знает о трейлерах | `node scripts/board.mjs check` в CI |
